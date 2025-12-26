@@ -1,0 +1,83 @@
+/* Mobile (<768px) */
+@media (max-width: 767px) {
+  .gear-stick-container {
+    display: none;
+  }
+
+  .gear-display {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .gear-button {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .windshield-frame {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .navbar-fallback {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+  }
+}
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .gear-stick-container {
+    display: flex;
+  }
+
+  .gear-display {
+    display: none;
+  }
+
+  .windshield-frame {
+    width: 70%;
+    margin: 0 auto;
+  }
+
+  .navbar-fallback {
+    position: relative;
+  }
+
+  .mobile-nav-links {
+    display: none;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+  .gear-stick-container {
+    display: flex;
+  }
+
+  .gear-display {
+    display: none;
+  }
+
+  .windshield-frame {
+    width: 60%;
+    margin: 0 auto;
+  }
+
+  .navbar-fallback {
+    position: relative;
+  }
+
+  .mobile-nav-links {
+    display: none;
+  }
+}

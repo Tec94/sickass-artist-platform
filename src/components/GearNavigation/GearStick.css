@@ -1,0 +1,132 @@
+.gear-stick-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  height: 100vh;
+  width: 120px;
+  position: fixed;
+  left: 20px;
+  top: 0;
+  z-index: 40;
+}
+
+.gear-base {
+  width: 80px;
+  height: 300px;
+  background: linear-gradient(135deg, var(--color-bg-charcoal), #2a2a2a);
+  border-radius: 8px;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+
+.gear-stick-track {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gear-stick-handle-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+  z-index: 10;
+  transition: top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gear-stick-handle-container.stick-dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.gear-stick {
+  width: 8px;
+  height: 100px;
+  background: linear-gradient(90deg, #444, #666, #444);
+  border-radius: 4px;
+  margin: 0 auto;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.gear-ball {
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle at 30% 30%, #666, #333);
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 -5px 10px rgba(0, 0, 0, 0.3);
+  margin: 0 auto;
+}
+
+.gear-marker {
+  width: 40px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-radius: 4px;
+}
+
+.gear-marker:hover {
+  background: rgba(0, 217, 255, 0.2);
+  color: var(--color-primary);
+}
+
+.gear-marker.marker-active {
+  color: var(--color-secondary);
+  text-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
+}
+
+.drag-hint {
+  font-size: 10px;
+  color: rgba(224, 224, 224, 0.5);
+  text-align: center;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.position-indicator {
+  position: absolute;
+  right: -30px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.6);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.position-indicator.visible {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .gear-stick-container {
+    display: none;
+  }
+}

@@ -1,0 +1,68 @@
+.gear-display {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  width: 100%;
+}
+
+.gear-button {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  background: rgba(0, 217, 255, 0.1);
+  color: var(--color-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+  position: relative;
+  outline: none;
+}
+
+.gear-button:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+  background: rgba(0, 217, 255, 0.2);
+}
+
+.gear-button:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.gear-button.gear-active {
+  border-color: var(--color-secondary);
+  background: rgba(255, 0, 110, 0.2);
+  color: var(--color-secondary);
+  box-shadow: 0 0 25px rgba(255, 0, 110, 0.8);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.gear-button.gear-hover {
+  background: rgba(0, 217, 255, 0.3);
+}
+
+.gear-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 10px;
+  color: var(--color-text);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .gear-button {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+}
