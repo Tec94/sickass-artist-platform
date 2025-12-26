@@ -1,0 +1,61 @@
+import { useEffect, useState, useRef } from 'react'
+import { useGear } from '../../contexts/GearContext'
+import { useGearNavigation } from '../../hooks/useGearNavigation'
+import { GearName } from '../../contexts/GearContext'
+import './GearDisplay.css'
+
+const GEARS: GearName[] = ['R', 'N', '1', '2', '3', '4', '5']
+
+export const GearDisplay = () => {
+  const { currentGear } = useGear()
+  const { navigateToGear } = useGearNavigation()
+  const [hoveredGear, setHoveredGear] = useState<GearName | null>(null)
+  const [focusedGear, setFocusedGear] = useState<GearName | null>(null)
+
+  const handleGearClick = (gear: GearName) => {
+    navigateToGear(gear)
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent, gear: GearName) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      navigateToGear(gear)
+    }
+  }
+
+  const getGearLabel = (gear: GearName): string => {
+    const labels: Record<GearName, string> = {
+      R: 'Reverse',
+      N: 'Neutral',
+      '1': 'First',
+      '2': 'Second',
+      '3': 'Third',
+      '4': 'Fourth',
+      '5': 'Fifth',
+    }
+    return labels[gear]
+  }
+
+  return (
+    <nav className="gear-display" role="navigation" aria-label="Gear navigation">
+      {GEARS.map((gear) => (
+        <button
+          key={gear}
+          className={`gear-button ${currentGear === gear ? 'gear-active' : ''} ${hoveredGear === gear ? 'gear-hover' : ''}`}
+          onClick={() => handleGearClick(gear)}
+          onMouseEnter={() => setHoveredGear(gear)}
+          onMouseLeave={() => setHoveredGear(null)}
+          onFocus={() => setFocusedGear(gear)}
+          onBlur={() => setFocusedGear(null)}
+          onKeyDown={(e) => handleKeyDown(e, gear)}
+          aria-label={getGearLabel(gear)}
+          aria-pressed={currentGear === gear}
+          type="button"
+        >
+          {gear}
+          {focusedGear === gear && <span className="gear-label">{gear}</span>}
+        </button>
+      ))}
+    </nav>
+  )
+}

@@ -1,0 +1,43 @@
+:root {
+  --color-primary: #00D9FF;
+  --color-secondary: #FF006E;
+  --color-accent: #8B0FFF;
+  --color-neon-green: #39FF14;
+  --color-gold: #FFD700;
+  --color-bg-dark: #0A0E27;
+  --color-bg-charcoal: #1C1F2E;
+  --color-text: #E0E0E0;
+
+  --glow-radius: 0px 0px 20px;
+  --transition-fast: 0.2s ease;
+  --transition-smooth: 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
