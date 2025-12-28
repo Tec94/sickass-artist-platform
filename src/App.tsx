@@ -3,6 +3,8 @@ import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { GearPage } from './pages/GearPage'
 import { ContentPage } from './pages/ContentPage'
+import { Profile } from './pages/Profile'
+import { ProfileEdit } from './pages/ProfileEdit'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import './styles/theme.css'
@@ -28,6 +30,8 @@ function App() {
               <Route path="5" element={<ContentPage />} />
               <Route index element={<Navigate to="/N" replace />} />
             </Route>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
           </Routes>
         </GearProvider>
       </BrowserRouter>
