@@ -32,3 +32,9 @@ export interface User {
   email: string
   profile: UserProfile
 }
+
+// Chat types
+export * from './chat'
+
+// Forum types
+export * from './forum'
