@@ -7,6 +7,15 @@
   width: 100%;
 }
 
+.gear-container {
+  position: relative;
+}
+
+.gear-container:hover .gear-button {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+}
+
 .gear-button {
   width: 64px;
   height: 64px;
