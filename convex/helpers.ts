@@ -1,25 +1,10 @@
-import type { Id } from './_generated/dataModel'
+import type { QueryCtx } from './_generated/server'
+import type { Doc, Id } from './_generated/dataModel'
 
 type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
 
-interface QueryCtx {
-  auth: {
-    getUserIdentity: () => Promise<{ subject: string } | null>
-  }
-  db: {
-    query: (table: string) => unknown
-    get: (id: Id<string>) => unknown
-  }
-}
-
-type DocFromTable = {
-  role: UserRole
-  fanTier: FanTier
-  [key: string]: unknown
-}
-
-export const getCurrentUser = async (ctx: QueryCtx) => {
+export const getCurrentUser = async (ctx: QueryCtx): Promise<Doc<'users'>> => {
   const identity = await ctx.auth.getUserIdentity()
   if (!identity) {
     throw new Error('Not authenticated')
@@ -29,8 +14,7 @@ export const getCurrentUser = async (ctx: QueryCtx) => {
 
   const user = await ctx.db
     .query('users')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .withIndex('by_clerkId', (q: any) => q.eq('clerkId', clerkId))
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
     .first()
 
   if (!user) {
@@ -112,7 +96,7 @@ export const canAccessCategory = async (
   return true
 }
 
-export const isModerator = (user: DocFromTable<'users'>): boolean => {
+export const isModerator = (user: Doc<'users'>): boolean => {
   return user.role === 'mod' || user.role === 'admin' || user.role === 'artist'
 }
 
@@ -124,8 +108,7 @@ export const validateIdempotencyKey = async (
 ): Promise<boolean> => {
   const existingMessage = await ctx.db
     .query('messages')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .withIndex('by_idempotency', (q: any) =>
+    .withIndex('by_idempotency', (q) =>
       q.eq('channelId', channelId).eq('authorId', authorId).eq('idempotencyKey', idempotencyKey)
     )
     .first()
