@@ -262,4 +262,85 @@ export default defineSchema({
     processedAt: v.optional(v.number()),
   })
     .index('by_user_status', ['userId', 'status', 'createdAt']),
+
+  // Gallery content
+  galleryContent: defineTable({
+    contentId: v.string(),
+    type: v.union(
+      v.literal('show'),
+      v.literal('bts'),
+      v.literal('edit'),
+      v.literal('wip'),
+      v.literal('exclusive')
+    ),
+    title: v.string(),
+    description: v.string(),
+    imageUrl: v.string(),
+    thumbnailUrl: v.string(),
+    creatorId: v.id('users'),
+    requiredFanTier: v.optional(
+      v.union(
+        v.literal('bronze'),
+        v.literal('silver'),
+        v.literal('gold'),
+        v.literal('platinum')
+      )
+    ),
+    tags: v.array(v.string()),
+    likeCount: v.number(),
+    viewCount: v.number(),
+    pinned: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_type', ['type'])
+    .index('by_creator', ['creatorId'])
+    .index('by_tier', ['requiredFanTier']),
+
+  // User-generated content
+  ugcContent: defineTable({
+    ugcId: v.string(),
+    creatorId: v.id('users'),
+    creatorDisplayName: v.string(),
+    creatorAvatar: v.string(),
+    creatorTier: v.union(
+      v.literal('bronze'),
+      v.literal('silver'),
+      v.literal('gold'),
+      v.literal('platinum')
+    ),
+    title: v.string(),
+    description: v.string(),
+    imageUrls: v.array(v.string()),
+    uploadedFile: v.optional(v.string()),
+    likeCount: v.number(),
+    viewCount: v.number(),
+    downloadCount: v.number(),
+    category: v.union(
+      v.literal('user-edit'),
+      v.literal('fan-art'),
+      v.literal('repost')
+    ),
+    tags: v.array(v.string()),
+    isApproved: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_creator', ['creatorId'])
+    .index('by_category', ['category'])
+    .index('by_createdAt', ['createdAt'])
+    .index('by_approved', ['isApproved']),
+
+  // Gallery likes (for both gallery and UGC content)
+  galleryLikes: defineTable({
+    userId: v.id('users'),
+    contentId: v.string(),
+    type: v.union(
+      v.literal('gallery'),
+      v.literal('ugc')
+    ),
+    createdAt: v.number(),
+  })
+    .index('by_user_type', ['userId', 'type'])
+    .index('by_content_type', ['contentId', 'type']),
 })
