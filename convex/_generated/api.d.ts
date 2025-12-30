@@ -9,6 +9,7 @@
  */
 
 import type * as chat from "../chat.js";
+import type * as forum from "../forum.js";
 import type * as helpers from "../helpers.js";
 import type * as users from "../users.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   chat: typeof chat;
+  forum: typeof forum;
   helpers: typeof helpers;
   users: typeof users;
 }>;

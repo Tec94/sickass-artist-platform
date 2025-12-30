@@ -342,7 +342,7 @@ export const createReply = mutation({
     await ctx.db.patch(args.threadId, {
       replyCount: thread.replyCount + 1,
       lastReplyAt: now,
-      lastReplyById: replyId,
+      lastReplyById: userId,
       updatedAt: now,
     });
 
