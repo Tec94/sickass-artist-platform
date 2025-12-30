@@ -1,11 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
-import {
-  getCurrentUser,
-  canAccessCategory,
-  isModerator,
-} from "./helpers";
+import { getCurrentUser, canAccessCategory, isModerator } from "./helpers";
 
 // QUERIES
 
@@ -105,114 +100,22 @@ export const getThreads = query({
       threads.sort((a, b) => b.replyCount - a.replyCount);
     }
 
-    // Apply cursor pagination
+    // Handle cursor for pagination
     if (args.cursor) {
-      const cursorIndex = threads.findIndex(
-        (t) => t._id === args.cursor!.threadId
-      );
+      const cursorIndex = threads.findIndex((t) => t._id === args.cursor!.threadId);
       if (cursorIndex !== -1) {
         threads = threads.slice(cursorIndex + 1);
       }
     }
 
-    const paginatedThreads = threads.slice(0, limit);
-
-    // Determine which field to use for next cursor
-    const sortField =
-      args.sort === "newest"
-        ? "createdAt"
-        : args.sort === "top"
-        ? "netVoteCount"
-        : "replyCount";
-
-    return {
-      threads: paginatedThreads,
-      nextCursor:
-        threads.length > limit
-          ? {
-              threadId: paginatedThreads[paginatedThreads.length - 1]._id,
-              sortValue: paginatedThreads[paginatedThreads.length - 1][
-                sortField as keyof Doc<"threads">
-              ] as number,
-            }
-          : null,
-    };
+    return threads.slice(0, limit);
   },
 });
 
 export const getThreadDetail = query({
-  args: { threadId: v.id("threads") },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const userId = user._id;
-
-    const thread = await ctx.db.get(args.threadId);
-    if (!thread) {
-      throw new ConvexError("Thread not found");
-    }
-
-    if (thread.isDeleted) {
-      throw new ConvexError("Thread is deleted");
-    }
-
-    const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
-    if (!hasAccess) {
-      throw new ConvexError("Access denied");
-    }
-
-    const replies = await ctx.db
-      .query("replies")
-      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
-      .collect();
-
-    const nonDeletedReplies = replies.filter((r) => !r.isDeleted);
-
-    return {
-      thread,
-      replies: nonDeletedReplies,
-      replyCount: nonDeletedReplies.length,
-    };
-  },
-});
-
-export const subscribeToThread = query({
-  args: { threadId: v.id("threads") },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const userId = user._id;
-
-    const thread = await ctx.db.get(args.threadId);
-    if (!thread || thread.isDeleted) {
-      return null;
-    }
-
-    const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
-    if (!hasAccess) {
-      return null;
-    }
-
-    const replies = await ctx.db
-      .query("replies")
-      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
-      .collect();
-
-    const nonDeletedReplies = replies.filter((r) => !r.isDeleted);
-
-    return {
-      thread,
-      replies: nonDeletedReplies,
-    };
-  },
-});
-
-// MUTATIONS
-
-export const createThread = mutation({
-  args: {
-    categoryId: v.id("categories"),
-    title: v.string(),
-    content: v.string(),
-    tags: v.optional(v.array(v.string())),
+  args: { 
+    threadId: v.id("threads"),
+    categoryId: v.id("categories")
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
@@ -223,43 +126,136 @@ export const createThread = mutation({
       throw new ConvexError("Access denied");
     }
 
-    const trimmedTitle = args.title.trim();
-    if (!trimmedTitle) {
-      throw new ConvexError("Title cannot be empty");
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread || thread.isDeleted) {
+      throw new ConvexError("Thread not found");
     }
 
-    if (trimmedTitle.length > 200) {
-      throw new ConvexError("Title must be 200 characters or less");
+    // Increment view count (non-blocking)
+    await ctx.db.patch(args.threadId, {
+      viewCount: (thread.viewCount || 0) + 1,
+    }).catch(() => {
+      // Ignore errors in view count update
+    });
+
+    return thread;
+  },
+});
+
+export const getReplies = query({
+  args: {
+    threadId: v.id("threads"),
+    limit: v.number(),
+    cursor: v.optional(
+      v.object({
+        replyId: v.id("replies"),
+        createdAt: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    // Get thread to check access
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) {
+      throw new ConvexError("Thread not found");
     }
 
-    const trimmedContent = args.content.trim();
-    if (!trimmedContent) {
-      throw new ConvexError("Content cannot be empty");
+    const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
     }
 
-    if (trimmedContent.length > 10000) {
-      throw new ConvexError("Content must be 10000 characters or less");
+    const query = ctx.db
+      .query("replies")
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .order("desc");
+
+    let builder = query;
+    if (args.cursor) {
+      builder = builder.filter((q) =>
+        q.or(
+          q.lt("createdAt", args.cursor.createdAt),
+          q.and(
+            q.eq("createdAt", args.cursor.createdAt),
+            q.lt("_id", args.cursor.replyId)
+          )
+        )
+      );
     }
 
-    if (args.tags) {
-      for (const tag of args.tags) {
-        if (tag.length > 20) {
-          throw new ConvexError("Each tag must be 20 characters or less");
-        }
+    const replies = await builder.take(args.limit);
+    return replies.reverse();
+  },
+});
+
+// MUTATIONS
+
+export const createThread = mutation({
+  args: {
+    categoryId: v.id("categories"),
+    title: v.string(),
+    content: v.string(),
+    tags: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    // Rate limiting: max 3 threads per hour per user per category
+    const oneHourAgo = Date.now() - 3600000;
+    const recentThreads = await ctx.db
+      .query("threads")
+      .withIndex("by_author", (q) => q.eq("authorId", userId))
+      .filter((q) => q.gt("createdAt", oneHourAgo))
+      .filter((q) => q.eq("categoryId", args.categoryId))
+      .collect();
+
+    if (recentThreads.length >= 3) {
+      throw new ConvexError("Too many threads. Please wait before posting again.");
+    }
+
+    // Check category access
+    const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied to this category");
+    }
+
+    // Validate title and content
+    if (!args.title || args.title.trim().length === 0) {
+      throw new ConvexError("Thread title cannot be empty");
+    }
+    if (args.title.length > 200) {
+      throw new ConvexError("Thread title too long (max 200 characters)");
+    }
+    if (!args.content || args.content.trim().length === 0) {
+      throw new ConvexError("Thread content cannot be empty");
+    }
+    if (args.content.length > 10000) {
+      throw new ConvexError("Thread content too long (max 10000 characters)");
+    }
+
+    // Validate tags
+    if (args.tags.length > 10) {
+      throw new ConvexError("Too many tags (max 10)");
+    }
+    args.tags.forEach((tag) => {
+      if (tag.length > 50) {
+        throw new ConvexError("Tag too long (max 50 characters)");
       }
-    }
-
-    const now = Date.now();
+    });
 
     const threadId = await ctx.db.insert("threads", {
-      title: trimmedTitle,
-      content: trimmedContent,
+      title: args.title,
+      content: args.content,
       authorId: userId,
       authorDisplayName: user.displayName,
       authorAvatar: user.avatar,
       authorTier: user.fanTier,
       categoryId: args.categoryId,
-      tags: args.tags || [],
+      tags: args.tags,
       upVoterIds: [],
       downVoterIds: [],
       upVoteCount: 0,
@@ -267,24 +263,74 @@ export const createThread = mutation({
       netVoteCount: 0,
       replyCount: 0,
       viewCount: 0,
-      lastReplyAt: undefined,
-      lastReplyById: undefined,
-      isDeleted: false,
-      deletedAt: undefined,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
+    // Update category thread count and last thread
     const category = await ctx.db.get(args.categoryId);
     if (category) {
       await ctx.db.patch(args.categoryId, {
-        threadCount: category.threadCount + 1,
-        lastThreadAt: now,
+        threadCount: (category.threadCount || 0) + 1,
+        lastThreadAt: Date.now(),
       });
     }
 
-    const thread = await ctx.db.get(threadId);
-    return thread;
+    return { threadId };
+  },
+});
+
+export const editThread = mutation({
+  args: {
+    threadId: v.id("threads"),
+    newTitle: v.optional(v.string()),
+    newContent: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    // Get the thread
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) {
+      throw new ConvexError("Thread not found");
+    }
+
+    // Check permissions: only owner or mods can edit
+    const canEdit = thread.authorId === userId || isModerator(user);
+    if (!canEdit) {
+      throw new ConvexError("Only thread author or mods can edit");
+    }
+
+    // Validate new content if provided
+    const updates: Record<string, unknown> = {
+      updatedAt: Date.now(),
+    };
+
+    if (args.newTitle !== undefined) {
+      if (!args.newTitle || args.newTitle.trim().length === 0) {
+        throw new ConvexError("Thread title cannot be empty");
+      }
+      if (args.newTitle.length > 200) {
+        throw new ConvexError("Thread title too long (max 200 characters)");
+      }
+      updates.title = args.newTitle;
+    }
+
+    if (args.newContent !== undefined) {
+      if (!args.newContent || args.newContent.trim().length === 0) {
+        throw new ConvexError("Thread content cannot be empty");
+      }
+      if (args.newContent.length > 10000) {
+        throw new ConvexError("Thread content too long (max 10000 characters)");
+      }
+      updates.content = args.newContent;
+    }
+
+    // Update the thread
+    const updatedThread = await ctx.db.patch(args.threadId, updates);
+
+    return updatedThread;
   },
 });
 
@@ -297,13 +343,22 @@ export const createReply = mutation({
     const user = await getCurrentUser(ctx);
     const userId = user._id;
 
-    const thread = await ctx.db.get(args.threadId);
-    if (!thread) {
-      throw new ConvexError("Thread not found");
+    // Rate limiting: max 10 replies per 30 minutes per user
+    const thirtyMinutesAgo = Date.now() - 1800000;
+    const recentReplies = await ctx.db
+      .query("replies")
+      .withIndex("by_author", (q) => q.eq("authorId", userId))
+      .filter((q) => q.gt("createdAt", thirtyMinutesAgo))
+      .collect();
+
+    if (recentReplies.length >= 10) {
+      throw new ConvexError("Too many replies. Please slow down.");
     }
 
-    if (thread.isDeleted) {
-      throw new ConvexError("Thread is deleted");
+    // Get thread and check access
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread || thread.isDeleted) {
+      throw new ConvexError("Thread not found");
     }
 
     const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
@@ -311,16 +366,13 @@ export const createReply = mutation({
       throw new ConvexError("Access denied");
     }
 
-    const trimmedContent = args.content.trim();
-    if (!trimmedContent) {
-      throw new ConvexError("Content cannot be empty");
+    // Validate content
+    if (!args.content || args.content.trim().length === 0) {
+      throw new ConvexError("Reply content cannot be empty");
     }
-
-    if (trimmedContent.length > 5000) {
-      throw new ConvexError("Content must be 5000 characters or less");
+    if (args.content.length > 5000) {
+      throw new ConvexError("Reply content too long (max 5000 characters)");
     }
-
-    const now = Date.now();
 
     const replyId = await ctx.db.insert("replies", {
       threadId: args.threadId,
@@ -328,286 +380,356 @@ export const createReply = mutation({
       authorDisplayName: user.displayName,
       authorAvatar: user.avatar,
       authorTier: user.fanTier,
-      content: trimmedContent,
-      editedAt: undefined,
+      content: args.content,
       upVoterIds: [],
       downVoterIds: [],
       upVoteCount: 0,
       downVoteCount: 0,
-      isDeleted: false,
-      deletedAt: undefined,
-      createdAt: now,
+      createdAt: Date.now(),
     });
 
+    // Update thread stats
     await ctx.db.patch(args.threadId, {
-      replyCount: thread.replyCount + 1,
-      lastReplyAt: now,
+      replyCount: (thread.replyCount || 0) + 1,
+      lastReplyAt: Date.now(),
       lastReplyById: userId,
-      updatedAt: now,
+      updatedAt: Date.now(),
     });
 
-    const reply = await ctx.db.get(replyId);
-    return reply;
+    // Update category last thread time
+    const category = await ctx.db.get(thread.categoryId);
+    if (category) {
+      await ctx.db.patch(thread.categoryId, {
+        lastThreadAt: Date.now(),
+      });
+    }
+
+    return { replyId };
+  },
+});
+
+export const editReply = mutation({
+  args: {
+    replyId: v.id("replies"),
+    newContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    // Get the reply
+    const reply = await ctx.db.get(args.replyId);
+    if (!reply) {
+      throw new ConvexError("Reply not found");
+    }
+
+    // Check permissions: only owner or mods can edit
+    const canEdit = reply.authorId === userId || isModerator(user);
+    if (!canEdit) {
+      throw new ConvexError("Only reply author or mods can edit");
+    }
+
+    // Validate new content
+    if (!args.newContent || args.newContent.trim().length === 0) {
+      throw new ConvexError("Reply content cannot be empty");
+    }
+    if (args.newContent.length > 5000) {
+      throw new ConvexError("Reply content too long (max 5000 characters)");
+    }
+
+    // Update the reply
+    const updatedReply = await ctx.db.patch(args.replyId, {
+      content: args.newContent,
+      editedAt: Date.now(),
+    });
+
+    return updatedReply;
   },
 });
 
 export const castThreadVote = mutation({
   args: {
     threadId: v.id("threads"),
-    direction: v.union(v.literal("up"), v.literal("down")),
+    voteType: v.union(v.literal("up"), v.literal("down")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
 
+    // Rate limiting: max 20 votes per 60 seconds per user
+    const sixtySecondsAgo = Date.now() - 60000;
+    const recentVotes = await ctx.db
+      .query("offlineQueue")
+      .withIndex("by_user_status", (q) => q.eq("userId", userId))
+      .filter((q) => q.gt("createdAt", sixtySecondsAgo))
+      .filter((q) => q.or(
+        q.eq("type", "vote_thread"),
+        q.eq("type", "vote_reply")
+      ))
+      .collect();
+
+    if (recentVotes.length >= 20) {
+      throw new ConvexError("Voting too fast. Please slow down.");
+    }
+
+    // Get thread
     const thread = await ctx.db.get(args.threadId);
-    if (!thread) {
+    if (!thread || thread.isDeleted) {
       throw new ConvexError("Thread not found");
     }
 
-    if (thread.isDeleted) {
-      throw new ConvexError("Thread is deleted");
-    }
-
+    // Check category access
     const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
 
-    // Read current state for atomic vote operation
-    const userAlreadyVotedUp = thread.upVoterIds.includes(userId);
-    const userAlreadyVotedDown = thread.downVoterIds.includes(userId);
+    // Update vote arrays
+    const isCurrentlyUpvoted = thread.upVoterIds.includes(userId);
+    const isCurrentlyDownvoted = thread.downVoterIds.includes(userId);
 
-    // Build new state
-    let newUpVoters = [...thread.upVoterIds];
-    let newDownVoters = [...thread.downVoterIds];
+    const updates: Record<string, unknown> = {};
 
-    if (args.direction === "up") {
-      if (userAlreadyVotedUp) {
-        // Toggle off
-        newUpVoters = newUpVoters.filter((id) => id !== userId);
+    if (args.voteType === "up") {
+      if (isCurrentlyUpvoted) {
+        // Remove upvote
+        updates.upVoterIds = thread.upVoterIds.filter((id) => id !== userId);
+        updates.upVoteCount = thread.upVoteCount - 1;
+        updates.netVoteCount = updates.upVoteCount - thread.downVoteCount;
       } else {
-        // Add up vote, remove down if exists
-        newUpVoters.push(userId);
-        newDownVoters = newDownVoters.filter((id) => id !== userId);
+        // Add upvote and remove downvote if present
+        updates.upVoterIds = [...thread.upVoterIds, userId];
+        updates.upVoteCount = thread.upVoteCount + 1;
+        updates.downVoterIds = thread.downVoterIds.filter((id) => id !== userId);
+        updates.downVoteCount = isCurrentlyDownvoted
+          ? thread.downVoteCount - 1
+          : thread.downVoteCount;
+        updates.netVoteCount = updates.upVoteCount - updates.downVoteCount;
       }
     } else {
-      if (userAlreadyVotedDown) {
-        // Toggle off
-        newDownVoters = newDownVoters.filter((id) => id !== userId);
+      if (isCurrentlyDownvoted) {
+        // Remove downvote
+        updates.downVoterIds = thread.downVoterIds.filter((id) => id !== userId);
+        updates.downVoteCount = thread.downVoteCount - 1;
+        updates.netVoteCount = thread.upVoteCount - updates.downVoteCount;
       } else {
-        // Add down vote, remove up if exists
-        newDownVoters.push(userId);
-        newUpVoters = newUpVoters.filter((id) => id !== userId);
+        // Add downvote and remove upvote if present
+        updates.downVoterIds = [...thread.downVoterIds, userId];
+        updates.downVoteCount = thread.downVoteCount + 1;
+        updates.upVoterIds = thread.upVoterIds.filter((id) => id !== userId);
+        updates.upVoteCount = isCurrentlyUpvoted
+          ? thread.upVoteCount - 1
+          : thread.upVoteCount;
+        updates.netVoteCount = updates.upVoteCount - updates.downVoteCount;
       }
     }
 
-    const netVoteCount = newUpVoters.length - newDownVoters.length;
+    // Update the thread
+    const updatedThread = await ctx.db.patch(args.threadId, updates);
 
-    // Patch atomically
-    await ctx.db.patch(args.threadId, {
-      upVoterIds: newUpVoters,
-      downVoterIds: newDownVoters,
-      upVoteCount: newUpVoters.length,
-      downVoteCount: newDownVoters.length,
-      netVoteCount,
-      updatedAt: Date.now(),
-    });
-
-    const updated = await ctx.db.get(args.threadId);
-
-    // Determine user's current vote
-    let userVote: "up" | "down" | null = null;
-    if (newUpVoters.includes(userId)) {
-      userVote = "up";
-    } else if (newDownVoters.includes(userId)) {
-      userVote = "down";
-    }
-
-    return {
-      threadId: args.threadId,
-      upVoteCount: updated!.upVoteCount,
-      downVoteCount: updated!.downVoteCount,
-      netVoteCount: updated!.netVoteCount,
-      userVote,
-    };
+    return updatedThread;
   },
 });
 
 export const castReplyVote = mutation({
   args: {
     replyId: v.id("replies"),
-    direction: v.union(v.literal("up"), v.literal("down")),
+    voteType: v.union(v.literal("up"), v.literal("down")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
 
+    // Rate limiting: max 20 votes per 60 seconds per user
+    const sixtySecondsAgo = Date.now() - 60000;
+    const recentVotes = await ctx.db
+      .query("offlineQueue")
+      .withIndex("by_user_status", (q) => q.eq("userId", userId))
+      .filter((q) => q.gt("createdAt", sixtySecondsAgo))
+      .filter((q) => q.or(
+        q.eq("type", "vote_thread"),
+        q.eq("type", "vote_reply")
+      ))
+      .collect();
+
+    if (recentVotes.length >= 20) {
+      throw new ConvexError("Voting too fast. Please slow down.");
+    }
+
+    // Get reply
     const reply = await ctx.db.get(args.replyId);
     if (!reply) {
       throw new ConvexError("Reply not found");
     }
 
-    if (reply.isDeleted) {
-      throw new ConvexError("Reply is deleted");
-    }
-
+    // Get thread to check access
     const thread = await ctx.db.get(reply.threadId);
-    if (thread) {
-      const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
-      if (!hasAccess) {
-        throw new ConvexError("Access denied");
-      }
-    }
-
-    // Read current state for atomic vote operation
-    const userAlreadyVotedUp = reply.upVoterIds.includes(userId);
-    const userAlreadyVotedDown = reply.downVoterIds.includes(userId);
-
-    // Build new state
-    let newUpVoters = [...reply.upVoterIds];
-    let newDownVoters = [...reply.downVoterIds];
-
-    if (args.direction === "up") {
-      if (userAlreadyVotedUp) {
-        // Toggle off
-        newUpVoters = newUpVoters.filter((id) => id !== userId);
-      } else {
-        // Add up vote, remove down if exists
-        newUpVoters.push(userId);
-        newDownVoters = newDownVoters.filter((id) => id !== userId);
-      }
-    } else {
-      if (userAlreadyVotedDown) {
-        // Toggle off
-        newDownVoters = newDownVoters.filter((id) => id !== userId);
-      } else {
-        // Add down vote, remove up if exists
-        newDownVoters.push(userId);
-        newUpVoters = newUpVoters.filter((id) => id !== userId);
-      }
-    }
-
-    // Patch atomically
-    await ctx.db.patch(args.replyId, {
-      upVoterIds: newUpVoters,
-      downVoterIds: newDownVoters,
-      upVoteCount: newUpVoters.length,
-      downVoteCount: newDownVoters.length,
-    });
-
-    const updated = await ctx.db.get(args.replyId);
-
-    // Determine user's current vote
-    let userVote: "up" | "down" | null = null;
-    if (newUpVoters.includes(userId)) {
-      userVote = "up";
-    } else if (newDownVoters.includes(userId)) {
-      userVote = "down";
-    }
-
-    return {
-      replyId: args.replyId,
-      upVoteCount: updated!.upVoteCount,
-      downVoteCount: updated!.downVoteCount,
-      userVote,
-    };
-  },
-});
-
-export const editThread = mutation({
-  args: {
-    threadId: v.id("threads"),
-    title: v.optional(v.string()),
-    content: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const userId = user._id;
-
-    const thread = await ctx.db.get(args.threadId);
     if (!thread) {
       throw new ConvexError("Thread not found");
     }
 
-    const isOwner = thread.authorId === userId;
-    const mod = isModerator(user);
-
-    if (!isOwner && !mod) {
-      throw new ConvexError("Only thread author or mods can edit");
+    // Check category access
+    const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
     }
 
-    if (args.title !== undefined) {
-      const trimmedTitle = args.title.trim();
-      if (!trimmedTitle) {
-        throw new ConvexError("Title cannot be empty");
+    // Update vote arrays
+    const isCurrentlyUpvoted = reply.upVoterIds.includes(userId);
+    const isCurrentlyDownvoted = reply.downVoterIds.includes(userId);
+
+    const updates: Record<string, unknown> = {};
+
+    if (args.voteType === "up") {
+      if (isCurrentlyUpvoted) {
+        // Remove upvote
+        updates.upVoterIds = reply.upVoterIds.filter((id) => id !== userId);
+        updates.upVoteCount = reply.upVoteCount - 1;
+      } else {
+        // Add upvote and remove downvote if present
+        updates.upVoterIds = [...reply.upVoterIds, userId];
+        updates.upVoteCount = reply.upVoteCount + 1;
+        updates.downVoterIds = reply.downVoterIds.filter((id) => id !== userId);
+        updates.downVoteCount = isCurrentlyDownvoted
+          ? reply.downVoteCount - 1
+          : reply.downVoteCount;
       }
-      if (trimmedTitle.length > 200) {
-        throw new ConvexError("Title must be 200 characters or less");
+    } else {
+      if (isCurrentlyDownvoted) {
+        // Remove downvote
+        updates.downVoterIds = reply.downVoterIds.filter((id) => id !== userId);
+        updates.downVoteCount = reply.downVoteCount - 1;
+      } else {
+        // Add downvote and remove upvote if present
+        updates.downVoterIds = [...reply.downVoterIds, userId];
+        updates.downVoteCount = reply.downVoteCount + 1;
+        updates.upVoterIds = reply.upVoterIds.filter((id) => id !== userId);
+        updates.upVoteCount = isCurrentlyUpvoted
+          ? reply.upVoteCount - 1
+          : reply.upVoteCount;
       }
     }
 
-    if (args.content !== undefined) {
-      const trimmedContent = args.content.trim();
-      if (!trimmedContent) {
-        throw new ConvexError("Content cannot be empty");
-      }
-      if (trimmedContent.length > 10000) {
-        throw new ConvexError("Content must be 10000 characters or less");
-      }
-    }
+    // Update the reply
+    const updatedReply = await ctx.db.patch(args.replyId, updates);
 
-    const updateData: Partial<Doc<"threads">> = {
-      updatedAt: Date.now(),
-    };
-
-    if (args.title !== undefined) {
-      updateData.title = args.title.trim();
-    }
-
-    if (args.content !== undefined) {
-      updateData.content = args.content.trim();
-    }
-
-    await ctx.db.patch(args.threadId, updateData);
-
-    const updated = await ctx.db.get(args.threadId);
-    return updated;
+    return updatedReply;
   },
 });
 
 export const deleteThread = mutation({
-  args: { threadId: v.id("threads") },
+  args: {
+    threadId: v.id("threads"),
+    categoryId: v.id("categories"),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
 
+    // Get thread
     const thread = await ctx.db.get(args.threadId);
     if (!thread) {
       throw new ConvexError("Thread not found");
     }
 
-    const isOwner = thread.authorId === userId;
-    const mod = isModerator(user);
-
-    if (!isOwner && !mod) {
-      throw new ConvexError("Only thread author or mods can delete");
+    // Check permissions: only owner, mods, or admins can delete
+    const canDelete = thread.authorId === userId || isModerator(user);
+    if (!canDelete) {
+      throw new ConvexError("Only thread owner or mods can delete");
     }
 
-    // Tombstone deletion
+    // Check category access
+    const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
+    }
+
+    // Soft delete the thread
     await ctx.db.patch(args.threadId, {
       isDeleted: true,
       deletedAt: Date.now(),
     });
 
-    // Update category stats
-    const category = await ctx.db.get(thread.categoryId);
-    if (category) {
-      await ctx.db.patch(thread.categoryId, {
-        threadCount: Math.max(0, category.threadCount - 1),
-      });
+    return { success: true };
+  },
+});
+
+export const deleteReply = mutation({
+  args: {
+    replyId: v.id("replies"),
+    threadId: v.id("threads"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    // Get reply
+    const reply = await ctx.db.get(args.replyId);
+    if (!reply) {
+      throw new ConvexError("Reply not found");
     }
 
+    // Check permissions: only owner, mods, or admins can delete
+    const canDelete = reply.authorId === userId || isModerator(user);
+    if (!canDelete) {
+      throw new ConvexError("Only reply owner or mods can delete");
+    }
+
+    // Get thread to check access
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) {
+      throw new ConvexError("Thread not found");
+    }
+
+    // Check category access
+    const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
+    }
+
+    // Soft delete the reply
+    await ctx.db.patch(args.replyId, {
+      isDeleted: true,
+      deletedAt: Date.now(),
+    });
+
     return { success: true };
+  },
+});
+
+// Record offline vote helper
+export const recordOfflineVote = mutation({
+  args: {
+    threadId: v.optional(v.id("threads")),
+    replyId: v.optional(v.id("replies")),
+    voteType: v.union(v.literal("up"), v.literal("down")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+    
+    // Determine vote type and validate
+    const voteType = args.threadId ? "vote_thread" : "vote_reply";
+    const targetId = args.threadId || args.replyId;
+    
+    if (!targetId) {
+      throw new ConvexError("Must provide either threadId or replyId");
+    }
+    
+    // Insert into offline queue
+    const queueItemId = await ctx.db.insert("offlineQueue", {
+      userId,
+      type: voteType,
+      payload: {
+        threadId: args.threadId,
+        replyId: args.replyId,
+        voteType: args.voteType,
+      },
+      status: "pending",
+      retryCount: 0,
+      createdAt: Date.now(),
+    });
+    
+    return { queueItemId };
   },
 });
