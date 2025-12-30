@@ -5,7 +5,8 @@ import { GearPage } from './pages/GearPage'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ContentPage } from './pages/ContentPage'
-import { Chat } from './pages/Chat'
+import { Forum } from './pages/Forum'
+import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { UserHeader } from './components/Auth/UserHeader'
@@ -41,7 +42,12 @@ function App() {
               } />
               <Route path="2" element={
                 <ProtectedRoute>
-                  <Chat />
+                  <Forum />
+                </ProtectedRoute>
+              } />
+              <Route path="2/thread/:threadId" element={
+                <ProtectedRoute>
+                  <ForumThreadDetail />
                 </ProtectedRoute>
               } />
               <Route path="3" element={<ContentPage />} />
@@ -57,6 +63,16 @@ function App() {
             <Route path="/profile/edit" element={
               <ProtectedRoute>
                 <ProfileEdit />
+              </ProtectedRoute>
+            } />
+            <Route path="/forum" element={
+              <ProtectedRoute>
+                <Forum />
+              </ProtectedRoute>
+            } />
+            <Route path="/forum/thread/:threadId" element={
+              <ProtectedRoute>
+                <ForumThreadDetail />
               </ProtectedRoute>
             } />
           </Routes>

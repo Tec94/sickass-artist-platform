@@ -18,8 +18,8 @@ export const GearPage = () => {
   const [touchStart, setTouchStart] = useState(0)
 
   useEffect(() => {
-    // Update gear based on route
-    const pathGear = location.pathname.slice(1)
+    // Update gear based on route (supports nested routes like /2/thread/:id)
+    const pathGear = location.pathname.split('/')[1] ?? ''
     if (isValidGear(pathGear)) {
       setCurrentGear(pathGear)
     }

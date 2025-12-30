@@ -188,7 +188,7 @@ export const subscribeToThread = query({
 
     const hasAccess = await canAccessCategory(ctx, userId, thread.categoryId);
     if (!hasAccess) {
-      throw new ConvexError("Access denied");
+      return null;
     }
 
     const replies = await ctx.db
