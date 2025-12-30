@@ -1,0 +1,109 @@
+import { useState, useCallback } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
+
+interface VoteState {
+  upVoteCount: number
+  downVoteCount: number
+  userVote: 'up' | 'down' | null
+}
+
+interface OptimisticVoteResult {
+  votes: VoteState
+  handleVote: (direction: 'up' | 'down') => Promise<void>
+}
+
+interface UseOptimisticVoteProps {
+  threadId: Id<'threads'>
+  initialVotes: {
+    upVoteCount: number
+    downVoteCount: number
+  }
+  initialUserVote?: 'up' | 'down' | null
+}
+
+interface CastThreadVoteResult {
+  threadId: Id<'threads'>
+  upVoteCount: number
+  downVoteCount: number
+  netVoteCount: number
+  userVote: 'up' | 'down' | null
+}
+
+export function useOptimisticVote({
+  threadId,
+  initialVotes,
+  initialUserVote = null,
+}: UseOptimisticVoteProps): OptimisticVoteResult {
+  const [votes, setVotes] = useState<VoteState>({
+    upVoteCount: initialVotes.upVoteCount,
+    downVoteCount: initialVotes.downVoteCount,
+    userVote: initialUserVote,
+  })
+
+  const castVoteMutation = useMutation(
+    (api as unknown as { forum: { castThreadVote: (args: { threadId: Id<'threads'>; direction: 'up' | 'down' }) => Promise<CastThreadVoteResult> } }).forum.castThreadVote
+  )
+
+  const handleVote = useCallback(
+    async (direction: 'up' | 'down') => {
+      const oldVotes = { ...votes }
+
+      let newUpVoteCount = votes.upVoteCount
+      let newDownVoteCount = votes.downVoteCount
+      let newUserVote: 'up' | 'down' | null = direction
+
+      if (votes.userVote === direction) {
+        if (direction === 'up') {
+          newUpVoteCount = Math.max(0, votes.upVoteCount - 1)
+        } else {
+          newDownVoteCount = Math.max(0, votes.downVoteCount - 1)
+        }
+        newUserVote = null
+      } else if (votes.userVote === null) {
+        if (direction === 'up') {
+          newUpVoteCount = votes.upVoteCount + 1
+        } else {
+          newDownVoteCount = votes.downVoteCount + 1
+        }
+      } else {
+        if (direction === 'up') {
+          newUpVoteCount = votes.upVoteCount + 1
+          newDownVoteCount = Math.max(0, votes.downVoteCount - 1)
+        } else {
+          newDownVoteCount = votes.downVoteCount + 1
+          newUpVoteCount = Math.max(0, votes.upVoteCount - 1)
+        }
+      }
+
+      setVotes({
+        upVoteCount: newUpVoteCount,
+        downVoteCount: newDownVoteCount,
+        userVote: newUserVote,
+      })
+
+      try {
+        const result = await castVoteMutation({
+          threadId,
+          direction,
+        })
+
+        setVotes({
+          upVoteCount: result.upVoteCount,
+          downVoteCount: result.downVoteCount,
+          userVote: result.userVote,
+        })
+      } catch (error) {
+        console.error('Failed to cast vote:', error)
+        setVotes(oldVotes)
+      }
+    },
+    [threadId, votes, castVoteMutation]
+  )
+
+  return {
+    votes,
+    handleVote,
+  }
+}
