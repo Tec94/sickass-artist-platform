@@ -1,5 +1,6 @@
-import { mutation, action } from "./_generated/server";
+import { query, mutation, action } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import { api } from "./_generated/api";
 import { getCurrentUser } from "./helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,7 +117,19 @@ const processQueueItem = async (ctx: any, item: QueueItem): Promise<{ success: b
 export const processOfflineQueue = action({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
+    // Get user identity from auth
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+    
+    // Get user via query
+    const user = await ctx.runQuery(api.offlineQueue.getUserByClerkId, {
+      clerkId: identity.subject,
+    });
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
     const userId = user._id;
     
     const result: ProcessResult = {
@@ -125,14 +138,10 @@ export const processOfflineQueue = action({
       errors: [],
     };
     
-    // Get all pending items for this user
-    const pendingItems = await ctx.db
-      .query("offlineQueue")
-      .withIndex("by_user_status", (q) => 
-        q.eq("userId", userId).eq("status", "pending")
-      )
-      .order("asc")
-      .collect();
+    // Get all pending items for this user via query
+    const pendingItems = await ctx.runQuery(api.offlineQueue.getPendingItemsForUser, {
+      userId,
+    });
     
     if (pendingItems.length === 0) {
       return result;
@@ -151,8 +160,9 @@ export const processOfflineQueue = action({
         const processResult = await processQueueItem(ctx, item);
         
         if (processResult.success) {
-          // Mark as synced
-          await ctx.db.patch(item._id, {
+          // Mark as synced via mutation
+          await ctx.runMutation(api.offlineQueue.updateQueueItem, {
+            itemId: item._id,
             status: 'synced',
             processedAt: Date.now(),
           });
@@ -160,7 +170,8 @@ export const processOfflineQueue = action({
         } else {
           // Mark as failed and increment retry count
           const newRetryCount = (item.retryCount || 0) + 1;
-          await ctx.db.patch(item._id, {
+          await ctx.runMutation(api.offlineQueue.updateQueueItem, {
+            itemId: item._id,
             status: newRetryCount >= 3 ? 'failed' : 'pending',
             retryCount: newRetryCount,
             lastError: processResult.error,
@@ -179,7 +190,8 @@ export const processOfflineQueue = action({
         
         // Update item with failure
         const newRetryCount = (item.retryCount || 0) + 1;
-        await ctx.db.patch(item._id, {
+        await ctx.runMutation(api.offlineQueue.updateQueueItem, {
+          itemId: item._id,
           status: newRetryCount >= 3 ? 'failed' : 'pending',
           retryCount: newRetryCount,
           lastError: errorMessage,
@@ -202,12 +214,9 @@ export const retryFailedQueueItems = action({
     const now = Date.now();
     const maxRetries = 3;
     
-    // Find failed items that can be retried
-    const failedItems = await ctx.db
-      .query("offlineQueue")
-      .withIndex("by_user_status", (q) => q.eq("status", "failed"))
-      .filter(q => q.lt("retryCount", maxRetries))
-      .collect();
+    // Find failed items that can be retried via query
+    const allFailedItems = await ctx.runQuery(api.offlineQueue.getFailedItems, {});
+    const failedItems = allFailedItems.filter((item: any) => item.retryCount < maxRetries);
     
     const result: ProcessResult = {
       processed: 0,
@@ -225,8 +234,9 @@ export const retryFailedQueueItems = action({
       }
       
       try {
-        // Reset status to pending and increment retry count
-        await ctx.db.patch(item._id, {
+        // Reset status to pending and increment retry count via mutation
+        await ctx.runMutation(api.offlineQueue.updateQueueItem, {
+          itemId: item._id,
           status: 'pending',
           retryCount: item.retryCount + 1,
           lastRetryAt: now,
@@ -257,11 +267,15 @@ export const cleanupOldQueue = mutation({
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     
     // Find synced items older than 7 days
-    const oldSyncedItems = await ctx.db
+    const allSyncedItems = await ctx.db
       .query("offlineQueue")
-      .filter(q => q.eq("status", "synced"))
-      .filter(q => q.lt("processedAt", sevenDaysAgo))
       .collect();
+    
+    const oldSyncedItems = allSyncedItems.filter(
+      (item) => item.status === "synced" && 
+                 item.processedAt && 
+                 item.processedAt < sevenDaysAgo
+    );
     
     let deletedCount = 0;
     
@@ -271,7 +285,7 @@ export const cleanupOldQueue = mutation({
         await ctx.db.delete(item._id);
         deletedCount++;
       } catch (error) {
-        console.error(`Failed to delete queue item ${item._id}:`, error);
+        // Silently ignore deletion errors
       }
     }
     
@@ -305,7 +319,6 @@ export const recordOfflineMessage = mutation({
       payload: {
         channelId: args.channelId,
         content: args.content,
-        idempotencyKey: args.idempotencyKey,
       },
       status: "pending",
       retryCount: 0,
@@ -313,6 +326,77 @@ export const recordOfflineMessage = mutation({
     });
     
     return { queueItemId };
+  },
+});
+
+/**
+ * Helper query: Get user by Clerk ID (for actions)
+ */
+export const getUserByClerkId = query({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+    return user;
+  },
+});
+
+/**
+ * Helper query: Get pending items for a user (for actions)
+ */
+export const getPendingItemsForUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const allItems = await ctx.db
+      .query("offlineQueue")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId))
+      .collect();
+    
+    return allItems.filter((item) => item.status === "pending");
+  },
+});
+
+/**
+ * Helper query: Get failed items (for actions)
+ */
+export const getFailedItems = query({
+  args: {},
+  handler: async (ctx) => {
+    const allItems = await ctx.db
+      .query("offlineQueue")
+      .collect();
+    
+    return allItems.filter((item) => item.status === "failed");
+  },
+});
+
+/**
+ * Helper mutation: Update queue item (for actions)
+ */
+export const updateQueueItem = mutation({
+  args: {
+    itemId: v.id("offlineQueue"),
+    status: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("synced"),
+      v.literal("failed")
+    )),
+    processedAt: v.optional(v.number()),
+    retryCount: v.optional(v.number()),
+    lastError: v.optional(v.string()),
+    lastRetryAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const updates: Record<string, unknown> = {};
+    if (args.status !== undefined) updates.status = args.status;
+    if (args.processedAt !== undefined) updates.processedAt = args.processedAt;
+    if (args.retryCount !== undefined) updates.retryCount = args.retryCount;
+    if (args.lastError !== undefined) updates.lastError = args.lastError;
+    if (args.lastRetryAt !== undefined) updates.lastRetryAt = args.lastRetryAt;
+    
+    await ctx.db.patch(args.itemId, updates);
   },
 });
 
@@ -330,15 +414,12 @@ export const getPendingItems = query({
     }
     
     // Get all pending items for this user
-    const pendingItems = await ctx.db
+    const allItems = await ctx.db
       .query("offlineQueue")
-      .withIndex("by_user_status", (q) => 
-        q.eq("userId", args.userId).eq("status", "pending")
-      )
-      .order("asc")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId))
       .collect();
     
-    return pendingItems;
+    return allItems.filter((item) => item.status === "pending");
   },
 });
 

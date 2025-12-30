@@ -27,11 +27,12 @@ export const searchThreads = query({
     const searchTerm = args.query.toLowerCase().trim();
     
     // Get all threads in the category
-    const threads = await ctx.db
+    const allThreads = await ctx.db
       .query("threads")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .filter((q) => q.eq("isDeleted", false))
       .collect();
+    
+    const threads = allThreads.filter((t) => !t.isDeleted);
 
     // Search in title and tags
     const results = threads.filter((thread) => {
@@ -80,11 +81,12 @@ export const searchMessages = query({
     const searchTerm = args.query.toLowerCase().trim();
     
     // Get all messages in the channel
-    const messages = await ctx.db
+    const allMessages = await ctx.db
       .query("messages")
       .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-      .filter((q) => q.eq("isDeleted", false))
       .collect();
+    
+    const messages = allMessages.filter((m) => !m.isDeleted);
 
     // Search in content
     const results = messages

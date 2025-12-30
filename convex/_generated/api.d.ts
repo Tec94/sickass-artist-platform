@@ -11,6 +11,9 @@
 import type * as chat from "../chat.js";
 import type * as forum from "../forum.js";
 import type * as helpers from "../helpers.js";
+import type * as offlineQueue from "../offlineQueue.js";
+import type * as scheduler from "../scheduler.js";
+import type * as search from "../search.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,6 +26,9 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   forum: typeof forum;
   helpers: typeof helpers;
+  offlineQueue: typeof offlineQueue;
+  scheduler: typeof scheduler;
+  search: typeof search;
   users: typeof users;
 }>;
 

@@ -131,12 +131,8 @@ export const getThreadDetail = query({
       throw new ConvexError("Thread not found");
     }
 
-    // Increment view count (non-blocking)
-    await ctx.db.patch(args.threadId, {
-      viewCount: (thread.viewCount || 0) + 1,
-    }).catch(() => {
-      // Ignore errors in view count update
-    });
+    // Note: View count increment should be done via a separate mutation
+    // Queries cannot mutate data
 
     return thread;
   },
@@ -168,26 +164,26 @@ export const getReplies = query({
       throw new ConvexError("Access denied");
     }
 
-    const query = ctx.db
+    const allReplies = await ctx.db
       .query("replies")
       .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
-      .order("desc");
+      .collect();
 
-    let builder = query;
+    // Filter out deleted replies and apply cursor if provided
+    let filteredReplies = allReplies.filter((r) => !r.isDeleted);
+    
     if (args.cursor) {
-      builder = builder.filter((q) =>
-        q.or(
-          q.lt("createdAt", args.cursor.createdAt),
-          q.and(
-            q.eq("createdAt", args.cursor.createdAt),
-            q.lt("_id", args.cursor.replyId)
-          )
-        )
+      const cursorIndex = filteredReplies.findIndex(
+        (r) => r._id === args.cursor!.replyId
       );
+      if (cursorIndex !== -1) {
+        filteredReplies = filteredReplies.slice(cursorIndex + 1);
+      }
     }
 
-    const replies = await builder.take(args.limit);
-    return replies.reverse();
+    // Sort by createdAt descending and take limit
+    filteredReplies.sort((a, b) => b.createdAt - a.createdAt);
+    return filteredReplies.slice(0, args.limit);
   },
 });
 
@@ -206,12 +202,14 @@ export const createThread = mutation({
 
     // Rate limiting: max 3 threads per hour per user per category
     const oneHourAgo = Date.now() - 3600000;
-    const recentThreads = await ctx.db
+    const allRecentThreads = await ctx.db
       .query("threads")
       .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter((q) => q.gt("createdAt", oneHourAgo))
-      .filter((q) => q.eq("categoryId", args.categoryId))
       .collect();
+    
+    const recentThreads = allRecentThreads.filter(
+      (t) => t.createdAt > oneHourAgo && t.categoryId === args.categoryId
+    );
 
     if (recentThreads.length >= 3) {
       throw new ConvexError("Too many threads. Please wait before posting again.");
@@ -263,6 +261,7 @@ export const createThread = mutation({
       netVoteCount: 0,
       replyCount: 0,
       viewCount: 0,
+      isDeleted: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -345,11 +344,14 @@ export const createReply = mutation({
 
     // Rate limiting: max 10 replies per 30 minutes per user
     const thirtyMinutesAgo = Date.now() - 1800000;
-    const recentReplies = await ctx.db
+    const allRecentReplies = await ctx.db
       .query("replies")
       .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter((q) => q.gt("createdAt", thirtyMinutesAgo))
       .collect();
+    
+    const recentReplies = allRecentReplies.filter(
+      (r) => r.createdAt > thirtyMinutesAgo
+    );
 
     if (recentReplies.length >= 10) {
       throw new ConvexError("Too many replies. Please slow down.");
@@ -385,6 +387,7 @@ export const createReply = mutation({
       downVoterIds: [],
       upVoteCount: 0,
       downVoteCount: 0,
+      isDeleted: false,
       createdAt: Date.now(),
     });
 
@@ -458,15 +461,15 @@ export const castThreadVote = mutation({
 
     // Rate limiting: max 20 votes per 60 seconds per user
     const sixtySecondsAgo = Date.now() - 60000;
-    const recentVotes = await ctx.db
+    const allRecentVotes = await ctx.db
       .query("offlineQueue")
       .withIndex("by_user_status", (q) => q.eq("userId", userId))
-      .filter((q) => q.gt("createdAt", sixtySecondsAgo))
-      .filter((q) => q.or(
-        q.eq("type", "vote_thread"),
-        q.eq("type", "vote_reply")
-      ))
       .collect();
+    
+    const recentVotes = allRecentVotes.filter(
+      (v) => v.createdAt > sixtySecondsAgo && 
+             (v.type === "vote_thread" || v.type === "vote_reply")
+    );
 
     if (recentVotes.length >= 20) {
       throw new ConvexError("Voting too fast. Please slow down.");
@@ -488,45 +491,58 @@ export const castThreadVote = mutation({
     const isCurrentlyUpvoted = thread.upVoterIds.includes(userId);
     const isCurrentlyDownvoted = thread.downVoterIds.includes(userId);
 
-    const updates: Record<string, unknown> = {};
+    let newUpVoterIds: typeof thread.upVoterIds;
+    let newDownVoterIds: typeof thread.downVoterIds;
+    let newUpVoteCount: number;
+    let newDownVoteCount: number;
 
     if (args.voteType === "up") {
       if (isCurrentlyUpvoted) {
         // Remove upvote
-        updates.upVoterIds = thread.upVoterIds.filter((id) => id !== userId);
-        updates.upVoteCount = thread.upVoteCount - 1;
-        updates.netVoteCount = updates.upVoteCount - thread.downVoteCount;
+        newUpVoterIds = thread.upVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = thread.upVoteCount - 1;
+        newDownVoterIds = thread.downVoterIds;
+        newDownVoteCount = thread.downVoteCount;
       } else {
         // Add upvote and remove downvote if present
-        updates.upVoterIds = [...thread.upVoterIds, userId];
-        updates.upVoteCount = thread.upVoteCount + 1;
-        updates.downVoterIds = thread.downVoterIds.filter((id) => id !== userId);
-        updates.downVoteCount = isCurrentlyDownvoted
+        newUpVoterIds = [...thread.upVoterIds, userId];
+        newUpVoteCount = thread.upVoteCount + 1;
+        newDownVoterIds = thread.downVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = isCurrentlyDownvoted
           ? thread.downVoteCount - 1
           : thread.downVoteCount;
-        updates.netVoteCount = updates.upVoteCount - updates.downVoteCount;
       }
     } else {
       if (isCurrentlyDownvoted) {
         // Remove downvote
-        updates.downVoterIds = thread.downVoterIds.filter((id) => id !== userId);
-        updates.downVoteCount = thread.downVoteCount - 1;
-        updates.netVoteCount = thread.upVoteCount - updates.downVoteCount;
+        newDownVoterIds = thread.downVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = thread.downVoteCount - 1;
+        newUpVoterIds = thread.upVoterIds;
+        newUpVoteCount = thread.upVoteCount;
       } else {
         // Add downvote and remove upvote if present
-        updates.downVoterIds = [...thread.downVoterIds, userId];
-        updates.downVoteCount = thread.downVoteCount + 1;
-        updates.upVoterIds = thread.upVoterIds.filter((id) => id !== userId);
-        updates.upVoteCount = isCurrentlyUpvoted
+        newDownVoterIds = [...thread.downVoterIds, userId];
+        newDownVoteCount = thread.downVoteCount + 1;
+        newUpVoterIds = thread.upVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = isCurrentlyUpvoted
           ? thread.upVoteCount - 1
           : thread.upVoteCount;
-        updates.netVoteCount = updates.upVoteCount - updates.downVoteCount;
       }
     }
 
-    // Update the thread
-    const updatedThread = await ctx.db.patch(args.threadId, updates);
+    const newNetVoteCount = newUpVoteCount - newDownVoteCount;
 
+    // Update the thread
+    await ctx.db.patch(args.threadId, {
+      upVoterIds: newUpVoterIds,
+      downVoterIds: newDownVoterIds,
+      upVoteCount: newUpVoteCount,
+      downVoteCount: newDownVoteCount,
+      netVoteCount: newNetVoteCount,
+      updatedAt: Date.now(),
+    });
+
+    const updatedThread = await ctx.db.get(args.threadId);
     return updatedThread;
   },
 });
@@ -542,15 +558,15 @@ export const castReplyVote = mutation({
 
     // Rate limiting: max 20 votes per 60 seconds per user
     const sixtySecondsAgo = Date.now() - 60000;
-    const recentVotes = await ctx.db
+    const allRecentVotes = await ctx.db
       .query("offlineQueue")
       .withIndex("by_user_status", (q) => q.eq("userId", userId))
-      .filter((q) => q.gt("createdAt", sixtySecondsAgo))
-      .filter((q) => q.or(
-        q.eq("type", "vote_thread"),
-        q.eq("type", "vote_reply")
-      ))
       .collect();
+    
+    const recentVotes = allRecentVotes.filter(
+      (v) => v.createdAt > sixtySecondsAgo && 
+             (v.type === "vote_thread" || v.type === "vote_reply")
+    );
 
     if (recentVotes.length >= 20) {
       throw new ConvexError("Voting too fast. Please slow down.");
@@ -578,41 +594,54 @@ export const castReplyVote = mutation({
     const isCurrentlyUpvoted = reply.upVoterIds.includes(userId);
     const isCurrentlyDownvoted = reply.downVoterIds.includes(userId);
 
-    const updates: Record<string, unknown> = {};
+    let newUpVoterIds: typeof reply.upVoterIds;
+    let newDownVoterIds: typeof reply.downVoterIds;
+    let newUpVoteCount: number;
+    let newDownVoteCount: number;
 
     if (args.voteType === "up") {
       if (isCurrentlyUpvoted) {
         // Remove upvote
-        updates.upVoterIds = reply.upVoterIds.filter((id) => id !== userId);
-        updates.upVoteCount = reply.upVoteCount - 1;
+        newUpVoterIds = reply.upVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = reply.upVoteCount - 1;
+        newDownVoterIds = reply.downVoterIds;
+        newDownVoteCount = reply.downVoteCount;
       } else {
         // Add upvote and remove downvote if present
-        updates.upVoterIds = [...reply.upVoterIds, userId];
-        updates.upVoteCount = reply.upVoteCount + 1;
-        updates.downVoterIds = reply.downVoterIds.filter((id) => id !== userId);
-        updates.downVoteCount = isCurrentlyDownvoted
+        newUpVoterIds = [...reply.upVoterIds, userId];
+        newUpVoteCount = reply.upVoteCount + 1;
+        newDownVoterIds = reply.downVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = isCurrentlyDownvoted
           ? reply.downVoteCount - 1
           : reply.downVoteCount;
       }
     } else {
       if (isCurrentlyDownvoted) {
         // Remove downvote
-        updates.downVoterIds = reply.downVoterIds.filter((id) => id !== userId);
-        updates.downVoteCount = reply.downVoteCount - 1;
+        newDownVoterIds = reply.downVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = reply.downVoteCount - 1;
+        newUpVoterIds = reply.upVoterIds;
+        newUpVoteCount = reply.upVoteCount;
       } else {
         // Add downvote and remove upvote if present
-        updates.downVoterIds = [...reply.downVoterIds, userId];
-        updates.downVoteCount = reply.downVoteCount + 1;
-        updates.upVoterIds = reply.upVoterIds.filter((id) => id !== userId);
-        updates.upVoteCount = isCurrentlyUpvoted
+        newDownVoterIds = [...reply.downVoterIds, userId];
+        newDownVoteCount = reply.downVoteCount + 1;
+        newUpVoterIds = reply.upVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = isCurrentlyUpvoted
           ? reply.upVoteCount - 1
           : reply.upVoteCount;
       }
     }
 
     // Update the reply
-    const updatedReply = await ctx.db.patch(args.replyId, updates);
+    await ctx.db.patch(args.replyId, {
+      upVoterIds: newUpVoterIds,
+      downVoterIds: newDownVoterIds,
+      upVoteCount: newUpVoteCount,
+      downVoteCount: newDownVoteCount,
+    });
 
+    const updatedReply = await ctx.db.get(args.replyId);
     return updatedReply;
   },
 });

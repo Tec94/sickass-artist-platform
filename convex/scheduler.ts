@@ -11,10 +11,14 @@ export const cleanupExpiredTypingIndicators = mutation({
     const now = Date.now();
     
     // Find all expired typing indicators
-    const expiredIndicators = await ctx.db
+    // Note: We query all and filter in memory since we need to check expiresAt across all channels
+    const allIndicators = await ctx.db
       .query("userTypingIndicators")
-      .withIndex("by_channel", (q) => q.lt("expiresAt", now))
       .collect();
+    
+    const expiredIndicators = allIndicators.filter(
+      (indicator) => indicator.expiresAt < now
+    );
     
     let deletedCount = 0;
     
@@ -24,7 +28,7 @@ export const cleanupExpiredTypingIndicators = mutation({
         await ctx.db.delete(indicator._id);
         deletedCount++;
       } catch (error) {
-        console.error(`Failed to delete typing indicator ${indicator._id}:`, error);
+        // Silently ignore deletion errors
       }
     }
     
