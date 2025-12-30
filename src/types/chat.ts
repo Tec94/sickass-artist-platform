@@ -1,5 +1,7 @@
-import type { Id } from '../../convex/_generated/dataModel'
 import type { UserRole, FanTier } from './index'
+import type { Id } from '../../convex/_generated/dataModel'
+
+export { Id }
 
 export interface Channel {
   _id: Id<'channels'>
@@ -37,4 +39,21 @@ export interface Reaction {
   emoji: string
   userId: Id<'users'>
   createdAt: number
+}
+
+export interface TypingUser {
+  userId: Id<'users'>
+  displayName: string
+  expiresAt: number
+  createdAt: number
+}
+
+export interface OptimisticMessage {
+  _id: string
+  content: string
+  authorDisplayName: string
+  authorAvatar: string
+  createdAt: number
+  status: 'sending' | 'sent' | 'failed'
+  idempotencyKey: string
 }

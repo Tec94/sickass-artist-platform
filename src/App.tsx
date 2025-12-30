@@ -5,6 +5,7 @@ import { GearPage } from './pages/GearPage'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ContentPage } from './pages/ContentPage'
+import { Chat } from './pages/Chat'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { UserHeader } from './components/Auth/UserHeader'
@@ -38,7 +39,11 @@ function App() {
                   <Profile />
                 </ProtectedRoute>
               } />
-              <Route path="2" element={<ContentPage />} />
+              <Route path="2" element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              } />
               <Route path="3" element={<ContentPage />} />
               <Route path="4" element={<ContentPage />} />
               <Route path="5" element={<ContentPage />} />
