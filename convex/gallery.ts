@@ -66,23 +66,27 @@ export const getGalleryContent = query({
     const pageSize = Math.min(args.pageSize, 50)
     const skip = args.page * pageSize
 
-    // Build query
-    let allContent: Doc<'galleryContent'>[]
+    // Build query and get all matching content
+    let allMatchingContent: Doc<'galleryContent'>[]
     
     if (args.type) {
-      contentQuery = contentQuery.withIndex('by_type', (q) =>
-        q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
-      )
+      allMatchingContent = await ctx.db
+        .query('galleryContent')
+        .withIndex('by_type', (q) =>
+          q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
+        )
+        .collect()
+    } else {
+      allMatchingContent = await ctx.db
+        .query('galleryContent')
+        .collect()
     }
-
-    // Get all matching content for sorting and filtering
-    let allMatchingContent = await contentQuery.collect()
 
     // Filter by tier if provided
     if (args.tier && args.tier !== 'all') {
       const requiredTierLevel = getTierLevel(args.tier as FanTier)
-      allMatchingContent = allMatchingContent.filter(item => {
-        if (!item.requiredFanTier) return true // Public content is always included? Or only if filtering for all?
+      allMatchingContent = allMatchingContent.filter((item: Doc<'galleryContent'>) => {
+        if (!item.requiredFanTier) return true // Public content is always included
         return getTierLevel(item.requiredFanTier) <= requiredTierLevel
       })
     }
