@@ -59,29 +59,28 @@ export const getGalleryContent = query({
     const skip = args.page * pageSize
 
     // Build query
-    let contentQuery = ctx.db.query('galleryContent')
-
+    let allContent: Doc<'galleryContent'>[]
+    
     if (args.type) {
-      contentQuery = contentQuery.withIndex('by_type', (q) =>
-        q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
-      )
-    }
-
-    // Get total count (can be expensive, consider caching)
-    let totalCount = 0
-    if (args.type) {
-      const allContent = await contentQuery.collect()
-      totalCount = allContent.length
+      allContent = await ctx.db
+        .query('galleryContent')
+        .withIndex('by_type', (q) =>
+          q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
+        )
+        .order('desc')
+        .collect()
     } else {
-      const allContent = await ctx.db.query('galleryContent').collect()
-      totalCount = allContent.length
+      allContent = await ctx.db
+        .query('galleryContent')
+        .order('desc')
+        .collect()
     }
+
+    // Get total count
+    const totalCount = allContent.length
 
     // Get paginated items with +1 to check hasMore
-    const items = await contentQuery
-      .order('desc')
-      .skip(skip)
-      .take(pageSize + 1)
+    const items = allContent.slice(skip, skip + pageSize + 1)
 
     const hasMore = items.length > pageSize
     if (hasMore) {
@@ -99,11 +98,15 @@ export const getGalleryContent = query({
     // Enrich items with creator info, like status, and locked status
     const enrichedItems: GalleryContentWithCreator[] = []
     for (const content of items) {
-      const creator = await ctx.db.get(content.creatorId)
+      const creatorDoc = await ctx.db.get(content.creatorId)
       
-      if (!creator) {
-        continue // Skip if creator not found
+      // Since creatorId is Id<'users'>, this should be a user document
+      // Check if it exists and has user properties
+      if (!creatorDoc || !('displayName' in creatorDoc)) {
+        continue // Skip if creator not found or not a user
       }
+      
+      const creator = creatorDoc as Doc<'users'>
 
       // Check if current user liked this content
       let isLiked = false
@@ -172,10 +175,12 @@ export const getGalleryContentDetail = query({
     }
 
     // Get creator info
-    const creator = await ctx.db.get(content.creatorId)
-    if (!creator) {
+    const creatorDoc = await ctx.db.get(content.creatorId)
+    // Since creatorId is Id<'users'>, this should be a user document
+    if (!creatorDoc || !('displayName' in creatorDoc)) {
       return null
     }
+    const creator = creatorDoc as Doc<'users'>
 
     // Get current user for like status and tier check
     let currentUser: Doc<'users'> | null = null
@@ -222,11 +227,14 @@ export const getGalleryContentDetail = query({
     // Enrich related content
     const relatedContent: GalleryContentWithCreator[] = []
     for (const related of relatedContentList) {
-      const relatedCreator = await ctx.db.get(related.creatorId)
+      const relatedCreatorDoc = await ctx.db.get(related.creatorId)
       
-      if (!relatedCreator) {
+      // Since creatorId is Id<'users'>, this should be a user document
+      if (!relatedCreatorDoc || !('displayName' in relatedCreatorDoc)) {
         continue
       }
+      
+      const relatedCreator = relatedCreatorDoc as Doc<'users'>
 
       // Check like status for related content
       let relatedIsLiked = false
@@ -298,19 +306,19 @@ export const getGalleryContentByCreator = query({
     const skip = args.page * pageSize
 
     // Build query
-    const contentQuery = ctx.db.query('galleryContent').withIndex('by_creator', (q) =>
-      q.eq('creatorId', args.creatorId)
-    )
+    const allContent = await ctx.db
+      .query('galleryContent')
+      .withIndex('by_creator', (q) =>
+        q.eq('creatorId', args.creatorId)
+      )
+      .order('desc')
+      .collect()
 
     // Get total count
-    const allContent = await contentQuery.collect()
     const totalCount = allContent.length
 
     // Get paginated items with +1 to check hasMore
-    const items = await contentQuery
-      .order('desc')
-      .skip(skip)
-      .take(pageSize + 1)
+    const items = allContent.slice(skip, skip + pageSize + 1)
 
     const hasMore = items.length > pageSize
     if (hasMore) {
@@ -328,11 +336,15 @@ export const getGalleryContentByCreator = query({
     // Enrich items with creator info, like status, and locked status
     const enrichedItems: GalleryContentWithCreator[] = []
     for (const content of items) {
-      const creator = await ctx.db.get(content.creatorId)
+      const creatorDoc = await ctx.db.get(content.creatorId)
       
-      if (!creator) {
-        continue // Skip if creator not found
+      // Since creatorId is Id<'users'>, this should be a user document
+      // Check if it exists and has user properties
+      if (!creatorDoc || !('displayName' in creatorDoc)) {
+        continue // Skip if creator not found or not a user
       }
+      
+      const creator = creatorDoc as Doc<'users'>
 
       // Check if current user liked this content
       let isLiked = false
@@ -397,15 +409,20 @@ export const searchGallery = query({
     const searchTerm = args.query.toLowerCase()
 
     // Get all gallery content (filter by type if provided)
-    let contentQuery = ctx.db.query('galleryContent')
-
+    let allContent: Doc<'galleryContent'>[]
+    
     if (args.type) {
-      contentQuery = contentQuery.withIndex('by_type', (q) =>
-        q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
-      )
+      allContent = await ctx.db
+        .query('galleryContent')
+        .withIndex('by_type', (q) =>
+          q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
+        )
+        .collect()
+    } else {
+      allContent = await ctx.db
+        .query('galleryContent')
+        .collect()
     }
-
-    const allContent = await contentQuery.collect()
 
     // Filter by search term (case-insensitive)
     // Prioritize title matches over description matches
@@ -431,11 +448,15 @@ export const searchGallery = query({
     // Enrich matched items with creator info, like status, and locked status
     const enrichedItems: GalleryContentWithCreator[] = []
     for (const content of matchedContent.slice(0, limit)) {
-      const creator = await ctx.db.get(content.creatorId)
+      const creatorDoc = await ctx.db.get(content.creatorId)
       
-      if (!creator) {
-        continue // Skip if creator not found
+      // Since creatorId is Id<'users'>, this should be a user document
+      // Check if it exists and has user properties
+      if (!creatorDoc || !('displayName' in creatorDoc)) {
+        continue // Skip if creator not found or not a user
       }
+      
+      const creator = creatorDoc as Doc<'users'>
 
       // Check if current user liked this content
       let isLiked = false

@@ -70,19 +70,28 @@ export const getUGCFeed = query({
     const skip = args.page * pageSize
 
     // Build query for approved UGC content
-    let ugcQuery = ctx.db.query('ugcContent').withIndex('by_approved', (q) =>
-      q.eq('isApproved', true)
-    )
-
-    // Filter by category if provided
+    let allUGC: Doc<'ugcContent'>[]
+    
     if (args.category) {
-      ugcQuery = ugcQuery.withIndex('by_category', (q) =>
-        q.eq('category', args.category as UGCCategory)
-      )
+      // Filter by both approved and category
+      const categoryUGC = await ctx.db
+        .query('ugcContent')
+        .withIndex('by_category', (q) =>
+          q.eq('category', args.category as UGCCategory)
+        )
+        .collect()
+      
+      allUGC = categoryUGC.filter(ugc => ugc.isApproved === true)
+    } else {
+      allUGC = await ctx.db
+        .query('ugcContent')
+        .withIndex('by_approved', (q) =>
+          q.eq('isApproved', true)
+        )
+        .collect()
     }
 
     // Get total count
-    const allUGC = await ugcQuery.collect()
     const totalCount = allUGC.length
 
     // Apply sorting
@@ -175,19 +184,21 @@ export const getUGCByCreator = query({
     const skip = args.page * pageSize
 
     // Build query for approved UGC by creator
-    const ugcQuery = ctx.db.query('ugcContent')
+    const allUGC = await ctx.db
+      .query('ugcContent')
       .withIndex('by_creator', (q) => q.eq('creatorId', args.creatorId))
-      .filter((q) => q.eq(q.field('isApproved'), true))
+      .collect()
+    
+    // Filter approved and sort
+    const approvedUGC = allUGC
+      .filter(ugc => ugc.isApproved === true)
+      .sort((a, b) => b.createdAt - a.createdAt)
 
     // Get total count
-    const allUGC = await ugcQuery.collect()
-    const totalCount = allUGC.length
+    const totalCount = approvedUGC.length
 
     // Get paginated items with +1 to check hasMore
-    const items = await ugcQuery
-      .order('desc')
-      .skip(skip)
-      .take(pageSize + 1)
+    const items = approvedUGC.slice(skip, skip + pageSize + 1)
 
     const hasMore = items.length > pageSize
     if (hasMore) {
@@ -385,16 +396,24 @@ export const searchUGC = query({
     const searchTerm = args.query.toLowerCase()
 
     // Get all approved UGC content (filter by category if provided)
-    let ugcQuery = ctx.db.query('ugcContent')
-      .withIndex('by_approved', (q) => q.eq('isApproved', true))
-
+    let allUGC: Doc<'ugcContent'>[]
+    
     if (args.category) {
-      ugcQuery = ugcQuery.withIndex('by_category', (q) =>
-        q.eq('category', args.category as UGCCategory)
-      )
+      // Filter by both approved and category
+      const categoryUGC = await ctx.db
+        .query('ugcContent')
+        .withIndex('by_category', (q) =>
+          q.eq('category', args.category as UGCCategory)
+        )
+        .collect()
+      
+      allUGC = categoryUGC.filter(ugc => ugc.isApproved === true)
+    } else {
+      allUGC = await ctx.db
+        .query('ugcContent')
+        .withIndex('by_approved', (q) => q.eq('isApproved', true))
+        .collect()
     }
-
-    const allUGC = await ugcQuery.collect()
 
     // Filter by search term (case-insensitive)
     // Prioritize title matches over description matches
@@ -510,7 +529,7 @@ export const uploadUGC = mutation({
       title: args.title,
       description: args.description,
       imageUrls: args.imageUrls,
-      uploadedFile: null, // Could be used for file storage if needed
+      uploadedFile: undefined, // Could be used for file storage if needed
       category: args.category as UGCCategory,
       tags: args.tags,
       likeCount: 0,
