@@ -1,68 +1,42 @@
-import React from 'react';
+import { memo } from 'react'
 
-export const GallerySkeleton = () => {
+interface GallerySkeletonProps {
+  count?: number
+}
+
+export const GallerySkeleton = memo(function GallerySkeleton({ count = 1 }: GallerySkeletonProps) {
   return (
-    <div className="gallery-skeleton-card">
-      <div className="skeleton-image" />
-      <div className="skeleton-info">
-        <div className="skeleton-line title" />
-        <div className="skeleton-line meta" />
-      </div>
-
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden"
+        >
+          <div className="relative aspect-video overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-750 to-gray-800 animate-[shimmer_1.5s_infinite]" />
+          </div>
+          <div className="p-3 space-y-2">
+            <div className="h-4 bg-gray-800 rounded animate-pulse" />
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-20 bg-gray-800 rounded animate-pulse" />
+              <div className="flex gap-3">
+                <div className="h-3 w-8 bg-gray-800 rounded animate-pulse" />
+                <div className="h-3 w-8 bg-gray-800 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
       <style>{`
-        .gallery-skeleton-card {
-          background: rgba(28, 31, 46, 0.5);
-          border: 1px solid rgba(139, 15, 255, 0.2);
-          border-radius: 8px;
-          overflow: hidden;
-          aspect-ratio: 16/10;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .skeleton-image {
-          flex: 1;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.05) 25%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0.05) 75%
-          );
-          background-size: 200% 100%;
-          animation: skeleton-shimmer 1.5s infinite;
-        }
-
-        .skeleton-info {
-          padding: 12px;
-          gap: 8px;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .skeleton-line {
-          height: 12px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-        }
-
-        .skeleton-line.title {
-          width: 70%;
-          height: 16px;
-        }
-
-        .skeleton-line.meta {
-          width: 40%;
-        }
-
-        @keyframes skeleton-shimmer {
+        @keyframes shimmer {
           0% {
-            background-position: 200% 0;
+            background-position: -200% 0;
           }
           100% {
-            background-position: -200% 0;
+            background-position: 200% 0;
           }
         }
       `}</style>
-    </div>
-  );
-};
+    </>
+  )
+})
