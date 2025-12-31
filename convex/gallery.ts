@@ -52,6 +52,14 @@ export const getGalleryContent = query({
     type: v.optional(v.string()),
     page: v.number(),
     pageSize: v.number(),
+    sortBy: v.optional(
+      v.union(
+        v.literal('newest'),
+        v.literal('oldest'),
+        v.literal('mostLiked')
+      )
+    ),
+    tier: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<PaginatedResult<GalleryContentWithCreator>> => {
     // Cap pageSize at 50 for performance
@@ -62,30 +70,39 @@ export const getGalleryContent = query({
     let allContent: Doc<'galleryContent'>[]
     
     if (args.type) {
-      allContent = await ctx.db
-        .query('galleryContent')
-        .withIndex('by_type', (q) =>
-          q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
-        )
-        .order('desc')
-        .collect()
+      contentQuery = contentQuery.withIndex('by_type', (q) =>
+        q.eq('type', args.type as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive')
+      )
+    }
+
+    // Get all matching content for sorting and filtering
+    let allMatchingContent = await contentQuery.collect()
+
+    // Filter by tier if provided
+    if (args.tier && args.tier !== 'all') {
+      const requiredTierLevel = getTierLevel(args.tier as FanTier)
+      allMatchingContent = allMatchingContent.filter(item => {
+        if (!item.requiredFanTier) return true // Public content is always included? Or only if filtering for all?
+        return getTierLevel(item.requiredFanTier) <= requiredTierLevel
+      })
+    }
+
+    const totalCount = allMatchingContent.length
+
+    // Apply sorting
+    let sortedContent = allMatchingContent
+    if (args.sortBy === 'oldest') {
+      sortedContent = [...allMatchingContent].sort((a, b) => a.createdAt - b.createdAt)
+    } else if (args.sortBy === 'mostLiked') {
+      sortedContent = [...allMatchingContent].sort((a, b) => b.likeCount - a.likeCount)
     } else {
-      allContent = await ctx.db
-        .query('galleryContent')
-        .order('desc')
-        .collect()
+      // Default: newest
+      sortedContent = [...allMatchingContent].sort((a, b) => b.createdAt - a.createdAt)
     }
 
-    // Get total count
-    const totalCount = allContent.length
-
-    // Get paginated items with +1 to check hasMore
-    const items = allContent.slice(skip, skip + pageSize + 1)
-
-    const hasMore = items.length > pageSize
-    if (hasMore) {
-      items.pop() // Remove extra item
-    }
+    // Paginate
+    const items = sortedContent.slice(skip, skip + pageSize)
+    const hasMore = skip + pageSize < totalCount
 
     // Get current user for like status and tier check
     let currentUser: Doc<'users'> | null = null

@@ -5,6 +5,7 @@ import { GearPage } from './pages/GearPage'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ContentPage } from './pages/ContentPage'
+import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { ParallaxBackground } from './components/ParallaxBackground'
@@ -50,7 +51,7 @@ function App() {
                   <ForumThreadDetail />
                 </ProtectedRoute>
               } />
-              <Route path="3" element={<ContentPage />} />
+              <Route path="3" element={<Gallery />} />
               <Route path="4" element={<ContentPage />} />
               <Route path="5" element={<ContentPage />} />
               <Route index element={<Navigate to="/N" replace />} />
