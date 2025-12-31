@@ -1,7 +1,9 @@
-import { Doc } from '../../../convex/_generated/dataModel'
+import type { Doc } from '../../../convex/_generated/dataModel'
+
+type ProfileAvatarUser = Pick<Doc<'users'>, 'username' | 'avatar' | 'fanTier'>
 
 interface ProfileAvatarProps {
-  user: Doc<'users'>
+  user: ProfileAvatarUser
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 

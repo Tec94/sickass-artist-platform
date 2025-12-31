@@ -1,4 +1,5 @@
 export { GalleryGrid } from './GalleryGrid'
 export { GalleryCard } from './GalleryCard'
+export { ContentCard } from './ContentCard'
 export { GallerySkeleton } from './GallerySkeleton'
 export { TierLockedOverlay } from './TierLockedOverlay'

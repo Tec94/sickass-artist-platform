@@ -1,5 +1,5 @@
 import { useState, useCallback, memo } from 'react'
-import { GalleryCard } from './GalleryCard'
+import { ContentCard } from './ContentCard'
 import { GallerySkeleton } from './GallerySkeleton'
 import { TierLockedOverlay } from './TierLockedOverlay'
 import type { GalleryContentItem } from '../../types/gallery'
@@ -86,7 +86,7 @@ export const GalleryGrid = memo(function GalleryGrid({
       {/* Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((item) => (
-          <GalleryCard
+          <ContentCard
             key={item.contentId}
             item={item}
             isLocked={item.isLocked}

@@ -11,6 +11,7 @@ type GalleryContentWithCreator = Doc<'galleryContent'> & {
     displayName: string
     avatar: string
     username: string
+    fanTier: FanTier
   }
   isLiked: boolean
   isLocked: boolean
@@ -162,6 +163,7 @@ export const getGalleryContent = query({
           displayName: creator.displayName,
           avatar: creator.avatar,
           username: creator.username,
+          fanTier: creator.fanTier,
         },
         isLiked,
         isLocked,
@@ -289,6 +291,7 @@ export const getGalleryContentDetail = query({
           displayName: relatedCreator.displayName,
           avatar: relatedCreator.avatar,
           username: relatedCreator.username,
+          fanTier: relatedCreator.fanTier,
         },
         isLiked: relatedIsLiked,
         isLocked: relatedIsLocked,
@@ -400,6 +403,7 @@ export const getGalleryContentByCreator = query({
           displayName: creator.displayName,
           avatar: creator.avatar,
           username: creator.username,
+          fanTier: creator.fanTier,
         },
         isLiked,
         isLocked,
@@ -512,6 +516,7 @@ export const searchGallery = query({
           displayName: creator.displayName,
           avatar: creator.avatar,
           username: creator.username,
+          fanTier: creator.fanTier,
         },
         isLiked,
         isLocked,
