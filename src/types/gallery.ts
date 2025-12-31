@@ -22,6 +22,7 @@ export interface GalleryContentItem {
     displayName: string;
     avatar: string;
     username: string;
+    fanTier: FanTier;
   };
   isLiked: boolean;
   isLocked: boolean;

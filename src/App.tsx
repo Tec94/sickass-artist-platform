@@ -4,6 +4,7 @@ import { UserProvider } from './contexts/UserContext'
 import { GearPage } from './pages/GearPage'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
+import { ProfileUser } from './pages/ProfileUser'
 import { ContentPage } from './pages/ContentPage'
 import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
@@ -64,6 +65,11 @@ function App() {
             <Route path="/profile/edit" element={
               <ProtectedRoute>
                 <ProfileEdit />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/:userId" element={
+              <ProtectedRoute>
+                <ProfileUser />
               </ProtectedRoute>
             } />
             <Route path="/forum" element={
