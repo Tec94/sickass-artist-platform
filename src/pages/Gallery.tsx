@@ -135,23 +135,19 @@ export const Gallery = () => {
       </header>
 
       <main className="gallery-content">
-        {error ? (
-          <div className="error-state">
-            <p>Failed to load gallery content.</p>
-            <button onClick={handleRetry} className="retry-button">Retry</button>
+        <GalleryGrid
+          items={accumulatedItems}
+          isLoading={isLoading}
+          error={error}
+          onRetry={handleRetry}
+        />
+
+        {data?.hasMore && !isLoading && !error && (
+          <div className="load-more-container">
+            <button onClick={handleLoadMore} className="load-more-button">
+              Load More
+            </button>
           </div>
-        ) : (
-          <>
-            <GalleryGrid items={accumulatedItems} isLoading={isLoading} />
-            
-            {data?.hasMore && !isLoading && (
-              <div className="load-more-container">
-                <button onClick={handleLoadMore} className="load-more-button">
-                  Load More
-                </button>
-              </div>
-            )}
-          </>
         )}
       </main>
 
