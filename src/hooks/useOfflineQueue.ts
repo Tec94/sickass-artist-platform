@@ -8,6 +8,7 @@ type QueueItemType =
   | 'vote_thread'
   | 'vote_reply'
   | 'reaction'
+  | 'like_gallery'
 
 interface QueueItem {
   id: string
@@ -20,7 +21,10 @@ interface QueueItem {
     content?: string
     emoji?: string
     direction?: 'up' | 'down'
+    contentId?: string
+    ugcId?: string
   }
+  idempotencyKey?: string
   status: 'pending' | 'synced' | 'failed'
   retryCount: number
   lastError?: string
@@ -88,12 +92,20 @@ export function useOfflineQueue(): UseOfflineQueueResult {
       castThreadVote: (args: { threadId: Id<'threads'>; direction: 'up' | 'down' }) => Promise<unknown>
       castReplyVote: (args: { replyId: Id<'replies'>; direction: 'up' | 'down' }) => Promise<unknown>
     }
+    gallery: {
+      likeGalleryContent: (args: { contentId: string }) => Promise<unknown>
+    }
+    ugc: {
+      likeUGC: (args: { ugcId: string }) => Promise<unknown>
+    }
   }
 
   const sendMessageMutation = useMutation(apiUnknown.chat.sendMessage)
   const addReactionMutation = useMutation(apiUnknown.chat.addReaction)
   const castThreadVoteMutation = useMutation(apiUnknown.forum.castThreadVote)
   const castReplyVoteMutation = useMutation(apiUnknown.forum.castReplyVote)
+  const likeGalleryMutation = useMutation(apiUnknown.gallery.likeGalleryContent)
+  const likeUGCMutation = useMutation(apiUnknown.ugc.likeUGC)
 
   const handleOnline = useCallback(() => {
     setIsOnline(true)
@@ -209,6 +221,13 @@ export function useOfflineQueue(): UseOfflineQueueResult {
                   emoji: item.payload.emoji!,
                 })
                 break
+              case 'like_gallery':
+                if (item.payload.contentId) {
+                  await likeGalleryMutation({ contentId: item.payload.contentId })
+                } else if (item.payload.ugcId) {
+                  await likeUGCMutation({ ugcId: item.payload.ugcId })
+                }
+                break
             }
 
             const updatedItem: IndexedDBQueueItem = {
@@ -257,6 +276,8 @@ export function useOfflineQueue(): UseOfflineQueueResult {
     castThreadVoteMutation,
     castReplyVoteMutation,
     addReactionMutation,
+    likeGalleryMutation,
+    likeUGCMutation,
   ])
 
   useEffect(() => {
