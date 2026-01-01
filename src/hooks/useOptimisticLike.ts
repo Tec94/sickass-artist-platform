@@ -1,79 +1,110 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useRef } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
+import { useOfflineQueue } from './useOfflineQueue'
+import { showToast } from '../lib/toast'
 
 type LikeType = 'gallery' | 'ugc'
 
 interface UseOptimisticLikeResult {
   likeCount: number
   isLiked: boolean
-  isLoading: boolean
-  error: Error | null
+  isPending: boolean
+  error: string | null
   handleLike: () => Promise<void>
 }
 
 export function useOptimisticLike(
   contentId: string,
   type: LikeType,
-  initialLikeCount: number,
+  initialCount: number,
   initialIsLiked = false
 ): UseOptimisticLikeResult {
+  const { addToQueue, isOnline } = useOfflineQueue()
+
   const likeGallery = useMutation(api.gallery.likeGalleryContent)
   const likeUGC = useMutation(api.ugc.likeUGC)
 
-  const [likeCount, setLikeCount] = useState(initialLikeCount)
-  const [isLiked, setIsLiked] = useState(initialIsLiked)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const stateRef = useRef({
+    likeCount: initialCount,
+    isLiked: initialIsLiked,
+  })
 
-  useEffect(() => {
-    if (isLoading) return
-    setLikeCount(initialLikeCount)
-    setIsLiked(initialIsLiked)
-  }, [contentId, initialIsLiked, initialLikeCount, isLoading])
+  const isPendingRef = useRef(false)
 
   const handleLike = useCallback(async () => {
-    if (isLoading) return
+    if (isPendingRef.current) return
 
-    setError(null)
-    setIsLoading(true)
+    isPendingRef.current = true
 
-    const previousLiked = isLiked
-    const previousCount = likeCount
+    const previousLiked = stateRef.current.isLiked
+    const previousCount = stateRef.current.likeCount
 
     const optimisticLiked = !previousLiked
     const optimisticCount = Math.max(0, previousCount + (previousLiked ? -1 : 1))
 
-    setIsLiked(optimisticLiked)
-    setLikeCount(optimisticCount)
+    stateRef.current = {
+      likeCount: optimisticCount,
+      isLiked: optimisticLiked,
+    }
+
+    if (!isOnline) {
+      await addToQueue({
+        type: 'like_gallery',
+        payload: {
+          contentId: type === 'gallery' ? contentId : undefined,
+          ugcId: type === 'ugc' ? contentId : undefined,
+        },
+      })
+      isPendingRef.current = false
+      return
+    }
 
     try {
+      let result: { liked: boolean; newCount: number }
       if (type === 'gallery') {
-        const result = await likeGallery({ contentId })
-        setIsLiked(result.liked)
-        setLikeCount(result.newCount)
+        result = await likeGallery({ contentId })
       } else {
-        const result = await likeUGC({ ugcId: contentId })
-        setIsLiked(result.liked)
-        setLikeCount(result.newCount)
+        result = await likeUGC({ ugcId: contentId })
+      }
+
+      stateRef.current = {
+        likeCount: result.newCount,
+        isLiked: result.liked,
       }
     } catch (err) {
-      setIsLiked(previousLiked)
-      setLikeCount(previousCount)
+      stateRef.current = {
+        likeCount: previousCount,
+        isLiked: previousLiked,
+      }
 
-      const errorObject = err instanceof Error ? err : new Error('Failed to update like')
-      setError(errorObject)
-      throw errorObject
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update like'
+      showToast(errorMessage, {
+        action: {
+          label: 'Retry',
+          onClick: () => {
+            void handleLike()
+          },
+        },
+      })
     } finally {
-      setIsLoading(false)
+      isPendingRef.current = false
     }
-  }, [contentId, isLiked, isLoading, likeCount, likeGallery, likeUGC, type])
+  }, [contentId, type, isOnline, addToQueue, likeGallery, likeUGC])
 
   return {
-    likeCount,
-    isLiked,
-    isLoading,
-    error,
+    get likeCount() {
+      return stateRef.current.likeCount
+    },
+    get isLiked() {
+      return stateRef.current.isLiked
+    },
+    get isPending() {
+      return isPendingRef.current
+    },
+    get error() {
+      return null
+    },
     handleLike,
   }
 }

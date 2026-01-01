@@ -3,7 +3,6 @@ import { Heart, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
-import { showToast } from '../../lib/toast'
 import { formatTierLabel, tierStyles } from '../../constants/tierStyles'
 import type { GalleryContentItem as GalleryItem } from '../../types/gallery'
 
@@ -17,7 +16,7 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
   const navigate = useNavigate()
   const [imageError, setImageError] = useState(false)
 
-  const { likeCount, isLiked, isLoading: isLikeLoading, handleLike } = useOptimisticLike(
+  const { likeCount, isLiked, isPending, handleLike } = useOptimisticLike(
     item.contentId,
     'gallery',
     item.likeCount,
@@ -40,22 +39,11 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
   const handleLikeClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (isLikeLoading) return
+      if (isPending) return
 
-      try {
-        await handleLike()
-      } catch {
-        showToast('Failed to update like', {
-          action: {
-            label: 'Retry',
-            onClick: () => {
-              void handleLike()
-            },
-          },
-        })
-      }
+      await handleLike()
     },
-    [handleLike, isLikeLoading]
+    [handleLike, isPending]
   )
 
   const visibleTags = useMemo(() => {
