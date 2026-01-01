@@ -2,6 +2,7 @@ import { useState, useCallback, memo } from 'react'
 import { ContentCard } from './ContentCard'
 import { GallerySkeleton } from './GallerySkeleton'
 import { TierLockedOverlay } from './TierLockedOverlay'
+import { Lightbox } from './Lightbox'
 import type { GalleryContentItem } from '../../types/gallery'
 
 interface GalleryGridProps {
@@ -55,20 +56,24 @@ export const GalleryGrid = memo(function GalleryGrid({
 }: GalleryGridProps) {
   const [selectedItem, setSelectedItem] = useState<GalleryContentItem | null>(null)
   const [showLockModal, setShowLockModal] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  const handleCardClick = useCallback((item: GalleryContentItem) => {
+  const handleCardClick = useCallback((item: GalleryContentItem, index: number) => {
     if (item.isLocked) {
       setSelectedItem(item)
       setShowLockModal(true)
     } else {
-      // Open Lightbox (Task 8)
-      console.log('Opening lightbox for:', item.contentId)
+      setLightboxIndex(index)
     }
   }, [])
 
   const handleCloseModal = useCallback(() => {
     setShowLockModal(false)
     setSelectedItem(null)
+  }, [])
+
+  const handleCloseLightbox = useCallback(() => {
+    setLightboxIndex(null)
   }, [])
 
   return (
@@ -85,12 +90,12 @@ export const GalleryGrid = memo(function GalleryGrid({
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <ContentCard
             key={item.contentId}
             item={item}
             isLocked={item.isLocked}
-            onClick={() => handleCardClick(item)}
+            onClick={() => handleCardClick(item, index)}
           />
         ))}
       </div>
@@ -114,6 +119,15 @@ export const GalleryGrid = memo(function GalleryGrid({
       {/* Tier Locked Overlay Modal */}
       {showLockModal && selectedItem && (
         <TierLockedOverlay item={selectedItem} onClose={handleCloseModal} />
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <Lightbox
+          items={items}
+          initialIndex={lightboxIndex}
+          onClose={handleCloseLightbox}
+        />
       )}
     </div>
   )
