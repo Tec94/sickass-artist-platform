@@ -24,12 +24,12 @@ export function VirtualizedUGCFeed({
   const [items, setItems] = useState<UGCItem[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<FixedSizeList>(null)
-  const hasMoreRef = useRef(true)
+  const [listHeight, setListHeight] = useState(window.innerHeight - 200)
+  const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
   const loadingRef = useRef(false)
 
   const pageSize = 12
 
-  // Use Convex query directly
   const queryResult = useQuery(
     api.ugc.getUGCFeed,
     { page, pageSize, sortBy: sort, category: cat }
@@ -38,6 +38,13 @@ export function VirtualizedUGCFeed({
   const isLoading = queryResult === undefined
   const hasMore = queryResult ? queryResult.hasMore : false
   const loading = isLoading || loadingRef.current
+
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      loadingRef.current = true
+      setPage(prev => prev + 1)
+    }
+  }, [loading, hasMore])
 
   // Accumulate items when query result changes
   useEffect(() => {
@@ -48,10 +55,32 @@ export function VirtualizedUGCFeed({
         )
         return page === 0 ? queryResult.items : [...prev, ...newItems]
       })
-      hasMoreRef.current = queryResult.hasMore
       loadingRef.current = false
     }
   }, [queryResult, page])
+
+  // Handle window resize for list height
+  useEffect(() => {
+    const handleResize = () => {
+      setListHeight(window.innerHeight - 200)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Use ResizeObserver to track container width for responsive columns
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width)
+      }
+    })
+
+    resizeObserver.observe(containerRef.current)
+    return () => resizeObserver.disconnect()
+  }, [])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -60,7 +89,7 @@ export function VirtualizedUGCFeed({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          setPage(prev => prev + 1)
+          loadMore()
         }
       },
       { threshold: 0.1 }
@@ -72,13 +101,11 @@ export function VirtualizedUGCFeed({
     }
 
     return () => observer.disconnect()
-  }, [hasMore, loading])
+  }, [hasMore, loading, loadMore])
 
   // Reset scroll position and pagination when filters change
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollToItem(0, 'start')
-    }
+    listRef.current?.scrollToItem(0, 'start')
     setPage(0)
     setItems([])
   }, [sort, cat])
@@ -101,22 +128,45 @@ export function VirtualizedUGCFeed({
     [onCategoryChange]
   )
 
-  // Calculate responsive item height based on container width
-  // Fixed at 400px as specified in requirements
-  const itemHeight = useMemo(() => 400, [])
+  const handleRetry = useCallback(() => {
+    setPage(p => p)
+  }, [])
+
+  // Calculate number of columns based on container width
+  const columnCount = useMemo(() => {
+    if (containerWidth >= 1200) return 3
+    if (containerWidth >= 600) return 2
+    return 1
+  }, [containerWidth])
+
+  // Calculate number of rows needed
+  const rowCount = useMemo(() => {
+    return Math.ceil(items.length / columnCount)
+  }, [items.length, columnCount])
 
   const Row = useCallback(
     ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const item = items[index]
-      if (!item) return null
+      const rowItems = []
+      const startIndex = index * columnCount
+
+      for (let i = 0; i < columnCount; i++) {
+        const itemIndex = startIndex + i
+        if (itemIndex < items.length) {
+          rowItems.push(
+            <div key={items[itemIndex].ugcId} className={`flex-1 px-2 ${i < columnCount - 1 ? 'pr-2' : ''}`}>
+              <UGCCard item={items[itemIndex]} />
+            </div>
+          )
+        }
+      }
 
       return (
-        <div style={style} className="px-2">
-          <UGCCard item={item} />
+        <div style={style} className="flex w-full">
+          {rowItems}
         </div>
       )
     },
-    [items]
+    [items, columnCount]
   )
 
   return (
@@ -150,8 +200,8 @@ export function VirtualizedUGCFeed({
       {queryResult === null && (
         <div className="mx-4 p-3 bg-red-900/30 text-red-200 rounded-lg flex items-center justify-between border border-red-800">
           <span>Failed to load UGC feed.</span>
-          <button 
-            onClick={() => setPage(p => p)} 
+          <button
+            onClick={handleRetry}
             className="text-red-300 hover:text-red-100 underline hover:no-underline transition-colors px-2 py-1 rounded"
           >
             Retry
@@ -164,9 +214,9 @@ export function VirtualizedUGCFeed({
         <FixedSizeList
           ref={listRef}
           className="flex-1"
-          height={window.innerHeight - 200}
-          itemCount={items.length}
-          itemSize={itemHeight}
+          height={listHeight}
+          itemCount={rowCount}
+          itemSize={400}
           width="100%"
           overscanCount={5}
         >
