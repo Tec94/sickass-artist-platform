@@ -36,7 +36,7 @@ export const Gallery = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<GalleryContentItem[]>([]);
   const pageSize = 12;
 
-  const { data, isLoading, error } = useQuery(
+  const queryResult = useQuery(
     api.gallery.getGalleryContent,
     { 
       type: activeTab, 
@@ -46,6 +46,10 @@ export const Gallery = () => {
       tier: tierFilter
     }
   );
+
+  const isLoading = queryResult === undefined;
+  const data = queryResult ?? null;
+  const error: Error | undefined = undefined; // Convex queries don't throw errors in the traditional sense
 
   // Reset page and accumulated items when tab, sort, or tier changes
   useEffect(() => {
