@@ -1,3 +1,4 @@
+export { useInfiniteScroll } from './useInfiniteScroll'
 export { useChannelMessages } from './useChannelMessages'
 export { useChannels } from './useChannels'
 export { useTypingIndicators } from './useTypingIndicators'
