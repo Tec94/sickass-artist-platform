@@ -3,7 +3,7 @@ import { v, ConvexError } from "convex/values";
 import { api } from "./_generated/api";
 import { getCurrentUser } from "./helpers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 interface QueueItem {
   _id: string;
   type: string;
