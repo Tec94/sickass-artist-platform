@@ -1,6 +1,7 @@
 import { useAuth } from '../hooks/useAuth'
 import { UserHeader } from './Auth/UserHeader'
 import { SignInButtons } from './Auth/SignInButtons'
+import { GearDisplay } from './GearNavigation/GearDisplay'
 
 export const NavbarFallback = () => {
   const { isSignedIn } = useAuth()
@@ -12,7 +13,7 @@ export const NavbarFallback = () => {
     <nav className="navbar-v2" role="navigation" aria-label="Main navigation">
       <div className="navbar-v2-container">
         <div className="navbar-v2-left">
-          {/* Brand text removed as requested */}
+          <GearDisplay variant="horizontal" />
         </div>
 
         <div className="navbar-v2-right">

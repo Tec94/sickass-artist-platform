@@ -16,14 +16,14 @@ const GEARS: { id: GearName, icon: string, label: string }[] = [
   { id: '6', icon: 'solar:chat-round-dots-linear', label: 'Chat' },
 ]
 
-export const GearDisplay = () => {
+export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'horizontal' }) => {
   const { currentGear } = useGear()
   const { navigateToGear } = useGearNavigation()
   const { user } = useAuth()
   const [hoveredGear, setHoveredGear] = useState<GearName | null>(null)
 
   return (
-    <nav className="gear-display" role="navigation" aria-label="Gear navigation">
+    <nav className={`gear-display ${variant}`} role="navigation" aria-label="Gear navigation">
       <div className="gear-display-container">
         {GEARS.map((gear) => (
           <div 
@@ -41,20 +41,59 @@ export const GearDisplay = () => {
               <iconify-icon icon={gear.icon}></iconify-icon>
               <span className="gear-marker-id">{gear.id}</span>
             </button>
-            <div className="gear-info">
-              <span className="gear-label">{gear.label}</span>
-              {gear.id === '1' && user && <span className="user-tip">{user.displayName}</span>}
-            </div>
+            {variant === 'default' && (
+              <div className="gear-info">
+                <span className="gear-label">{gear.label}</span>
+                {gear.id === '1' && user && <span className="user-tip">{user.displayName}</span>}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
       <style>{`
-        .gear-display {
+        .gear-display.default {
           position: fixed;
           left: 40px;
           bottom: 40px;
           z-index: 100;
+        }
+
+        .gear-display.horizontal {
+          position: relative;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+        }
+
+        .gear-display.horizontal .gear-display-container {
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .gear-display.horizontal .gear-btn {
+          width: 42px;
+          height: 42px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+        }
+
+        .gear-display.horizontal .gear-btn iconify-icon {
+          font-size: 18px;
+        }
+
+        .gear-display.horizontal .gear-marker-id {
+          font-size: 9px;
+          font-weight: 900;
+          opacity: 0.7;
+          margin-top: -1px;
+        }
+        
+        .gear-display.horizontal .gear-item.active .gear-marker-id {
+          opacity: 1;
+          color: var(--color-primary);
         }
 
         .gear-display-container {
@@ -149,7 +188,7 @@ export const GearDisplay = () => {
         }
 
         @media (max-width: 768px) {
-          .gear-display {
+          .gear-display.default {
             left: 10px;
           }
           .gear-info { display: none; }

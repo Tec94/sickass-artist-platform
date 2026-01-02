@@ -88,9 +88,9 @@ export const GearStick = () => {
       <style>{`
         .gear-stick-container {
           position: fixed;
-          right: 50px;
+          right: 20px; /* Moved further right to avoid overlapping windshield content */
           bottom: 50px;
-          height: 350px;
+          height: 400px; /* Extended height */
           width: 80px;
           z-index: 90;
           display: flex;
@@ -121,7 +121,7 @@ export const GearStick = () => {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          padding: 20px 0;
+          padding: 40px 0; /* Increased padding */
         }
 
         .gear-marker {
@@ -144,11 +144,14 @@ export const GearStick = () => {
 
         .marker-label {
           position: absolute;
-          right: 50px;
+          left: 50%;
+          transform: translateX(-50%);
+          top: -18px;
           font-size: 11px;
           font-weight: 800;
           color: var(--color-text-dim);
           opacity: 0.3;
+          white-space: nowrap;
         }
 
         .marker-active .marker-label {

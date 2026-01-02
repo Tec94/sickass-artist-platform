@@ -1,5 +1,4 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { GearDisplay } from '../components/GearNavigation/GearDisplay'
 import { GearStick } from '../components/GearNavigation/GearStick'
 import { WindshieldFrame } from '../components/GearNavigation/WindshieldFrame'
 import { NoodleConnector } from '../components/Effects/NoodleConnector'
@@ -56,7 +55,6 @@ export const GearPage = () => {
       onTouchEnd={handleTouchEnd}
     >
       <div className="gear-nav-overlay">
-        <GearDisplay />
         <GearStick />
         
         {/* Decorative Noodle Connectors */}
