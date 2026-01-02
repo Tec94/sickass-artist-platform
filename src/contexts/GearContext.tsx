@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
 
 export type GearName = 'R' | 'N' | '1' | '2' | '3' | '4' | '5' | '6'
 
@@ -27,13 +27,13 @@ export const GearProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
 
-  const handleSetCurrentGear = (gear: GearName) => {
+  const handleSetCurrentGear = useCallback((gear: GearName) => {
     setCurrentGear(gear)
     setGearHistory((prev) => {
       const newHistory = [...prev, gear]
       return newHistory.slice(-3)
     })
-  }
+  }, [])
 
   return (
     <GearContext.Provider
