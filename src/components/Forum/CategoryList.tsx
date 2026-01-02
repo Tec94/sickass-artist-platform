@@ -8,21 +8,6 @@ interface CategoryListProps {
   isLoading?: boolean
 }
 
-const formatRelativeTime = (timestamp: number) => {
-  const now = Date.now()
-  const diff = Math.max(0, now - timestamp)
-  const seconds = Math.floor(diff / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (seconds < 60) return `${seconds}s ago`
-  if (minutes < 60) return `${minutes}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString()
-}
-
 export const CategoryList = memo(function CategoryList({
   categories,
   selectedCategoryId,
@@ -35,89 +20,168 @@ export const CategoryList = memo(function CategoryList({
 
   if (isLoading) {
     return (
-      <div className="p-4">
-        <div className="flex items-center justify-center gap-3 text-gray-400">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-cyan-500" />
-          <span>Loading categories...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (sortedCategories.length === 0) {
-    return (
-      <div className="p-4 text-center">
-        <p className="text-gray-400">No categories available</p>
+      <div className="hub-sidebar-loading">
+        <iconify-icon icon="solar:spinner-bold" className="spin"></iconify-icon>
+        <span>Syncing Hub...</span>
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-4 border-b border-gray-700">
-        <h2 className="text-white font-bold text-lg">Forum</h2>
-        <p className="text-gray-400 text-sm">Browse categories</p>
+    <div className="hub-sidebar">
+      <div className="hub-sidebar-header">
+        <h2 className="hub-title">The Hub</h2>
+        <div className="hub-status"><span className="dot"></span> Online</div>
       </div>
 
-      <div className="divide-y divide-gray-700">
+      <div className="hub-channels">
         {sortedCategories.map((category) => {
           const isSelected = selectedCategoryId === category._id
-          const lastActivity = category.lastThreadAt ? formatRelativeTime(category.lastThreadAt) : 'No activity'
-
           return (
             <button
               key={category._id}
               type="button"
               onClick={() => onSelectCategory(category._id)}
-              className={
-                `w-full text-left cursor-pointer p-4 flex flex-col gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/60 ` +
-                `${isSelected ? 'bg-cyan-600/20 border-l-2 border-cyan-500' : 'hover:bg-gray-700/50'}`
-              }
+              className={`hub-channel-btn ${isSelected ? 'active' : ''}`}
               aria-current={isSelected ? 'true' : undefined}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-700 bg-gray-900/40 flex-shrink-0"
-                    style={{ boxShadow: `0 0 0 1px ${category.color}33` }}
-                    aria-hidden="true"
-                  >
-                    <span className="text-lg">{category.icon}</span>
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-semibold truncate">{category.name}</span>
-                      <span className="bg-gray-700/60 text-gray-200 text-xs px-2 py-0.5 rounded-full">
-                        {category.threadCount}
-                      </span>
-                    </div>
-                    <p className="text-gray-400 text-sm line-clamp-2">{category.description}</p>
-                  </div>
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <div className="text-xs text-gray-400">Last activity</div>
-                  <div className="text-xs text-gray-200">{lastActivity}</div>
-                </div>
+              <div className="channel-icon-wrapper">
+                 <iconify-icon icon={category.icon?.includes(':') ? category.icon : 'solar:hashtag-square-linear'}></iconify-icon>
               </div>
-
-              <div className="flex gap-2">
-                {category.requiredRole && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-red-600/20 text-red-200 border border-red-600/30">
-                    {category.requiredRole}
-                  </span>
-                )}
-                {category.requiredFanTier && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-amber-600/20 text-amber-200 border border-amber-600/30">
-                    {category.requiredFanTier}
-                  </span>
-                )}
+              <div className="channel-info">
+                <span className="channel-name">{category.name}</span>
+                <span className="channel-meta">{category.threadCount} active</span>
               </div>
+              {isSelected && <div className="active-indicator" />}
             </button>
           )
         })}
       </div>
+
+      <style>{`
+        .hub-sidebar {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          background: rgba(5, 5, 5, 0.5);
+        }
+
+        .hub-sidebar-header {
+          padding: 24px;
+          border-bottom: 1px solid var(--color-card-border);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .hub-title {
+          font-size: 18px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin: 0;
+        }
+
+        .hub-status {
+          font-size: 10px;
+          font-weight: 700;
+          color: #39FF14;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .hub-status .dot {
+          width: 6px;
+          height: 6px;
+          background: currentColor;
+          border-radius: 50%;
+          box-shadow: 0 0 10px currentColor;
+        }
+
+        .hub-channels {
+          flex: 1;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .hub-channel-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          border-radius: 12px;
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          position: relative;
+          text-align: left;
+        }
+
+        .hub-channel-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
+        }
+
+        .hub-channel-btn.active {
+          background: rgba(255, 0, 0, 0.1);
+          color: white;
+        }
+
+        .channel-icon-wrapper {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          color: var(--color-primary);
+        }
+
+        .channel-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .channel-name {
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .channel-meta {
+          font-size: 11px;
+          opacity: 0.5;
+        }
+
+        .active-indicator {
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 60%;
+          background: var(--color-primary);
+          border-radius: 0 4px 4px 0;
+          box-shadow: 0 0 10px var(--color-primary);
+        }
+
+        .hub-sidebar-loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 200px;
+          gap: 12px;
+          color: var(--color-text-dim);
+        }
+
+        .spin { animation: rotate 2s linear infinite; font-size: 24px; color: var(--color-primary); }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 })

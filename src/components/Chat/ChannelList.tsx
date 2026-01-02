@@ -9,90 +9,59 @@ interface ChannelListProps {
 }
 
 export function ChannelList({ channels, selectedChannelId, onSelectChannel, isLoading }: ChannelListProps) {
-  // Sort channels by creation date (newest first)
   const sortedChannels = useMemo(() => {
     return [...channels].sort((a, b) => b.createdAt - a.createdAt)
   }, [channels])
 
   if (isLoading) {
     return (
-      <div className="p-4">
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-          <span className="ml-2 text-gray-400">Loading channels...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (channels.length === 0) {
-    return (
-      <div className="p-4 text-center">
-        <p className="text-gray-400">No channels available</p>
+      <div className="px-3 flex flex-col gap-1.5 animate-pulse">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-8 bg-[#35373c] rounded-md w-full"></div>
+        ))}
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-4 border-b border-gray-700">
-        <h2 className="text-white font-bold text-lg">Channels</h2>
+    <div className="px-2 flex flex-col gap-1">
+      <div className="px-2 py-1 flex items-center justify-between text-[12px] font-bold text-[#949ba4] uppercase tracking-wide group">
+        <span className="flex items-center gap-0.5">
+           <iconify-icon icon="solar:alt-arrow-down-linear" className="text-[10px]"></iconify-icon>
+           TEXT CHANNELS
+        </span>
+        <button className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-white">
+           <iconify-icon icon="solar:add-circle-linear" style={{ fontSize: '16px' }}></iconify-icon>
+        </button>
       </div>
 
-      <div className="divide-y divide-gray-700">
+      <nav className="flex flex-col gap-0.5 mt-1">
         {sortedChannels.map((channel) => (
-          <div
+          <button
             key={channel._id}
             onClick={() => onSelectChannel(channel._id)}
-            className={`${
+            className={`group relative flex items-center px-2 py-1.5 rounded-md transition-all duration-100 ${
               selectedChannelId === channel._id
-                ? 'bg-cyan-600/20 border-l-2 border-cyan-500'
-                : 'hover:bg-gray-700/50'
-            } cursor-pointer p-4 flex flex-col gap-1 transition-colors`}
+                ? 'bg-[#3f4147] text-white shadow-sm'
+                : 'text-[#949ba4] hover:bg-[#35373c] hover:text-[#dbdee1]'
+            }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-white font-medium"># {channel.name}</span>
-                {channel.messageCount > 0 && (
-                  <span className="bg-gray-600 text-gray-300 text-xs px-2 py-1 rounded-full">
-                    {channel.messageCount}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {channel.description && (
-              <p className="text-gray-400 text-sm line-clamp-1">
-                {channel.description}
-              </p>
+            <span className="text-xl mr-1.5 opacity-60 font-light translate-y-[-1px]">#</span>
+            <span className="flex-1 text-left truncate font-medium text-[15px]">
+              {channel.name}
+            </span>
+            
+            {channel.messageCount > 0 && selectedChannelId !== channel._id && (
+              <span className="w-1.5 h-1.5 bg-white border-2 border-white rounded-full absolute left-[-4px] top-1/2 translate-y-[-50%]"></span>
             )}
 
-            {/* Category badge */}
-            <div className="flex gap-2 mt-1">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                channel.category === 'general' ? 'bg-blue-600/30 text-blue-300' :
-                channel.category === 'mod' ? 'bg-red-600/30 text-red-300' :
-                channel.category === 'fan-only' ? 'bg-yellow-600/30 text-yellow-300' :
-                'bg-purple-600/30 text-purple-300'
-              }`}>
-                {channel.category}
-              </span>
-
-              {channel.requiredRole && (
-                <span className="text-xs px-2 py-1 rounded-full bg-green-600/30 text-green-300">
-                  {channel.requiredRole}
-                </span>
-              )}
-
-              {channel.requiredFanTier && (
-                <span className="text-xs px-2 py-1 rounded-full bg-amber-600/30 text-amber-300">
-                  {channel.requiredFanTier}
-                </span>
-              )}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+               <iconify-icon icon="solar:user-plus-bold" style={{ fontSize: '14px' }} className="hover:text-white"></iconify-icon>
+               <iconify-icon icon="solar:settings-bold" style={{ fontSize: '14px' }} className="hover:text-white"></iconify-icon>
             </div>
-          </div>
+          </button>
         ))}
-      </div>
+      </nav>
     </div>
   )
 }

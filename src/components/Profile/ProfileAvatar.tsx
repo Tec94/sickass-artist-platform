@@ -15,28 +15,53 @@ const sizeClasses = {
 }
 
 const tierRingColors = {
-  bronze: 'ring-amber-600',
-  silver: 'ring-gray-400',
-  gold: 'ring-yellow-500',
-  platinum: 'ring-cyan-400',
+  bronze: '#CD7F32',
+  silver: '#C0C0C0',
+  gold: '#FFD700',
+  platinum: '#FF0000',
 }
 
 export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
+  const ringColor = tierRingColors[user.fanTier]
+
   return (
-    <div className="relative inline-block">
-      <img
-        src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
-        alt={user.username}
-        className={`${sizeClasses[size]} rounded-full ring-2 ${tierRingColors[user.fanTier]} object-cover`}
-      />
-      {size !== 'sm' && (
-        <div className="absolute bottom-0 right-0 text-2xl bg-gray-900 rounded-full p-1">
-          {user.fanTier === 'bronze' && '🥉'}
-          {user.fanTier === 'silver' && '🥈'}
-          {user.fanTier === 'gold' && '🥇'}
-          {user.fanTier === 'platinum' && '👑'}
-        </div>
-      )}
+    <div className="relative inline-block profile-avatar-wrapper">
+      <div 
+        className="avatar-ring" 
+        style={{ '--ring-color': ringColor } as React.CSSProperties}
+      >
+        <img
+          src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
+          alt={user.username}
+          className={`${sizeClasses[size]} rounded-full object-cover avatar-img`}
+        />
+      </div>
+
+      <style>{`
+        .profile-avatar-wrapper {
+          padding: 3px;
+        }
+
+        .avatar-ring {
+          position: relative;
+          padding: 3px;
+          border-radius: 50%;
+          background: linear-gradient(45deg, transparent, var(--ring-color), transparent);
+          animation: rotate-ring 4s linear infinite;
+        }
+
+        .avatar-img {
+          background: #000;
+          border: 2px solid #000;
+          position: relative;
+          z-index: 2;
+        }
+
+        @keyframes rotate-ring {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

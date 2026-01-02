@@ -1,21 +1,122 @@
 :root {
-  --color-primary: #00D9FF;
-  --color-secondary: #FF006E;
-  --color-accent: #8B0FFF;
-  --color-neon-green: #39FF14;
-  --color-gold: #FFD700;
-  --color-bg-dark: #0A0E27;
-  --color-bg-charcoal: #1C1F2E;
-  --color-text: #E0E0E0;
-
-  --glow-radius: 0px 0px 20px;
-  --transition-fast: 0.2s ease;
-  --transition-smooth: 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+  --color-primary: #FF0000;
+  --color-bg: #000000;
+  --color-card-bg: #0A0A0A;
+  --color-card-border: #1A1A1A;
+  --color-text-main: #FFFFFF;
+  --color-text-dim: #808080;
+  --color-red-dim: #330000;
+  
+  --transition-standard: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-stagger: 0.1s;
 }
 
+/* Base Styles */
 * {
   box-sizing: border-box;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Flashlight Effect Utility */
+.flashlight-container {
+  position: relative;
+}
+
+.flashlight-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 0, 0, 0.05),
+    transparent 40%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Global Animations */
+[data-animate] {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(20px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, filter, opacity;
+  animation-fill-mode: both;
+}
+
+[data-animate].animate-in {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+}
+
+.animate-fade {
+  opacity: 0;
+}
+
+.animate-fade.animate-in {
+  opacity: 1;
+}
+
+.animate-slide-up {
+  transform: translateY(50px);
+}
+
+.animate-slide-up.animate-in {
+  transform: translateY(0);
+}
+
+.animate-blur {
+  filter: blur(20px);
+}
+
+.animate-blur.animate-in {
+  filter: blur(0);
+}
+
+/* Border Beam Effect */
+.border-beam {
+  position: relative;
+  overflow: hidden;
+}
+
+.border-beam::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    var(--color-primary) 25%,
+    transparent 50%
+  );
+  animation: border-rotate 4s linear infinite;
+  animation-play-state: paused;
+  z-index: -1;
+  border-radius: inherit;
+  filter: blur(4px);
+  opacity: 0;
+}
+
+.border-beam:hover::after {
+  animation-play-state: running;
+  opacity: 1;
+}
+
+@keyframes border-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 
 html,
 body {

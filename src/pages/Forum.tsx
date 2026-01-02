@@ -8,18 +8,16 @@ import { useForumThreads } from '../hooks/useForumThreads'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateThread } from '../hooks/useCreateThread'
 import { useCreateReply } from '../hooks/useCreateReply'
-import { CategoryFilter, CategoryList, ThreadDetail, ThreadForm, ThreadList } from '../components/Forum'
+import { CategoryList, ThreadDetail, ThreadForm, ThreadList } from '../components/Forum'
 
 export function Forum() {
   const { user } = useAuth()
 
   const { categories, isLoading: isCategoriesLoading } = useForumCategories()
-
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(null)
   const [selectedThreadId, setSelectedThreadId] = useState<Id<'threads'> | null>(null)
   const [sortBy, setSortBy] = useState<ThreadSortBy>('newest')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-
   const [isThreadFormOpen, setIsThreadFormOpen] = useState(false)
   const [editingThread, setEditingThread] = useState<Thread | null>(null)
 
@@ -40,10 +38,8 @@ export function Forum() {
   })
 
   const { thread, replies, isLoading: isThreadDetailLoading } = useForumThreadDetail(selectedThreadId)
-
   const { handleCreateThread } = useCreateThread(selectedCategoryId)
   const { handleCreateReply } = useCreateReply(selectedThreadId)
-
   const editThreadMutation = useMutation(api.forum.editThread)
   const deleteThreadMutation = useMutation(api.forum.deleteThread)
 
@@ -68,90 +64,54 @@ export function Forum() {
     setIsThreadFormOpen(true)
   }
 
-  const openEditThread = (t: Thread) => {
-    setEditingThread(t)
-    setIsThreadFormOpen(true)
-  }
-
   const handleDeleteThread = async () => {
-    if (!selectedThreadId) return
-
-    await deleteThreadMutation({ threadId: selectedThreadId })
+    if (!selectedThreadId || !selectedCategoryId) return
+    await deleteThreadMutation({ threadId: selectedThreadId, categoryId: selectedCategoryId })
     setSelectedThreadId(null)
   }
 
   return (
-    <div className="flex h-full w-full bg-gray-900/80 backdrop-blur-sm rounded-lg overflow-hidden">
-      {/* Mobile Sidebar Toggle */}
-      <button
-        onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-gray-800 p-2 rounded-lg border border-gray-700"
-        aria-label="Toggle categories"
-        type="button"
-      >
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      {/* Category List - Sidebar */}
-      <div
-        className={
-          `${isMobileSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-96 bg-gray-800/90 border-r border-gray-700 overflow-y-auto`
-        }
-      >
+    <div className="forum-container h-full">
+      <aside className={`forum-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
         <CategoryList
           categories={categories}
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={handleSelectCategory}
           isLoading={isCategoriesLoading}
         />
-      </div>
+      </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full">
-        <CategoryFilter
-          category={selectedCategory}
-          sortBy={sortBy}
-          onSortChange={(next) => {
-            setSortBy(next)
-            setSelectedThreadId(null)
-          }}
-          onCreateThread={openCreateThread}
-          onBackToCategories={() => setIsMobileSidebarOpen(true)}
-        />
+      <main className="forum-main">
+        <header className="forum-main-header">
+           <div className="header-left">
+             <h2 className="selected-category-name">{selectedCategory?.name || 'Forum'}</h2>
+             <span className="thread-count">{threads.length} Threads</span>
+           </div>
+           <div className="header-actions">
+             <button onClick={openCreateThread} className="create-thread-btn border-beam">
+               <iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
+               <span>New Thread</span>
+             </button>
+           </div>
+        </header>
 
-        {/* List vs Detail */}
-        <div className="flex-1 min-h-0">
+        <div className="forum-content">
           {selectedThreadId ? (
-            <div className="h-full flex flex-col">
-              <div className="p-4 border-b border-gray-700 bg-gray-800/20 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setSelectedThreadId(null)}
-                  className="text-gray-300 hover:text-white"
-                >
-                  ← Back to threads
-                </button>
-              </div>
-
-              {isThreadDetailLoading ? (
-                <div className="flex-1 flex items-center justify-center text-gray-400">Loading thread…</div>
-              ) : !thread ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-gray-400">Thread not found or unavailable</p>
-                </div>
-              ) : (
-                <ThreadDetail
-                  thread={thread}
-                  replies={replies}
-                  currentUserId={user._id}
-                  onReply={handleCreateReply}
-                  onEdit={() => openEditThread(thread)}
-                  onDelete={handleDeleteThread}
-                  isModerator={isModerator}
-                />
-              )}
+            <div className="thread-detail-view">
+               <button className="back-btn" onClick={() => setSelectedThreadId(null)}>
+                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Back to Feed
+               </button>
+               {isThreadDetailLoading ? <div>Loading...</div> : !thread ? <div>Not Found</div> : (
+                 <ThreadDetail
+                   thread={thread}
+                   replies={replies}
+                   currentUserId={user._id}
+                   onReply={handleCreateReply}
+                   onEdit={() => { setEditingThread(thread); setIsThreadFormOpen(true); }}
+                   onDelete={handleDeleteThread}
+                   isModerator={isModerator}
+                 />
+               )}
             </div>
           ) : (
             <ThreadList
@@ -167,28 +127,122 @@ export function Forum() {
             />
           )}
         </div>
-      </div>
+      </main>
 
       {isThreadFormOpen && (
         <ThreadForm
           categoryId={selectedCategoryId}
-          initialData={
-            editingThread
-              ? { title: editingThread.title, content: editingThread.content, tags: editingThread.tags }
-              : undefined
-          }
+          initialData={editingThread ? { title: editingThread.title, content: editingThread.content, tags: editingThread.tags } : undefined}
           onCancel={() => setIsThreadFormOpen(false)}
           onSubmit={async (title, content, tags) => {
             if (editingThread) {
-              await editThreadMutation({ threadId: editingThread._id, title, content })
+              await editThreadMutation({ threadId: editingThread._id, newTitle: title, newContent: content })
             } else {
               await handleCreateThread(title, content, tags)
             }
-
             setIsThreadFormOpen(false)
           }}
         />
       )}
+
+      <style>{`
+        .forum-container {
+          display: flex;
+          width: 100%;
+          height: 100%;
+          background: rgba(10, 10, 10, 0.6);
+          backdrop-filter: blur(20px);
+          border-radius: 16px;
+          border: 1px solid var(--color-card-border);
+          overflow: hidden;
+        }
+
+        .forum-sidebar {
+          width: 280px;
+          border-right: 1px solid var(--color-card-border);
+          background: rgba(5, 5, 5, 0.3);
+        }
+
+        .forum-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .forum-main-header {
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--color-card-border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(10, 10, 10, 0.4);
+        }
+
+        .selected-category-name {
+          font-size: 18px;
+          font-weight: 800;
+          margin: 0;
+          color: white;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .thread-count {
+          font-size: 11px;
+          color: var(--color-text-dim);
+          font-weight: 600;
+        }
+
+        .create-thread-btn {
+          background: var(--color-primary);
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 100px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .forum-content {
+          flex: 1;
+          overflow: hidden;
+        }
+
+        .thread-detail-view {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          padding: 24px;
+          overflow-y: auto;
+        }
+
+        .back-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          width: fit-content;
+        }
+
+        .back-btn:hover { color: white; }
+
+        @media (max-width: 768px) {
+          .forum-sidebar { display: none; }
+          .forum-sidebar.mobile-open { display: block; position: fixed; inset: 0; z-index: 1000; }
+        }
+      `}</style>
     </div>
   )
 }

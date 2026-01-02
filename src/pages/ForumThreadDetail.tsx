@@ -7,11 +7,13 @@ import { useAuth } from '../hooks/useAuth'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateReply } from '../hooks/useCreateReply'
 import { ThreadDetail, ThreadForm } from '../components/Forum'
+import { useScrollAnimation } from '../hooks/useScrollAnimation'
 
 export function ForumThreadDetail() {
   const { threadId } = useParams<{ threadId: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const animate = useScrollAnimation()
 
   const parsedThreadId = (threadId as Id<'threads'> | undefined) ?? null
 
@@ -36,22 +38,26 @@ export function ForumThreadDetail() {
   }
 
   return (
-    <div className="h-full w-full bg-gray-900/80 backdrop-blur-sm rounded-lg overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+    <div className="thread-detail-container">
+      <header ref={animate} data-animate className="thread-detail-header">
         <button
           type="button"
           onClick={() => navigate('/2')}
-          className="text-gray-300 hover:text-white"
+          className="back-btn"
         >
-          ← Back to forum
+          <iconify-icon icon="solar:arrow-left-linear"></iconify-icon>
+          <span>Back to Feed</span>
         </button>
-      </div>
+      </header>
 
-      <div className="flex-1 min-h-0">
+      <div className="thread-detail-body">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400">Loading thread…</div>
+          <div className="loading-state">
+             <iconify-icon icon="solar:refresh-linear" className="animate-spin"></iconify-icon>
+             <span>Loading context...</span>
+          </div>
         ) : !thread ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="empty-state">
             <p className="text-gray-400">{notFoundMessage}</p>
           </div>
         ) : (
@@ -65,7 +71,7 @@ export function ForumThreadDetail() {
               setIsThreadFormOpen(true)
             }}
             onDelete={async () => {
-              await deleteThreadMutation({ threadId: thread._id })
+              await deleteThreadMutation({ threadId: thread._id, categoryId: thread.categoryId })
               navigate('/2')
             }}
             isModerator={Boolean(isModerator)}
@@ -79,11 +85,59 @@ export function ForumThreadDetail() {
           initialData={{ title: editingThread.title, content: editingThread.content, tags: editingThread.tags }}
           onCancel={() => setIsThreadFormOpen(false)}
           onSubmit={async (title, content) => {
-            await editThreadMutation({ threadId: editingThread._id, title, content })
+            await editThreadMutation({ threadId: editingThread._id, newTitle: title, newContent: content })
             setIsThreadFormOpen(false)
           }}
         />
       )}
+
+      <style>{`
+        .thread-detail-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          background: rgba(10, 10, 10, 0.4);
+          backdrop-filter: blur(20px);
+          border-radius: 16px;
+          border: 1px solid var(--color-card-border);
+        }
+
+        .thread-detail-header {
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--color-card-border);
+        }
+
+        .back-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .back-btn:hover { color: white; transform: translateX(-4px); }
+
+        .thread-detail-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 32px;
+        }
+
+        .loading-state, .empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          gap: 16px;
+          color: var(--color-text-dim);
+        }
+      `}</style>
     </div>
   )
 }

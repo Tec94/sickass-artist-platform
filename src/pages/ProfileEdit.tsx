@@ -3,11 +3,13 @@ import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
+import { useScrollAnimation } from '../hooks/useScrollAnimation'
 
 export function ProfileEdit() {
   const { user, isSignedIn, isLoading } = useAuth()
   const navigate = useNavigate()
   const updateUserMutation = useMutation(api.users.update)
+  const animate = useScrollAnimation()
 
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -25,14 +27,14 @@ export function ProfileEdit() {
   const [error, setError] = useState('')
 
   if (isLoading) {
-    return <div className="p-8 text-center">Loading...</div>
+    return <div className="loading-container">Authenticating...</div>
   }
 
   if (!isSignedIn || !user) {
     return (
-      <div className="p-8 text-center">
-        <p>Please sign in to edit your profile.</p>
-        <button onClick={() => navigate('/')}>Back to Home</button>
+      <div className="error-view">
+        <p>Restricted access: Auth required.</p>
+        <button onClick={() => navigate('/')} className="back-btn-v2">Return Home</button>
       </div>
     )
   }
@@ -44,7 +46,7 @@ export function ProfileEdit() {
         ...prev,
         socials: {
           ...prev.socials,
-          [socialKey]: value,
+          [socialKey as keyof typeof prev.socials]: value,
         },
       }))
     } else {
@@ -72,7 +74,7 @@ export function ProfileEdit() {
       })
       navigate('/profile')
     } catch (err) {
-      setError('Failed to update profile')
+      setError('Communication error: Failed to sync identity.')
       console.error(err)
     } finally {
       setIsSaving(false)
@@ -80,116 +82,241 @@ export function ProfileEdit() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">Edit Profile</h1>
+    <div className="profile-edit-layout">
+      <div ref={animate} data-animate className="profile-edit-container">
+        <header className="profile-edit-header">
+           <h1 className="form-title">Modify Identity</h1>
+        </header>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-200">
-            {error}
+          <div className="error-banner">
+            <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Display Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={formData.displayName}
-              onChange={e => handleChange('displayName', e.target.value)}
-              maxLength={50}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
-              placeholder="Your display name"
-            />
+        <form onSubmit={handleSubmit} className="edit-form">
+          <div className="field-group">
+            <label className="field-label">Display Name</label>
+            <div className="input-wrapper">
+              <iconify-icon icon="solar:user-id-linear"></iconify-icon>
+              <input
+                type="text"
+                value={formData.displayName}
+                onChange={e => handleChange('displayName', e.target.value)}
+                maxLength={50}
+                placeholder="Identity string..."
+              />
+            </div>
           </div>
 
-          {/* Bio */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Bio
-            </label>
+          <div className="field-group">
+            <label className="field-label">Bio (The Pitch)</label>
             <textarea
               value={formData.bio}
               onChange={e => handleChange('bio', e.target.value)}
               maxLength={500}
-              rows={4}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
-              placeholder="Tell us about yourself (max 500 chars)"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.bio.length}/500
-            </p>
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Location
-            </label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={e => handleChange('location', e.target.value)}
-              maxLength={50}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
-              placeholder="City, Country"
+              placeholder="Tell your story..."
             />
           </div>
 
-          {/* Socials */}
-          <div className="border-t border-gray-700 pt-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Social Media
-            </h3>
+          <div className="field-group">
+            <label className="field-label">Territory</label>
+            <div className="input-wrapper">
+              <iconify-icon icon="solar:map-point-linear"></iconify-icon>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={e => handleChange('location', e.target.value)}
+                maxLength={50}
+                placeholder="Where are you from?"
+              />
+            </div>
+          </div>
 
-            <div className="space-y-4">
+          <div className="socials-meta">
+            <h3 className="meta-title">Nexus Links</h3>
+            <div className="social-inputs">
               {(['twitter', 'instagram', 'tiktok'] as const).map(platform => (
-                <div key={platform}>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2 capitalize">
-                    {platform} Handle
-                  </label>
-                  <div className="flex">
-                    <span className="px-4 py-2 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg text-gray-500 text-sm">
-                      @
-                    </span>
-                    <input
-                      type="text"
-                      value={formData.socials[platform]}
-                      onChange={e =>
-                        handleChange(`socials.${platform}`, e.target.value)
-                      }
-                      maxLength={30}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-r-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
-                      placeholder={`Your ${platform} handle`}
-                    />
+                <div key={platform} className="social-input-group">
+                  <div className="platform-icon">
+                    <iconify-icon icon={`simple-icons:${platform}`}></iconify-icon>
                   </div>
+                  <input
+                    type="text"
+                    value={formData.socials[platform]}
+                    onChange={e => handleChange(`socials.${platform}`, e.target.value)}
+                    placeholder={`@${platform}_handle`}
+                  />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-4 pt-6">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="flex-1 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-black font-semibold rounded-lg transition"
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+          <div className="form-actions">
+            <button type="submit" disabled={isSaving} className="save-btn border-beam">
+              <span>{isSaving ? 'Syncing...' : 'Confirm Sync'}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/profile')}
-              className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition"
-            >
+            <button type="button" onClick={() => navigate('/profile')} className="cancel-btn">
               Cancel
             </button>
           </div>
         </form>
       </div>
+
+      <style>{`
+        .profile-edit-layout {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 40px 0;
+        }
+
+        .profile-edit-container {
+          background: rgba(10, 10, 10, 0.4);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--color-card-border);
+          border-radius: 24px;
+          padding: 40px;
+        }
+
+        .form-title {
+          font-size: 24px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: white;
+          margin: 0 0 32px 0;
+        }
+
+        .error-banner {
+          background: rgba(255, 0, 0, 0.1);
+          border: 1px solid var(--color-primary);
+          color: white;
+          padding: 12px 16px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 24px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .edit-form { display: flex; flex-direction: column; gap: 24px; }
+
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .field-label {
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: var(--color-text-dim);
+        }
+
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .input-wrapper iconify-icon {
+          position: absolute;
+          left: 16px;
+          font-size: 20px;
+          color: var(--color-primary);
+        }
+
+        input, textarea {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-card-border);
+          border-radius: 12px;
+          padding: 12px 16px;
+          color: white;
+          font-size: 14px;
+          font-family: inherit;
+          transition: all 0.3s ease;
+        }
+
+        .input-wrapper input { padding-left: 48px; }
+
+        input:focus, textarea:focus {
+          outline: none;
+          background: rgba(255, 255, 255, 0.05);
+          border-color: var(--color-primary);
+          box-shadow: 0 0 20px rgba(255, 0, 0, 0.1);
+        }
+
+        textarea { height: 120px; resize: none; }
+
+        .socials-meta { margin-top: 16px; }
+
+        .meta-title {
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: var(--color-text-dim);
+          margin-bottom: 16px;
+        }
+
+        .social-inputs { display: flex; flex-direction: column; gap: 12px; }
+
+        .social-input-group {
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-card-border);
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .platform-icon {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.2);
+          color: var(--color-primary);
+          font-size: 18px;
+        }
+
+        .social-input-group input { border: none; background: transparent; }
+
+        .form-actions {
+          display: flex;
+          gap: 16px;
+          margin-top: 24px;
+        }
+
+        .save-btn {
+          flex: 2;
+          background: var(--color-primary);
+          color: white;
+          border: none;
+          padding: 14px;
+          border-radius: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          cursor: pointer;
+        }
+
+        .cancel-btn {
+          flex: 1;
+          background: transparent;
+          border: 1px solid var(--color-card-border);
+          color: var(--color-text-dim);
+          padding: 14px;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .cancel-btn:hover { color: white; border-color: white; }
+      `}</style>
     </div>
   )
 }

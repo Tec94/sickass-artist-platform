@@ -1,45 +1,28 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
 import type { KeyboardEvent } from 'react'
-import type { Thread, VoteDirection } from '../../types/forum'
+import type { Thread } from '../../types/forum'
 import { VoteButtons } from './VoteButtons'
 import { useThreadVote } from '../../hooks/useThreadVote'
+import { FlashlightEffect } from '../Effects/FlashlightEffect'
 
 interface ThreadListItemProps {
   thread: Thread
   isSelected: boolean
   onClick: (threadId: Thread['_id']) => void
-  onVote?: (threadId: Thread['_id'], direction: VoteDirection) => void
-}
-
-const formatRelativeTime = (timestamp: number) => {
-  const now = Date.now()
-  const diff = Math.max(0, now - timestamp)
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString()
 }
 
 const tierStyles: Record<Thread['authorTier'], string> = {
-  bronze: 'bg-amber-600/20 text-amber-200 border-amber-600/30',
-  silver: 'bg-gray-300/20 text-gray-100 border-gray-300/30',
-  gold: 'bg-yellow-500/20 text-yellow-200 border-yellow-500/30',
-  platinum: 'bg-cyan-500/20 text-cyan-200 border-cyan-500/30',
+  bronze: 'border-amber-600/30 text-amber-200',
+  silver: 'border-gray-500/30 text-gray-300',
+  gold: 'border-yellow-500/30 text-yellow-200',
+  platinum: 'border-red-500/30 text-red-200',
 }
 
 export const ThreadListItem = memo(function ThreadListItem({
   thread,
   isSelected,
   onClick,
-  onVote,
 }: ThreadListItemProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
   const { votes, handleVote, isLoading } = useThreadVote({
     threadId: thread._id,
     initialUpCount: thread.upVoteCount,
@@ -50,13 +33,9 @@ export const ThreadListItem = memo(function ThreadListItem({
 
   const excerpt = useMemo(() => {
     const text = thread.content.trim().replace(/\s+/g, ' ')
-    if (text.length <= 100) return text
-    return `${text.slice(0, 100)}…`
+    if (text.length <= 120) return text
+    return `${text.slice(0, 120)}…`
   }, [thread.content])
-
-  const lastActivity = thread.lastReplyAt ?? thread.createdAt
-
-  const showModBadge = thread.authorRole === 'mod' || thread.authorRole === 'admin'
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -71,91 +50,169 @@ export const ThreadListItem = memo(function ThreadListItem({
       tabIndex={0}
       onClick={() => onClick(thread._id)}
       onKeyDown={handleKeyDown}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={
-        `w-full text-left rounded-xl border p-4 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/60 ` +
-        `${isSelected ? 'border-cyan-500/60 bg-cyan-500/10' : 'border-gray-700 bg-gray-900/30 hover:bg-gray-800/40'}`
-      }
-      aria-current={isSelected ? 'true' : undefined}
+      className={`thread-card-outer ${isSelected ? 'active' : ''}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-white font-semibold truncate">{thread.title}</h3>
-            {thread.isPinned && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-200 border border-yellow-500/30">
-                📌 Pinned
-              </span>
+      <FlashlightEffect className="thread-card-flashlight">
+        <article className="thread-card">
+          <div className="thread-main">
+            <header className="thread-header">
+              <div className="author-meta">
+                <img src={thread.authorAvatar} alt="" className="author-avatar" />
+                <div className="author-info">
+                  <span className="author-name">{thread.authorDisplayName}</span>
+                  <span className={`tier-badge ${tierStyles[thread.authorTier]}`}>
+                    {thread.authorTier}
+                  </span>
+                </div>
+              </div>
+              <div className="thread-stats">
+                <span className="stat"><iconify-icon icon="solar:chat-round-line-linear"></iconify-icon> {thread.replyCount}</span>
+              </div>
+            </header>
+
+            <h3 className="thread-title">{thread.title}</h3>
+            <p className="thread-excerpt">{excerpt}</p>
+
+            {thread.tags.length > 0 && (
+              <div className="thread-tags">
+                {thread.tags.map(tag => <span key={tag} className="tag">#{tag}</span>)}
+              </div>
             )}
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
-            <div className="flex items-center gap-2 min-w-0">
-              <img
-                src={thread.authorAvatar}
-                alt={thread.authorDisplayName}
-                loading="lazy"
-                className="h-6 w-6 rounded-full border border-gray-700 object-cover"
-              />
-              <span className="text-gray-200 truncate">{thread.authorDisplayName}</span>
-            </div>
-
-            <span className={`border rounded-full px-2 py-0.5 ${tierStyles[thread.authorTier]}`}>
-              {thread.authorTier.toUpperCase()}
-            </span>
-
-            {showModBadge && (
-              <span className="border rounded-full px-2 py-0.5 bg-purple-600/20 text-purple-200 border-purple-600/30">
-                MOD
-              </span>
-            )}
-
-            <span>•</span>
-            <span>{formatRelativeTime(lastActivity)}</span>
-          </div>
-
-          {thread.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {thread.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2 py-1 rounded-full bg-gray-700/40 text-gray-200 border border-gray-600/40"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {isHovered && excerpt && (
-            <p className="mt-3 text-sm text-gray-300 line-clamp-2">{excerpt}</p>
-          )}
-        </div>
-
-        <div className="flex-shrink-0 flex flex-col items-end gap-2">
-          <div
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            role="presentation"
-          >
+          <aside className="thread-votes">
             <VoteButtons
               upCount={votes.upVoteCount}
               downCount={votes.downVoteCount}
               userVote={votes.userVote}
-              onVote={async (direction) => {
-                await handleVote(direction)
-                onVote?.(thread._id, direction)
-              }}
+              onVote={handleVote}
               isLoading={isLoading}
             />
-          </div>
+          </aside>
+        </article>
+      </FlashlightEffect>
 
-          <div className="text-xs text-gray-300">
-            <span className="mr-2">💬 {thread.replyCount}</span>
-          </div>
-        </div>
-      </div>
+      <style>{`
+        .thread-card-outer {
+          border-radius: 16px;
+          overflow: hidden;
+          background: rgba(10, 10, 10, 0.4);
+          border: 1px solid var(--color-card-border);
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .thread-card-outer:hover {
+          border-color: var(--color-primary);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .thread-card-outer.active {
+          border-color: var(--color-primary);
+          background: rgba(255, 0, 0, 0.05);
+        }
+
+        .thread-card {
+          display: flex;
+          padding: 20px;
+          gap: 20px;
+        }
+
+        .thread-main {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .thread-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+
+        .author-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .author-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 1px solid var(--color-card-border);
+          object-fit: cover;
+        }
+
+        .author-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .author-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: white;
+        }
+
+        .tier-badge {
+          font-size: 9px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: 1px 6px;
+          border-radius: 4px;
+          border: 1px solid;
+          width: fit-content;
+        }
+
+        .thread-stats {
+          font-size: 12px;
+          color: var(--color-text-dim);
+          display: flex;
+          gap: 12px;
+        }
+
+        .stat { display: flex; align-items: center; gap: 4px; }
+
+        .thread-title {
+          font-size: 17px;
+          font-weight: 700;
+          color: white;
+          margin: 0 0 8px 0;
+          line-height: 1.4;
+        }
+
+        .thread-excerpt {
+          font-size: 14px;
+          color: var(--color-text-dim);
+          line-height: 1.5;
+          margin-bottom: 12px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .thread-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .tag {
+          font-size: 11px;
+          color: var(--color-primary);
+          font-weight: 600;
+        }
+
+        .thread-votes {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+      `}</style>
     </div>
   )
 })

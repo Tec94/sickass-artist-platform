@@ -1,30 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useSearchParams } from 'react-router-dom';
-import { GalleryGrid } from '../components/Gallery/GalleryGrid';
-import { GalleryContentItem } from '../types/gallery';
+import { GalleryFYP } from '../components/Gallery/GalleryFYP';
+import type { GalleryContentItem } from '../types/gallery';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const TABS = [
-  { id: 'show', label: 'Show' },
-  { id: 'bts', label: 'BTS' },
-  { id: 'edit', label: 'Edits' },
-  { id: 'wip', label: 'WIPs' },
-  { id: 'exclusive', label: 'Exclusive' },
-];
-
-const SORT_OPTIONS = [
-  { id: 'newest', label: 'Newest' },
-  { id: 'oldest', label: 'Oldest' },
-  { id: 'mostLiked', label: 'Most Liked' },
-];
-
-const FILTER_OPTIONS = [
-  { id: 'all', label: 'All Tiers' },
-  { id: 'bronze', label: 'Bronze+' },
-  { id: 'silver', label: 'Silver+' },
-  { id: 'gold', label: 'Gold+' },
-  { id: 'platinum', label: 'Platinum' },
+  { id: 'show', label: 'Show', icon: 'solar:play-circle-linear' },
+  { id: 'bts', label: 'BTS', icon: 'solar:camera-linear' },
+  { id: 'edit', label: 'Edits', icon: 'solar:magic-stick-linear' },
+  { id: 'wip', label: 'WIPs', icon: 'solar:clining-square-linear' },
+  { id: 'exclusive', label: 'Exclusive', icon: 'solar:star-linear' },
 ];
 
 export const Gallery = () => {
@@ -35,6 +22,7 @@ export const Gallery = () => {
   const [page, setPage] = useState(0);
   const [accumulatedItems, setAccumulatedItems] = useState<GalleryContentItem[]>([]);
   const pageSize = 12;
+  const animate = useScrollAnimation();
 
   const queryResult = useQuery(
     api.gallery.getGalleryContent,
@@ -49,9 +37,7 @@ export const Gallery = () => {
 
   const isLoading = queryResult === undefined;
   const data = queryResult ?? null;
-  const error: Error | undefined = undefined; // Convex queries don't throw errors in the traditional sense
 
-  // Reset page and accumulated items when tab, sort, or tier changes
   useEffect(() => {
     setPage(0);
     setAccumulatedItems([]);
@@ -72,241 +58,143 @@ export const Gallery = () => {
     setSearchParams({ tab: tabId, sort: sortBy, tier: tierFilter });
   };
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchParams({ tab: activeTab, sort: e.target.value, tier: tierFilter });
-  };
-
-  const handleTierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchParams({ tab: activeTab, sort: sortBy, tier: e.target.value });
-  };
-
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
   };
 
-  const handleRetry = () => {
-    // Convex useQuery automatically retries, but we can trigger a state change if needed
-    // or just rely on it. Here we just re-render by setting page to same value
-    setPage(p => p);
-  };
-
   return (
-    <div className="gallery-page-container">
-      <header className="gallery-header">
-        <div className="header-top">
-          <h1 className="page-title">Gallery</h1>
-          <div className="controls-container">
-            <div className="control-group">
-              <label htmlFor="sort-select">Sort:</label>
-              <select 
-                id="sort-select" 
-                value={sortBy} 
-                onChange={handleSortChange}
-                className="select-input"
-              >
-                {SORT_OPTIONS.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="control-group">
-              <label htmlFor="filter-select">Filter:</label>
-              <select 
-                id="filter-select" 
-                value={tierFilter} 
-                onChange={handleTierChange}
-                className="select-input"
-              >
-                {FILTER_OPTIONS.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+    <div className="gallery-layout h-full flex flex-col">
+      <header ref={animate} data-animate className="gallery-header-v2">
+        <div className="header-meta">
+          <h1 className="h1-title">Visual Feed</h1>
+          <p className="sub-text">Captured moments and exclusive insights</p>
         </div>
-
-        <nav className="tab-navigation">
+        
+        <nav className="gallery-tabs">
           {TABS.map(tab => (
             <button
               key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              className={`gallery-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => handleTabChange(tab.id)}
             >
-              {tab.label}
+              <iconify-icon icon={tab.icon}></iconify-icon>
+              <span>{tab.label}</span>
             </button>
           ))}
         </nav>
       </header>
 
-      <main className="gallery-content">
-        <GalleryGrid
+      <main className="gallery-viewport">
+        <GalleryFYP
           items={accumulatedItems}
           isLoading={isLoading}
-          error={error}
-          onRetry={handleRetry}
         />
 
-        {data?.hasMore && !isLoading && !error && (
-          <div className="load-more-container">
-            <button onClick={handleLoadMore} className="load-more-button">
-              Load More
+        {data?.hasMore && !isLoading && (
+          <div className="gallery-footer-actions">
+            <button onClick={handleLoadMore} className="load-more-btn border-beam">
+              <span>Sync More</span>
+              <iconify-icon icon="solar:round-alt-arrow-down-linear"></iconify-icon>
             </button>
           </div>
         )}
       </main>
 
       <style>{`
-        .gallery-page-container {
+        .gallery-layout {
           width: 100%;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-          color: var(--color-text);
         }
 
-        .gallery-header {
-          margin-bottom: 32px;
-        }
-
-        .header-top {
+        .gallery-header-v2 {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-        }
-
-        .page-title {
-          font-size: 32px;
-          margin: 0;
-          color: var(--color-primary);
-          text-transform: uppercase;
-          letter-spacing: 2px;
-          text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-        }
-
-        .controls-container {
-          display: flex;
-          align-items: center;
-          gap: 16px;
+          align-items: flex-end;
+          margin-bottom: 40px;
+          gap: 20px;
           flex-wrap: wrap;
         }
 
-        .control-group {
+        .h1-title {
+          font-size: 28px;
+          font-weight: 800;
+          color: white;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          margin: 0;
+        }
+
+        .sub-text {
+          font-size: 13px;
+          color: var(--color-text-dim);
+          font-weight: 600;
+          margin: 4px 0 0 0;
+        }
+
+        .gallery-tabs {
+          display: flex;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 4px;
+          border-radius: 12px;
+          border: 1px solid var(--color-card-border);
+        }
+
+        .gallery-tab-btn {
+          background: transparent;
+          border: none;
+          color: var(--color-text-dim);
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           gap: 8px;
+          transition: all 0.3s ease;
         }
 
-        .select-input {
-          background: rgba(28, 31, 46, 0.8);
-          border: 1px solid var(--color-accent);
+        .gallery-tab-btn:hover { color: white; background: rgba(255, 255, 255, 0.05); }
+
+        .gallery-tab-btn.active {
+          background: var(--color-primary);
           color: white;
-          padding: 8px 12px;
-          border-radius: 4px;
-          cursor: pointer;
-          outline: none;
-          font-size: 14px;
+          box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
         }
 
-        .select-input:focus {
+        .gallery-viewport {
+          flex: 1;
+        }
+
+        .gallery-footer-actions {
+          display: flex;
+          justify-content: center;
+          padding: 40px 0;
+        }
+
+        .load-more-btn {
+          background: rgba(10, 10, 10, 0.4);
+          border: 1px solid var(--color-card-border);
+          color: white;
+          padding: 12px 32px;
+          border-radius: 100px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .load-more-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
           border-color: var(--color-primary);
         }
 
-        .tab-navigation {
-          display: flex;
-          gap: 8px;
-          border-bottom: 1px solid rgba(139, 15, 255, 0.3);
-          padding-bottom: 1px;
-          overflow-x: auto;
-          scrollbar-width: none;
-        }
-
-        .tab-navigation::-webkit-scrollbar {
-          display: none;
-        }
-
-        .tab-button {
-          background: transparent;
-          border: none;
-          color: #888;
-          padding: 12px 24px;
-          font-size: 16px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border-bottom: 2px solid transparent;
-          white-space: nowrap;
-        }
-
-        .tab-button:hover {
-          color: var(--color-primary);
-        }
-
-        .tab-button.active {
-          color: var(--color-primary);
-          border-bottom-color: var(--color-primary);
-          background: rgba(0, 217, 255, 0.1);
-        }
-
-        .gallery-content {
-          min-height: 400px;
-        }
-
-        .error-state {
-          text-align: center;
-          padding: 48px;
-          color: var(--color-secondary);
-        }
-
-        .retry-button {
-          margin-top: 16px;
-          background: var(--color-secondary);
-          color: white;
-          border: none;
-          padding: 10px 24px;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-
-        .load-more-container {
-          display: flex;
-          justify-content: center;
-          margin-top: 40px;
-        }
-
-        .load-more-button {
-          background: transparent;
-          border: 1px solid var(--color-primary);
-          color: var(--color-primary);
-          padding: 12px 32px;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-weight: bold;
-        }
-
-        .load-more-button:hover {
-          background: var(--color-primary);
-          color: black;
-          box-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
-        }
-
         @media (max-width: 768px) {
-          .header-top {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-          }
-
-          .tab-navigation {
-            flex-wrap: wrap;
-          }
-
-          .tab-button {
-            padding: 10px 16px;
-            font-size: 14px;
-            flex: 1 1 auto;
-            text-align: center;
-          }
+          .gallery-header-v2 { flex-direction: column; align-items: flex-start; }
+          .gallery-tabs { width: 100%; overflow-x: auto; padding-bottom: 8px; }
         }
       `}</style>
     </div>
