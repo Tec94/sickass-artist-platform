@@ -565,7 +565,7 @@ export const likeUGC = mutation({
     // Check if like already exists
     const existingLike = await ctx.db
       .query('galleryLikes')
-      .withIndex('by_content_type', (q) => 
+      .withIndex('by_content_type', (q) =>
         q.eq('contentId', args.ugcId).eq('type', 'ugc')
       )
       .filter((q) => q.eq(q.field('userId'), user._id))
@@ -577,19 +577,42 @@ export const likeUGC = mutation({
     if (existingLike) {
       // Unlike: remove the like and decrement count
       await ctx.db.delete(existingLike._id)
-      
+
       const ugc = await ctx.db
         .query('ugcContent')
         .filter((q) => q.eq(q.field('ugcId'), args.ugcId))
         .first()
-      
+
       if (ugc) {
         newCount = Math.max(0, ugc.likeCount - 1)
         await ctx.db.patch(ugc._id, { likeCount: newCount })
+
+        // Refresh trending score for this content
+        const existingScore = await ctx.db
+          .query('trendingScores')
+          .withIndex('by_contentId', (q) =>
+            q.eq('contentId', args.ugcId).eq('contentType', 'ugc')
+          )
+          .first()
+
+        if (existingScore) {
+          const now = Date.now()
+          const ageInDays = (now - ugc.createdAt) / (1000 * 60 * 60 * 24)
+          const recencyFactor = 1 / (1 + ageInDays / 7)
+          const engagementScore = newCount * 2 + ugc.viewCount * 0.5
+          const trendingScore = engagementScore * recencyFactor
+
+          await ctx.db.patch(existingScore._id, {
+            trendingScore,
+            engagementScore,
+            likeCount: newCount,
+            computedAt: now,
+          })
+        }
       } else {
         newCount = 0
       }
-      
+
       liked = false
     } else {
       // Like: create the like and increment count
@@ -604,14 +627,37 @@ export const likeUGC = mutation({
         .query('ugcContent')
         .filter((q) => q.eq(q.field('ugcId'), args.ugcId))
         .first()
-      
+
       if (ugc) {
         newCount = ugc.likeCount + 1
         await ctx.db.patch(ugc._id, { likeCount: newCount })
+
+        // Refresh trending score for this content
+        const existingScore = await ctx.db
+          .query('trendingScores')
+          .withIndex('by_contentId', (q) =>
+            q.eq('contentId', args.ugcId).eq('contentType', 'ugc')
+          )
+          .first()
+
+        if (existingScore) {
+          const now = Date.now()
+          const ageInDays = (now - ugc.createdAt) / (1000 * 60 * 60 * 24)
+          const recencyFactor = 1 / (1 + ageInDays / 7)
+          const engagementScore = newCount * 2 + ugc.viewCount * 0.5
+          const trendingScore = engagementScore * recencyFactor
+
+          await ctx.db.patch(existingScore._id, {
+            trendingScore,
+            engagementScore,
+            likeCount: newCount,
+            computedAt: now,
+          })
+        }
       } else {
         newCount = 1
       }
-      
+
       liked = true
     }
 
@@ -701,6 +747,29 @@ export const incrementUGCViewCount = mutation({
     // Increment view count
     const newViewCount = ugc.viewCount + 1
     await ctx.db.patch(ugc._id, { viewCount: newViewCount })
+
+    // Refresh trending score for this content
+    const existingScore = await ctx.db
+      .query('trendingScores')
+      .withIndex('by_contentId', (q) =>
+        q.eq('contentId', args.ugcId).eq('contentType', 'ugc')
+      )
+      .first()
+
+    if (existingScore) {
+      const now = Date.now()
+      const ageInDays = (now - ugc.createdAt) / (1000 * 60 * 60 * 24)
+      const recencyFactor = 1 / (1 + ageInDays / 7)
+      const engagementScore = ugc.likeCount * 2 + newViewCount * 0.5
+      const trendingScore = engagementScore * recencyFactor
+
+      await ctx.db.patch(existingScore._id, {
+        trendingScore,
+        engagementScore,
+        viewCount: newViewCount,
+        computedAt: now,
+      })
+    }
 
     return {
       ugcId: args.ugcId,
