@@ -197,6 +197,14 @@ export const getTrendingContent = query({
 
       if (item) {
         items.push(item)
+    // Enrich gallery items with creator info
+    for (const item of galleryItems) {
+      const creatorDoc = await ctx.db.get(item.creatorId as any)
+      if (creatorDoc && 'displayName' in creatorDoc && 'avatar' in creatorDoc && 'fanTier' in creatorDoc) {
+        const creator = creatorDoc as Doc<'users'>
+        item.creatorDisplayName = creator.displayName
+        item.creatorAvatar = creator.avatar
+        item.creatorTier = creator.fanTier
       }
     }
 

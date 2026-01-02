@@ -13,6 +13,7 @@ import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
 import type * as offlineQueue from "../offlineQueue.js";
+import type * as recommendations from "../recommendations.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
 import type * as ugc from "../ugc.js";
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   gallery: typeof gallery;
   helpers: typeof helpers;
   offlineQueue: typeof offlineQueue;
+  recommendations: typeof recommendations;
   scheduler: typeof scheduler;
   search: typeof search;
   ugc: typeof ugc;

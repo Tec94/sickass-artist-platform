@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useCallback, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { TrendingGrid, FilterBar } from '../../components/Explore'
-import { CreatorCard } from '../../components/Gallery/CreatorCard'
+import { TrendingGrid } from '../components/Explore/TrendingGrid'
+import { FilterBar } from '../components/Explore/FilterBar'
+import { CreatorCard } from '../components/Gallery/CreatorCard'
 import { Loader2 } from 'lucide-react'
-import type { ExploreFilters, TrendingItem } from '../../types'
+import type { ExploreFilters, TrendingItem } from '../types'
 
 // Default filters
 const DEFAULT_FILTERS: ExploreFilters = {
