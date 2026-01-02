@@ -6,7 +6,7 @@ import { v, ConvexError } from 'convex/values'
  * Formula: (likes × 2 + views × 0.5 + comments × 1.5) × recencyFactor
  * Recency factor: 1 / (1 + daysOld / 7) → 7-day half-life
  */
-function calculateTrendingScore(
+export function calculateTrendingScore(
   likeCount: number,
   viewCount: number,
   commentCount: number,
