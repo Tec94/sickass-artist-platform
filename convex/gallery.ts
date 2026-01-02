@@ -45,6 +45,11 @@ type LikeResult = {
   timestamp: number
 }
 
+type ViewCountResult = {
+  contentId: string
+  newViewCount: number
+}
+
 /**
  * Get paginated gallery content with optional type filter
  */
@@ -551,7 +556,7 @@ export const likeGalleryContent = mutation({
     // Check if like already exists
     const existingLike = await ctx.db
       .query('galleryLikes')
-      .withIndex('by_user_type', (q) => 
+      .withIndex('by_user_type', (q) =>
         q.eq('userId', user._id).eq('type', 'gallery')
       )
       .collect()
@@ -563,10 +568,33 @@ export const likeGalleryContent = mutation({
     if (like) {
       // Unlike: delete the like and decrement count
       await ctx.db.delete(like._id)
-      
+
       // Decrement like count (min 0)
       const newCount = Math.max(0, content.likeCount - 1)
       await ctx.db.patch(content._id, { likeCount: newCount })
+
+      // Refresh trending score for this content
+      const existingScore = await ctx.db
+        .query('trendingScores')
+        .withIndex('by_contentId', (q) =>
+          q.eq('contentId', args.contentId).eq('contentType', 'gallery')
+        )
+        .first()
+
+      if (existingScore) {
+        const now = Date.now()
+        const ageInDays = (now - content.createdAt) / (1000 * 60 * 60 * 24)
+        const recencyFactor = 1 / (1 + ageInDays / 7)
+        const engagementScore = newCount * 2 + content.viewCount * 0.5
+        const trendingScore = engagementScore * recencyFactor
+
+        await ctx.db.patch(existingScore._id, {
+          trendingScore,
+          engagementScore,
+          likeCount: newCount,
+          computedAt: now,
+        })
+      }
 
       return {
         contentId: args.contentId,
@@ -586,6 +614,29 @@ export const likeGalleryContent = mutation({
       // Increment like count
       const newCount = content.likeCount + 1
       await ctx.db.patch(content._id, { likeCount: newCount })
+
+      // Refresh trending score for this content
+      const existingScore = await ctx.db
+        .query('trendingScores')
+        .withIndex('by_contentId', (q) =>
+          q.eq('contentId', args.contentId).eq('contentType', 'gallery')
+        )
+        .first()
+
+      if (existingScore) {
+        const now = Date.now()
+        const ageInDays = (now - content.createdAt) / (1000 * 60 * 60 * 24)
+        const recencyFactor = 1 / (1 + ageInDays / 7)
+        const engagementScore = newCount * 2 + content.viewCount * 0.5
+        const trendingScore = engagementScore * recencyFactor
+
+        await ctx.db.patch(existingScore._id, {
+          trendingScore,
+          engagementScore,
+          likeCount: newCount,
+          computedAt: now,
+        })
+      }
 
       return {
         contentId: args.contentId,
@@ -663,6 +714,58 @@ export const unlikeGalleryContent = mutation({
 })
 
 /**
+ * Increment gallery content view count (public)
+ */
+export const incrementGalleryViewCount = mutation({
+  args: {
+    contentId: v.string(),
+  },
+  handler: async (ctx, args): Promise<ViewCountResult> => {
+    // Find gallery content by contentId
+    const content = await ctx.db
+      .query('galleryContent')
+      .filter((q) => q.eq(q.field('contentId'), args.contentId))
+      .first()
+
+    if (!content) {
+      throw new ConvexError('Gallery content not found')
+    }
+
+    // Increment view count
+    const newViewCount = content.viewCount + 1
+    await ctx.db.patch(content._id, { viewCount: newViewCount })
+
+    // Refresh trending score for this content
+    const existingScore = await ctx.db
+      .query('trendingScores')
+      .withIndex('by_contentId', (q) =>
+        q.eq('contentId', args.contentId).eq('contentType', 'gallery')
+      )
+      .first()
+
+    if (existingScore) {
+      const now = Date.now()
+      const ageInDays = (now - content.createdAt) / (1000 * 60 * 60 * 24)
+      const recencyFactor = 1 / (1 + ageInDays / 7)
+      const engagementScore = content.likeCount * 2 + newViewCount * 0.5
+      const trendingScore = engagementScore * recencyFactor
+
+      await ctx.db.patch(existingScore._id, {
+        trendingScore,
+        engagementScore,
+        viewCount: newViewCount,
+        computedAt: now,
+      })
+    }
+
+    return {
+      contentId: args.contentId,
+      newViewCount,
+    }
+  },
+})
+
+/**
  * Get all content IDs liked by current user
  */
 export const getLikedContentIds = query({
@@ -674,7 +777,7 @@ export const getLikedContentIds = query({
     // Query all likes for this user of type 'gallery'
     const likes = await ctx.db
       .query('galleryLikes')
-      .withIndex('by_user_type', (q) => 
+      .withIndex('by_user_type', (q) =>
         q.eq('userId', user._id).eq('type', 'gallery')
       )
       .collect()

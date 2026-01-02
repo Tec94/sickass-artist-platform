@@ -1,5 +1,5 @@
 import { query } from "./_generated/server"
-import { v } from "convex/values"
+import { v, ConvexError } from "convex/values"
 import type { Doc } from "./_generated/dataModel"
 import { getCurrentUser, getTierLevel } from "./helpers"
 
@@ -34,6 +34,7 @@ type TrendingResult = {
 
 /**
  * Get trending content across gallery and UGC
+ * Uses precomputed scores from trendingScores table for better performance
  */
 export const getTrendingContent = query({
   args: {
@@ -54,6 +55,7 @@ export const getTrendingContent = query({
   handler: async (ctx, args): Promise<TrendingResult> => {
     const pageSize = Math.min(args.pageSize, 50)
     const skip = args.page * pageSize
+    const sortBy = args.sortBy || 'trending'
 
     // Get current user for tier checks
     let currentUser: Doc<'users'> | null = null
@@ -76,103 +78,125 @@ export const getTrendingContent = query({
     const tierFilter = args.tierFilter === 'all' ? undefined : args.tierFilter as FanTier
     const requiredTierLevel = tierFilter ? getTierLevel(tierFilter) : 0
 
-    // Collect gallery content based on category filter
-    let galleryContent: Doc<'galleryContent'>[] = []
-    
-    if (!args.category || args.category === 'all' || args.category === 'gallery') {
-      if (args.category === 'gallery') {
-        galleryContent = await ctx.db.query('galleryContent').collect()
-      } else {
-        galleryContent = await ctx.db.query('galleryContent').collect()
-      }
-    }
+    // Fetch precomputed trending scores
+    let trendingScores: Doc<'trendingScores'>[] = []
 
-    // Collect UGC content (only approved) based on category filter
-    let ugcContent: Doc<'ugcContent'>[] = []
-    
-    if (!args.category || args.category === 'all' || args.category === 'ugc') {
-      const allUGC = await ctx.db
-        .query('ugcContent')
-        .withIndex('by_approved', (q) => q.eq('isApproved', true))
+    if (!args.category || args.category === 'all') {
+      // Get both gallery and UGC scores, sorted by trendingScore (descending)
+      trendingScores = await ctx.db.query('trendingScores').collect()
+    } else if (args.category === 'gallery') {
+      trendingScores = await ctx.db
+        .query('trendingScores')
+        .withIndex('by_content_type', (q) => q.eq('contentType', 'gallery'))
         .collect()
-      ugcContent = allUGC
+    } else if (args.category === 'ugc') {
+      trendingScores = await ctx.db
+        .query('trendingScores')
+        .withIndex('by_content_type', (q) => q.eq('contentType', 'ugc'))
+        .collect()
     }
 
-    // Transform gallery content to trending items
-    const galleryItems: TrendingItem[] = galleryContent
-      .filter(item => {
-        // Filter by tier requirement (user must meet requirement)
-        if (item.requiredFanTier) {
-          const itemTierLevel = getTierLevel(item.requiredFanTier)
-          if (userTierLevel < itemTierLevel) return false
-        }
-        // Filter by tier filter (show only content at or above this tier)
-        if (tierFilter && item.requiredFanTier) {
-          const itemTierLevel = getTierLevel(item.requiredFanTier)
-          if (itemTierLevel < requiredTierLevel) return false
-        }
-        // Filter by date range
-        if (dateCutoff && item.createdAt < dateCutoff) return false
-        return true
-      })
-      .map(item => {
-        const now = Date.now()
-        const daysOld = (now - item.createdAt) / (1000 * 60 * 60 * 24)
-        const recencyFactor = args.sortBy === 'newest' ? 1 : 1 / (1 + daysOld / 7)
-        const trendingScore = (item.likeCount + (item.viewCount * 0.1)) * recencyFactor
+    // Filter by date range
+    if (dateCutoff) {
+      trendingScores = trendingScores.filter((score) => score.createdAt >= dateCutoff)
+    }
 
-        return {
-          id: item._id.toString(),
-          contentId: item.contentId,
-          title: item.title,
-          thumbnailUrl: item.thumbnailUrl,
-          type: 'gallery' as const,
-          subType: item.type,
-          creatorId: item.creatorId.toString(),
+    // Build list of content IDs to fetch
+    const galleryContentIds = new Set<string>()
+    const ugcContentIds = new Set<string>()
+
+    trendingScores.forEach((score) => {
+      if (score.contentType === 'gallery') {
+        galleryContentIds.add(score.contentId)
+      } else {
+        ugcContentIds.add(score.contentId)
+      }
+    })
+
+    // Fetch actual content in parallel
+    const [allGallery, allUGC] = await Promise.all([
+      galleryContentIds.size > 0
+        ? ctx.db.query('galleryContent').collect()
+        : [],
+      ugcContentIds.size > 0
+        ? ctx.db.query('ugcContent').withIndex('by_approved', (q) => q.eq('isApproved', true)).collect()
+        : [],
+    ])
+
+    // Create content lookup maps
+    const galleryMap = new Map(allGallery.map((g) => [g.contentId, g]))
+    const ugcMap = new Map(allUGC.map((u) => [u.ugcId, u]))
+
+    // Transform scores to trending items with content data
+    const items: TrendingItem[] = []
+
+    for (const score of trendingScores) {
+      let item: TrendingItem | null = null
+
+      if (score.contentType === 'gallery') {
+        const content = galleryMap.get(score.contentId)
+        if (!content) continue
+
+        // Filter by tier requirement
+        if (content.requiredFanTier) {
+          const itemTierLevel = getTierLevel(content.requiredFanTier)
+          if (userTierLevel < itemTierLevel) continue
+        }
+        // Filter by tier filter
+        if (tierFilter && content.requiredFanTier) {
+          const itemTierLevel = getTierLevel(content.requiredFanTier)
+          if (itemTierLevel < requiredTierLevel) continue
+        }
+
+        // Filter by date range (already applied to scores, but verify content createdAt)
+        if (dateCutoff && content.createdAt < dateCutoff) continue
+
+        item = {
+          id: content._id.toString(),
+          contentId: content.contentId,
+          title: content.title,
+          thumbnailUrl: content.thumbnailUrl,
+          type: 'gallery',
+          subType: content.type,
+          creatorId: content.creatorId.toString(),
           creatorDisplayName: '',
           creatorAvatar: '',
-          creatorTier: 'bronze' as FanTier,
-          likeCount: item.likeCount,
-          viewCount: item.viewCount,
+          creatorTier: 'bronze',
+          likeCount: score.likeCount,
+          viewCount: score.viewCount,
           isLocked: false,
-          requiredFanTier: item.requiredFanTier,
-          createdAt: item.createdAt,
-          trendingScore,
+          requiredFanTier: content.requiredFanTier,
+          createdAt: content.createdAt,
+          trendingScore: score.trendingScore,
         }
-      })
+      } else {
+        const content = ugcMap.get(score.contentId)
+        if (!content) continue
 
-    // Transform UGC content to trending items
-    const ugcItems: TrendingItem[] = ugcContent
-      .filter(item => {
-        // Filter by date range
-        if (dateCutoff && item.createdAt < dateCutoff) return false
-        return true
-      })
-      .map(item => {
-        const now = Date.now()
-        const daysOld = (now - item.createdAt) / (1000 * 60 * 60 * 24)
-        const recencyFactor = args.sortBy === 'newest' ? 1 : 1 / (1 + daysOld / 7)
-        const trendingScore = (item.likeCount + (item.viewCount * 0.1)) * recencyFactor
+        // Filter by date range (already applied to scores, but verify content createdAt)
+        if (dateCutoff && content.createdAt < dateCutoff) continue
 
-        return {
-          id: item._id.toString(),
-          contentId: item.ugcId,
-          title: item.title,
-          thumbnailUrl: item.imageUrls[0] || '',
-          type: 'ugc' as const,
-          subType: item.category,
-          creatorId: item.creatorId.toString(),
-          creatorDisplayName: item.creatorDisplayName,
-          creatorAvatar: item.creatorAvatar,
-          creatorTier: item.creatorTier,
-          likeCount: item.likeCount,
-          viewCount: item.viewCount,
+        item = {
+          id: content._id.toString(),
+          contentId: content.ugcId,
+          title: content.title,
+          thumbnailUrl: content.imageUrls[0] || '',
+          type: 'ugc',
+          subType: content.category,
+          creatorId: content.creatorId.toString(),
+          creatorDisplayName: content.creatorDisplayName,
+          creatorAvatar: content.creatorAvatar,
+          creatorTier: content.creatorTier,
+          likeCount: score.likeCount,
+          viewCount: score.viewCount,
           isLocked: false,
-          createdAt: item.createdAt,
-          trendingScore,
+          createdAt: content.createdAt,
+          trendingScore: score.trendingScore,
         }
-      })
+      }
 
+      if (item) {
+        items.push(item)
     // Enrich gallery items with creator info
     for (const item of galleryItems) {
       const creatorDoc = await ctx.db.get(item.creatorId as any)
@@ -184,30 +208,39 @@ export const getTrendingContent = query({
       }
     }
 
-    // Combine and sort
-    let allItems = [...galleryItems, ...ugcItems]
+    // Enrich gallery items with creator info
+    for (const item of items) {
+      if (item.type === 'gallery') {
+        const creator = await ctx.db.get(item.creatorId as typeof item.creatorId)
+        if (creator && 'displayName' in creator) {
+          item.creatorDisplayName = creator.displayName
+          item.creatorAvatar = creator.avatar
+          item.creatorTier = creator.fanTier
+        }
+      }
+    }
 
     // Sort based on sortBy
-    if (args.sortBy === 'newest') {
-      allItems.sort((a, b) => b.createdAt - a.createdAt)
-    } else if (args.sortBy === 'mostLiked') {
-      allItems.sort((a, b) => b.likeCount - a.likeCount)
-    } else if (args.sortBy === 'mostViewed') {
-      allItems.sort((a, b) => b.viewCount - a.viewCount)
+    if (sortBy === 'newest') {
+      items.sort((a, b) => b.createdAt - a.createdAt)
+    } else if (sortBy === 'mostLiked') {
+      items.sort((a, b) => b.likeCount - a.likeCount)
+    } else if (sortBy === 'mostViewed') {
+      items.sort((a, b) => b.viewCount - a.viewCount)
     } else {
-      // Trending (default)
-      allItems.sort((a, b) => b.trendingScore - a.trendingScore)
+      // Trending (default) - already sorted by precomputed score
+      items.sort((a, b) => b.trendingScore - a.trendingScore)
     }
 
     // Get total count
-    const totalCount = allItems.length
+    const totalCount = items.length
 
     // Paginate
-    const items = allItems.slice(skip, skip + pageSize)
+    const paginatedItems = items.slice(skip, skip + pageSize)
     const hasMore = skip + pageSize < totalCount
 
     return {
-      items,
+      items: paginatedItems,
       hasMore,
       totalCount,
       page: args.page,
@@ -242,5 +275,92 @@ export const getRecommendedCreators = query({
       .slice(0, limit)
 
     return sortedCreators
+  },
+})
+
+/**
+ * Get trending content by category (gallery or UGC only)
+ * Uses precomputed scores for efficient sorting
+ */
+export const getTrendingByCategory = query({
+  args: {
+    category: v.union(v.literal('gallery'), v.literal('ugc')),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit || 10, 50)
+
+    try {
+      // Fetch precomputed trending scores for the category
+      const trendingScores = await ctx.db
+        .query('trendingScores')
+        .withIndex('by_content_type', (q) => q.eq('contentType', args.category))
+        .collect()
+
+      // Sort by trending score (descending)
+      trendingScores.sort((a, b) => b.trendingScore - a.trendingScore)
+
+      // Take the top N scores
+      const topScores = trendingScores.slice(0, limit)
+
+      // Fetch actual content
+      type TrendingItemByCategory = {
+        contentId: string
+        title: string
+        thumbnailUrl: string
+        likeCount: number
+        viewCount: number
+        createdAt: number
+        trendingScore: number
+        type?: string
+        category?: string
+      }
+      const items: TrendingItemByCategory[] = []
+
+      for (const score of topScores) {
+        if (args.category === 'gallery') {
+          const content = await ctx.db
+            .query('galleryContent')
+            .filter((q) => q.eq(q.field('contentId'), score.contentId))
+            .first()
+
+          if (content) {
+            items.push({
+              contentId: content.contentId,
+              title: content.title,
+              thumbnailUrl: content.thumbnailUrl,
+              likeCount: content.likeCount,
+              viewCount: content.viewCount,
+              type: content.type,
+              createdAt: content.createdAt,
+              trendingScore: score.trendingScore,
+            })
+          }
+        } else {
+          const content = await ctx.db
+            .query('ugcContent')
+            .filter((q) => q.eq(q.field('ugcId'), score.contentId))
+            .first()
+
+          if (content) {
+            items.push({
+              contentId: content.ugcId,
+              title: content.title,
+              thumbnailUrl: content.imageUrls[0] || '',
+              likeCount: content.likeCount,
+              viewCount: content.viewCount,
+              category: content.category,
+              createdAt: content.createdAt,
+              trendingScore: score.trendingScore,
+            })
+          }
+        }
+      }
+
+      return items
+    } catch (err) {
+      console.error('[Trending] Error fetching by category:', err)
+      throw new ConvexError('Failed to fetch trending by category')
+    }
   },
 })

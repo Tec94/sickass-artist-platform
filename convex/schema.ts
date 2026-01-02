@@ -343,4 +343,24 @@ export default defineSchema({
   })
     .index('by_user_type', ['userId', 'type'])
     .index('by_content_type', ['contentId', 'type']),
+
+  // Precomputed trending scores for gallery and UGC content
+  // Refreshed hourly by scheduled job
+  trendingScores: defineTable({
+    contentId: v.string(), // galleryContent.contentId or ugcContent.ugcId
+    contentType: v.union(
+      v.literal('gallery'),
+      v.literal('ugc')
+    ),
+    trendingScore: v.number(),
+    recencyFactor: v.number(),
+    engagementScore: v.number(), // likes * 2 + views * 0.5 + comments * 1.5
+    likeCount: v.number(),
+    viewCount: v.number(),
+    commentCount: v.number(),
+    createdAt: v.number(), // When the content was created
+    computedAt: v.number(), // When this score was computed (for staleness check)
+  })
+    .index('by_content_type', ['contentType', 'trendingScore'])
+    .index('by_contentId', ['contentId', 'contentType']),
 })
