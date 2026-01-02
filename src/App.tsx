@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { GearPage } from './pages/GearPage'
+import { Explore } from './pages/Explore'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
@@ -59,6 +60,7 @@ function App() {
                 } />
                 <Route index element={<Navigate to="/N" replace />} />
               </Route>
+              <Route path="/explore" element={<Explore />} />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
