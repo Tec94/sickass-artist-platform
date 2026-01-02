@@ -23,3 +23,13 @@ export { useEditThread } from './useEditThread'
 export { useSearchThreads } from './useSearchThreads'
 export { useSearchMessages } from './useSearchMessages'
 export { useSwipe } from './useSwipe'
+
+export {
+  useGlobalSearch,
+  type SearchUserResult,
+  type SearchThreadResult,
+  type SearchGalleryResult,
+  type SearchUGCResult,
+  type SearchChannelResult,
+  type SearchResult,
+} from './useGlobalSearch'
