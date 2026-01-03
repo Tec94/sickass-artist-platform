@@ -10,6 +10,8 @@ import { ContentPage } from './pages/ContentPage'
 import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
+import { Events } from './pages/Events'
+import { EventDetail } from './pages/EventDetail'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -86,6 +88,8 @@ function App() {
                   <ForumThreadDetail />
                 </ProtectedRoute>
               } />
+              <Route path="/events" element={<Events />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
             </Routes>
           </FlashlightEffect>
         </GearProvider>
