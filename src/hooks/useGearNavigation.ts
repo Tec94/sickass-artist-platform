@@ -18,8 +18,6 @@ export const useGearNavigation = () => {
 
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
-      const key = event.key.toUpperCase()
-
       // Arrow keys for shifting up/down
       if (event.key === 'ArrowUp') {
         const currentIndex = GEAR_ORDER.indexOf(currentGear)
@@ -31,9 +29,6 @@ export const useGearNavigation = () => {
         if (currentIndex < GEAR_ORDER.length - 1) {
           navigateToGear(GEAR_ORDER[currentIndex + 1])
         }
-      } else if (GEAR_ORDER.includes(key as GearName)) {
-        // Direct gear selection
-        navigateToGear(key as GearName)
       } else if (event.key === 'Escape') {
         // Close mobile menu if present
         const mobileMenu = document.querySelector('[data-mobile-menu]')

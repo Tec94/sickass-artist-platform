@@ -16,6 +16,7 @@ import type * as offlineQueue from "../offlineQueue.js";
 import type * as recommendations from "../recommendations.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
+import type * as trending from "../trending.js";
 import type * as ugc from "../ugc.js";
 import type * as users from "../users.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   recommendations: typeof recommendations;
   scheduler: typeof scheduler;
   search: typeof search;
+  trending: typeof trending;
   ugc: typeof ugc;
   users: typeof users;
 }>;

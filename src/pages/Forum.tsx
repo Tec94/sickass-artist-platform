@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useForumCategories } from '../hooks/useForumCategories'
 import { useForumThreads } from '../hooks/useForumThreads'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
-import { useCreateThread } from '../hooks/useCreateThread'
 import { useCreateReply } from '../hooks/useCreateReply'
 import { CategoryList, ThreadDetail, ThreadForm, ThreadList } from '../components/Forum'
 
@@ -38,8 +37,8 @@ export function Forum() {
   })
 
   const { thread, replies, isLoading: isThreadDetailLoading } = useForumThreadDetail(selectedThreadId)
-  const { handleCreateThread } = useCreateThread(selectedCategoryId)
   const { handleCreateReply } = useCreateReply(selectedThreadId)
+  const createThreadMutation = useMutation(api.forum.createThread)
   const editThreadMutation = useMutation(api.forum.editThread)
   const deleteThreadMutation = useMutation(api.forum.deleteThread)
 
@@ -60,6 +59,10 @@ export function Forum() {
   }
 
   const openCreateThread = () => {
+    // Ensure a category is selected before opening the form
+    if (!selectedCategoryId && categories.length > 0) {
+      setSelectedCategoryId(categories[0]._id)
+    }
     setEditingThread(null)
     setIsThreadFormOpen(true)
   }
@@ -88,7 +91,12 @@ export function Forum() {
              <span className="thread-count">{threads.length} Threads</span>
            </div>
            <div className="header-actions">
-             <button onClick={openCreateThread} className="create-thread-btn border-beam">
+             <button 
+               type="button"
+               onClick={openCreateThread} 
+               disabled={isCategoriesLoading}
+               className="create-thread-btn border-beam"
+             >
                <iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
                <span>New Thread</span>
              </button>
@@ -131,15 +139,17 @@ export function Forum() {
 
       {isThreadFormOpen && (
         <ThreadForm
-          categoryId={selectedCategoryId}
+          categories={categories}
+          initialCategoryId={selectedCategoryId}
           initialData={editingThread ? { title: editingThread.title, content: editingThread.content, tags: editingThread.tags } : undefined}
           onCancel={() => setIsThreadFormOpen(false)}
-          onSubmit={async (title, content, tags) => {
+          onSubmit={async (categoryId, title, content, tags) => {
             if (editingThread) {
               await editThreadMutation({ threadId: editingThread._id, newTitle: title, newContent: content })
             } else {
-              await handleCreateThread(title, content, tags)
+              await createThreadMutation({ categoryId, title, content, tags })
             }
+            setSelectedCategoryId(categoryId)
             setIsThreadFormOpen(false)
           }}
         />
@@ -207,6 +217,17 @@ export function Forum() {
           align-items: center;
           gap: 8px;
           transition: all 0.3s ease;
+          position: relative;
+          z-index: 10;
+        }
+
+        .create-thread-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .create-thread-btn:not(:disabled):hover {
+          filter: brightness(1.1);
         }
 
         .forum-content {

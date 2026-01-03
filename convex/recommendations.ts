@@ -1,6 +1,6 @@
 import { query } from "./_generated/server"
 import { v, ConvexError } from "convex/values"
-import type { Doc } from "./_generated/dataModel"
+import type { Doc, Id } from "./_generated/dataModel"
 import { getCurrentUser, getTierLevel } from "./helpers"
 
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
@@ -197,25 +197,19 @@ export const getTrendingContent = query({
 
       if (item) {
         items.push(item)
-    // Enrich gallery items with creator info
-    for (const item of galleryItems) {
-      const creatorDoc = await ctx.db.get(item.creatorId as any)
-      if (creatorDoc && 'displayName' in creatorDoc && 'avatar' in creatorDoc && 'fanTier' in creatorDoc) {
-        const creator = creatorDoc as Doc<'users'>
-        item.creatorDisplayName = creator.displayName
-        item.creatorAvatar = creator.avatar
-        item.creatorTier = creator.fanTier
       }
     }
 
     // Enrich gallery items with creator info
     for (const item of items) {
       if (item.type === 'gallery') {
-        const creator = await ctx.db.get(item.creatorId as typeof item.creatorId)
-        if (creator && 'displayName' in creator) {
-          item.creatorDisplayName = creator.displayName
-          item.creatorAvatar = creator.avatar
-          item.creatorTier = creator.fanTier
+        const creatorId = item.creatorId as Id<'users'>
+        const creator = await ctx.db.get(creatorId)
+        if (creator && 'displayName' in creator && 'avatar' in creator && 'fanTier' in creator) {
+          const user = creator as Doc<'users'>
+          item.creatorDisplayName = user.displayName
+          item.creatorAvatar = user.avatar
+          item.creatorTier = user.fanTier
         }
       }
     }

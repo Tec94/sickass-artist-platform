@@ -7,9 +7,15 @@ import { getCurrentUser, canAccessCategory, isModerator } from "./helpers";
 export const getCategories = query({
   args: {},
   handler: async (ctx) => {
+    const allCategories = await ctx.db.query("categories").collect();
+
+    // Check if user is authenticated for role/tier filtering
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      return [];
+      // Return public categories (those without role/tier requirements)
+      return allCategories
+        .filter((c) => !c.requiredRole && !c.requiredFanTier)
+        .sort((a, b) => a.order - b.order);
     }
 
     const clerkId = identity.subject;
@@ -19,10 +25,11 @@ export const getCategories = query({
       .first();
 
     if (!user) {
-      return [];
+      // Return public categories if user record not found
+      return allCategories
+        .filter((c) => !c.requiredRole && !c.requiredFanTier)
+        .sort((a, b) => a.order - b.order);
     }
-
-    const allCategories = await ctx.db.query("categories").collect();
 
     const tierHierarchy: Record<string, number> = {
       bronze: 0,
@@ -71,13 +78,26 @@ export const getThreads = query({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const userId = user._id;
-
-    const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
-    if (!hasAccess) {
-      throw new ConvexError("Access denied");
+    // Get category to check access requirements
+    const category = await ctx.db.get(args.categoryId);
+    if (!category) {
+      throw new ConvexError("Category not found");
     }
+
+    // Check if category requires authentication
+    const requiresAuth = category.requiredRole || category.requiredFanTier;
+
+    if (requiresAuth) {
+      // For restricted categories, require authentication
+      const user = await getCurrentUser(ctx);
+      const userId = user._id;
+
+      const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
+      if (!hasAccess) {
+        throw new ConvexError("Access denied");
+      }
+    }
+    // For public categories, allow viewing without authentication
 
     let limit = args.limit;
     if (limit > 50) {
@@ -118,13 +138,26 @@ export const getThreadDetail = query({
     categoryId: v.id("categories")
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const userId = user._id;
-
-    const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
-    if (!hasAccess) {
-      throw new ConvexError("Access denied");
+    // Get category to check access requirements
+    const category = await ctx.db.get(args.categoryId);
+    if (!category) {
+      throw new ConvexError("Category not found");
     }
+
+    // Check if category requires authentication
+    const requiresAuth = category.requiredRole || category.requiredFanTier;
+
+    if (requiresAuth) {
+      // For restricted categories, require authentication
+      const user = await getCurrentUser(ctx);
+      const userId = user._id;
+
+      const hasAccess = await canAccessCategory(ctx, userId, args.categoryId);
+      if (!hasAccess) {
+        throw new ConvexError("Access denied");
+      }
+    }
+    // For public categories, allow viewing without authentication
 
     const thread = await ctx.db.get(args.threadId);
     if (!thread || thread.isDeleted) {
@@ -760,5 +793,71 @@ export const recordOfflineVote = mutation({
     });
     
     return { queueItemId };
+  },
+});
+
+// Seed default categories (run once to initialize)
+export const seedCategories = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if categories already exist
+    const existingCategories = await ctx.db.query("categories").first();
+    if (existingCategories) {
+      return { message: "Categories already exist" };
+    }
+
+    const defaultCategories = [
+      {
+        name: "General Discussion",
+        slug: "general",
+        description: "Chat about anything and everything",
+        icon: "solar:chat-round-dots-linear",
+        color: "#6366f1",
+        order: 1,
+      },
+      {
+        name: "Art & Creations",
+        slug: "art",
+        description: "Share and discuss artwork and creative projects",
+        icon: "solar:palette-linear",
+        color: "#ec4899",
+        order: 2,
+      },
+      {
+        name: "Music",
+        slug: "music",
+        description: "Discuss tracks, albums, and music production",
+        icon: "solar:music-notes-linear",
+        color: "#10b981",
+        order: 3,
+      },
+      {
+        name: "Announcements",
+        slug: "announcements",
+        description: "Official news and updates",
+        icon: "solar:megaphone-linear",
+        color: "#f59e0b",
+        order: 0,
+      },
+      {
+        name: "Feedback & Suggestions",
+        slug: "feedback",
+        description: "Share your ideas to help improve the platform",
+        icon: "solar:lightbulb-linear",
+        color: "#8b5cf6",
+        order: 4,
+      },
+    ];
+
+    const now = Date.now();
+    for (const category of defaultCategories) {
+      await ctx.db.insert("categories", {
+        ...category,
+        threadCount: 0,
+        createdAt: now,
+      });
+    }
+
+    return { message: "Categories seeded successfully", count: defaultCategories.length };
   },
 });

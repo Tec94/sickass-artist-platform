@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Id } from '../../types/forum'
+import type { Category, Id } from '../../types/forum'
 
 interface ThreadFormInitialData {
   title: string
@@ -8,8 +8,9 @@ interface ThreadFormInitialData {
 }
 
 interface ThreadFormProps {
-  categoryId: Id<'categories'> | null
-  onSubmit: (title: string, content: string, tags: string[]) => Promise<void>
+  categories: Category[]
+  initialCategoryId: Id<'categories'> | null
+  onSubmit: (categoryId: Id<'categories'>, title: string, content: string, tags: string[]) => Promise<void>
   onCancel: () => void
   initialData?: ThreadFormInitialData
 }
@@ -22,7 +23,10 @@ const parseTags = (value: string): string[] => {
     .filter((t, idx, arr) => arr.indexOf(t) === idx)
 }
 
-export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: ThreadFormProps) {
+export function ThreadForm({ categories, initialCategoryId, onSubmit, onCancel, initialData }: ThreadFormProps) {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(
+    initialCategoryId ?? (categories.length > 0 ? categories[0]._id : null)
+  )
   const [title, setTitle] = useState(initialData?.title ?? '')
   const [content, setContent] = useState(initialData?.content ?? '')
   const [tagsInput, setTagsInput] = useState((initialData?.tags ?? []).join(', '))
@@ -37,6 +41,8 @@ export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: Thre
     const trimmedTitle = title.trim()
     const trimmedContent = content.trim()
 
+    if (!selectedCategoryId) return 'Please select a category'
+
     if (!trimmedTitle) return 'Title cannot be empty'
     if (trimmedTitle.length > 200) return 'Title must be 200 characters or less'
 
@@ -46,8 +52,6 @@ export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: Thre
     for (const tag of tags) {
       if (tag.length > 20) return 'Each tag must be 20 characters or less'
     }
-
-    if (!categoryId) return 'No category selected'
 
     return null
   }
@@ -59,11 +63,13 @@ export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: Thre
       return
     }
 
+    if (!selectedCategoryId) return
+
     setError(null)
     setIsSubmitting(true)
 
     try {
-      await onSubmit(title.trim(), content.trim(), tags)
+      await onSubmit(selectedCategoryId, title.trim(), content.trim(), tags)
     } catch (err) {
       setError((err as Error).message)
       return
@@ -85,7 +91,7 @@ export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: Thre
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-gray-700 bg-gray-900/90 shadow-2xl">
+      <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-gray-700 bg-gray-900/90 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-5 border-b border-gray-700">
           <h2 className="text-white font-bold text-xl">
             {isEditMode ? 'Edit Thread' : 'Create Thread'}
@@ -94,6 +100,27 @@ export function ThreadForm({ categoryId, onSubmit, onCancel, initialData }: Thre
         </div>
 
         <div className="p-5 space-y-4">
+          {!isEditMode && (
+            <div>
+              <label className="block text-gray-200 text-sm font-semibold mb-1">Category</label>
+              <select
+                value={selectedCategoryId ?? ''}
+                onChange={(e) => setSelectedCategoryId(e.target.value as Id<'categories'>)}
+                className="w-full rounded-xl border border-gray-700 bg-gray-900/30 text-gray-100 p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/60"
+              >
+                {categories.length === 0 ? (
+                  <option value="">No categories available</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-gray-200 text-sm font-semibold mb-1">Title</label>
             <input
