@@ -9,10 +9,12 @@
  */
 
 import type * as chat from "../chat.js";
+import type * as crons from "../crons.js";
 import type * as events from "../events.js";
 import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
+import type * as httpActions from "../httpActions.js";
 import type * as offlineQueue from "../offlineQueue.js";
 import type * as recommendations from "../recommendations.js";
 import type * as scheduler from "../scheduler.js";
@@ -20,6 +22,7 @@ import type * as search from "../search.js";
 import type * as trending from "../trending.js";
 import type * as ugc from "../ugc.js";
 import type * as users from "../users.js";
+import type * as venues from "../venues.js";
 
 import type {
   ApiFromModules,
@@ -29,10 +32,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   chat: typeof chat;
+  crons: typeof crons;
   events: typeof events;
   forum: typeof forum;
   gallery: typeof gallery;
   helpers: typeof helpers;
+  httpActions: typeof httpActions;
   offlineQueue: typeof offlineQueue;
   recommendations: typeof recommendations;
   scheduler: typeof scheduler;
@@ -40,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   trending: typeof trending;
   ugc: typeof ugc;
   users: typeof users;
+  venues: typeof venues;
 }>;
 
 /**

@@ -628,7 +628,7 @@ export const createTicketType = mutation({
     }
 
     // Check if user can create tickets for this event
-    if (event.artistId.toString() !== user._id.toString() && !(await isModerator(ctx))) {
+    if (event.artistId.toString() !== user._id.toString() && !isModerator(user)) {
       throw new ValidationError('Not authorized to create tickets for this event', 'eventId')
     }
 
