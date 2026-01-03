@@ -71,3 +71,6 @@ export * from './chat'
 
 // Forum types
 export * from './forum'
+
+// Event types
+export * from './events'

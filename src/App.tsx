@@ -10,6 +10,11 @@ import { ContentPage } from './pages/ContentPage'
 import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
+import { Events } from './pages/Events'
+import { EventDetail } from './pages/EventDetail'
+import { ConfirmationPage } from './pages/ConfirmationPage'
+import { AdminEvents } from './pages/AdminEvents'
+import { AdminEventForm } from './pages/AdminEventForm'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -17,6 +22,7 @@ import { FlashlightEffect } from './components/Effects/FlashlightEffect'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
+import './styles/events.css'
 import './index.css'
 
 
@@ -84,6 +90,23 @@ function App() {
               <Route path="/forum/thread/:threadId" element={
                 <ProtectedRoute>
                   <ForumThreadDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/events" element={<Events />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
+              <Route path="/events/confirmation" element={
+                <ProtectedRoute>
+                  <ConfirmationPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/events" element={
+                <ProtectedRoute>
+                  <AdminEvents />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/events/new" element={
+                <ProtectedRoute>
+                  <AdminEventForm />
                 </ProtectedRoute>
               } />
             </Routes>
