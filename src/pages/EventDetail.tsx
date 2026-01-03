@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api'
 import { Id } from '../../convex/_generated/dataModel'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { QueueSection, CheckoutModal } from '../components/events'
+import { CalendarExportModal } from '../components/CalendarExportModal'
 import {
   formatEventTime,
   formatEventDate,
@@ -19,6 +20,7 @@ export function EventDetail() {
   const navigate = useNavigate()
   const animate = useScrollAnimation()
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isCalendarExportOpen, setIsCalendarExportOpen] = useState(false)
 
   const handleAdmitted = useCallback(() => {
     setIsCheckoutOpen(true)
@@ -110,6 +112,16 @@ export function EventDetail() {
               <span>{getAvailabilityText(event.capacity, event.ticketsSold)}</span>
             </div>
           </div>
+
+          {!isPast && (
+            <button
+              onClick={() => setIsCalendarExportOpen(true)}
+              className="export-calendar-button"
+            >
+              <iconify-icon icon="solar:calendar-add-bold"></iconify-icon>
+              <span>Add to Calendar</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,6 +237,13 @@ export function EventDetail() {
               onRequeue={handleRequeue}
             />
           )}
+
+          {/* Calendar Export Modal */}
+          <CalendarExportModal
+            isOpen={isCalendarExportOpen}
+            onClose={() => setIsCalendarExportOpen(false)}
+            event={event}
+          />
 
           {/* Related Events */}
           {relatedEvents && relatedEvents.items.length > 0 && (
@@ -350,6 +369,31 @@ export function EventDetail() {
 
         .meta-icon {
           color: var(--color-primary);
+          font-size: 20px;
+        }
+
+        .export-calendar-button {
+          margin-top: 16px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 24px;
+          background: rgba(6, 182, 212, 0.2);
+          border: 1px solid var(--color-primary);
+          border-radius: 8px;
+          color: var(--color-primary);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .export-calendar-button:hover {
+          background: rgba(6, 182, 212, 0.3);
+          transform: translateY(-2px);
+        }
+
+        .export-calendar-button iconify-icon {
           font-size: 20px;
         }
 
