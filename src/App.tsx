@@ -13,6 +13,8 @@ import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { Events } from './pages/Events'
 import { EventDetail } from './pages/EventDetail'
 import { ConfirmationPage } from './pages/ConfirmationPage'
+import { AdminEvents } from './pages/AdminEvents'
+import { AdminEventForm } from './pages/AdminEventForm'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -95,6 +97,16 @@ function App() {
               <Route path="/events/confirmation" element={
                 <ProtectedRoute>
                   <ConfirmationPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/events" element={
+                <ProtectedRoute>
+                  <AdminEvents />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/events/new" element={
+                <ProtectedRoute>
+                  <AdminEventForm />
                 </ProtectedRoute>
               } />
             </Routes>
