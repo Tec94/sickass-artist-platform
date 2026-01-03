@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Id } from '../../convex/_generated/dataModel'
+import { Id } from '../../../convex/_generated/dataModel'
 import { 
   validateEventForm, 
   validateTicketTypeForm, 

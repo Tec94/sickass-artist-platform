@@ -1,0 +1,52 @@
+.action-card-container {
+  position: sticky;
+  top: 20px;
+}
+
+.action-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-card-border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.action-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 8px 0;
+}
+
+.action-card-subtitle {
+  font-size: 14px;
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.action-button {
+  width: 100%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+
+.action-button:hover {
+  opacity: 0.9;
+}
+
+.action-card-note {
+  font-size: 12px;
+  color: var(--color-text-dim);
+  margin: 12px 0 0 0;
+  text-align: center;
+}
