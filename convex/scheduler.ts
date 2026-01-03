@@ -117,10 +117,10 @@ export const cleanupExpiredCheckoutSessions = mutation({
     }
     
     // Defensive reconciliation: verify cleanup was complete
-    const remainingExpired = await ctx.db
+    const remainingExpired = (await ctx.db
       .query('checkoutSessions')
       .withIndex('by_expires', (q) => q.lt('expiresAtUtc', now))
-      .count();
+      .collect()).length;
     
     if (remainingExpired > 0) {
       console.warn(`⚠️ Reconciliation: ${remainingExpired} expired sessions remain after cleanup`);

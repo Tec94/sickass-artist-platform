@@ -320,7 +320,7 @@ export const getEventDetail = query({
             .collect(),
         ])
 
-        let queueData: EventDetailWithContext['userContext']['queueEntry'] = undefined
+        let queueData: NonNullable<EventDetailWithContext['userContext']>['queueEntry'] = undefined
         if (queueEntry) {
           let position = 0
           if (queueEntry.status === 'waiting') {

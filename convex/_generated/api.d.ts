@@ -9,6 +9,7 @@
  */
 
 import type * as chat from "../chat.js";
+import type * as events from "../events.js";
 import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
@@ -28,6 +29,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   chat: typeof chat;
+  events: typeof events;
   forum: typeof forum;
   gallery: typeof gallery;
   helpers: typeof helpers;
