@@ -37,6 +37,13 @@ const Merch = lazy(() => import('./pages/Merch').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+const MerchDetail = lazy(() => import('./pages/MerchDetail').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.MerchDetail />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
@@ -104,6 +111,11 @@ function App() {
                 } />
                 <Route path="/events" element={<Events />} />
                 <Route path="/merch" element={<Merch />} />
+                <Route path="/merch/:productId" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
+                    <MerchDetail />
+                  </Suspense>
+                } />
                 <Route path="/events/:eventId" element={
                   <Suspense fallback={<EventDetailSkeleton />}>
                     <EventDetail />
