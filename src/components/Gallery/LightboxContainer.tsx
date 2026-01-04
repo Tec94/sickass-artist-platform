@@ -5,7 +5,8 @@ import { LightboxMetadata } from './LightboxMetadata'
 import { RelatedContent } from './RelatedContent'
 import { CreatorPortfolio } from './CreatorPortfolio'
 import type { GalleryContentItem } from '../../types/gallery'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
+import { perfMonitor } from '../../utils/performanceMonitor'
 
 interface LightboxContainerProps {
   items: GalleryContentItem[]
@@ -37,6 +38,7 @@ export const LightboxContainer = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef({ x: 0, y: 0, time: 0 })
   const lastTapRef = useRef(0)
+  const [openStartTime, setOpenStartTime] = useState<number | null>(null)
 
   // Focus management
   useEffect(() => {
@@ -48,11 +50,23 @@ export const LightboxContainer = ({
   // Sync initial state
   useEffect(() => {
     if (initialIsOpen) {
+      perfMonitor.mark('lightbox-open')
+      setOpenStartTime(performance.now())
       open(initialIndex)
-    } else {
-      close()
     }
   }, [initialIsOpen, initialIndex, open, close])
+
+  // Track lightbox open time
+  useEffect(() => {
+    if (isOpen && openStartTime !== null) {
+      const timeout = setTimeout(() => {
+        const duration = performance.now() - openStartTime
+        perfMonitor.trackLightboxOpen(duration)
+        setOpenStartTime(null)
+      }, 0)
+      return () => clearTimeout(timeout)
+    }
+  }, [isOpen, openStartTime])
 
   // Handle touch swipe and double tap
   useEffect(() => {

@@ -5,6 +5,7 @@ import {
   getOptimalFormat,
 } from '../../utils/imageOptimization'
 import { imageCache } from '../../utils/imageCache'
+import { perfMonitor } from '../../utils/performanceMonitor'
 
 interface OptimizedImageProps {
   src: string
@@ -36,10 +37,14 @@ export const OptimizedImage = memo(function OptimizedImage({
   const observerRef = useRef<IntersectionObserver | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const loadStartTimeRef = useRef<number>(0)
 
   const computedAspectRatio = height && width ? width / height : aspectRatio
 
   const loadImage = useCallback(async (url: string) => {
+    // Start timing image load
+    loadStartTimeRef.current = performance.now()
+
     try {
       const cached = await imageCache.get(url)
       if (cached) {
@@ -47,6 +52,10 @@ export const OptimizedImage = memo(function OptimizedImage({
         setImageSrc(blobUrl)
         setIsLoaded(true)
         onLoad?.()
+
+        // Track cache hit performance
+        const duration = performance.now() - loadStartTimeRef.current
+        perfMonitor.trackImageLoad(url, duration, { cached: true })
         return
       }
     } catch (e) {
@@ -59,6 +68,10 @@ export const OptimizedImage = memo(function OptimizedImage({
     loadTimeoutRef.current = setTimeout(() => {
       setError(new Error('Image load timeout'))
       onError?.(new Error('Image took too long to load'))
+
+      // Track timeout
+      const duration = performance.now() - loadStartTimeRef.current
+      perfMonitor.trackImageLoad(url, duration, { error: 'timeout' })
     }, 3000)
 
     const img = new Image()
@@ -67,6 +80,10 @@ export const OptimizedImage = memo(function OptimizedImage({
       clearTimeout(loadTimeoutRef.current!)
       setIsLoaded(true)
       setError(null)
+
+      // Track successful load
+      const duration = performance.now() - loadStartTimeRef.current
+      perfMonitor.trackImageLoad(url, duration, { cached: false })
 
       try {
         const canvas = document.createElement('canvas')
@@ -95,6 +112,10 @@ export const OptimizedImage = memo(function OptimizedImage({
       setError(error)
       setImageSrc(null)
       onError?.(error)
+
+      // Track error
+      const duration = performance.now() - loadStartTimeRef.current
+      perfMonitor.trackImageLoad(url, duration, { error: 'load_failed' })
     }
 
     img.src = getOptimalFormat(url)
