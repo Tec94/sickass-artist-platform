@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
+import { CartProvider } from './contexts/CartContext'
 import { GearPage } from './pages/GearPage'
 import { Explore } from './pages/Explore'
 import { Profile } from './pages/Profile'
@@ -44,13 +45,21 @@ const MerchDetail = lazy(() => import('./pages/MerchDetail').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+const ShoppingCart = lazy(() => import('./pages/ShoppingCart').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.ShoppingCart />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
     <UserProvider>
-      <BrowserRouter>
-        <GearProvider>
-          <FlashlightEffect className="app-root">
+      <CartProvider>
+        <BrowserRouter>
+          <GearProvider>
+            <FlashlightEffect className="app-root">
             <ParallaxBackground />
             <NavbarFallback />
             <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
@@ -111,6 +120,7 @@ function App() {
                 } />
                 <Route path="/events" element={<Events />} />
                 <Route path="/merch" element={<Merch />} />
+                <Route path="/merch/cart" element={<ShoppingCart />} />
                 <Route path="/merch/:productId" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
                     <MerchDetail />
@@ -143,6 +153,7 @@ function App() {
           </FlashlightEffect>
         </GearProvider>
       </BrowserRouter>
+      </CartProvider>
     </UserProvider>
   )
 }
