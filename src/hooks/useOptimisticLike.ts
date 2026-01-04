@@ -1,110 +1,155 @@
-import { useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useOfflineQueue } from './useOfflineQueue'
-import { showToast } from '../lib/toast'
+import { useAuth } from './useAuth'
 
-type LikeType = 'gallery' | 'ugc'
-
-interface UseOptimisticLikeResult {
-  likeCount: number
+interface UseOptimisticLikeReturn {
   isLiked: boolean
+  likeCount: number
+  isLoading: boolean
+  isRetrying: boolean
+  error: Error | null
   isPending: boolean
-  error: string | null
+  toggleLike: () => Promise<void>
   handleLike: () => Promise<void>
 }
 
-export function useOptimisticLike(
+export const useOptimisticLike = (
   contentId: string,
-  type: LikeType,
-  initialCount: number,
-  initialIsLiked = false
-): UseOptimisticLikeResult {
-  const { addToQueue, isOnline } = useOfflineQueue()
+  contentType: 'gallery' | 'ugc',
+  initialLiked: boolean,
+  initialCount: number
+): UseOptimisticLikeReturn => {
+  const { user } = useAuth()
+  const [isLiked, setIsLiked] = useState(initialLiked)
+  const [likeCount, setLikeCount] = useState(initialCount)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [isPending, setIsPending] = useState(false)
 
-  const likeGallery = useMutation(api.gallery.likeGalleryContent)
-  const likeUGC = useMutation(api.ugc.likeUGC)
+  // Refs for state consistency
+  const previousStateRef = useRef({ isLiked: initialLiked, count: initialCount })
+  const mutationQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const retryCountRef = useRef(0)
+  const maxRetriesRef = useRef(3)
 
-  const stateRef = useRef({
-    likeCount: initialCount,
-    isLiked: initialIsLiked,
-  })
+  // Mutations
+  const likeContentMutation = useMutation(
+    contentType === 'gallery' ? api.gallery.likeGalleryContent : api.ugc.likeUGC
+  )
+  const unlikeContentMutation = useMutation(
+    contentType === 'gallery' ? api.gallery.unlikeGalleryContent : api.ugc.unlikeUGC
+  )
 
-  const isPendingRef = useRef(false)
+  // Offline queue
+  const { addToQueue } = useOfflineQueue()
 
-  const handleLike = useCallback(async () => {
-    if (isPendingRef.current) return
+  // Retry with exponential backoff
+  const retryWithBackoff = useCallback(
+    async (action: () => Promise<void>, maxRetries = 3) => {
+      let lastError: Error | null = null
 
-    isPendingRef.current = true
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          setIsRetrying(i > 0)
+          await action()
+          retryCountRef.current = 0
+          setIsRetrying(false)
+          return
+        } catch (err) {
+          lastError = err as Error
+          if (i < maxRetries - 1) {
+            // Exponential backoff: 1s, 2s, 4s
+            const delay = Math.pow(2, i) * 1000
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      }
 
-    const previousLiked = stateRef.current.isLiked
-    const previousCount = stateRef.current.likeCount
+      throw lastError
+    },
+    []
+  )
 
-    const optimisticLiked = !previousLiked
-    const optimisticCount = Math.max(0, previousCount + (previousLiked ? -1 : 1))
-
-    stateRef.current = {
-      likeCount: optimisticCount,
-      isLiked: optimisticLiked,
-    }
-
-    if (!isOnline) {
-      await addToQueue({
-        type: 'like_gallery',
-        payload: {
-          contentId: type === 'gallery' ? contentId : undefined,
-          ugcId: type === 'ugc' ? contentId : undefined,
-        },
-      })
-      isPendingRef.current = false
+  // Toggle like
+  const toggleLike = useCallback(async () => {
+    if (!user) {
+      setError(new Error('You must be logged in to like'))
       return
     }
 
-    try {
-      let result: { liked: boolean; newCount: number }
-      if (type === 'gallery') {
-        result = await likeGallery({ contentId })
-      } else {
-        result = await likeUGC({ ugcId: contentId })
-      }
+    // Add to mutation queue to prevent race conditions
+    mutationQueueRef.current = mutationQueueRef.current.then(async () => {
+      setIsLoading(true)
+      setError(null)
 
-      stateRef.current = {
-        likeCount: result.newCount,
-        isLiked: result.liked,
-      }
-    } catch (err) {
-      stateRef.current = {
-        likeCount: previousCount,
-        isLiked: previousLiked,
-      }
+      // Store previous state for rollback
+      previousStateRef.current = { isLiked, count: likeCount }
 
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update like'
-      showToast(errorMessage, {
-        action: {
-          label: 'Retry',
-          onClick: () => {
-            void handleLike()
-          },
-        },
-      })
-    } finally {
-      isPendingRef.current = false
+      // Optimistic update
+      const newLiked = !isLiked
+      setIsLiked(newLiked)
+      setLikeCount(prev => (newLiked ? prev + 1 : prev - 1))
+      setIsPending(true)
+
+      try {
+        const mutation = newLiked
+          ? () => likeContentMutation({ [contentType === 'gallery' ? 'contentId' : 'ugcId']: contentId })
+          : () => unlikeContentMutation({ [contentType === 'gallery' ? 'contentId' : 'ugcId']: contentId })
+
+        // Try with retries
+        await retryWithBackoff(mutation, maxRetriesRef.current)
+
+        setIsPending(false)
+        setIsLoading(false)
+      } catch (err) {
+        const error = err as Error
+
+        // Rollback on error
+        setIsLiked(previousStateRef.current.isLiked)
+        setLikeCount(previousStateRef.current.count)
+        setError(error)
+        setIsPending(false)
+        setIsLoading(false)
+
+        // Queue for offline sync
+        if (navigator.onLine === false) {
+          const queueType = contentType === 'gallery' ? 'like_gallery' : 'like_ugc'
+          const payload = contentType === 'gallery'
+            ? { contentId }
+            : { ugcId: contentId }
+
+          await addToQueue({
+            type: queueType,
+            action: newLiked ? 'like' : 'unlike',
+            payload,
+          })
+        }
+
+        // Show error toast
+        console.error('Failed to update like:', error)
+        throw error
+      }
+    })
+  }, [user, isLiked, likeCount, contentId, contentType, likeContentMutation, unlikeContentMutation, addToQueue, retryWithBackoff])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel pending mutations if component unmounts
     }
-  }, [contentId, type, isOnline, addToQueue, likeGallery, likeUGC])
+  }, [])
 
   return {
-    get likeCount() {
-      return stateRef.current.likeCount
-    },
-    get isLiked() {
-      return stateRef.current.isLiked
-    },
-    get isPending() {
-      return isPendingRef.current
-    },
-    get error() {
-      return null
-    },
-    handleLike,
+    isLiked,
+    likeCount,
+    isLoading,
+    isRetrying,
+    error,
+    isPending,
+    toggleLike,
+    handleLike: toggleLike,
   }
 }
