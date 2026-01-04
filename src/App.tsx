@@ -66,6 +66,13 @@ const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation').then(m 
     </MerchErrorBoundary>
   )
 })))
+const DropsPage = lazy(() => import('./pages/DropsPage').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.DropsPage />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
@@ -134,6 +141,7 @@ function App() {
                 } />
                 <Route path="/events" element={<Events />} />
                 <Route path="/merch" element={<Merch />} />
+                <Route path="/merch/drops" element={<DropsPage />} />
                 <Route path="/merch/cart" element={<ShoppingCart />} />
                 <Route path="/merch/checkout" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>

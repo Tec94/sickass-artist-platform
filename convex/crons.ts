@@ -1,5 +1,5 @@
 import { cronJobs } from "convex/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 // Convex cron jobs configuration
 // These run automatically on the specified intervals
@@ -11,5 +11,17 @@ crons.interval(
   { minutes: 5 },
   api.events.cleanupExpiredEntries
 );
+
+crons.interval(
+  'auto-activate-drops',
+  { minutes: 5 }, // Every 5 minutes
+  internal.drops.autoActivateDrops
+)
+
+crons.interval(
+  'cleanup-preorders',
+  { hours: 1 }, // Every hour
+  internal.drops.cleanupExpiredPreOrders
+)
 
 export default crons;
