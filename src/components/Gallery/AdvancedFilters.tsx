@@ -286,23 +286,21 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
           </FilterSection>
         </div>
 
-        {/* Mobile apply button */}
-        {isModal && (
-          <div className="sticky bottom-0 p-4 border-t border-gray-800 bg-black flex gap-2">
-            <button
-              onClick={clearAll}
-              className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition"
-            >
-              Clear
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition font-medium"
-            >
-              Apply
-            </button>
-          </div>
-        )}
+        {/* Apply button */}
+        <div className="sticky bottom-0 p-4 border-t border-gray-800 bg-black flex gap-2">
+          <button
+            onClick={clearAll}
+            className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition"
+          >
+            Clear
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition font-medium"
+          >
+            Apply
+          </button>
+        </div>
       </div>
     </div>
   )

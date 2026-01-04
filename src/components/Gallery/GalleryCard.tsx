@@ -26,6 +26,8 @@ export const GalleryCard = memo(function GalleryCard({
 
   return (
     <div
+      role="button"
+      aria-label="View item"
       className={`bg-gray-900/70 border border-gray-800 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer hover:border-cyan-500/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 ${
         isLocked ? 'opacity-80' : ''
       }`}

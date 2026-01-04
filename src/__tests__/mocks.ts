@@ -1,0 +1,53 @@
+import { GalleryContentItem } from '../types/gallery';
+import { Id } from '../../convex/_generated/dataModel';
+
+export const mockGalleryItems: GalleryContentItem[] = [
+  {
+    contentId: '1',
+    type: 'show',
+    title: 'Show 1',
+    description: 'Description 1',
+    imageUrl: 'https://example.com/image1.jpg',
+    thumbnailUrl: 'https://example.com/thumb1.jpg',
+    creatorId: 'user1' as unknown as Id<'users'>,
+    tags: ['tag1', 'tag2'],
+    likeCount: 10,
+    viewCount: 100,
+    pinned: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    creator: {
+      _id: 'user1' as unknown as Id<'users'>,
+      displayName: 'User 1',
+      avatar: 'https://example.com/avatar1.jpg',
+      username: 'user1',
+      fanTier: 'bronze',
+    },
+    isLiked: false,
+    isLocked: false,
+  },
+  {
+    contentId: '2',
+    type: 'bts',
+    title: 'Show 2',
+    description: 'Description 2',
+    imageUrl: 'https://example.com/image2.jpg',
+    thumbnailUrl: 'https://example.com/thumb2.jpg',
+    creatorId: 'user1' as unknown as Id<'users'>,
+    tags: ['tag1', 'tag3'],
+    likeCount: 20,
+    viewCount: 200,
+    pinned: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    creator: {
+      _id: 'user1' as unknown as Id<'users'>,
+      displayName: 'User 1',
+      avatar: 'https://example.com/avatar1.jpg',
+      username: 'user1',
+      fanTier: 'bronze',
+    },
+    isLiked: true,
+    isLocked: false,
+  },
+];
