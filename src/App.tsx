@@ -17,6 +17,7 @@ import { NavbarFallback } from './components/NavbarFallback'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
 import { FlashlightEffect } from './components/Effects/FlashlightEffect'
 import { EventDetailSkeleton, PurchaseLoadingState } from './components/events/Skeletons'
+import { MerchErrorBoundary } from './components/Merch/ErrorBoundary'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
@@ -29,6 +30,13 @@ const EventDetail = lazy(() => import('./pages/EventDetail').then(m => ({ defaul
 const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage').then(m => ({ default: m.ConfirmationPage })))
 const AdminEvents = lazy(() => import('./pages/AdminEvents').then(m => ({ default: m.AdminEvents })))
 const AdminEventForm = lazy(() => import('./pages/AdminEventForm').then(m => ({ default: m.AdminEventForm })))
+const Merch = lazy(() => import('./pages/Merch').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.Merch />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
@@ -95,6 +103,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/events" element={<Events />} />
+                <Route path="/merch" element={<Merch />} />
                 <Route path="/events/:eventId" element={
                   <Suspense fallback={<EventDetailSkeleton />}>
                     <EventDetail />
