@@ -714,4 +714,26 @@ export default defineSchema({
   })
     .index('by_starts', ['startsAt'])
     .index('by_status', ['startsAt', 'endsAt']),
+
+  // Inventory audit log - Tracks inventory inconsistency checks and issues
+  inventoryAuditLog: defineTable({
+    timestamp: v.number(),              // When the audit was run
+    issues: v.array(v.object({
+      variantId: v.id('merchVariants'),
+      sku: v.string(),
+      type: v.union(
+        v.literal('negative_stock'),
+        v.literal('discrepancy')
+      ),
+      currentStock: v.optional(v.number()),
+      expectedStock: v.optional(v.number()),
+      severity: v.union(
+        v.literal('warning'),
+        v.literal('critical')
+      ),
+      timestamp: v.number(),
+    })),
+    resolvedAt: v.optional(v.number()), // When issues were resolved
+    resolvedBy: v.optional(v.id('users')), // Admin who resolved issues
+  }),
 })
