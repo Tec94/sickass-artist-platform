@@ -2,6 +2,8 @@ import { useLightbox } from '../../hooks/useLightbox'
 import { LightboxImage } from './LightboxImage'
 import { LightboxControls } from './LightboxControls'
 import { LightboxMetadata } from './LightboxMetadata'
+import { RelatedContent } from './RelatedContent'
+import { CreatorPortfolio } from './CreatorPortfolio'
 import type { GalleryContentItem } from '../../types/gallery'
 import { useRef, useEffect } from 'react'
 
@@ -186,12 +188,32 @@ export const LightboxContainer = ({
       </div>
 
       {/* Metadata sidebar (desktop) */}
-      <div 
-        className="hidden lg:block w-96 border-l border-gray-800 bg-black/50 overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        <LightboxMetadata item={currentItem} />
-      </div>
+        <div
+          className="hidden lg:block w-96 border-l border-gray-800 bg-black/50 overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <LightboxMetadata item={currentItem} />
+          <div className="p-6 pt-0">
+            <RelatedContent
+              currentItem={currentItem}
+              onItemClick={(item) => {
+                const itemIndex = items.findIndex(i => i.contentId === item.contentId)
+                if (itemIndex !== -1) {
+                  open(itemIndex)
+                }
+              }}
+            />
+            <CreatorPortfolio
+              creatorId={currentItem.creator._id}
+              onItemClick={(item) => {
+                const itemIndex = items.findIndex(i => i.contentId === item.contentId)
+                if (itemIndex !== -1) {
+                  open(itemIndex)
+                }
+              }}
+            />
+          </div>
+        </div>
 
       {/* Metadata below image (mobile) */}
       <div 
@@ -204,6 +226,32 @@ export const LightboxContainer = ({
            <img src={currentItem.creator.avatar} alt="" className="w-6 h-6 rounded-full" />
            <span className="text-gray-400 text-xs">{currentItem.creator.displayName}</span>
         </div>
+      </div>
+
+      {/* Related content section */}
+      <div className="lg:hidden mt-auto" onClick={e => e.stopPropagation()}>
+      <RelatedContent
+        currentItem={currentItem}
+        onItemClick={(item) => {
+          const itemIndex = items.findIndex(i => i.contentId === item.contentId)
+          if (itemIndex !== -1) {
+            open(itemIndex)
+          }
+        }}
+      />
+      </div>
+
+      {/* Creator portfolio section */}
+      <div className="lg:hidden mt-auto" onClick={e => e.stopPropagation()}>
+        <CreatorPortfolio 
+          creatorId={currentItem.creator._id}
+          onItemClick={(item) => {
+            const itemIndex = items.findIndex(i => i.contentId === item.contentId)
+            if (itemIndex !== -1) {
+              open(itemIndex)
+            }
+          }}
+        />
       </div>
     </div>
   )

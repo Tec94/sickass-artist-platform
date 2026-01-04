@@ -357,4 +357,154 @@ export const getTrendingByCategory = query({
       throw new ConvexError('Failed to fetch trending by category')
     }
   },
+),
+
+/**
+ * Get related content recommendations for a specific gallery item
+ * Uses weighted algorithm considering creator, tags, type, and trending factors
+ */
+export const getRelatedContent = query({
+  args: {
+    contentId: v.string(),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      // Get current item
+      const current = await ctx.db
+        .query('galleryContent')
+        .filter(q => q.eq(q.field('contentId'), args.contentId))
+        .first()
+
+      if (!current) {
+        return []
+      }
+
+      // Get all gallery content
+      const allContent = await ctx.db.query('galleryContent').collect()
+
+      // Score each item
+      interface RecommendationScore {
+        contentId: string
+        score: number
+        reason: 'creator' | 'tags' | 'type' | 'trending'
+      }
+
+      const scores: RecommendationScore[] = []
+
+      for (const item of allContent) {
+        if (item._id === current._id) continue
+
+        let score = 0
+        let reason: 'creator' | 'tags' | 'type' | 'trending' = 'trending'
+
+        // Creator match (50% weight)
+        if (item.creatorId === current.creatorId) {
+          score += 50
+          reason = 'creator'
+        }
+
+        // Tag overlap (30% weight)
+        const tagOverlap = item.tags.filter(tag =>
+          current.tags.includes(tag)
+        ).length
+        const tagScore = (tagOverlap / Math.max(current.tags.length, 1)) * 30
+        score += tagScore
+        if (tagScore > 10) reason = 'tags'
+
+        // Type match (15% weight)
+        if (item.type === current.type) {
+          score += 15
+          reason = 'type'
+        }
+
+        // Recency boost (5% weight, capped at 2 weeks)
+        const ageMs = Date.now() - item.createdAt
+        const twoWeeksMs = 14 * 24 * 60 * 60 * 1000
+        if (ageMs < twoWeeksMs) {
+          score += 5 * (1 - ageMs / twoWeeksMs)
+          reason = 'trending'
+        }
+
+        // Popularity boost
+        const likeBoost = Math.min(item.likeCount / 100, 10)
+        const viewBoost = Math.min(item.viewCount / 1000, 10)
+        score += likeBoost + viewBoost
+
+        scores.push({
+          contentId: item.contentId,
+          score,
+          reason,
+        })
+      }
+
+      // Sort by score descending
+      scores.sort((a, b) => b.score - a.score)
+
+      // Get top N items (diversified: max 3 from same creator)
+      const results: string[] = []
+      const creatorCounts: Record<string, number> = {}
+
+      for (const score of scores) {
+        if (results.length >= args.limit) break
+
+        const item = allContent.find(c => c.contentId === score.contentId)
+        if (!item) continue
+
+        const creatorId = item.creatorId.toString()
+        const count = creatorCounts[creatorId] || 0
+
+        // Don't add more than 3 from same creator
+        if (count < 3) {
+          results.push(score.contentId)
+          creatorCounts[creatorId] = count + 1
+        }
+      }
+
+      // Fetch full items
+      const relatedItems = await Promise.all(
+        results.map(async contentId => {
+          return await ctx.db
+            .query('galleryContent')
+            .filter(q => q.eq(q.field('contentId'), contentId))
+            .first()
+        })
+      )
+
+      return relatedItems.filter(Boolean)
+    } catch (error) {
+      console.error('Recommendation error:', error)
+      return []
+    }
+  },
+})
+
+/**
+ * Get content by creator for portfolio display
+ */
+export const getCreatorContent = query({
+  args: {
+    creatorId: v.id('users'),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('galleryContent')
+      .withIndex('by_creator', q => q.eq('creatorId', args.creatorId))
+      .order('desc', 'createdAt')
+      .take(args.limit)
+      .collect()
+  },
+})
+
+/**
+ * Get creator information by ID
+ */
+export const getCreator = query({
+  args: {
+    creatorId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.creatorId)
+  },
 })

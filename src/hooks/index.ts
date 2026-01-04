@@ -11,6 +11,7 @@ export { useOnlineStatus } from './useOnlineStatus'
 export { useSyncOfflineQueue } from './useSyncOfflineQueue'
 export { useCheckout, type ShippingAddress, type CheckoutState } from './useCheckout'
 export { useShoppingCart } from './useShoppingCart'
+export { useRecommendations } from './useRecommendations'
 
 export { useForumCategories } from './useForumCategories'
 export { useForumThreads } from './useForumThreads'
