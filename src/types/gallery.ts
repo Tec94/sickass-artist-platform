@@ -27,3 +27,21 @@ export interface GalleryContentItem {
   isLiked: boolean;
   isLocked: boolean;
 }
+
+export interface GalleryFilters {
+  types: ('show' | 'bts' | 'edit' | 'wip' | 'exclusive')[]
+  dateRange: '7d' | '30d' | '90d' | 'all'
+  creatorId: string | null
+  fanTier: 'all' | 'bronze' | 'silver' | 'gold' | 'platinum'
+  tags: string[]
+  sortBy: 'newest' | 'oldest' | 'mostLiked' | 'mostViewed' | 'trending'
+  page: number
+}
+
+export interface FilterState extends GalleryFilters {
+  isActive: boolean
+  appliedCount: number
+  resultsCount: number
+  isLoading: boolean
+  error: Error | null
+}
