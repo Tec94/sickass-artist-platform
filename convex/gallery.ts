@@ -786,3 +786,223 @@ export const getLikedContentIds = query({
     return likes.map(like => like.contentId)
   },
 })
+
+/**
+ * Get filtered gallery content with multi-filter support
+ */
+export const getFilteredGallery = query({
+  args: {
+    types: v.optional(v.array(v.string())),
+    dateRange: v.optional(v.string()),
+    creatorId: v.optional(v.id('users')),
+    fanTier: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    sortBy: v.optional(v.string()),
+    page: v.number(),
+    pageSize: v.number(),
+  },
+  handler: async (ctx, args): Promise<PaginatedResult<GalleryContentWithCreator>> => {
+    try {
+      // Get all content first
+      let allContent = await ctx.db.query('galleryContent').collect()
+
+      // Filter by type
+      if (args.types && args.types.length > 0) {
+        allContent = allContent.filter(item =>
+          args.types!.includes(item.type)
+        )
+      }
+
+      // Filter by creator
+      if (args.creatorId) {
+        allContent = allContent.filter(item =>
+          item.creatorId === args.creatorId
+        )
+      }
+
+      // Filter by fan tier
+      if (args.fanTier && args.fanTier !== 'all') {
+        const requiredTierLevel = getTierLevel(args.fanTier as FanTier)
+        allContent = allContent.filter(item => {
+          if (!item.requiredFanTier) return true // Public content is always included
+          return getTierLevel(item.requiredFanTier) <= requiredTierLevel
+        })
+      }
+
+      // Filter by date range
+      if (args.dateRange && args.dateRange !== 'all') {
+        const now = Date.now()
+        const daysMap: Record<string, number> = {
+          '7d': 7,
+          '30d': 30,
+          '90d': 90,
+        }
+        const days = daysMap[args.dateRange] || 0
+        const cutoff = now - days * 24 * 60 * 60 * 1000
+
+        allContent = allContent.filter(item =>
+          item.createdAt >= cutoff
+        )
+      }
+
+      // Filter by tags (all tags must match)
+      if (args.tags && args.tags.length > 0) {
+        allContent = allContent.filter(item =>
+          args.tags!.every(tag => item.tags.includes(tag))
+        )
+      }
+
+      // Get current user for like status and tier check
+      let currentUser: Doc<'users'> | null = null
+      try {
+        currentUser = await getCurrentUser(ctx)
+      } catch {
+        // User not authenticated, continue without like status
+      }
+
+      // Sort
+      let sortedContent = allContent
+      switch (args.sortBy) {
+        case 'mostLiked':
+          sortedContent = [...allContent].sort((a, b) => b.likeCount - a.likeCount)
+          break
+        case 'mostViewed':
+          sortedContent = [...allContent].sort((a, b) => b.viewCount - a.viewCount)
+          break
+        case 'oldest':
+          sortedContent = [...allContent].sort((a, b) => a.createdAt - b.createdAt)
+          break
+        case 'trending':
+          // Trending: combine likes, views, and recency
+          sortedContent = [...allContent].sort((a, b) => {
+            const now = Date.now()
+            const ageInDaysA = (now - a.createdAt) / (1000 * 60 * 60 * 24)
+            const ageInDaysB = (now - b.createdAt) / (1000 * 60 * 60 * 24)
+            const recencyFactorA = 1 / (1 + ageInDaysA / 7)
+            const recencyFactorB = 1 / (1 + ageInDaysB / 7)
+            const scoreA = (a.likeCount * 2 + a.viewCount * 0.5) * recencyFactorA
+            const scoreB = (b.likeCount * 2 + b.viewCount * 0.5) * recencyFactorB
+            return scoreB - scoreA
+          })
+          break
+        case 'newest':
+        default:
+          sortedContent = [...allContent].sort((a, b) => b.createdAt - a.createdAt)
+          break
+      }
+
+      // Get total count
+      const total = sortedContent.length
+
+      // Paginate
+      const pageSize = Math.min(args.pageSize, 50)
+      const skip = args.page * pageSize
+      const items = sortedContent.slice(skip, skip + pageSize)
+
+      // Enrich items with creator info, like status, and locked status
+      const enrichedItems: GalleryContentWithCreator[] = []
+      for (const content of items) {
+        const creatorDoc = await ctx.db.get(content.creatorId)
+        
+        if (!creatorDoc || !('displayName' in creatorDoc)) {
+          continue
+        }
+        
+        const creator = creatorDoc as Doc<'users'>
+
+        // Check if current user liked this content
+        let isLiked = false
+        if (currentUser) {
+          const like = await ctx.db
+            .query('galleryLikes')
+            .withIndex('by_user_type', (q) => 
+              q.eq('userId', currentUser._id).eq('type', 'gallery')
+            )
+            .collect()
+          
+          isLiked = like.some(l => l.contentId === content.contentId)
+        }
+
+        // Check if content is locked by tier
+        let isLocked = false
+        if (content.requiredFanTier) {
+          if (currentUser) {
+            const userTierLevel = getTierLevel(currentUser.fanTier)
+            const requiredTierLevel = getTierLevel(content.requiredFanTier)
+            isLocked = userTierLevel < requiredTierLevel
+          } else {
+            isLocked = true
+          }
+        }
+
+        enrichedItems.push({
+          ...content,
+          creator: {
+            _id: creator._id,
+            displayName: creator.displayName,
+            avatar: creator.avatar,
+            username: creator.username,
+            fanTier: creator.fanTier,
+          },
+          isLiked,
+          isLocked,
+        })
+      }
+
+      return {
+        items: enrichedItems,
+        hasMore: skip + pageSize < total,
+        totalCount: total,
+        page: args.page,
+        total,
+      }
+    } catch (error) {
+      console.error('Gallery filter error:', error)
+      throw error
+    }
+  },
+})
+
+/**
+ * Get available creators (non-fan users who have gallery content)
+ */
+export const getAvailableCreators = query({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db
+      .query('users')
+      .filter(q => q.neq(q.field('role'), 'fan'))
+      .collect()
+
+    return users.map(user => ({
+      _id: user._id,
+      displayName: user.displayName,
+      username: user.username,
+      avatar: user.avatar,
+    }))
+  },
+})
+
+/**
+ * Get available tags with search support
+ */
+export const getAvailableTags = query({
+  args: {
+    search: v.string(),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const items = await ctx.db.query('galleryContent').collect()
+    const tagSet = new Set<string>()
+
+    items.forEach(item => {
+      item.tags.forEach(tag => {
+        if (tag.toLowerCase().includes(args.search.toLowerCase())) {
+          tagSet.add(tag)
+        }
+      })
+    })
+
+    return Array.from(tagSet).slice(0, args.limit)
+  },
+})
