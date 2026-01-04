@@ -52,6 +52,20 @@ const ShoppingCart = lazy(() => import('./pages/ShoppingCart').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+const Checkout = lazy(() => import('./pages/Checkout').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.Checkout />
+    </MerchErrorBoundary>
+  )
+})))
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.OrderConfirmation />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
@@ -121,6 +135,16 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/merch" element={<Merch />} />
                 <Route path="/merch/cart" element={<ShoppingCart />} />
+                <Route path="/merch/checkout" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <Checkout />
+                  </Suspense>
+                } />
+                <Route path="/merch/confirmation" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderConfirmation />
+                  </Suspense>
+                } />
                 <Route path="/merch/:productId" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
                     <MerchDetail />
