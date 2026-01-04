@@ -9,6 +9,8 @@ export { useOptimisticMessage } from './useOptimisticMessage'
 export { useOfflineQueue } from './useOfflineQueue'
 export { useOnlineStatus } from './useOnlineStatus'
 export { useSyncOfflineQueue } from './useSyncOfflineQueue'
+export { useCheckout, type ShippingAddress, type CheckoutState } from './useCheckout'
+export { useShoppingCart } from './useShoppingCart'
 
 export { useForumCategories } from './useForumCategories'
 export { useForumThreads } from './useForumThreads'
