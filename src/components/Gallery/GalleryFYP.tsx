@@ -2,6 +2,7 @@ import React from 'react';
 import type { GalleryContentItem } from '../../types/gallery';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 import { OptimizedImage } from './OptimizedImage';
+import { LikeButton } from './LikeButton';
 
 interface GalleryFYPProps {
   items: GalleryContentItem[];
@@ -45,7 +46,15 @@ export const GalleryFYP: React.FC<GalleryFYPProps> = ({ items, isLoading }) => {
 
           <div className="post-actions">
             <div className="main-actions">
-              <button><iconify-icon icon="solar:heart-linear"></iconify-icon></button>
+              <LikeButton
+                contentId={item.contentId}
+                contentType="gallery"
+                initialLiked={item.isLiked}
+                initialCount={item.likeCount}
+                size="md"
+                showCount={false}
+                compact
+              />
               <button><iconify-icon icon="solar:chat-round-line-linear"></iconify-icon></button>
               <button><iconify-icon icon="solar:share-linear"></iconify-icon></button>
             </div>

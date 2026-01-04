@@ -237,8 +237,11 @@ export default defineSchema({
       v.literal('message'),
       v.literal('vote_thread'),
       v.literal('vote_reply'),
-      v.literal('reaction')
+      v.literal('reaction'),
+      v.literal('like_gallery'),
+      v.literal('like_ugc')
     ),
+    action: v.optional(v.union(v.literal('like'), v.literal('unlike'))),
     payload: v.optional(
       v.object({
         channelId: v.optional(v.id('channels')),
@@ -248,6 +251,8 @@ export default defineSchema({
         content: v.optional(v.string()),
         emoji: v.optional(v.string()),
         voteType: v.optional(v.union(v.literal('up'), v.literal('down'))),
+        contentId: v.optional(v.string()),
+        ugcId: v.optional(v.string()),
       })
     ),
     status: v.union(

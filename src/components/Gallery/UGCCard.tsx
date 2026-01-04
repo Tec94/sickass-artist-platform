@@ -1,9 +1,9 @@
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import type { UGCItem } from '../../types/ugc'
-import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { api } from '../../../convex/_generated/api'
 import { useMutation } from 'convex/react'
 import { OptimizedImage } from './OptimizedImage'
+import { LikeButton } from './LikeButton'
 
 interface UGCCardProps {
   item: UGCItem
@@ -16,14 +16,7 @@ export const UGCCard = memo(function UGCCard({
 }: UGCCardProps) {
   const [imageVisible, setImageVisible] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  
-  const { likeCount, isLiked, isPending, handleLike } = useOptimisticLike(
-    item.ugcId,
-    'ugc',
-    item.likeCount,
-    item.isLiked
-  )
-  
+
   const incrementViewCount = useMutation(api.ugc.incrementUGCViewCount)
 
   useEffect(() => {
@@ -63,8 +56,7 @@ export const UGCCard = memo(function UGCCard({
 
   const handleLikeClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    void handleLike()
-  }, [handleLike])
+  }, [])
 
   const categoryLabels: Record<string, string> = {
     'user-edit': 'User Edit',
@@ -105,25 +97,24 @@ export const UGCCard = memo(function UGCCard({
 
         <div className="flex items-center justify-between">
           <span className="text-cyan-400 text-xs">@{item.creatorDisplayName}</span>
-          
-          <div className="flex gap-3 text-xs text-gray-500">
-            <button
-              onClick={handleLikeClick}
-              disabled={isPending}
-              className={`flex items-center gap-1 transition-colors ${
-                isLiked ? 'text-red-400' : 'text-gray-500 hover:text-red-400'
-              } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <span>{isLiked ? '❤️' : '🤍'}</span>
-              {likeCount}
-            </button>
-            
-            <span className="flex items-center gap-1">
+
+          <div className="flex gap-3 items-center">
+            <div onClick={handleLikeClick}>
+              <LikeButton
+                contentId={item.ugcId}
+                contentType="ugc"
+                initialLiked={item.isLiked}
+                initialCount={item.likeCount}
+                size="sm"
+                showCount
+                compact
+              />
+            </div>
+            <span className="flex items-center gap-1 text-xs text-gray-500">
               <span className="text-blue-400">👁</span>
               {item.viewCount}
             </span>
-            
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 text-xs text-gray-500">
               <span className="text-green-400">↓</span>
               {item.downloadCount}
             </span>

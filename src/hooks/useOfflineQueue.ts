@@ -9,10 +9,12 @@ type QueueItemType =
   | 'vote_reply'
   | 'reaction'
   | 'like_gallery'
+  | 'like_ugc'
 
 interface QueueItem {
   id: string
   type: QueueItemType
+  action?: 'like' | 'unlike'
   payload: {
     channelId?: Id<'channels'>
     threadId?: Id<'threads'>
@@ -94,9 +96,11 @@ export function useOfflineQueue(): UseOfflineQueueResult {
     }
     gallery: {
       likeGalleryContent: (args: { contentId: string }) => Promise<unknown>
+      unlikeGalleryContent: (args: { contentId: string }) => Promise<unknown>
     }
     ugc: {
       likeUGC: (args: { ugcId: string }) => Promise<unknown>
+      unlikeUGC: (args: { ugcId: string }) => Promise<unknown>
     }
   }
 
@@ -105,7 +109,9 @@ export function useOfflineQueue(): UseOfflineQueueResult {
   const castThreadVoteMutation = useMutation(apiUnknown.forum.castThreadVote)
   const castReplyVoteMutation = useMutation(apiUnknown.forum.castReplyVote)
   const likeGalleryMutation = useMutation(apiUnknown.gallery.likeGalleryContent)
+  const unlikeGalleryMutation = useMutation(apiUnknown.gallery.unlikeGalleryContent)
   const likeUGCMutation = useMutation(apiUnknown.ugc.likeUGC)
+  const unlikeUGCMutation = useMutation(apiUnknown.ugc.unlikeUGC)
 
   const handleOnline = useCallback(() => {
     setIsOnline(true)
@@ -222,10 +228,17 @@ export function useOfflineQueue(): UseOfflineQueueResult {
                 })
                 break
               case 'like_gallery':
-                if (item.payload.contentId) {
-                  await likeGalleryMutation({ contentId: item.payload.contentId })
-                } else if (item.payload.ugcId) {
-                  await likeUGCMutation({ ugcId: item.payload.ugcId })
+                if (item.action === 'unlike') {
+                  await unlikeGalleryMutation({ contentId: item.payload.contentId! })
+                } else {
+                  await likeGalleryMutation({ contentId: item.payload.contentId! })
+                }
+                break
+              case 'like_ugc':
+                if (item.action === 'unlike') {
+                  await unlikeUGCMutation({ ugcId: item.payload.ugcId! })
+                } else {
+                  await likeUGCMutation({ ugcId: item.payload.ugcId! })
                 }
                 break
             }
@@ -277,7 +290,9 @@ export function useOfflineQueue(): UseOfflineQueueResult {
     castReplyVoteMutation,
     addReactionMutation,
     likeGalleryMutation,
+    unlikeGalleryMutation,
     likeUGCMutation,
+    unlikeUGCMutation,
   ])
 
   useEffect(() => {
