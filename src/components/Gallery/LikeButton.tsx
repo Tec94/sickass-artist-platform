@@ -1,6 +1,7 @@
 import { Heart, Loader2 } from 'lucide-react'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { useAuth } from '../../hooks/useAuth'
+import { perfMonitor } from '../../utils/performanceMonitor'
 
 interface LikeButtonProps {
   contentId: string
@@ -34,9 +35,15 @@ export const LikeButton = ({
       return
     }
 
+    const startTime = performance.now()
+
     try {
       await toggleLike()
+      const duration = performance.now() - startTime
+      perfMonitor.trackLikeResponse(duration, true)
     } catch (err) {
+      const duration = performance.now() - startTime
+      perfMonitor.trackLikeResponse(duration, false)
       onError?.(err as Error)
     }
   }

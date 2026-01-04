@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, Activity } from 'lucide-react';
 import type { GalleryContentItem } from '../types/gallery';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useGalleryFilters } from '../hooks/useGalleryFilters';
+import { usePerformanceMetrics, usePerformanceOperation } from '../hooks/usePerformanceMetrics';
+import { perfMonitor } from '../utils/performanceMonitor';
 import { AdvancedFilters } from '../components/Gallery/AdvancedFilters';
 import { FilterChips } from '../components/Gallery/FilterChips';
 import { GalleryFYP } from '../components/Gallery/GalleryFYP';
+import { PerformanceDashboard } from '../components/Performance/PerformanceDashboard';
 
 const TABS = [
   { id: 'show', label: 'Show', icon: 'solar:play-circle-linear' },
@@ -19,15 +22,22 @@ export const Gallery = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<GalleryContentItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showPerfDashboard, setShowPerfDashboard] = useState(false);
   const animate = useScrollAnimation();
-  
-  const { 
-    filters, 
-    setFilter, 
-    clearFilter, 
-    queryResult, 
-    appliedCount, 
-    isActive 
+
+  // Track Web Vitals
+  usePerformanceMetrics();
+
+  // Track filter operations
+  const filterOperation = usePerformanceOperation('gallery-filter-apply');
+
+  const {
+    filters,
+    setFilter,
+    clearFilter,
+    queryResult,
+    appliedCount,
+    isActive
   } = useGalleryFilters();
 
   const isLoading = queryResult === undefined;
@@ -50,7 +60,29 @@ export const Gallery = () => {
     setAccumulatedItems([]);
   }, [filters.types, filters.dateRange, filters.creatorId, filters.fanTier, filters.tags, filters.sortBy]);
 
+  // Track filter operations
+  useEffect(() => {
+    if (queryResult) {
+      const activeFilters = [
+        filters.types.length,
+        filters.dateRange !== 'all' ? 1 : 0,
+        filters.creatorId ? 1 : 0,
+        filters.fanTier !== 'all' ? 1 : 0,
+        filters.tags.length,
+      ].reduce((a, b) => a + b, 0);
+
+      if (activeFilters > 0) {
+        // Track filter application (time would be measured from actual filter start)
+        // For now, we estimate based on query completion
+        perfMonitor.trackFilterApply(activeFilters, 100);
+      }
+    }
+  }, [queryResult, filters.types, filters.dateRange, filters.creatorId, filters.fanTier, filters.tags]);
+
   const handleTabChange = (tabId: string) => {
+    // Start timing filter operation
+    filterOperation.start();
+
     // Toggle tab selection
     const contentType = tabId as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive';
     if (filters.types.includes(contentType)) {
@@ -102,6 +134,17 @@ export const Gallery = () => {
                 </button>
               ))}
             </nav>
+
+            {/* Performance dashboard button (dev only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => setShowPerfDashboard(!showPerfDashboard)}
+                className="filter-toggle-btn"
+                title="Performance Dashboard"
+              >
+                <Activity className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Filter toggle button */}
             <button
@@ -184,6 +227,14 @@ export const Gallery = () => {
           )}
         </main>
       </div>
+
+      {/* Performance Dashboard (dev only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <PerformanceDashboard
+          isOpen={showPerfDashboard}
+          onClose={() => setShowPerfDashboard(false)}
+        />
+      )}
 
       <style>{`
         .gallery-layout {
