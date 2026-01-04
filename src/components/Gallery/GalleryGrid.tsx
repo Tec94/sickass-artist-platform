@@ -2,7 +2,7 @@ import { useState, useCallback, memo } from 'react'
 import { ContentCard } from './ContentCard'
 import { GallerySkeleton } from './GallerySkeleton'
 import { TierLockedOverlay } from './TierLockedOverlay'
-import { Lightbox } from './Lightbox'
+import { LightboxContainer } from './LightboxContainer'
 import type { GalleryContentItem } from '../../types/gallery'
 
 interface GalleryGridProps {
@@ -123,9 +123,10 @@ export const GalleryGrid = memo(function GalleryGrid({
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
-        <Lightbox
+        <LightboxContainer
           items={items}
-          initialIndex={lightboxIndex}
+          currentIndex={lightboxIndex}
+          isOpen={true}
           onClose={handleCloseLightbox}
         />
       )}
