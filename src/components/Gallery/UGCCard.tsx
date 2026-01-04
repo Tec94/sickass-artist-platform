@@ -3,6 +3,7 @@ import type { UGCItem } from '../../types/ugc'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { api } from '../../../convex/_generated/api'
 import { useMutation } from 'convex/react'
+import { OptimizedImage } from './OptimizedImage'
 
 interface UGCCardProps {
   item: UGCItem
@@ -13,9 +14,8 @@ export const UGCCard = memo(function UGCCard({
   item,
   onClick,
 }: UGCCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false)
   const [imageVisible, setImageVisible] = useState(false)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   const { likeCount, isLiked, isPending, handleLike } = useOptimisticLike(
     item.ugcId,
@@ -27,15 +27,14 @@ export const UGCCard = memo(function UGCCard({
   const incrementViewCount = useMutation(api.ugc.incrementUGCViewCount)
 
   useEffect(() => {
-    const imgElement = imgRef.current
-    if (!imgElement) return
+    const containerElement = containerRef.current
+    if (!containerElement) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && !imageVisible) {
             setImageVisible(true)
-            // Increment view count when image comes into view
             void incrementViewCount({ ugcId: item.ugcId })
             observer.unobserve(entry.target)
           }
@@ -47,18 +46,14 @@ export const UGCCard = memo(function UGCCard({
       }
     )
 
-    observer.observe(imgElement)
+    observer.observe(containerElement)
 
     return () => {
-      if (imgElement) {
-        observer.unobserve(imgElement)
+      if (containerElement) {
+        observer.unobserve(containerElement)
       }
     }
-  }, [item.ugcId, incrementViewCount])
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true)
-  }, [])
+  }, [item.ugcId, incrementViewCount, imageVisible])
 
   const handleClick = useCallback(() => {
     if (onClick) {
@@ -79,24 +74,20 @@ export const UGCCard = memo(function UGCCard({
 
   return (
     <div
+      ref={containerRef}
       className="bg-gray-900/70 border border-gray-800 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer hover:border-cyan-500/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10"
       onClick={handleClick}
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-950">
-        {!imageVisible && (
-          <div className="absolute inset-0 bg-gray-900 animate-pulse" />
+      <div className="relative overflow-hidden bg-gray-950">
+        {imageVisible ? (
+          <OptimizedImage
+            src={item.imageUrls[0]}
+            alt={item.title}
+            aspectRatio={16 / 9}
+          />
+        ) : (
+          <div className="aspect-video bg-gray-900 animate-pulse" />
         )}
-        
-        <img
-          ref={imgRef}
-          src={imageVisible ? item.imageUrls[0] : ''}
-          alt={item.title}
-          loading="lazy"
-          onLoad={handleImageLoad}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
 
         <div className="absolute top-2 left-2 bg-cyan-500/90 text-black px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide">
           {categoryLabels[item.category] || item.category}
