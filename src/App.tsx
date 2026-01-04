@@ -73,6 +73,20 @@ const DropsPage = lazy(() => import('./pages/DropsPage').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+const OrderHistory = lazy(() => import('./pages/OrderHistory').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.OrderHistory />
+    </MerchErrorBoundary>
+  )
+})))
+const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
+  default: () => (
+    <MerchErrorBoundary>
+      <m.OrderDetail />
+    </MerchErrorBoundary>
+  )
+})))
 
 function App() {
   return (
@@ -142,6 +156,16 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/merch" element={<Merch />} />
                 <Route path="/merch/drops" element={<DropsPage />} />
+                <Route path="/merch/orders" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderHistory />
+                  </Suspense>
+                } />
+                <Route path="/merch/orders/:orderNumber" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderDetail />
+                  </Suspense>
+                } />
                 <Route path="/merch/cart" element={<ShoppingCart />} />
                 <Route path="/merch/checkout" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>

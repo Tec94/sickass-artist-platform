@@ -8,7 +8,7 @@ import { useMerchFilters } from '../hooks/useMerchFilters'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export function Merch() {
@@ -54,18 +54,29 @@ export function Merch() {
             </p>
           </div>
 
-          {/* Cart button */}
-          <button
-            onClick={() => navigate('/merch/cart')}
-            className="relative p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <ShoppingCart className="w-6 h-6 text-cyan-400" />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
+          <div className="flex gap-3">
+            {/* Orders button */}
+            <button
+              onClick={() => navigate('/merch/orders')}
+              className="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+              title="Order History"
+            >
+              <Package className="w-6 h-6 text-gray-300" />
+            </button>
+
+            {/* Cart button */}
+            <button
+              onClick={() => navigate('/merch/cart')}
+              className="relative p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <ShoppingCart className="w-6 h-6 text-cyan-400" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

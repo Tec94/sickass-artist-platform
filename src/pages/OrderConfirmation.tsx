@@ -143,6 +143,12 @@ export function OrderConfirmation() {
 
         <div className="w-full flex flex-col gap-3 sm:flex-row">
           <button
+            onClick={() => navigate('/merch/orders')}
+            className="flex-1 py-3 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            View Order Details
+          </button>
+          <button
             onClick={() => navigate('/merch')}
             className="flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
           >
