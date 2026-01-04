@@ -1,11 +1,13 @@
-import { internal } from './_generated/server'
+import { internalMutation } from './_generated/server'
+import type { Id } from './_generated/dataModel'
 
 // Run every 6 hours to check inventory consistency
-export const checkInventoryConsistency = internal({
+export const checkInventoryConsistency = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const now = Date.now()
     const issues: Array<{
-      variantId: string
+      variantId: Id<'merchVariants'>
       sku: string
       type: 'negative_stock' | 'discrepancy'
       currentStock?: number
@@ -55,7 +57,7 @@ export const checkInventoryConsistency = internal({
           sku: variant.sku,
           type: 'discrepancy' as const,
           expectedStock: reconstructedStock,
-          actualStock: variant.stock,
+          currentStock: variant.stock,
           severity: 'warning' as const,
           timestamp: now,
         })
@@ -80,7 +82,8 @@ export const checkInventoryConsistency = internal({
 })
 
 // Automatic drop activation/deactivation
-export const autoActivateDrops = internal({
+export const autoActivateDrops = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const now = Date.now()
     const changes = { activated: 0, deactivated: 0 }
@@ -125,7 +128,8 @@ export const autoActivateDrops = internal({
 })
 
 // Clean up expired pre-orders
-export const cleanupExpiredPreOrders = internal({
+export const cleanupExpiredPreOrders = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const now = Date.now()
     let cleanedCount = 0

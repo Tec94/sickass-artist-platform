@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as cart from "../cart.js";
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
@@ -15,7 +16,10 @@ import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
 import type * as httpActions from "../httpActions.js";
+import type * as inventoryRepair from "../inventoryRepair.js";
+import type * as merch from "../merch.js";
 import type * as offlineQueue from "../offlineQueue.js";
+import type * as orders from "../orders.js";
 import type * as recommendations from "../recommendations.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
@@ -31,6 +35,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  cart: typeof cart;
   chat: typeof chat;
   crons: typeof crons;
   events: typeof events;
@@ -38,7 +43,10 @@ declare const fullApi: ApiFromModules<{
   gallery: typeof gallery;
   helpers: typeof helpers;
   httpActions: typeof httpActions;
+  inventoryRepair: typeof inventoryRepair;
+  merch: typeof merch;
   offlineQueue: typeof offlineQueue;
+  orders: typeof orders;
   recommendations: typeof recommendations;
   scheduler: typeof scheduler;
   search: typeof search;
