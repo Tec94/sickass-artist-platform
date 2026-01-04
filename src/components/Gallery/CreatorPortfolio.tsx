@@ -1,10 +1,10 @@
 import { useQuery } from 'convex/react'
-import { api } from '../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { GalleryCard } from './GalleryCard'
 import { GallerySkeleton } from './GallerySkeleton'
-import type { GalleryContentItem } from '../types/gallery'
+import type { GalleryContentItem } from '../../types/gallery'
 
-import { Id } from '../../convex/_generated/dataModel'
+import { Id } from '../../../convex/_generated/dataModel'
 
 interface CreatorPortfolioProps {
   creatorId: Id<'users'>

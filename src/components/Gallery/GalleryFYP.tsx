@@ -7,15 +7,24 @@ import { LikeButton } from './LikeButton';
 interface GalleryFYPProps {
   items: GalleryContentItem[];
   isLoading?: boolean;
+  onItemClick?: (index: number) => void;
 }
 
-export const GalleryFYP: React.FC<GalleryFYPProps> = ({ items, isLoading }) => {
+export const GalleryFYP: React.FC<GalleryFYPProps> = ({ items, isLoading, onItemClick }) => {
   const animate = useScrollAnimation();
 
   return (
     <div className="fyp-container">
-      {items.map((item) => (
-        <article key={item.contentId} ref={animate} data-animate className="fyp-post">
+      {items.map((item, index) => (
+        <article 
+          key={item.contentId} 
+          ref={animate} 
+          data-animate 
+          className="fyp-post cursor-pointer"
+          onClick={() => onItemClick?.(index)}
+          role="button"
+          aria-label="View item"
+        >
           <div className="post-header">
             <div className="user-info">
               <div className="avatar">

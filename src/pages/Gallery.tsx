@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Filter, Activity } from 'lucide-react';
 import type { GalleryContentItem } from '../types/gallery';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -8,6 +8,7 @@ import { perfMonitor } from '../utils/performanceMonitor';
 import { AdvancedFilters } from '../components/Gallery/AdvancedFilters';
 import { FilterChips } from '../components/Gallery/FilterChips';
 import { GalleryFYP } from '../components/Gallery/GalleryFYP';
+import { LightboxContainer } from '../components/Gallery/LightboxContainer';
 import { PerformanceDashboard } from '../components/Performance/PerformanceDashboard';
 
 const TABS = [
@@ -23,6 +24,7 @@ export const Gallery = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showPerfDashboard, setShowPerfDashboard] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const animate = useScrollAnimation();
 
   // Track Web Vitals
@@ -96,6 +98,14 @@ export const Gallery = () => {
     setFilter('page', filters.page + 1);
   };
 
+  const handleItemClick = useCallback((index: number) => {
+    setLightboxIndex(index);
+  }, []);
+
+  const handleCloseLightbox = useCallback(() => {
+    setLightboxIndex(null);
+  }, []);
+
   return (
     <div className="gallery-layout h-full flex">
       {/* Desktop filter sidebar */}
@@ -157,6 +167,7 @@ export const Gallery = () => {
               }}
               className={`filter-toggle-btn ${isActive ? 'has-filters' : ''}`}
               title="Toggle filters"
+              aria-label="Toggle filters"
             >
               <Filter className="w-5 h-5" />
               {appliedCount > 0 && (
@@ -213,6 +224,7 @@ export const Gallery = () => {
               <GalleryFYP
                 items={accumulatedItems}
                 isLoading={isLoading}
+                onItemClick={handleItemClick}
               />
 
               {data?.hasMore && !isLoading && (
@@ -233,6 +245,16 @@ export const Gallery = () => {
         <PerformanceDashboard
           isOpen={showPerfDashboard}
           onClose={() => setShowPerfDashboard(false)}
+        />
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <LightboxContainer
+          items={accumulatedItems}
+          currentIndex={lightboxIndex}
+          isOpen={true}
+          onClose={handleCloseLightbox}
         />
       )}
 

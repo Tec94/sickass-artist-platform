@@ -61,6 +61,7 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
     <div
       role="button"
       tabIndex={0}
+      aria-label="View item"
       className={
         'group relative rounded-lg overflow-hidden cursor-pointer bg-gray-900/70 border border-gray-800 ' +
         'transition-all duration-200 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.02]'

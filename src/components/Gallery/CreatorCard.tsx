@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Doc } from '../../convex/_generated/dataModel'
+import type { Doc } from '../../../convex/_generated/dataModel'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 
 interface CreatorCardProps {
