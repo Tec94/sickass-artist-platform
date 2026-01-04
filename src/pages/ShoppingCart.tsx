@@ -88,21 +88,29 @@ export function ShoppingCart() {
               ))}
 
               {/* Clear cart button */}
-              <button
-                onClick={async () => {
-                  if (confirm('Clear your entire cart?')) {
-                    try {
-                      await clearCart()
-                      showToast('Cart cleared', { type: 'success' })
-                    } catch {
-                      showToast('Failed to clear cart', { type: 'error' })
+              <div className="flex gap-4">
+                <button
+                  onClick={() => navigate('/merch/orders')}
+                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  View Order History
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirm('Clear your entire cart?')) {
+                      try {
+                        await clearCart()
+                        showToast('Cart cleared', { type: 'success' })
+                      } catch {
+                        showToast('Failed to clear cart', { type: 'error' })
+                      }
                     }
-                  }
-                }}
-                className="text-sm text-gray-400 hover:text-red-400 transition-colors"
-              >
-                Clear Cart
-              </button>
+                  }}
+                  className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                >
+                  Clear Cart
+                </button>
+              </div>
             </div>
 
             {/* Summary sidebar */}

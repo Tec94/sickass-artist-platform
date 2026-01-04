@@ -30,13 +30,22 @@ export function Profile() {
     <div className="profile-page-container">
       <header ref={animate} data-animate className="profile-page-header">
         <h1 className="page-title">Identity</h1>
-        <button
-          onClick={() => navigate('/profile/edit')}
-          className="edit-profile-btn border-beam"
-        >
-          <iconify-icon icon="solar:user-edit-linear"></iconify-icon>
-          <span>Modify Profile</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate('/merch/orders')}
+            className="edit-profile-btn"
+          >
+            <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>
+            <span>Orders</span>
+          </button>
+          <button
+            onClick={() => navigate('/profile/edit')}
+            className="edit-profile-btn border-beam"
+          >
+            <iconify-icon icon="solar:user-edit-linear"></iconify-icon>
+            <span>Modify Profile</span>
+          </button>
+        </div>
       </header>
 
       <div className="profile-page-content">
