@@ -5,6 +5,7 @@ import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { formatTierLabel, tierStyles } from '../../constants/tierStyles'
 import type { GalleryContentItem as GalleryItem } from '../../types/gallery'
+import { OptimizedImage } from './OptimizedImage'
 
 interface ContentCardProps {
   item: GalleryItem
@@ -72,17 +73,17 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
         }
       }}
     >
-      <div className="relative aspect-video bg-gray-800 overflow-hidden">
+      <div className="relative bg-gray-800 overflow-hidden">
         {!imageError ? (
-          <img
+          <OptimizedImage
             src={item.imageUrl}
             alt={item.title}
-            loading="lazy"
+            aspectRatio={16 / 9}
             onError={() => setImageError(true)}
-            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+            className="transition-transform duration-200 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs">
+          <div className="aspect-video bg-gray-700 flex items-center justify-center text-gray-300 text-xs">
             Image unavailable
           </div>
         )}

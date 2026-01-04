@@ -1,5 +1,6 @@
-import { memo, useState, useRef, useEffect, useCallback } from 'react'
+import { memo, useCallback } from 'react'
 import type { GalleryContentItem } from '../../types/gallery'
+import { OptimizedImage } from './OptimizedImage'
 
 interface GalleryCardProps {
   item: GalleryContentItem
@@ -12,42 +13,6 @@ export const GalleryCard = memo(function GalleryCard({
   isLocked,
   onClick,
 }: GalleryCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [imageVisible, setImageVisible] = useState(false)
-  const imgRef = useRef<HTMLImageElement>(null)
-
-  useEffect(() => {
-    const imgElement = imgRef.current
-    if (!imgElement) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setImageVisible(true)
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '50px',
-      }
-    )
-
-    observer.observe(imgElement)
-
-    return () => {
-      if (imgElement) {
-        observer.unobserve(imgElement)
-      }
-    }
-  }, [])
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true)
-  }, [])
-
   const handleClick = useCallback(() => {
     if (onClick) {
       onClick()
@@ -61,20 +26,12 @@ export const GalleryCard = memo(function GalleryCard({
       }`}
       onClick={handleClick}
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-950">
-        {!imageVisible && (
-          <div className="absolute inset-0 bg-gray-900 animate-pulse" />
-        )}
-        
-        <img
-          ref={imgRef}
-          src={imageVisible ? item.thumbnailUrl || item.imageUrl : ''}
+      <div className="relative overflow-hidden bg-gray-950">
+        <OptimizedImage
+          src={item.thumbnailUrl || item.imageUrl}
           alt={item.title}
-          loading="lazy"
-          onLoad={handleImageLoad}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          } ${isLocked ? 'filter blur-sm' : ''}`}
+          aspectRatio={16 / 9}
+          className={isLocked ? 'filter blur-sm' : ''}
         />
 
         {isLocked && (

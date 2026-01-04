@@ -1,6 +1,7 @@
 import React from 'react';
 import type { GalleryContentItem } from '../../types/gallery';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import { OptimizedImage } from './OptimizedImage';
 
 interface GalleryFYPProps {
   items: GalleryContentItem[];
@@ -29,7 +30,11 @@ export const GalleryFYP: React.FC<GalleryFYPProps> = ({ items, isLoading }) => {
           </div>
 
           <div className="post-media">
-            <img src={item.imageUrl} alt={item.title} loading="lazy" />
+            <OptimizedImage
+              src={item.imageUrl}
+              alt={item.title}
+              aspectRatio={1}
+            />
             {item.isLocked && (
               <div className="locked-overlay">
                 <iconify-icon icon="solar:lock-bold"></iconify-icon>
@@ -111,12 +116,9 @@ export const GalleryFYP: React.FC<GalleryFYPProps> = ({ items, isLoading }) => {
         .username { font-weight: 600; font-size: 14px; }
 
         .post-media {
-          aspect-ratio: 1;
           background: #050505;
           position: relative;
         }
-
-        .post-media img { width: 100%; height: 100%; object-fit: cover; }
 
         .locked-overlay {
           position: absolute;
