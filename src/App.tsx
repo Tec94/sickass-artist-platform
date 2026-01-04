@@ -102,25 +102,20 @@ function App() {
                 <Route path="/" element={<GearPage />}>
                   <Route path="R" element={<ContentPage />} />
                   <Route path="N" element={<ContentPage />} />
-                  <Route path="1" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="2" element={
+                  <Route path="1" element={<Events />} />
+                  <Route path="2" element={<Merch />} />
+                  <Route path="3" element={<Gallery />} />
+                  <Route path="4" element={
                     <ProtectedRoute>
                       <Forum />
                     </ProtectedRoute>
                   } />
-                  <Route path="2/thread/:threadId" element={
+                  <Route path="4/thread/:threadId" element={
                     <ProtectedRoute>
                       <ForumThreadDetail />
                     </ProtectedRoute>
                   } />
-                  <Route path="3" element={<Gallery />} />
-                  <Route path="4" element={<ContentPage />} />
-                  <Route path="5" element={<ContentPage />} />
-                  <Route path="6" element={
+                  <Route path="5" element={
                     <ProtectedRoute>
                       <Chat />
                     </ProtectedRoute>

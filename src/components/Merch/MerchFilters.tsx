@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Filter, X } from 'lucide-react'
-import { MerchFilters } from '../../hooks/useMerchFilters'
+import { MerchFilters as MerchFilterState } from '../../hooks/useMerchFilters'
 
 interface MerchFiltersProps {
-  filters: MerchFilters
+  filters: MerchFilterState
   onFilterChange: (key: string, value: string | number | null) => void
   onReset: () => void
 }
@@ -99,12 +99,11 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
           </select>
         </div>
 
-        {/* Price range */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           <label className="block text-sm font-semibold text-gray-300">
             Price Range
           </label>
-          <div className="flex gap-2">
+          <div className="space-y-2">
             <input
               type="number"
               placeholder="Min ($)"
@@ -115,7 +114,7 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
                   e.target.value ? parseInt(e.target.value) * 100 : null
                 )
               }
-              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
             />
             <input
               type="number"
@@ -127,7 +126,7 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
                   e.target.value ? parseInt(e.target.value) * 100 : null
                 )
               }
-              className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
             />
           </div>
         </div>

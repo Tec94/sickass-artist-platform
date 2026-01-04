@@ -145,7 +145,7 @@ export const getEvents = query({
     city: v.optional(v.string()),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
-    saleStatus: v.optional(v.union(v.literal('upcoming'), v.literal('on_sale'))),
+    saleStatus: v.optional(v.union(v.literal('upcoming'), v.literal('on_sale'), v.null())),
     sortBy: v.optional(v.union(v.literal('asc'), v.literal('desc'))),
   },
   handler: async (ctx, args): Promise<PaginatedResult<EventWithCreator>> => {
@@ -249,7 +249,7 @@ export const searchEvents = query({
     query: v.string(),
     limit: v.number(),
     city: v.optional(v.string()),
-    saleStatus: v.optional(v.union(v.literal('upcoming'), v.literal('on_sale'))),
+    saleStatus: v.optional(v.union(v.literal('upcoming'), v.literal('on_sale'), v.null())),
   },
   handler: async (ctx, args): Promise<EventWithCreator[]> => {
     if (args.query.length < 2) {

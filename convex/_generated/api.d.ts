@@ -11,6 +11,7 @@
 import type * as cart from "../cart.js";
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
+import type * as drops from "../drops.js";
 import type * as events from "../events.js";
 import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   cart: typeof cart;
   chat: typeof chat;
   crons: typeof crons;
+  drops: typeof drops;
   events: typeof events;
   forum: typeof forum;
   gallery: typeof gallery;

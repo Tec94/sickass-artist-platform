@@ -8,12 +8,11 @@ import './GearDisplay.css'
 const GEARS: { id: GearName, icon: string, label: string }[] = [
   { id: 'R', icon: 'solar:refresh-circle-linear', label: 'Reset' },
   { id: 'N', icon: 'solar:stop-circle-linear', label: 'Neutral' },
-  { id: '1', icon: 'solar:user-id-linear', label: 'Profile' },
-  { id: '2', icon: 'solar:posts-carousel-vertical-linear', label: 'Forum' },
+  { id: '1', icon: 'solar:calendar-mark-linear', label: 'Events' },
+  { id: '2', icon: 'solar:bag-heart-linear', label: 'Merch' },
   { id: '3', icon: 'solar:gallery-wide-linear', label: 'Gallery' },
-  { id: '4', icon: 'solar:music-note-linear', label: 'Music' },
-  { id: '5', icon: 'solar:settings-linear', label: 'Settings' },
-  { id: '6', icon: 'solar:chat-round-dots-linear', label: 'Chat' },
+  { id: '4', icon: 'solar:posts-carousel-vertical-linear', label: 'Forum' },
+  { id: '5', icon: 'solar:chat-round-dots-linear', label: 'Chatroom' },
 ]
 
 export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'horizontal' }) => {

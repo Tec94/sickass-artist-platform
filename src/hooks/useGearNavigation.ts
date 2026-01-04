@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGear, GearName } from '../contexts/GearContext'
 
-const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5', '6']
+const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5']
 
 export const useGearNavigation = () => {
   const { currentGear, setCurrentGear } = useGear()

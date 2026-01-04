@@ -6,6 +6,22 @@ import { getCurrentUser } from './helpers'
 export const getCart = query({
   args: {},
   handler: async (ctx) => {
+    // Check if user is authenticated
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      // Return empty cart for unauthenticated users
+      return {
+        items: [],
+        total: 0,
+        itemCount: 0,
+        subtotal: 0,
+        tax: 0,
+        shipping: 0,
+        isEmpty: true,
+        timestamp: Date.now(),
+      }
+    }
+
     const user = await getCurrentUser(ctx)
 
     const cart = await ctx.db

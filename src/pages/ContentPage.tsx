@@ -7,11 +7,11 @@ export const ContentPage = () => {
     const titles: Record<string, string> = {
       R: 'Reverse Gear',
       N: 'Neutral',
-      '1': 'First Gear',
-      '2': 'Second Gear',
-      '3': 'Third Gear',
-      '4': 'Fourth Gear',
-      '5': 'Fifth Gear',
+      '1': 'Events',
+      '2': 'Merch',
+      '3': 'Gallery',
+      '4': 'Forum',
+      '5': 'Chatroom',
     }
     return titles[gear] || 'Unknown Gear'
   }
@@ -20,11 +20,11 @@ export const ContentPage = () => {
     const descriptions: Record<string, string> = {
       R: 'Going back in style',
       N: 'Taking a pause',
-      '1': 'Getting started',
-      '2': 'Picking up speed',
-      '3': 'In the groove',
-      '4': 'Full throttle',
-      '5': 'Maximum power',
+      '1': 'Upcoming shows and gatherings',
+      '2': 'Exclusive limited items',
+      '3': 'Visual journey',
+      '4': 'Community discussions',
+      '5': 'Connect with others',
     }
     return descriptions[gear] || ''
   }

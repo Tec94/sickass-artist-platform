@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
 
-export type GearName = 'R' | 'N' | '1' | '2' | '3' | '4' | '5' | '6'
+export type GearName = 'R' | 'N' | '1' | '2' | '3' | '4' | '5'
 
 interface GearContextType {
   currentGear: GearName
