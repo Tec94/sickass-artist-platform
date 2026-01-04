@@ -514,4 +514,204 @@ export default defineSchema({
     .index('by_event', ['eventId'])                         // Count active sessions per event (for throttling)
     .index('by_event_user', ['eventId', 'userId'])          // Enforce 1 session per user per event
     .index('by_expires', ['expiresAtUtc']),                 // Cron: cleanup expired sessions every 5 minutes
+
+  // ==================== MERCHANDISE SYSTEM ====================
+
+  // Products table - Main product catalog with pricing and inventory
+  merchProducts: defineTable({
+    // Basic info
+    name: v.string(),                  // "Tour T-Shirt"
+    description: v.string(),           // Short description
+    longDescription: v.optional(v.string()), // Markdown/rich text
+
+    // Pricing (in cents, e.g., 9999 = $99.99)
+    price: v.number(),                  // Base price
+    discount: v.optional(v.number()),  // Discount percentage (0-100)
+
+    // Inventory management
+    totalStock: v.number(),             // Total across all variants
+    lowStockThreshold: v.number(),      // Alert at this count (default: 10)
+
+    // Images
+    imageUrls: v.array(v.string()),     // Gallery of images (max 10)
+    thumbnailUrl: v.string(),           // Main thumbnail
+
+    // Categorization
+    category: v.union(
+      v.literal('apparel'),
+      v.literal('accessories'),
+      v.literal('vinyl'),
+      v.literal('limited'),
+      v.literal('other')
+    ),
+    tags: v.array(v.string()),          // For search/filtering (max 5)
+
+    // Status & visibility
+    status: v.union(
+      v.literal('active'),
+      v.literal('draft'),
+      v.literal('archived'),
+      v.literal('discontinued')
+    ),
+
+    // Drops & pre-orders
+    isPreOrder: v.boolean(),
+    preOrderDeadline: v.optional(v.number()), // Timestamp (ms)
+    isDropProduct: v.boolean(),
+    dropStartsAt: v.optional(v.number()),     // Timestamp (ms)
+    dropEndsAt: v.optional(v.number()),       // Timestamp (ms)
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdBy: v.id('users'),            // Artist/admin who created
+  })
+    .index('by_status', ['status'])
+    .index('by_category', ['category'])
+    .index('by_created', ['createdAt'])
+    .index('by_drop', ['isDropProduct', 'dropStartsAt']),
+
+  // Product variants - Size/color/style combinations
+  merchVariants: defineTable({
+    productId: v.id('merchProducts'),
+    sku: v.string(),                    // Unique SKU (e.g., "TOUR-TSH-XL-BLK")
+
+    // Variant options
+    size: v.optional(v.string()),       // "XL", "One Size", etc.
+    color: v.optional(v.string()),      // "Black", "White", etc.
+    style: v.optional(v.string()),      // "Crewneck", "Hoodie", etc.
+
+    // Pricing & stock
+    price: v.optional(v.number()),      // Override product price (if different)
+    stock: v.number(),                  // Quantity available (>= 0)
+    weight: v.optional(v.number()),     // In grams, for shipping
+
+    // Status
+    status: v.union(
+      v.literal('available'),
+      v.literal('low_stock'),
+      v.literal('out_of_stock'),
+      v.literal('discontinued')
+    ),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_product', ['productId'])
+    .index('by_sku', ['sku']),
+
+  // Shopping cart items - User's cart with price locking
+  merchCart: defineTable({
+    userId: v.id('users'),
+    items: v.array(v.object({
+      variantId: v.id('merchVariants'),
+      quantity: v.number(),             // 1-100
+      priceAtAddTime: v.number(),       // Lock price when added (prevent manipulation)
+      addedAt: v.number(),              // Timestamp when added
+    })),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId']),
+
+  // Orders - Completed purchases with full snapshot
+  merchOrders: defineTable({
+    userId: v.id('users'),
+    orderNumber: v.string(),            // "ORD-1704067200000" (unique)
+
+    // Items ordered
+    items: v.array(v.object({
+      variantId: v.id('merchVariants'),
+      productName: v.string(),
+      variantName: v.string(),          // "XL Black" (display)
+      quantity: v.number(),
+      pricePerUnit: v.number(),         // Price at purchase time
+      totalPrice: v.number(),           // quantity × pricePerUnit
+    })),
+
+    // Pricing breakdown (in cents)
+    subtotal: v.number(),
+    tax: v.number(),                    // 10% of subtotal
+    shipping: v.number(),               // $10 = 1000
+    discount: v.optional(v.number()),   // Future: coupon codes
+    total: v.number(),                  // subtotal + tax + shipping - discount
+
+    // Shipping address
+    shippingAddress: v.object({
+      name: v.string(),
+      email: v.string(),
+      addressLine1: v.string(),
+      addressLine2: v.optional(v.string()),
+      city: v.string(),
+      state: v.string(),
+      zipCode: v.string(),
+      country: v.string(),
+    }),
+
+    // Status & tracking
+    status: v.union(
+      v.literal('pending'),
+      v.literal('paid'),
+      v.literal('processing'),
+      v.literal('shipped'),
+      v.literal('delivered'),
+      v.literal('cancelled')
+    ),
+
+    trackingNumber: v.optional(v.string()),
+    trackingUrl: v.optional(v.string()),
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    shippedAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_user', ['userId'])
+    .index('by_order_number', ['orderNumber'])
+    .index('by_status', ['status']),
+
+  // Inventory audit log - Track all stock changes
+  merchInventoryLog: defineTable({
+    variantId: v.id('merchVariants'),
+    change: v.number(),                // Positive (restock) or negative (purchase/loss)
+    reason: v.union(
+      v.literal('purchase'),
+      v.literal('restock'),
+      v.literal('manual_correction'),
+      v.literal('return'),
+      v.literal('damage')
+    ),
+    orderId: v.optional(v.id('merchOrders')),
+    notes: v.optional(v.string()),      // For manual corrections
+    createdBy: v.optional(v.id('users')), // For manual adjustments
+    createdAt: v.number(),
+  })
+    .index('by_variant', ['variantId'])
+    .index('by_created', ['createdAt']),
+
+  // Drop schedules - Limited-time product drops
+  merchDrops: defineTable({
+    name: v.string(),                   // "Summer Collection Drop"
+    description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+
+    // Timing
+    startsAt: v.number(),               // Timestamp (ms)
+    endsAt: v.number(),                 // Timestamp (ms)
+
+    // Products in this drop
+    products: v.array(v.id('merchProducts')),
+
+    // Display order
+    priority: v.number(),               // For ordering (0 = highest)
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdBy: v.id('users'),
+  })
+    .index('by_starts', ['startsAt'])
+    .index('by_status', ['startsAt', 'endsAt']),
 })
