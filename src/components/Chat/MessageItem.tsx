@@ -44,8 +44,8 @@ export function MessageItem({ message, isPinned = false, onDelete, onReact, curr
 
   return (
     <div
-      className={`flex gap-3 p-3 rounded-lg hover:bg-gray-800/50 transition-colors relative ${
-        isPinned ? 'border-l-2 border-yellow-500' : ''
+      className={`flex gap-3 p-3 rounded-lg hover:bg-[#1a1a1a]/50 transition-colors relative ${
+        isPinned ? 'border-l-2 border-[#c41e3a]' : ''
       }`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -68,22 +68,22 @@ export function MessageItem({ message, isPinned = false, onDelete, onReact, curr
           <FanStatusBadge user={mockUser as any} size="sm" />
         </div>
 
-        <span className="text-gray-400 text-xs">
+        <span className="text-[#808080] text-xs">
           {formatTimestamp(message.createdAt)}
         </span>
 
         {isPinned && (
-          <span className="text-yellow-400 text-xs">📌</span>
+          <span className="text-[#c41e3a] text-xs">📌</span>
         )}
 
         {message.isDeleted && (
-          <span className="text-red-400 text-xs">[deleted]</span>
+          <span className="text-[#c41e3a] text-xs">[deleted]</span>
         )}
         </div>
 
         {/* Message Content */}
-        <div className={`text-gray-200 text-sm whitespace-pre-wrap break-words ${
-          message.isDeleted ? 'italic text-gray-500' : ''
+        <div className={`text-[#e0e0e0] text-sm whitespace-pre-wrap break-words ${
+          message.isDeleted ? 'italic text-[#808080]' : ''
         }`}>
           {message.isDeleted ? '[deleted]' : message.content}
         </div>
@@ -96,11 +96,11 @@ export function MessageItem({ message, isPinned = false, onDelete, onReact, curr
             {(message.reactionEmojis as string[]).map((emoji, index) => (
                 <button
                   key={index}
-                  className="flex items-center gap-1 px-2 py-1 bg-gray-700/50 rounded-full text-xs hover:bg-gray-600/50 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 bg-[#1a1a1a]/50 rounded-full text-xs hover:bg-[#2a2a2a]/50 transition-colors border border-[#2a2a2a]"
                   onClick={() => onReact?.(emoji)}
                 >
                   <span>{emoji}</span>
-                  <span className="text-gray-300">{message.reactionCount}</span>
+                  <span className="text-[#e0e0e0]">{message.reactionCount}</span>
                 </button>
               ))}
             </div>
@@ -111,7 +111,7 @@ export function MessageItem({ message, isPinned = false, onDelete, onReact, curr
             <div className="flex items-center gap-2 ml-auto">
               <button
                 onClick={() => setShowReactionPicker(!showReactionPicker)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-[#808080] hover:text-white transition-colors"
                 title="Add reaction"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@ export function MessageItem({ message, isPinned = false, onDelete, onReact, curr
               {onDelete && message.authorId === currentUserId && (
                 <button
                   onClick={onDelete}
-                  className="text-gray-400 hover:text-red-400 transition-colors"
+                  className="text-[#808080] hover:text-[#c41e3a] transition-colors"
                   title="Delete message"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

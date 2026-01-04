@@ -29,7 +29,7 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
     }
   }, [messageContent])
 
@@ -71,78 +71,48 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex-1">
       {/* Offline indicator */}
       {!isOnline && (
-        <div className="absolute -top-8 left-0 bg-red-600/80 text-white text-xs px-3 py-1 rounded-full z-10">
+        <div className="absolute -top-8 left-0 bg-[#c41e3a]/80 text-white text-xs px-3 py-1 rounded-full z-10">
           Offline - messages will sync when online
         </div>
       )}
 
       {/* Message Input */}
-      <div className="flex flex-col gap-2">
-        <textarea
-          ref={textareaRef}
-          value={messageContent}
-          onChange={(e) => setMessageContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={isOnline ? `Message #channel (Shift+Enter to send)` : `Message #channel (offline)`}
-          disabled={isSending}
-          className={`w-full min-h-[48px] max-h-[120px] p-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-            sendError ? 'border-red-500' : ''
-          }`}
-        />
+      <textarea
+        ref={textareaRef}
+        value={messageContent}
+        onChange={(e) => setMessageContent(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={isOnline ? `Message #general` : `Message #general (offline)`}
+        disabled={isSending}
+        rows={1}
+        className={`w-full min-h-[24px] max-h-[120px] bg-transparent text-[#e0e0e0] text-sm resize-none focus:outline-none placeholder:text-[#505050] ${
+          sendError ? 'text-[#c41e3a]' : ''
+        }`}
+      />
 
-        {/* Character count and send button */}
-        <div className="flex items-center justify-between">
-          <div className="text-gray-400 text-xs">
-            {messageContent.length}/500 characters
-          </div>
+      {/* Error message */}
+      {sendError && (
+        <div className="text-[#c41e3a] text-xs mt-1">
+          {sendError}
+        </div>
+      )}
 
+      {/* Retry button for failed optimistic messages */}
+      {optimisticMessages.some(msg => msg.status === 'failed') && (
+        <div className="mt-1">
           <button
-            onClick={handleSend}
-            disabled={isSending || !messageContent.trim() || !isOnline}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1 ${
-              isSending
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : !messageContent.trim()
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-cyan-600 hover:bg-cyan-700 text-white'
-            }`}
+            onClick={() => {
+              // Retry logic would go here
+            }}
+            className="text-[#c41e3a] hover:text-[#ff3355] text-xs transition-colors"
           >
-            {isSending ? (
-              <>
-                <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></span>
-                Sending...
-              </>
-            ) : (
-              'Send'
-            )}
+            Retry failed messages
           </button>
         </div>
-
-        {/* Error message */}
-        {sendError && (
-          <div className="text-red-400 text-sm mt-1">
-            {sendError}
-          </div>
-        )}
-
-        {/* Retry button for failed optimistic messages */}
-        {optimisticMessages.some(msg => msg.status === 'failed') && (
-          <div className="mt-2">
-            <button
-              onClick={() => {
-                // Retry logic would go here
-                // In a real app, you'd retry sending these messages
-              }}
-              className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
-            >
-              Retry failed messages
-            </button>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

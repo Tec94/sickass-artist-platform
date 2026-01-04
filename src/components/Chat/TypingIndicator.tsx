@@ -20,7 +20,7 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
   }
 
   return (
-    <div className="flex items-center gap-1 text-gray-400 text-sm">
+    <div className="flex items-center gap-1 text-[#808080] text-sm">
       <span>{typingText}</span>
       <span className="typing-dots">
         <span className="dot">.</span>
