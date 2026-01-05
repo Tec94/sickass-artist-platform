@@ -19,6 +19,8 @@ import { ProtectedRoute } from './components/Auth/ProtectedRoute'
 import { FlashlightEffect } from './components/Effects/FlashlightEffect'
 import { EventDetailSkeleton, PurchaseLoadingState } from './components/events/Skeletons'
 import { MerchErrorBoundary } from './components/Merch/ErrorBoundary'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { TestErrorPage } from './pages/TestErrorPage'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
@@ -94,12 +96,13 @@ function App() {
   return (
     <UserProvider>
       <CartProvider>
-        <BrowserRouter>
-          <GearProvider>
-            <FlashlightEffect className="app-root">
-            <ParallaxBackground />
-            <NavbarFallback />
-            <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+        <ErrorBoundary level="page">
+          <BrowserRouter>
+            <GearProvider>
+              <FlashlightEffect className="app-root">
+                <ParallaxBackground />
+                <NavbarFallback />
+                <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<GearPage />}>
                   <Route path="R" element={
@@ -111,12 +114,14 @@ function App() {
                   } />
                   <Route path="dashboard" element={
                     <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
-                      <Dashboard />
+                      <ErrorBoundary level="section">
+                        <Dashboard />
+                      </ErrorBoundary>
                     </Suspense>
                   } />
-                  <Route path="events" element={<Events />} />
+                  <Route path="events" element={<ErrorBoundary level="section"><Events /></ErrorBoundary>} />
                   <Route path="store" element={<Merch />} />
-                  <Route path="gallery" element={<Gallery />} />
+                  <Route path="gallery" element={<ErrorBoundary level="section"><Gallery /></ErrorBoundary>} />
                   <Route path="forum" element={
                     <ProtectedRoute>
                       <Forum />
@@ -211,11 +216,13 @@ function App() {
                     <AdminEventForm />
                   </ProtectedRoute>
                 } />
+                <Route path="/test-errors" element={<TestErrorPage />} />
               </Routes>
             </Suspense>
           </FlashlightEffect>
         </GearProvider>
       </BrowserRouter>
+      </ErrorBoundary>
       </CartProvider>
     </UserProvider>
   )

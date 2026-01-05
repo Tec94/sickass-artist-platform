@@ -1,254 +1,261 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { ErrorFallback } from './ErrorFallback'
+import {
+  shouldProcessError,
+  shouldRetry,
+  getRetryDelay,
+  createErrorContext,
+  logErrorToStorage,
+  RETRY_DELAYS
+} from '../utils/errorHandler'
 
-interface Props {
+type NodeJSTimeout = any
+
+interface ErrorBoundaryProps {
   children: ReactNode
+  level?: 'page' | 'section' | 'component'
   fallback?: ReactNode
   onError?: (error: Error, errorInfo: ErrorInfo) => void
+  componentName?: string
+  maxRetries?: number
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean
   error?: Error
   errorInfo?: ErrorInfo
+  retryCount: number
+  isRetrying: boolean
 }
 
-// Network Error Boundary specifically for Convex subscriptions
-export class NetworkErrorBoundary extends Component<Props, State> {
-  private retryTimeoutId: NodeJS.Timeout | null = null
-  private retryCount = 0
-  private maxRetries = 5
+ 
 
-  constructor(props: Props) {
+/**
+ * Comprehensive Error Boundary with exponential backoff retry and error tracking
+ */
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private retryTimeoutId: NodeJSTimeout | null = null
+  private errorContext: ReturnType<typeof createErrorContext> | null = null
+  
+  constructor(props: ErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false }
+    this.state = {
+      hasError: false,
+      retryCount: 0,
+      isRetrying: false
+    }
   }
-
-  static getDerivedStateFromError(error: Error): State {
+  
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
       error,
+      retryCount: 0,
+      isRetrying: false
     }
   }
-
+  
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[NetworkErrorBoundary] Caught error:', error, errorInfo)
+    console.error(`[ErrorBoundary] Caught error in ${this.props.level || 'component'} level:`, error, errorInfo)
     
-    // Log error for debugging
+    // Create error context
+    this.errorContext = createErrorContext(
+      this.props.level || 'component',
+      this.props.componentName,
+      error
+    )
+    
+    // Check if we should process this error (frequency tracking)
+    const shouldProcess = shouldProcessError()
+    
+    if (!shouldProcess) {
+      console.warn('[ErrorBoundary] Error frequency limit reached, suppressing error')
+      return
+    }
+    
+    // Set error state
     this.setState({
       error,
       errorInfo,
+      hasError: true
     })
-
+    
+    // Log error to localStorage
+    logErrorToStorage(error, this.errorContext)
+    
     // Call optional error handler
     this.props.onError?.(error, errorInfo)
-
-    // Check if this is a network-related error
-    if (this.isNetworkError(error)) {
+    
+    // Check if we should retry
+    const shouldRetryError = shouldRetry(error)
+    if (shouldRetryError) {
       this.scheduleRetry()
     }
   }
-
+  
   componentWillUnmount() {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId)
     }
   }
-
-  private isNetworkError(error: Error): boolean {
-    const networkErrorPatterns = [
-      'network',
-      'fetch',
-      'connection',
-      'timeout',
-      'offline',
-      'socket',
-      'ECONNRESET',
-      'ECONNREFUSED',
-    ]
-    
-    return networkErrorPatterns.some(pattern => 
-      error.message.toLowerCase().includes(pattern)
-    )
-  }
-
+  
   private scheduleRetry() {
-    if (this.retryCount >= this.maxRetries) {
-      console.warn('[NetworkErrorBoundary] Max retries reached, giving up')
+    const { retryCount } = this.state
+    const maxRetries = this.props.maxRetries || RETRY_DELAYS.length
+    
+    if (retryCount >= maxRetries) {
+      console.warn(`[ErrorBoundary] Max retries (${maxRetries}) reached, giving up`)
       return
     }
-
-    const delay = Math.min(1000 * Math.pow(2, this.retryCount), 16000) // Max 16s delay
+    
+    const delay = getRetryDelay(retryCount)
+    if (!delay) {
+      console.warn('[ErrorBoundary] No retry delay available')
+      return
+    }
+    
+    console.log(`[ErrorBoundary] Scheduling retry ${retryCount + 1}/${maxRetries} in ${delay}ms`)
+    
+    this.setState({ isRetrying: true })
     
     this.retryTimeoutId = setTimeout(() => {
-      this.retryCount++
-      console.log(`[NetworkErrorBoundary] Retrying connection (attempt ${this.retryCount}/${this.maxRetries})...`)
-      
-      this.setState({ hasError: false, error: undefined, errorInfo: undefined })
-    }, delay)
+      this.setState(prevState => ({
+        hasError: false,
+        error: undefined,
+        errorInfo: undefined,
+        retryCount: prevState.retryCount + 1,
+        isRetrying: false
+      }))
+    }, delay) as unknown as NodeJSTimeout
   }
-
+  
   private handleManualRetry = () => {
-    this.retryCount = 0
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
+    // Clear any pending retry
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId)
+    }
+    
+    // Reset state
+    this.setState({
+      hasError: false,
+      error: undefined,
+      errorInfo: undefined,
+      retryCount: 0,
+      isRetrying: false
+    })
   }
-
+  
+  private handleReset = () => {
+    // Full reset - reload the page
+    window.location.reload()
+  }
+  
   render() {
     if (this.state.hasError) {
+      const level = this.props.level || 'component'
+      const error = this.state.error
+      const retryCount = this.state.retryCount
+      const maxRetries = this.props.maxRetries || RETRY_DELAYS.length
+      
+      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback
       }
-
-      const isNetworkError = this.state.error && this.isNetworkError(this.state.error!)
-      const canRetry = isNetworkError && this.retryCount < this.maxRetries
-
+      
+      // Use appropriate fallback based on level
+      if (level === 'page') {
+        return (
+          <ErrorFallback
+            level="page"
+            error={error}
+            errorInfo={this.state.errorInfo}
+            onRetry={this.handleManualRetry}
+            onReset={this.handleReset}
+            retryCount={retryCount}
+            maxRetries={maxRetries}
+            showDetails={true}
+          />
+        )
+      }
+      
+      if (level === 'section') {
+        return (
+          <ErrorFallback
+            level="section"
+            error={error}
+            errorInfo={this.state.errorInfo}
+            onRetry={this.handleManualRetry}
+            retryCount={retryCount}
+            maxRetries={maxRetries}
+            showDetails={true}
+          />
+        )
+      }
+      
+      // Component level - minimal fallback
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            
-            <div className="mt-4 text-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                {isNetworkError ? 'Connection Problem' : 'Something went wrong'}
-              </h3>
-              
-              <p className="mt-2 text-sm text-gray-600">
-                {isNetworkError 
-                  ? 'We\'re having trouble connecting to our servers. This might be due to a network issue.'
-                  : 'An unexpected error occurred. Please try again.'
-                }
-              </p>
-
-              {isNetworkError && (
-                <div className="mt-3 text-xs text-gray-500">
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${navigator.onLine ? 'bg-green-400' : 'bg-red-400'}`} />
-                    <span>{navigator.onLine ? 'Online' : 'Offline'}</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 space-y-3">
-                {canRetry && (
-                  <button
-                    onClick={this.handleManualRetry}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Try Again
-                  </button>
-                )}
-                
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Refresh Page
-                </button>
-              </div>
-
-              {this.state.error && process.env.NODE_ENV === 'development' && (
-                <details className="mt-4 text-left">
-                  <summary className="text-xs text-gray-500 cursor-pointer">
-                    Error Details (Development)
-                  </summary>
-                  <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
-                    {this.state.error.message}
-                    {this.state.errorInfo?.componentStack}
-                  </pre>
-                </details>
-              )}
-            </div>
-          </div>
-        </div>
+        <ErrorFallback
+          level="component"
+          error={error}
+          errorInfo={this.state.errorInfo}
+          retryCount={retryCount}
+          maxRetries={maxRetries}
+          showDetails={true}
+        />
       )
     }
-
+    
     return this.props.children
   }
 }
 
-// Reconnecting Banner Component
-export function ReconnectingBanner() {
-  const [isVisible, setIsVisible] = React.useState(false)
-  const [retryCount, setRetryCount] = React.useState(0)
-
-  React.useEffect(() => {
-    const handleOnline = () => {
-      setIsVisible(false)
-      setRetryCount(0)
-    }
-
-    const handleOffline = () => {
-      setIsVisible(true)
-    }
-
-    const handleConvexError = () => {
-      setIsVisible(true)
-      setRetryCount(prev => prev + 1)
-      
-      // Auto-hide after successful connection
-      setTimeout(() => {
-        if (navigator.onLine) {
-          setIsVisible(false)
-        }
-      }, 3000)
-    }
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    window.addEventListener('convex-error', handleConvexError)
-
-    // Check initial state
-    if (!navigator.onLine) {
-      setIsVisible(true)
-    }
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-      window.removeEventListener('convex-error', handleConvexError as EventListener)
-    }
-  }, [])
-
-  if (!isVisible) return null
-
-  return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-50 border-b border-yellow-200 px-4 py-3">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0">
-            <svg className="w-5 h-5 text-yellow-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-yellow-800">
-              {navigator.onLine ? 'Reconnecting...' : 'No internet connection'}
-            </p>
-            <p className="text-xs text-yellow-700">
-              {retryCount > 0 && `Attempt ${retryCount}`}
-              {navigator.onLine ? 'Please wait while we restore the connection.' : 'Check your network settings and try again.'}
-            </p>
-          </div>
-        </div>
-        
-        <button
-          onClick={() => setIsVisible(false)}
-          className="flex-shrink-0 text-yellow-600 hover:text-yellow-800"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  )
+// Widget-specific error boundary with simpler interface
+interface WidgetErrorBoundaryProps {
+  children: ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  componentName?: string
+  maxRetries?: number
 }
 
-// Error Toast Component for user feedback
+export class WidgetErrorBoundary extends Component<WidgetErrorBoundaryProps> {
+  render() {
+    return (
+      <ErrorBoundary
+        level="section"
+        componentName={this.props.componentName}
+        onError={this.props.onError}
+        maxRetries={this.props.maxRetries}
+      >
+        {this.props.children}
+      </ErrorBoundary>
+    )
+  }
+}
+
+// Network Error Boundary (backward compatibility)
+interface NetworkErrorBoundaryProps {
+  children: ReactNode
+  fallback?: ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
+}
+
+export class NetworkErrorBoundary extends Component<NetworkErrorBoundaryProps> {
+  render() {
+    return (
+      <ErrorBoundary
+        level="section"
+        fallback={this.props.fallback}
+        onError={this.props.onError}
+        componentName="NetworkErrorBoundary"
+        maxRetries={3}
+      >
+        {this.props.children}
+      </ErrorBoundary>
+    )
+  }
+}
+
+// Re-export ErrorToast for backward compatibility
 interface ErrorToastProps {
   error: {
     message: string
@@ -261,14 +268,14 @@ interface ErrorToastProps {
 
 export function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
   const [countdown, setCountdown] = React.useState(error.retryAfter || 0)
-
+  
   React.useEffect(() => {
     if (error.retryAfter && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
       return () => clearTimeout(timer)
     }
   }, [countdown, error.retryAfter])
-
+  
   const getToastStyles = () => {
     switch (error.type) {
       case 'oversell':
@@ -283,7 +290,7 @@ export function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
         return 'bg-gray-50 border-gray-200 text-gray-800'
     }
   }
-
+  
   const getIcon = () => {
     switch (error.type) {
       case 'oversell':
@@ -312,7 +319,7 @@ export function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
         )
     }
   }
-
+  
   return (
     <div className={`fixed top-4 right-4 z-50 max-w-sm w-full border rounded-lg p-4 shadow-lg ${getToastStyles()}`}>
       <div className="flex items-start space-x-3">
