@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { NetworkErrorBoundary } from '../components/ErrorBoundary'
+import { ErrorBoundary, WidgetErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
 import { TrendingWidget } from '../components/Dashboard/TrendingWidget'
 import { EventsWidget } from '../components/Dashboard/EventsWidget'
@@ -64,51 +64,51 @@ export const Dashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Hero Section - Always renders first */}
-      <NetworkErrorBoundary>
-        <HeroSection />
-      </NetworkErrorBoundary>
+        <ErrorBoundary level="section" componentName="HeroSection">
+          <HeroSection />
+        </ErrorBoundary>
 
       {/* Dashboard Grid */}
       <div className="dashboard-grid">
         {/* Priority 1 Widgets - Trending */}
         {renderedWidgets.has('trending') && (
-          <NetworkErrorBoundary>
+          <WidgetErrorBoundary componentName="TrendingWidget">
             <TrendingWidget 
               data={trendingData}
               onRetry={() => handleWidgetRetry('trending')}
             />
-          </NetworkErrorBoundary>
+          </WidgetErrorBoundary>
         )}
 
         {/* Priority 1 Widgets - Events */}
         {renderedWidgets.has('events') && (
-          <NetworkErrorBoundary>
+          <WidgetErrorBoundary componentName="EventsWidget">
             <EventsWidget 
               data={eventsData}
               onRetry={() => handleWidgetRetry('events')}
             />
-          </NetworkErrorBoundary>
+          </WidgetErrorBoundary>
         )}
 
         {/* Priority 2 Widgets - Forum (deferred) */}
         {renderedWidgets.has('forum') && (
-          <NetworkErrorBoundary>
+          <WidgetErrorBoundary componentName="ForumWidget">
             <ForumWidget onRetry={() => handleWidgetRetry('forum')} />
-          </NetworkErrorBoundary>
+          </WidgetErrorBoundary>
         )}
 
         {/* Priority 2 Widgets - Merch (deferred) */}
         {renderedWidgets.has('merch') && (
-          <NetworkErrorBoundary>
+          <WidgetErrorBoundary componentName="MerchWidget">
             <MerchWidget onRetry={() => handleWidgetRetry('merch')} />
-          </NetworkErrorBoundary>
+          </WidgetErrorBoundary>
         )}
 
         {/* Priority 2 Widgets - Creators (deferred) */}
         {renderedWidgets.has('creators') && (
-          <NetworkErrorBoundary>
+          <WidgetErrorBoundary componentName="CreatorsWidget">
             <CreatorsWidget onRetry={() => handleWidgetRetry('creators')} />
-          </NetworkErrorBoundary>
+          </WidgetErrorBoundary>
         )}
       </div>
 
