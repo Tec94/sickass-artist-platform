@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react'
 import { TrendingUp, Eye, Heart, Clock, ArrowRight, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { LoadingSkeleton } from '../LoadingSkeleton'
+import { useQueryWithTimeout } from '../../hooks/useQueryWithTimeout'
+
+interface QueryFunction {
+  (args: Record<string, unknown>): unknown
+}
 
 interface TrendingWidgetProps {
+  queryFn?: QueryFunction
+  queryArgs?: Record<string, unknown>
   data?: {
     items: TrendingItem[]
     hasMore: boolean
@@ -10,6 +17,7 @@ interface TrendingWidgetProps {
     page: number
   }
   onRetry?: () => void
+  timeoutMs?: number
 }
 
 interface TrendingItem {
@@ -29,33 +37,71 @@ interface TrendingItem {
   trendingScore: number
 }
 
-export const TrendingWidget = ({ data, onRetry }: TrendingWidgetProps) => {
+export const TrendingWidget = ({ 
+  queryFn, 
+  queryArgs, 
+  data: initialData, 
+  onRetry,
+  timeoutMs = 5000
+}: TrendingWidgetProps) => {
   const navigate = useNavigate()
-  const [timeoutReached, setTimeoutReached] = useState(false)
+  
+  // Use timeout hook - always call hooks in the same order
+  const queryResult = useQueryWithTimeout(
+    queryFn || (() => undefined),
+    queryArgs || {},
+    { timeoutMs, enabled: !!queryFn }
+  )
 
-  // Set timeout for 3 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeoutReached(true)
-    }, 3000)
+  const {
+    data = initialData,
+    isLoading = !initialData,
+    error,
+    timedOut
+  } = queryResult
 
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Show loading skeleton if data is undefined and timeout not reached
-  if (!data && !timeoutReached) {
-    return <TrendingSkeleton />
+  const handleRetry = () => {
+    onRetry?.()
   }
 
-  // Show error state if timeout reached and no data
-  if ((!data || data.items?.length === 0) && timeoutReached) {
+  // Show timeout error after 5s
+  if (timedOut) {
+    return (
+      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+        <div className="widget-error">
+          <AlertCircle size={48} className="error-icon" />
+          <h3>Request timed out</h3>
+          <p>Unable to load trending content. Please try again.</p>
+          <button className="retry-button" onClick={handleRetry}>
+            Try Again
+          </button>
+        </div>
+      </WidgetContainer>
+    )
+  }
+
+  // Show loading skeleton if data is loading
+  if (isLoading && !data) {
+    return (
+      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+        <LoadingSkeleton 
+          type="gallery" 
+          count={4}
+          className="trending-grid"
+        />
+      </WidgetContainer>
+    )
+  }
+
+  // Show error state if there's an error and no data
+  if (error && !data?.items?.length) {
     return (
       <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
         <div className="widget-error">
           <AlertCircle size={48} className="error-icon" />
           <h3>Unable to load trending content</h3>
           <p>Please check your connection and try again.</p>
-          <button className="retry-button" onClick={onRetry}>
+          <button className="retry-button" onClick={handleRetry}>
             Try Again
           </button>
         </div>
@@ -82,8 +128,8 @@ export const TrendingWidget = ({ data, onRetry }: TrendingWidgetProps) => {
   return (
     <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
       <div className="trending-grid">
-        {data?.items?.slice(0, 4).map((item: any, index: number) => (
-          <TrendingItem key={item.id || index} item={item} index={index} navigate={navigate} />
+        {data?.items?.slice(0, 4).map((item: TrendingItem, index: number) => (
+          <TrendingItemComponent key={item.id || index} item={item} index={index} navigate={navigate} />
         ))}
       </div>
     </WidgetContainer>
@@ -93,7 +139,7 @@ export const TrendingWidget = ({ data, onRetry }: TrendingWidgetProps) => {
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: any
+  icon: React.ComponentType<{ size?: number; className?: string }>
   actionLabel: string
   children: React.ReactNode
 }
@@ -120,12 +166,12 @@ const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetCon
 
 // Trending Item Component
 interface TrendingItemProps {
-  item: any
+  item: TrendingItem
   index: number
-  navigate: any
+  navigate: ReturnType<typeof useNavigate>
 }
 
-const TrendingItem = ({ item, index, navigate }: TrendingItemProps) => {
+const TrendingItemComponent = ({ item, index, navigate }: TrendingItemProps) => {
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
@@ -181,32 +227,6 @@ const TrendingItem = ({ item, index, navigate }: TrendingItemProps) => {
             <span>{new Date(item.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-// Loading Skeleton Component
-const TrendingSkeleton = () => {
-  return (
-    <div className="widget-container">
-      <div className="widget-header">
-        <div className="widget-title">
-          <TrendingUp size={20} />
-          <h3>Trending Now</h3>
-        </div>
-      </div>
-      <div className="trending-grid">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="trending-item-skeleton">
-            <div className="skeleton-thumbnail" />
-            <div className="skeleton-content">
-              <div className="skeleton-title" />
-              <div className="skeleton-creator" />
-              <div className="skeleton-stats" />
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   )
