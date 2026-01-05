@@ -49,6 +49,7 @@ export function AdminMerch() {
   const [searchQuery, setSearchQuery] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [imageUrlInput, setImageUrlInput] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch products
   const products = useQuery(api.merch.getProducts, { 
@@ -57,8 +58,10 @@ export function AdminMerch() {
     search: searchQuery || undefined
   })
 
-  // Mutations would be added to convex/admin.ts
-  // For now, we'll show the UI and display placeholder actions
+  // Admin mutations
+  const createProduct = useMutation(api.admin.createProduct)
+  const updateProduct = useMutation(api.admin.updateProduct)
+  const archiveProduct = useMutation(api.admin.archiveProduct)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,11 +76,48 @@ export function AdminMerch() {
       return
     }
 
-    // TODO: Call mutation when backend is ready
-    showToast(editingId ? 'Product updated!' : 'Product created!', { type: 'success' })
-    setShowForm(false)
-    setEditingId(null)
-    setFormData(initialFormData)
+    setIsSubmitting(true)
+    try {
+      if (editingId) {
+        // Update existing product
+        await updateProduct({
+          productId: editingId,
+          updates: {
+            name: formData.name,
+            description: formData.description,
+            price: Math.round(formData.price * 100), // Convert to cents
+            category: formData.category,
+            tags: formData.tags,
+            images: formData.images,
+            status: formData.status,
+          },
+        })
+        showToast('Product updated successfully!', { type: 'success' })
+      } else {
+        // Create new product
+        await createProduct({
+          name: formData.name,
+          description: formData.description,
+          price: Math.round(formData.price * 100), // Convert to cents
+          category: formData.category,
+          tags: formData.tags,
+          images: formData.images,
+          status: formData.status,
+        })
+        showToast('Product created successfully!', { type: 'success' })
+      }
+      setShowForm(false)
+      setEditingId(null)
+      setFormData(initialFormData)
+    } catch (error) {
+      console.error('Error saving product:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to save product. Please try again.',
+        { type: 'error' }
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEdit = (product: Doc<'merchProducts'>) => {
@@ -96,8 +136,17 @@ export function AdminMerch() {
 
   const handleDelete = async (productId: Id<'merchProducts'>) => {
     if (!confirm('Are you sure you want to archive this product?')) return
-    // TODO: Call mutation when backend is ready
-    showToast('Product archived', { type: 'success' })
+    
+    try {
+      await archiveProduct({ productId })
+      showToast('Product archived successfully!', { type: 'success' })
+    } catch (error) {
+      console.error('Error archiving product:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to archive product. Please try again.',
+        { type: 'error' }
+      )
+    }
   }
 
   const addTag = () => {
@@ -269,12 +318,16 @@ export function AdminMerch() {
               </div>
 
               <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>
+                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)} disabled={isSubmitting}>
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  <Save size={16} />
-                  {editingId ? 'Update Product' : 'Create Product'}
+                <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span className="animate-spin">⏳</span>
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  {isSubmitting ? 'Saving...' : editingId ? 'Update Product' : 'Create Product'}
                 </button>
               </div>
             </form>

@@ -15,6 +15,7 @@ export function EventFilters({
   eventCount = 0,
 }: EventFiltersProps) {
   const [showFilters, setShowFilters] = useState(true)
+  const [selectedDateRange, setSelectedDateRange] = useState<string>('all')
 
   const handleCityChange = useCallback((city: string) => {
     onChange({
@@ -38,6 +39,7 @@ export function EventFilters({
   }, [filters, onChange])
 
   const handleDateRangeChange = useCallback((range: string) => {
+    setSelectedDateRange(range)
     const now = Date.now()
     let startDate: number | undefined
     let endDate: number | undefined
@@ -114,8 +116,7 @@ export function EventFilters({
                   key={range}
                   onClick={() => handleDateRangeChange(range)}
                   className={`px-3 py-2 rounded text-xs font-bold transition-colors ${
-                    (!filters.startDate && range === 'all') ||
-                    (filters.startDate && range !== 'all')
+                    selectedDateRange === range
                       ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                       : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
                   }`}

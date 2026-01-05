@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { 
@@ -45,9 +45,18 @@ export function AdminForum() {
   const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<Id<'categories'> | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch data
   const categories = useQuery(api.forum.getCategories)
+
+  // Admin mutations
+  const createCategory = useMutation(api.admin.createCategory)
+  const updateCategory = useMutation(api.admin.updateCategory)
+  const deleteCategoryMut = useMutation(api.admin.deleteCategory)
+  const pinThread = useMutation(api.admin.pinThread)
+  const lockThread = useMutation(api.admin.lockThread)
+  const deleteThreadMut = useMutation(api.admin.deleteThread)
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,11 +66,41 @@ export function AdminForum() {
       return
     }
 
-    // TODO: Call mutation when backend is ready
-    showToast(editingCategoryId ? 'Category updated!' : 'Category created!', { type: 'success' })
-    setShowCategoryForm(false)
-    setEditingCategoryId(null)
-    setCategoryForm(initialCategoryForm)
+    setIsSubmitting(true)
+    try {
+      if (editingCategoryId) {
+        await updateCategory({
+          categoryId: editingCategoryId,
+          updates: {
+            name: categoryForm.name,
+            description: categoryForm.description,
+            icon: categoryForm.icon,
+            color: categoryForm.color,
+          },
+        })
+        showToast('Category updated successfully!', { type: 'success' })
+      } else {
+        await createCategory({
+          name: categoryForm.name,
+          description: categoryForm.description,
+          slug: categoryForm.name.toLowerCase().replace(/\s+/g, '-'),
+          icon: categoryForm.icon,
+          color: categoryForm.color,
+        })
+        showToast('Category created successfully!', { type: 'success' })
+      }
+      setShowCategoryForm(false)
+      setEditingCategoryId(null)
+      setCategoryForm(initialCategoryForm)
+    } catch (error) {
+      console.error('Error saving category:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to save category. Please try again.',
+        { type: 'error' }
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEditCategory = (category: { _id: Id<'categories'>; name: string; description?: string }) => {
@@ -77,24 +116,55 @@ export function AdminForum() {
 
   const handleDeleteCategory = async (categoryId: Id<'categories'>) => {
     if (!confirm('Delete this category? All threads will be moved to General.')) return
-    // TODO: Call mutation when backend is ready
-    showToast('Category deleted', { type: 'success' })
+    
+    try {
+      await deleteCategoryMut({ categoryId })
+      showToast('Category deleted successfully!', { type: 'success' })
+      if (selectedCategory === categoryId) {
+        setSelectedCategory(null)
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to delete category. Please try again.',
+        { type: 'error' }
+      )
+    }
   }
 
-  const handlePinThread = async (threadId: Id<'threads'>) => {
-    // TODO: Call mutation when backend is ready
-    showToast('Thread pinned', { type: 'success' })
+  const handlePinThread = async (threadId: Id<'threads'>, isPinned: boolean) => {
+    try {
+      await pinThread({ threadId, pinned: !isPinned })
+      showToast(isPinned ? 'Thread unpinned' : 'Thread pinned', { type: 'success' })
+    } catch (error) {
+      console.error('Error pinning thread:', error)
+      showToast('Failed to update thread. Please try again.', { type: 'error' })
+    }
   }
 
-  const handleLockThread = async (threadId: Id<'threads'>) => {
-    // TODO: Call mutation when backend is ready
-    showToast('Thread locked', { type: 'success' })
+  const handleLockThread = async (threadId: Id<'threads'>, isLocked: boolean) => {
+    try {
+      await lockThread({ threadId, locked: !isLocked })
+      showToast(isLocked ? 'Thread unlocked' : 'Thread locked', { type: 'success' })
+    } catch (error) {
+      console.error('Error locking thread:', error)
+      showToast('Failed to update thread. Please try again.', { type: 'error' })
+    }
   }
 
   const handleDeleteThread = async (threadId: Id<'threads'>) => {
     if (!confirm('Delete this thread? This action cannot be undone.')) return
-    // TODO: Call mutation when backend is ready
-    showToast('Thread deleted', { type: 'success' })
+    
+    try {
+      await deleteThreadMut({ threadId })
+      showToast('Thread deleted successfully!', { type: 'success' })
+    } catch (error) {
+      console.error('Error deleting thread:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to delete thread. Please try again.',
+        { type: 'error' }
+      )
+    }
   }
 
   return (

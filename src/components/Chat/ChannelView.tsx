@@ -1,4 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { useChannelMessages } from '../../hooks/useChannelMessages'
 import { useTypingIndicators } from '../../hooks/useTypingIndicators'
 import { MessageThread } from './MessageThread'
@@ -13,17 +15,10 @@ interface ChannelViewProps {
 export function ChannelView({ channelId }: ChannelViewProps) {
   const { messages, isLoading, loadMore, hasMore } = useChannelMessages(channelId)
   const { typingUsers, isLoading: isTypingLoading } = useTypingIndicators(channelId)
-  const [channelInfo, setChannelInfo] = useState<{ name: string; description: string } | null>(null)
+  
+  // Fetch real channel data from Convex
+  const channelDetail = useQuery(api.chat.getChannelDetail, { channelId: channelId as any })
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // This would be replaced with actual channel data fetching
-    const mockChannelData = {
-      name: 'general',
-      description: 'The main channel for general discussions and community interaction.'
-    }
-    setChannelInfo(mockChannelData)
-  }, [channelId])
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -36,9 +31,9 @@ export function ChannelView({ channelId }: ChannelViewProps) {
       {/* Header */}
       <header className="h-12 px-4 flex items-center gap-2 border-b border-[#1a1a1a] shadow-sm flex-shrink-0">
         <span className="text-2xl text-[#808080] font-light translate-y-[-1px]">#</span>
-        <h2 className="font-bold text-white text-[15px]">{channelInfo?.name}</h2>
+        <h2 className="font-bold text-white text-[15px]">{channelDetail?.name}</h2>
         <div className="w-[1px] h-6 bg-[#2a2a2a] mx-2"></div>
-        <p className="text-[#808080] text-[13px] truncate">{channelInfo?.description}</p>
+        <p className="text-[#808080] text-[13px] truncate">{channelDetail?.description}</p>
         
         <div className="flex items-center gap-4 ml-auto text-[#808080]">
            <iconify-icon icon="solar:notification-lines-bold" className="hover:text-white cursor-pointer"></iconify-icon>
@@ -73,8 +68,8 @@ export function ChannelView({ channelId }: ChannelViewProps) {
               <div className="w-16 h-16 rounded-full bg-[#1a1a1a] flex items-center justify-center mb-4">
                  <span className="text-white text-3xl font-light">#</span>
               </div>
-              <h1 className="text-white text-3xl font-extrabold mb-1">Welcome to #{channelInfo?.name}!</h1>
-              <p className="text-[#808080]">This is the start of the #{channelInfo?.name} channel.</p>
+              <h1 className="text-white text-3xl font-extrabold mb-1">Welcome to #{channelDetail?.name}!</h1>
+              <p className="text-[#808080]">This is the start of the #{channelDetail?.name} channel.</p>
               <div className="h-[1px] bg-[#1a1a1a] w-full my-6"></div>
             </div>
             

@@ -39,9 +39,15 @@ export function AdminChat() {
   const [editingId, setEditingId] = useState<Id<'channels'> | null>(null)
   const [formData, setFormData] = useState<ChannelFormData>(initialFormData)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch channels
   const channels = useQuery(api.chat.getChannels)
+
+  // Admin mutations
+  const createChannel = useMutation(api.admin.createChannel)
+  const updateChannel = useMutation(api.admin.updateChannel)
+  const deleteChannel = useMutation(api.admin.deleteChannel)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,11 +57,44 @@ export function AdminChat() {
       return
     }
 
-    // TODO: Call mutation when backend is ready
-    showToast(editingId ? 'Channel updated!' : 'Channel created!', { type: 'success' })
-    setShowForm(false)
-    setEditingId(null)
-    setFormData(initialFormData)
+    setIsSubmitting(true)
+    try {
+      // Map access level to backend schema
+      const requiredRole = formData.accessLevel === 'vip' ? 'fan' as const : undefined
+      const requiredFanTier = formData.accessLevel === 'vip' ? 'gold' as const : undefined
+
+      if (editingId) {
+        await updateChannel({
+          channelId: editingId,
+          updates: {
+            name: formData.name,
+            description: formData.description,
+            requiredRole,
+            requiredFanTier,
+          },
+        })
+        showToast('Channel updated successfully!', { type: 'success' })
+      } else {
+        await createChannel({
+          name: formData.name,
+          description: formData.description,
+          requiredRole,
+          requiredFanTier,
+        })
+        showToast('Channel created successfully!', { type: 'success' })
+      }
+      setShowForm(false)
+      setEditingId(null)
+      setFormData(initialFormData)
+    } catch (error) {
+      console.error('Error saving channel:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to save channel. Please try again.',
+        { type: 'error' }
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEdit = (channel: { _id: Id<'channels'>; name: string; description?: string }) => {
@@ -70,8 +109,17 @@ export function AdminChat() {
 
   const handleDelete = async (channelId: Id<'channels'>) => {
     if (!confirm('Are you sure you want to delete this channel? All messages will be lost.')) return
-    // TODO: Call mutation when backend is ready
-    showToast('Channel deleted', { type: 'success' })
+    
+    try {
+      await deleteChannel({ channelId })
+      showToast('Channel deleted successfully!', { type: 'success' })
+    } catch (error) {
+      console.error('Error deleting channel:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to delete channel. Please try again.',
+        { type: 'error' }
+      )
+    }
   }
 
   const getAccessIcon = (level: ChannelAccessLevel) => {
@@ -184,12 +232,16 @@ export function AdminChat() {
               </div>
 
               <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>
+                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)} disabled={isSubmitting}>
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  <Save size={16} />
-                  {editingId ? 'Update Channel' : 'Create Channel'}
+                <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span className="animate-spin">⏳</span>
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  {isSubmitting ? 'Saving...' : editingId ? 'Update Channel' : 'Create Channel'}
                 </button>
               </div>
             </form>

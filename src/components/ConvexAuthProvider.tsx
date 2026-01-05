@@ -11,26 +11,21 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
   const convex = useConvex()
 
   useEffect(() => {
-    const setAuth = async () => {
-      if (isSignedIn) {
+    if (isSignedIn) {
+      // Pass an async function that returns the token
+      // This allows Convex to re-authenticate when needed
+      convex.setAuth(async () => {
         try {
           const token = await getToken()
-          if (token) {
-            await convex.setAuth(token)
-          }
+          return token || null
         } catch (error) {
-          console.error('Failed to set Convex auth:', error)
+          console.error('Failed to get Convex auth token:', error)
+          return null
         }
-      } else {
-        await convex.clearAuth()
-      }
+      })
+    } else {
+      convex.clearAuth()
     }
-
-    setAuth()
-
-    // Refresh token periodically
-    const interval = setInterval(setAuth, 55 * 60 * 1000)
-    return () => clearInterval(interval)
   }, [getToken, isSignedIn, convex])
 
   return <>{children}</>
