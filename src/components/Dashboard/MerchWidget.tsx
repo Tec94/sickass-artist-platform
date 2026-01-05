@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { ShoppingBag, Star, Clock, ArrowRight, AlertCircle, Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 

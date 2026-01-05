@@ -1,13 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, ReactNode, useEffect, useState, useContext } from 'react'
-import { useUser, useClerk } from '@clerk/clerk-react'
+import { useUser as useClerkUser, useClerk } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { Doc } from '../../convex/_generated/dataModel'
 
 interface UserContextType {
   // Clerk auth state
-  clerkUser: ReturnType<typeof useUser>['user'] | null | undefined
+  clerkUser: ReturnType<typeof useClerkUser>['user'] | null | undefined
   isSignedIn: boolean
   isLoading: boolean
   
@@ -27,7 +27,7 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { user, isSignedIn, isLoaded } = useUser()
+  const { user, isSignedIn, isLoaded } = useClerkUser()
   const { signOut: clerkSignOut } = useClerk()
   const [userProfile, setUserProfile] = useState<Doc<'users'> | null>(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)

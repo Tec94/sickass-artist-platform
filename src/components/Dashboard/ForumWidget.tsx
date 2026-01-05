@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { MessageCircle, Clock, User, ArrowRight, AlertCircle, Hash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 

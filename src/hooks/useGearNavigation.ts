@@ -4,6 +4,16 @@ import { useGear, GearName } from '../contexts/GearContext'
 
 const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5']
 
+const GEAR_PATHS: Record<GearName, string> = {
+  'R': '/R',
+  'N': '/dashboard',
+  '1': '/events',
+  '2': '/store',
+  '3': '/gallery',
+  '4': '/forum',
+  '5': '/chat'
+}
+
 export const useGearNavigation = () => {
   const { currentGear, setCurrentGear } = useGear()
   const navigate = useNavigate()
@@ -11,7 +21,7 @@ export const useGearNavigation = () => {
   const navigateToGear = useCallback(
     (gearName: GearName) => {
       setCurrentGear(gearName)
-      navigate(`/${gearName}`)
+      navigate(GEAR_PATHS[gearName])
     },
     [setCurrentGear, navigate]
   )

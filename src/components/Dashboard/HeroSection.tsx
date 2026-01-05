@@ -96,13 +96,14 @@ export const HeroSection = () => {
 
       <style>{`
         .hero-section {
-          background: linear-gradient(135deg, #8B0FFF 0%, #00D9FF 100%);
-          border-radius: 20px;
-          padding: 40px;
+          background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+          border-radius: 12px;
+          padding: 60px 40px;
           margin-bottom: 32px;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(139, 15, 255, 0.3);
+          border: 1px solid var(--color-card-border);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
         .hero-section::before {
@@ -112,11 +113,11 @@ export const HeroSection = () => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+          background: linear-gradient(45deg, rgba(255, 0, 0, 0.05) 0%, transparent 100%);
           pointer-events: none;
         }
 
-        .hero-content {
+        .hero-section .hero-content {
           position: relative;
           z-index: 1;
           display: flex;
@@ -126,39 +127,39 @@ export const HeroSection = () => {
           text-align: center;
         }
 
-        .hero-user {
+        .hero-section .hero-user {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 24px;
         }
 
-        .avatar-container {
+        .hero-section .avatar-container {
           position: relative;
           display: inline-block;
         }
 
-        .user-avatar {
+        .hero-section .user-avatar {
           width: 120px;
           height: 120px;
           border-radius: 50%;
-          border: 4px solid rgba(255, 255, 255, 0.2);
+          border: 4px solid var(--color-card-border);
           object-fit: cover;
           cursor: pointer;
           transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .user-avatar:hover {
+        .hero-section .user-avatar:hover {
           transform: scale(1.05);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          border-color: var(--color-primary);
         }
 
-        .user-avatar-placeholder {
+        .hero-section .user-avatar-placeholder {
           width: 120px;
           height: 120px;
           border-radius: 50%;
-          border: 4px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.1);
+          border: 4px solid var(--color-card-border);
+          background: rgba(255, 0, 0, 0.05);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -167,12 +168,13 @@ export const HeroSection = () => {
           transition: all 0.3s ease;
         }
 
-        .user-avatar-placeholder:hover {
-          background: rgba(255, 255, 255, 0.2);
+        .hero-section .user-avatar-placeholder:hover {
+          background: rgba(255, 0, 0, 0.1);
           transform: scale(1.05);
+          border-color: var(--color-primary);
         }
 
-        .status-indicators {
+        .hero-section .status-indicators {
           position: absolute;
           bottom: 8px;
           right: 8px;
@@ -180,132 +182,116 @@ export const HeroSection = () => {
           gap: 4px;
         }
 
-        .status-dot {
+        .hero-section .status-dot {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          border: 2px solid white;
+          border: 2px solid #000;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .status-dot.online {
+        .hero-section .status-dot.online {
           background: #10B981;
         }
 
-        .status-dot.verified {
-          background: #8B0FFF;
+        .hero-section .status-dot.verified {
+          background: var(--color-primary);
           color: white;
         }
 
-        .user-info {
+        .hero-section .user-info {
           max-width: 600px;
         }
 
-        .user-name {
-          font-size: 2.5rem;
-          font-weight: 700;
+        .hero-section .user-name {
+          font-size: 3rem;
+          font-weight: 900;
           color: white;
           margin: 0 0 12px 0;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          text-transform: uppercase;
+          letter-spacing: -1px;
+          line-height: 0.9;
         }
 
-        .user-subtitle {
+        .hero-section .user-subtitle {
           font-size: 1.125rem;
-          color: rgba(255, 255, 255, 0.9);
+          color: var(--color-text-dim);
           margin: 0;
           line-height: 1.6;
         }
 
-        .hero-actions {
+        .hero-section .hero-actions {
           width: 100%;
           max-width: 500px;
         }
 
-        .cta-button {
-          width: 100%;
-          padding: 16px 32px;
-          font-size: 1.125rem;
-          font-weight: 600;
-          border-radius: 12px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .cta-button.primary {
-          background: white;
-          color: #8B0FFF;
-        }
-
-        .cta-button.primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .action-buttons {
+        .hero-section .action-buttons {
           display: flex;
           gap: 12px;
           flex-wrap: wrap;
           justify-content: center;
         }
 
-        .action-btn {
+        .hero-section .action-btn {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 12px 20px;
-          border-radius: 10px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          background: rgba(255, 255, 255, 0.1);
+          padding: 12px 24px;
+          border-radius: 4px;
+          border: 1px solid var(--color-card-border);
+          background: rgba(255, 255, 255, 0.03);
           color: white;
-          font-weight: 500;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-size: 0.75rem;
           cursor: pointer;
           transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
         }
 
-        .action-btn:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.5);
+        .hero-section .action-btn:hover {
+          background: rgba(255, 0, 0, 0.1);
+          border-color: var(--color-primary);
           transform: translateY(-2px);
         }
 
-        .action-btn.primary {
-          background: white;
-          color: #8B0FFF;
-          border-color: white;
+        .hero-section .action-btn.primary {
+          background: var(--color-primary);
+          color: white;
+          border-color: var(--color-primary);
         }
 
-        .action-btn.primary:hover {
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .hero-section .action-btn.primary:hover {
+          background: #cc0000;
+          box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
         }
 
-        .hero-social {
+        .hero-section .hero-social {
           display: flex;
           align-items: center;
           gap: 16px;
         }
 
-        .social-label {
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 0.875rem;
-          font-weight: 500;
+        .hero-section .social-label {
+          color: var(--color-text-dim);
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
         }
 
-        .social-links {
+        .hero-section .social-links {
           display: flex;
           gap: 8px;
         }
 
-        .social-link {
+        .hero-section .social-link {
           width: 36px;
           height: 36px;
-          border-radius: 50%;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          border: 1px solid var(--color-card-border);
+          background: rgba(255, 255, 255, 0.03);
           color: white;
           display: flex;
           align-items: center;
@@ -314,49 +300,34 @@ export const HeroSection = () => {
           transition: all 0.3s ease;
         }
 
-        .social-link:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.5);
+        .hero-section .social-link:hover {
+          background: rgba(255, 0, 0, 0.1);
+          border-color: var(--color-primary);
           transform: translateY(-2px);
         }
 
         /* Mobile optimizations */
         @media (max-width: 767px) {
           .hero-section {
-            padding: 24px;
+            padding: 40px 20px;
             margin-bottom: 24px;
-            border-radius: 16px;
+            border-radius: 8px;
           }
 
-          .hero-content {
-            gap: 24px;
+          .hero-section .user-name {
+            font-size: 2rem;
           }
 
-          .user-avatar,
-          .user-avatar-placeholder {
-            width: 80px;
-            height: 80px;
-          }
-
-          .user-name {
-            font-size: 1.875rem;
-          }
-
-          .user-subtitle {
+          .hero-section .user-subtitle {
             font-size: 1rem;
           }
 
-          .action-buttons {
+          .hero-section .action-buttons {
             flex-direction: column;
           }
 
-          .action-btn {
+          .hero-section .action-btn {
             justify-content: center;
-          }
-
-          .hero-social {
-            flex-direction: column;
-            gap: 12px;
           }
         }
       `}</style>

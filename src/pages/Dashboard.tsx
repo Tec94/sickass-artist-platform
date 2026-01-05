@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../convex/_generated/api'
+import { api } from '../../convex/_generated/api'
 import { NetworkErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
 import { TrendingWidget } from '../components/Dashboard/TrendingWidget'
@@ -16,7 +16,7 @@ export const Dashboard = () => {
   const [renderedWidgets, setRenderedWidgets] = useState<Set<WidgetName>>(new Set(['hero']))
 
   // Progressive rendering: Priority 1 widgets render on mount
-  const { data: trendingData } = useQuery(
+  const trendingData = useQuery(
     api.recommendations.getTrendingContent,
     { 
       page: 0, 
@@ -26,7 +26,7 @@ export const Dashboard = () => {
     }
   )
 
-  const { data: eventsData } = useQuery(
+  const eventsData = useQuery(
     api.events.getEvents,
     { 
       page: 0, 
@@ -115,7 +115,7 @@ export const Dashboard = () => {
       <style>{`
         .dashboard-container {
           min-height: 100vh;
-          background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+          background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a0000 100%);
           padding: 0;
           margin: 0;
           width: 100%;

@@ -102,30 +102,30 @@ function App() {
               <Routes>
                 <Route path="/" element={<GearPage />}>
                   <Route path="R" element={<ContentPage />} />
-                  <Route path="N" element={
+                  <Route path="dashboard" element={
                     <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
                       <Dashboard />
                     </Suspense>
                   } />
-                  <Route path="1" element={<Events />} />
-                  <Route path="2" element={<Merch />} />
-                  <Route path="3" element={<Gallery />} />
-                  <Route path="4" element={
+                  <Route path="events" element={<Events />} />
+                  <Route path="store" element={<Merch />} />
+                  <Route path="gallery" element={<Gallery />} />
+                  <Route path="forum" element={
                     <ProtectedRoute>
                       <Forum />
                     </ProtectedRoute>
                   } />
-                  <Route path="4/thread/:threadId" element={
+                  <Route path="forum/thread/:threadId" element={
                     <ProtectedRoute>
                       <ForumThreadDetail />
                     </ProtectedRoute>
                   } />
-                  <Route path="5" element={
+                  <Route path="chat" element={
                     <ProtectedRoute>
                       <Chat />
                     </ProtectedRoute>
                   } />
-                  <Route index element={<Navigate to="/N" replace />} />
+                  <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/profile" element={
