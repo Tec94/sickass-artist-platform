@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
+import { useAuth } from '../hooks/useAuth'
 import { api } from '../../convex/_generated/api'
 import { OrderTracking } from '../components/Merch/OrderTracking'
 import { ChevronLeft, Copy, Download } from 'lucide-react'
@@ -9,7 +9,11 @@ import { showToast } from '../lib/toast'
 export function OrderDetail() {
   const { orderNumber } = useParams<{ orderNumber: string }>()
   const navigate = useNavigate()
-  const order = useQuery(api.orders.getOrder, { orderNumber: orderNumber! })
+  const { isSignedIn } = useAuth()
+  const order = useQuery(
+    api.orders.getOrder,
+    isSignedIn && orderNumber ? { orderNumber } : 'skip'
+  )
   const [copied, setCopied] = useState(false)
 
   if (!orderNumber) {

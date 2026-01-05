@@ -13,10 +13,10 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
   useEffect(() => {
     if (isSignedIn) {
       // Pass an async function that returns the token
-      // This allows Convex to re-authenticate when needed
+      // IMPORTANT: Must use template: 'convex' for Convex to recognize the token
       convex.setAuth(async () => {
         try {
-          const token = await getToken()
+          const token = await getToken({ template: 'convex' })
           return token || null
         } catch (error) {
           console.error('Failed to get Convex auth token:', error)
