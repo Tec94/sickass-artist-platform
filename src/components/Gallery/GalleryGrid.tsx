@@ -1,20 +1,24 @@
 import { useState, useCallback, memo } from 'react'
 import { ContentCard } from './ContentCard'
-import { GallerySkeleton } from './GallerySkeleton'
+import { LoadingSkeleton } from '../LoadingSkeleton'
+import { useQueryWithTimeout } from '../../hooks/useQueryWithTimeout'
 import { TierLockedOverlay } from './TierLockedOverlay'
 import { LightboxContainer } from './LightboxContainer'
 import type { GalleryContentItem } from '../../types/gallery'
 
+interface QueryFunction {
+  (args: Record<string, unknown>): unknown
+}
+
 interface GalleryGridProps {
-  items: GalleryContentItem[]
+  queryFn?: QueryFunction
+  queryArgs?: Record<string, unknown>
+  items?: GalleryContentItem[]
   isLoading?: boolean
   error?: Error
   onRetry?: () => void
+  timeoutMs?: number
 }
-
-const SkeletonCards = memo(function SkeletonCards({ count }: { count: number }) {
-  return <GallerySkeleton count={count} />
-})
 
 const ErrorBanner = memo(function ErrorBanner({
   error,
@@ -49,14 +53,31 @@ const ErrorBanner = memo(function ErrorBanner({
 })
 
 export const GalleryGrid = memo(function GalleryGrid({
-  items,
-  isLoading = false,
-  error,
+  queryFn,
+  queryArgs,
+  items: initialItems,
+  isLoading: initialIsLoading = false,
+  error: initialError,
   onRetry,
+  timeoutMs = 5000,
 }: GalleryGridProps) {
   const [selectedItem, setSelectedItem] = useState<GalleryContentItem | null>(null)
   const [showLockModal, setShowLockModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+
+  // Use timeout hook - always call hooks in the same order
+  const queryResult = useQueryWithTimeout(
+    queryFn || (() => undefined),
+    queryArgs || {},
+    { timeoutMs, enabled: !!queryFn }
+  )
+
+  const {
+    data: items = initialItems || [],
+    isLoading = initialIsLoading,
+    error = initialError,
+    timedOut
+  } = queryResult
 
   const handleCardClick = useCallback((item: GalleryContentItem, index: number) => {
     if (item.isLocked) {
@@ -76,35 +97,57 @@ export const GalleryGrid = memo(function GalleryGrid({
     setLightboxIndex(null)
   }, [])
 
+  const handleRetry = useCallback(() => {
+    onRetry?.()
+  }, [onRetry])
+
+  // Show timeout error after 5s
+  if (timedOut) {
+    return (
+      <div className="gallery-grid max-w-[1200px] mx-auto px-4">
+        <ErrorBanner 
+          error={new Error('Request timed out after 5 seconds')} 
+          onRetry={handleRetry} 
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="gallery-grid max-w-[1200px] mx-auto px-4">
       {/* Error State */}
-      {error && <ErrorBanner error={error} onRetry={onRetry} />}
+      {error && <ErrorBanner error={error} onRetry={handleRetry} />}
 
-      {/* Loading State */}
+      {/* Loading State with Skeletons */}
       {isLoading && items.length === 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SkeletonCards count={12} />
+        <LoadingSkeleton 
+          type="gallery" 
+          count={12}
+          className="animate-in fade-in duration-200"
+        />
+      )}
+
+      {/* Content Grid with fade-in animation */}
+      {items.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-enter">
+          {items.map((item, index) => (
+            <ContentCard
+              key={item.contentId}
+              item={item}
+              isLocked={item.isLocked}
+              onClick={() => handleCardClick(item, index)}
+            />
+          ))}
         </div>
       )}
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((item, index) => (
-          <ContentCard
-            key={item.contentId}
-            item={item}
-            isLocked={item.isLocked}
-            onClick={() => handleCardClick(item, index)}
-          />
-        ))}
-      </div>
-
       {/* Loading More Skeletons */}
       {isLoading && items.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          <SkeletonCards count={3} />
-        </div>
+        <LoadingSkeleton 
+          type="gallery" 
+          count={3}
+          className="mt-4 animate-in fade-in duration-200"
+        />
       )}
 
       {/* Empty State */}

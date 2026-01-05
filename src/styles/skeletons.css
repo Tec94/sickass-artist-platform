@@ -1,0 +1,301 @@
+/* ====================================
+   LOADING SKELETONS CSS
+   ====================================
+   Zero CLS (0.0) loading states with 
+   smooth shimmer animation
+   ==================================== */
+
+/* CSS Variables for theme consistency */
+:root {
+  --skeleton-bg: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.2) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  
+  --skeleton-base: #374151; /* gray-700 */
+  --skeleton-highlight: #4b5563; /* gray-600 */
+  --skeleton-border: #1f2937; /* gray-800 */
+  
+  /* Animation performance */
+  --skeleton-animation-duration: 2s;
+  --skeleton-animation-timing: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* ====================================
+   SKELETON ANIMATION
+   ==================================== */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 1000px 0;
+    opacity: 0.8;
+  }
+}
+
+/* ====================================
+   BASE SKELETON ELEMENTS
+   ==================================== */
+
+/* Image placeholder - aspect-ratio prevents CLS */
+.skeleton-image {
+  aspect-ratio: 1 / 1; /* Exact size known before load */
+  width: 100%;
+  background: var(--skeleton-base);
+  border-radius: 6px;
+  animation: shimmer var(--skeleton-animation-duration) infinite;
+  background-size: 200% 100%;
+  background-image: var(--skeleton-bg);
+  will-change: background-position;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Product image (3/4 aspect ratio) */
+.skeleton-image.product {
+  aspect-ratio: 3 / 4;
+}
+
+/* Text placeholder - matches actual content dimensions */
+.skeleton-text {
+  height: 16px; /* Matches h3 font-size */
+  width: 100%;
+  background: var(--skeleton-base);
+  border-radius: 4px;
+  animation: shimmer var(--skeleton-animation-duration) infinite;
+  background-size: 200% 100%;
+  background-image: var(--skeleton-bg);
+  will-change: background-position;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  margin-bottom: 8px;
+}
+
+/* Avatar placeholder */
+.skeleton-avatar {
+  background: var(--skeleton-base);
+  border-radius: 50%;
+  animation: shimmer var(--skeleton-animation-duration) infinite;
+  background-size: 200% 100%;
+  background-image: var(--skeleton-bg);
+  will-change: background-position;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* ====================================
+   SKELETON CONTAINERS
+   ==================================== */
+.skeleton-container {
+  background: rgba(17, 24, 39, 0.5); /* gray-900/50 */
+  border: 1px solid var(--skeleton-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ====================================
+   CONTENT ENTER ANIMATION
+   ==================================== */
+@keyframes contentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-enter {
+  animation: contentEnter 0.2s ease-out;
+}
+
+/* ====================================
+   RESPONSIVE SIZING
+   ==================================== */
+@media (max-width: 768px) {
+  .skeleton-text {
+    height: 14px; /* Smaller text on mobile */
+  }
+  
+  .skeleton-image {
+    aspect-ratio: 16 / 9; /* Different aspect ratio on mobile for gallery */
+  }
+  
+  .skeleton-image.product {
+    aspect-ratio: 1 / 1; /* Square products on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .skeleton-text {
+    height: 12px; /* Even smaller on small screens */
+  }
+  
+  .skeleton-avatar {
+    width: 24px !important; /* Smaller avatars on mobile */
+    height: 24px !important;
+  }
+}
+
+/* ====================================
+   HIGH CONTRAST MODE
+   ==================================== */
+@media (prefers-contrast: high) {
+  :root {
+    --skeleton-base: #6b7280; /* gray-500 for better contrast */
+    --skeleton-highlight: #9ca3af; /* gray-400 */
+  }
+}
+
+/* ====================================
+   REDUCED MOTION
+   ==================================== */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-image,
+  .skeleton-text,
+  .skeleton-avatar {
+    animation: none;
+    background: var(--skeleton-base);
+  }
+  
+  .content-enter {
+    animation: none;
+  }
+}
+
+/* ====================================
+   DARK MODE OPTIMIZATIONS
+   ==================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --skeleton-bg: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(255, 255, 255, 0.1) 60%,
+      rgba(255, 255, 255, 0)
+    );
+  }
+}
+
+/* ====================================
+   PERFORMANCE OPTIMIZATIONS
+   ==================================== */
+
+/* GPU acceleration for smoother animations */
+.skeleton-image,
+.skeleton-text,
+.skeleton-avatar {
+  contain: layout style paint;
+}
+
+/* Reduce layout thrashing */
+.skeleton-grid {
+  contain: layout style;
+}
+
+/* ====================================
+   ACCESSIBILITY
+   ==================================== */
+.skeleton-screen-reader-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ====================================
+   SKELETON GRID LAYOUTS
+   ==================================== */
+.skeleton-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .skeleton-gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skeleton-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.skeleton-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .skeleton-product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skeleton-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+/* ====================================
+   LOADING STATE UTILITIES
+   ==================================== */
+.loading-overlay {
+  position: relative;
+}
+
+.loading-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: inherit;
+  z-index: 10;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--skeleton-base);
+  border-top: 2px solid var(--skeleton-highlight);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 11;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import skeleton styles for zero CLS loading states */
+@import './styles/skeletons.css';
+
 * {
   margin: 0;
   padding: 0;
