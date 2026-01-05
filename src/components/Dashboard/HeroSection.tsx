@@ -1,4 +1,4 @@
-import { User, Star, MessageCircle, Share2 } from 'lucide-react'
+import { User, Star, MessageCircle, Twitter, Instagram, Disc } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 
@@ -29,10 +29,29 @@ export const HeroSection = () => {
 
   return (
     <div className="hero-section">
+      {/* Texture Overlays */}
+      <div className="grain-overlay"></div>
+      
+      {/* SVG Grain Filter */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <filter id="grainy">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.25" />
+          </feComponentTransfer>
+        </filter>
+      </svg>
+
       <div className="hero-content">
         {/* User Avatar & Info */}
         <div className="hero-user">
           <div className="avatar-container">
+            {/* 3D Wave Ripple Layers */}
+            <div className="wave-ripple wave-1"></div>
+            <div className="wave-ripple wave-2"></div>
+            <div className="wave-ripple wave-3"></div>
+            
             {isSignedIn && userProfile?.avatar ? (
               <img 
                 src={userProfile.avatar} 
@@ -43,16 +62,6 @@ export const HeroSection = () => {
             ) : (
               <div className="user-avatar-placeholder" onClick={handleProfileClick}>
                 <User size={32} />
-              </div>
-            )}
-            
-            {/* Status indicators */}
-            {isSignedIn && (
-              <div className="status-indicators">
-                <div className="status-dot online" title="Online"></div>
-                <div className="status-dot verified" title="Verified">
-                  <Star size={12} />
-                </div>
               </div>
             )}
           </div>
@@ -104,21 +113,23 @@ export const HeroSection = () => {
               onClick={() => handleSocialClick('twitter')}
               title="Twitter"
             >
-              <Share2 size={16} />
+              <Twitter size={18} />
             </button>
             <button 
               className="social-link"
               onClick={() => handleSocialClick('instagram')}
               title="Instagram"
+              style={{ marginLeft: '12px' }}
             >
-              <Share2 size={16} />
+              <Instagram size={18} />
             </button>
             <button 
               className="social-link"
               onClick={() => handleSocialClick('discord')}
               title="Discord"
+              style={{ marginLeft: '12px' }}
             >
-              <MessageCircle size={16} />
+              <Disc size={18} />
             </button>
           </div>
         </div>
@@ -126,33 +137,86 @@ export const HeroSection = () => {
 
       <style>{`
         .hero-section {
-          background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+          background: #050505;
           border-radius: 12px;
-          padding: 60px 40px;
+          padding: 100px 40px;
           margin-bottom: 32px;
           position: relative;
           overflow: hidden;
-          border: 1px solid var(--color-card-border);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255, 0, 0, 0.08);
+          box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Grain Overlay */
+        .grain-overlay {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 2;
+          filter: url(#grainy);
+          opacity: 0.3;
+          mix-blend-mode: soft-light;
         }
 
         .hero-section::before {
           content: '';
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(45deg, rgba(255, 0, 0, 0.05) 0%, transparent 100%);
+          inset: 0;
+          background: radial-gradient(circle at center, rgba(139, 0, 0, 0.1) 0%, transparent 70%);
           pointer-events: none;
+          z-index: 1;
+        }
+
+        /* 3D Wave Ripple with Physical Volume */
+        .wave-ripple {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 0;
+          /* The "Hump" of the wave using radial gradients */
+          background: radial-gradient(
+            circle, 
+            transparent 35%, 
+            rgba(0, 0, 0, 0.5) 42%,       /* Trough shadow */
+            rgba(196, 30, 58, 0.25) 48%,   /* Ascent slope */
+            rgba(255, 255, 255, 0.4) 50%,  /* Crest highlight */
+            rgba(196, 30, 58, 0.25) 52%,   /* Descent slope */
+            rgba(0, 0, 0, 0.4) 58%,       /* Trailing shadow */
+            transparent 65%
+          );
+          filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
+          will-change: transform, opacity;
+        }
+
+        .wave-1 { animation: wave-expand 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite; }
+        .wave-2 { animation: wave-expand 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 2s; }
+        .wave-3 { animation: wave-expand 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 4s; }
+
+        @keyframes wave-expand {
+          0% {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(8);
+            opacity: 0;
+          }
         }
 
         .hero-section .hero-content {
           position: relative;
-          z-index: 1;
+          z-index: 5;
           display: flex;
           flex-direction: column;
-          gap: 32px;
+          gap: 48px;
           align-items: center;
           text-align: center;
         }
@@ -161,130 +225,111 @@ export const HeroSection = () => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 24px;
+          gap: 40px;
         }
 
         .hero-section .avatar-container {
           position: relative;
-          display: inline-block;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 160px;
+          height: 160px;
         }
 
         .hero-section .user-avatar {
-          width: 120px;
-          height: 120px;
+          width: 140px;
+          height: 140px;
           border-radius: 50%;
-          border: 4px solid var(--color-card-border);
+          border: 1px solid rgba(255, 0, 0, 0.2);
+          box-shadow: 
+            0 0 0 8px rgba(0, 0, 0, 0.3),
+            0 0 40px rgba(196, 30, 58, 0.4);
           object-fit: cover;
           cursor: pointer;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+          z-index: 10;
         }
 
         .hero-section .user-avatar:hover {
-          transform: scale(1.05);
-          border-color: var(--color-primary);
+          transform: scale(1.08) translateY(-5px);
+          box-shadow: 
+            0 0 0 12px rgba(196, 30, 58, 0.1),
+            0 20px 60px rgba(196, 30, 58, 0.6);
         }
 
         .hero-section .user-avatar-placeholder {
-          width: 120px;
-          height: 120px;
+          width: 140px;
+          height: 140px;
           border-radius: 50%;
-          border: 4px solid var(--color-card-border);
-          background: rgba(255, 0, 0, 0.05);
+          border: 4px solid #1a1a1a;
+          background: #080808;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: #333;
           cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .hero-section .user-avatar-placeholder:hover {
-          background: rgba(255, 0, 0, 0.1);
-          transform: scale(1.05);
-          border-color: var(--color-primary);
-        }
-
-        .hero-section .status-indicators {
-          position: absolute;
-          bottom: 8px;
-          right: 8px;
-          display: flex;
-          gap: 4px;
-        }
-
-        .hero-section .status-dot {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          border: 2px solid #000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .hero-section .status-dot.online {
-          background: #10B981;
-        }
-
-        .hero-section .status-dot.verified {
-          background: var(--color-primary);
-          color: white;
+          z-index: 10;
         }
 
         .hero-section .user-info {
-          max-width: 600px;
+          max-width: 800px;
         }
 
         .hero-section .user-name {
-          font-size: 3rem;
-          font-weight: 900;
+          font-size: 5rem;
+          font-weight: 950;
           color: white;
-          margin: 0 0 12px 0;
+          margin: 0 0 20px 0;
           text-transform: uppercase;
-          letter-spacing: -1px;
-          line-height: 0.9;
+          letter-spacing: -4px;
+          line-height: 0.85;
+          background: linear-gradient(180deg, #FFFFFF 30%, #444444 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
         }
 
         .hero-section .user-subtitle {
-          font-size: 1.125rem;
-          color: var(--color-text-dim);
+          font-size: 1.35rem;
+          color: #777;
           margin: 0;
-          line-height: 1.6;
-        }
-
-        .hero-section .hero-actions {
-          width: 100%;
-          max-width: 500px;
+          line-height: 1.5;
+          max-width: 550px;
+          margin: 0 auto;
+          font-weight: 400;
+          letter-spacing: -0.2px;
         }
 
         .hero-section .action-buttons {
           display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
+          gap: 20px;
           justify-content: center;
         }
 
         .hero-section .action-btn {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 12px 24px;
+          gap: 12px;
+          padding: 16px 32px;
           border-radius: 4px;
-          border: 1px solid var(--color-card-border);
-          background: rgba(255, 255, 255, 0.03);
-          color: white;
-          font-weight: 700;
+          border: 1px solid #1a1a1a;
+          background: rgba(10, 10, 10, 0.8);
+          color: #aaa;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          font-size: 0.75rem;
+          letter-spacing: 2px;
+          font-size: 0.7rem;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+          backdrop-filter: blur(5px);
         }
 
         .hero-section .action-btn:hover {
-          background: rgba(255, 0, 0, 0.1);
-          border-color: var(--color-primary);
-          transform: translateY(-2px);
+          background: #111;
+          color: white;
+          border-color: #333;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .hero-section .action-btn.primary {
@@ -294,70 +339,49 @@ export const HeroSection = () => {
         }
 
         .hero-section .action-btn.primary:hover {
-          background: #cc0000;
-          box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
+          background: #FF1A1A;
+          box-shadow: 0 15px 35px rgba(255, 0, 0, 0.3);
         }
 
         .hero-section .hero-social {
+          margin-top: 20px;
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .hero-section .social-links {
           display: flex;
           align-items: center;
           gap: 16px;
         }
 
         .hero-section .social-label {
-          color: var(--color-text-dim);
-          font-size: 0.75rem;
-          font-weight: 700;
+          color: #333;
+          font-size: 0.65rem;
+          font-weight: 900;
           text-transform: uppercase;
-        }
-
-        .hero-section .social-links {
-          display: flex;
-          gap: 8px;
-        }
-
-        .hero-section .social-link {
-          width: 36px;
-          height: 36px;
-          border-radius: 4px;
-          border: 1px solid var(--color-card-border);
-          background: rgba(255, 255, 255, 0.03);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .hero-section .social-link:hover {
-          background: rgba(255, 0, 0, 0.1);
-          border-color: var(--color-primary);
-          transform: translateY(-2px);
+          letter-spacing: 3px;
         }
 
         /* Mobile optimizations */
         @media (max-width: 767px) {
           .hero-section {
-            padding: 40px 20px;
-            margin-bottom: 24px;
-            border-radius: 8px;
+            padding: 80px 20px;
           }
 
           .hero-section .user-name {
-            font-size: 2rem;
+            font-size: 3rem;
+            letter-spacing: -2px;
           }
 
           .hero-section .user-subtitle {
-            font-size: 1rem;
+            font-size: 1.1rem;
           }
 
           .hero-section .action-buttons {
             flex-direction: column;
-          }
-
-          .hero-section .action-btn {
-            justify-content: center;
+            width: 100%;
           }
         }
       `}</style>

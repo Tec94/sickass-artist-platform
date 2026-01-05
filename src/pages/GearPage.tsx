@@ -77,10 +77,6 @@ export const GearPage = () => {
     >
       <div className="gear-nav-overlay">
         <GearStick />
-        
-        {/* Decorative Noodle Connectors */}
-        <NoodleConnector start={{ x: 65, y: 150 }} end={{ x: 140, y: 250 }} />
-        <NoodleConnector start={{ x: 140, y: 350 }} end={{ x: 100, y: 450 }} />
       </div>
 
       <div className="main-viewport">

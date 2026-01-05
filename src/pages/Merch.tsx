@@ -17,7 +17,8 @@ import {
   Star,
   ChevronRight,
   Filter,
-  X
+  X,
+  Cross
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -136,7 +137,7 @@ export function Merch() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-full text-[#c41e3a] text-sm">
-                <Sparkles className="w-4 h-4" />
+                <Cross className="w-4 h-4" />
                 New Collection Available
               </div>
               

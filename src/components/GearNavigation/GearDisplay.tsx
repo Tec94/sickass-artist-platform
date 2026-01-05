@@ -6,13 +6,13 @@ import { GearName } from '../../contexts/GearContext'
 import './GearDisplay.css'
 
 const GEARS: { id: GearName, icon: string, label: string }[] = [
-  { id: 'R', icon: 'solar:refresh-circle-linear', label: 'Reset' },
-  { id: 'N', icon: 'solar:stop-circle-linear', label: 'Neutral' },
-  { id: '1', icon: 'solar:calendar-mark-linear', label: 'Events' },
-  { id: '2', icon: 'solar:bag-heart-linear', label: 'Merch' },
-  { id: '3', icon: 'solar:gallery-wide-linear', label: 'Gallery' },
-  { id: '4', icon: 'solar:posts-carousel-vertical-linear', label: 'Forum' },
-  { id: '5', icon: 'solar:chat-round-dots-linear', label: 'Chatroom' },
+  { id: 'R', icon: 'solar:settings-bold-duotone', label: 'Admin' },
+  { id: 'N', icon: 'solar:widget-2-bold-duotone', label: 'Dashboard' },
+  { id: '1', icon: 'solar:calendar-mark-bold-duotone', label: 'Events' },
+  { id: '2', icon: 'solar:shop-2-bold-duotone', label: 'Store' },
+  { id: '3', icon: 'solar:gallery-bold-duotone', label: 'Gallery' },
+  { id: '4', icon: 'solar:dialog-2-bold-duotone', label: 'Forum' },
+  { id: '5', icon: 'solar:chat-round-dots-bold-duotone', label: 'Chatroom' },
 ]
 
 export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'horizontal' }) => {
@@ -38,7 +38,7 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
               type="button"
             >
               <iconify-icon icon={gear.icon}></iconify-icon>
-              <span className="gear-marker-id">{gear.id}</span>
+              <span className="gear-marker-id" style={{ marginTop: '6px' }}>{gear.label}</span>
             </button>
             {variant === 'default' && (
               <div className="gear-info">
@@ -73,9 +73,12 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
         }
 
         .gear-display.horizontal .gear-btn {
-          width: 42px;
-          height: 42px;
-          background: rgba(255, 255, 255, 0.05);
+          width: auto;
+          min-width: 64px;
+          padding: 0 12px;
+          height: 52px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 12px;
         }
 
@@ -84,10 +87,11 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
         }
 
         .gear-display.horizontal .gear-marker-id {
-          font-size: 9px;
+          font-size: 8px;
           font-weight: 900;
-          opacity: 0.7;
-          margin-top: -1px;
+          opacity: 0.6;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         
         .gear-display.horizontal .gear-item.active .gear-marker-id {
@@ -109,10 +113,10 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
         }
 
         .gear-btn {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-          background: rgba(10, 10, 10, 0.8);
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+          background: rgba(10, 10, 10, 0.9);
           border: 1px solid var(--color-card-border);
           color: var(--color-text-dim);
           display: flex;
@@ -148,7 +152,7 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
           position: absolute;
           inset: 0;
           border: 1px solid var(--color-primary);
-          border-radius: 50%;
+          border-radius: 16px;
           animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
 

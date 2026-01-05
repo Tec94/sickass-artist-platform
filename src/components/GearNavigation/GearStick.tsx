@@ -6,6 +6,17 @@ import { useScrollAnimation } from '../../hooks/useScrollAnimation'
 
 const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5', '6']
 
+const GEAR_LABELS: Record<GearName, string> = {
+  'R': 'ADMIN',
+  'N': 'DASHBOARD',
+  '1': 'EVENTS',
+  '2': 'STORE',
+  '3': 'GALLERY',
+  '4': 'FORUM',
+  '5': 'CHATROOM',
+  '6': 'SETTINGS'
+}
+
 export const GearStick = () => {
   const { currentGear } = useGear()
   const { navigateToGear } = useGearNavigation()
@@ -68,7 +79,7 @@ export const GearStick = () => {
               key={gear}
               className={`gear-marker ${currentGear === gear ? 'marker-active' : ''}`}
             >
-              <span className="marker-label">{gear}</span>
+              <span className="marker-label">{GEAR_LABELS[gear] || gear}</span>
             </div>
           ))}
 
