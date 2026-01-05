@@ -88,6 +88,7 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 
 function App() {
   return (
@@ -101,7 +102,13 @@ function App() {
             <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<GearPage />}>
-                  <Route path="R" element={<ContentPage />} />
+                  <Route path="R" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="text-white p-8 text-center">Loading Admin...</div>}>
+                        <AdminDashboard />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
                   <Route path="dashboard" element={
                     <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
                       <Dashboard />

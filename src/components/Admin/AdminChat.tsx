@@ -1,0 +1,747 @@
+import { useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  MessageSquare,
+  Hash,
+  Lock,
+  Globe,
+  Crown,
+  Users,
+  Save,
+  X,
+  Shield,
+  AlertTriangle
+} from 'lucide-react'
+import { showToast } from '../../lib/toast'
+
+type ChannelAccessLevel = 'public' | 'members' | 'vip'
+
+interface ChannelFormData {
+  name: string
+  description: string
+  accessLevel: ChannelAccessLevel
+}
+
+const initialFormData: ChannelFormData = {
+  name: '',
+  description: '',
+  accessLevel: 'public'
+}
+
+export function AdminChat() {
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<Id<'channels'> | null>(null)
+  const [formData, setFormData] = useState<ChannelFormData>(initialFormData)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  // Fetch channels
+  const channels = useQuery(api.chat.getChannels)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.name.trim()) {
+      showToast('Channel name is required', { type: 'error' })
+      return
+    }
+
+    // TODO: Call mutation when backend is ready
+    showToast(editingId ? 'Channel updated!' : 'Channel created!', { type: 'success' })
+    setShowForm(false)
+    setEditingId(null)
+    setFormData(initialFormData)
+  }
+
+  const handleEdit = (channel: { _id: Id<'channels'>; name: string; description?: string }) => {
+    setFormData({
+      name: channel.name,
+      description: channel.description || '',
+      accessLevel: 'public' // Would come from channel data
+    })
+    setEditingId(channel._id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (channelId: Id<'channels'>) => {
+    if (!confirm('Are you sure you want to delete this channel? All messages will be lost.')) return
+    // TODO: Call mutation when backend is ready
+    showToast('Channel deleted', { type: 'success' })
+  }
+
+  const getAccessIcon = (level: ChannelAccessLevel) => {
+    switch (level) {
+      case 'public': return <Globe size={14} />
+      case 'members': return <Users size={14} />
+      case 'vip': return <Crown size={14} />
+    }
+  }
+
+  const filteredChannels = channels?.filter(ch => 
+    ch.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || []
+
+  return (
+    <div className="admin-chat">
+      {/* Header */}
+      <div className="chat-header">
+        <div>
+          <h2>Chat Channel Management</h2>
+          <p>Create and manage chat channels for the community</p>
+        </div>
+        <button className="add-btn" onClick={() => {
+          setFormData(initialFormData)
+          setEditingId(null)
+          setShowForm(true)
+        }}>
+          <Plus size={18} />
+          Create Channel
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="search-bar">
+        <Search size={18} />
+        <input 
+          type="text"
+          placeholder="Search channels..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* Channel Form Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingId ? 'Edit Channel' : 'Create New Channel'}</h3>
+              <button className="close-btn" onClick={() => setShowForm(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="channel-form">
+              <div className="form-group">
+                <label>Channel Name *</label>
+                <div className="input-with-icon">
+                  <Hash size={16} />
+                  <input 
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(p => ({ ...p, name: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                    placeholder="general"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
+                  placeholder="What's this channel about?"
+                  rows={3}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Access Level</label>
+                <div className="access-options">
+                  <button 
+                    type="button"
+                    className={`access-option ${formData.accessLevel === 'public' ? 'active' : ''}`}
+                    onClick={() => setFormData(p => ({ ...p, accessLevel: 'public' }))}
+                  >
+                    <Globe size={20} />
+                    <span>Public</span>
+                    <small>Anyone can view and chat</small>
+                  </button>
+                  <button 
+                    type="button"
+                    className={`access-option ${formData.accessLevel === 'members' ? 'active' : ''}`}
+                    onClick={() => setFormData(p => ({ ...p, accessLevel: 'members' }))}
+                  >
+                    <Users size={20} />
+                    <span>Members Only</span>
+                    <small>Logged in users only</small>
+                  </button>
+                  <button 
+                    type="button"
+                    className={`access-option ${formData.accessLevel === 'vip' ? 'active' : ''}`}
+                    onClick={() => setFormData(p => ({ ...p, accessLevel: 'vip' }))}
+                  >
+                    <Crown size={20} />
+                    <span>VIP</span>
+                    <small>Premium members only</small>
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  <Save size={16} />
+                  {editingId ? 'Update Channel' : 'Create Channel'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Channels List */}
+      <div className="channels-grid">
+        {filteredChannels.length === 0 && (
+          <div className="empty-state">
+            <MessageSquare size={48} />
+            <h3>No channels found</h3>
+            <p>Create your first channel to get started</p>
+          </div>
+        )}
+
+        {filteredChannels.map(channel => (
+          <div key={channel._id} className="channel-card">
+            <div className="channel-icon">
+              <Hash size={24} />
+            </div>
+            <div className="channel-info">
+              <div className="channel-name-row">
+                <h4># {channel.name}</h4>
+                <span className="access-badge">{getAccessIcon('public')} Public</span>
+              </div>
+              <p className="channel-desc">{channel.description || 'No description'}</p>
+              <div className="channel-stats">
+                <span><MessageSquare size={14} /> — messages</span>
+                <span><Users size={14} /> — members</span>
+              </div>
+            </div>
+            <div className="channel-actions">
+              <button onClick={() => handleEdit(channel)} title="Edit">
+                <Edit size={16} />
+              </button>
+              <button onClick={() => handleDelete(channel._id)} title="Delete" className="delete">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Moderation Section */}
+      <div className="moderation-section">
+        <div className="section-header">
+          <Shield size={20} />
+          <h3>Chat Moderation</h3>
+        </div>
+        
+        <div className="moderation-tools">
+          <div className="mod-card">
+            <AlertTriangle size={24} />
+            <div>
+              <h4>Flagged Messages</h4>
+              <p>0 messages pending review</p>
+            </div>
+            <button className="view-btn">View All</button>
+          </div>
+          
+          <div className="mod-card">
+            <Lock size={24} />
+            <div>
+              <h4>Banned Users</h4>
+              <p>0 users currently banned</p>
+            </div>
+            <button className="view-btn">Manage</button>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .admin-chat {
+          padding: 24px;
+        }
+
+        .chat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 24px;
+        }
+
+        .chat-header h2 {
+          font-size: 28px;
+          font-weight: 700;
+          color: #fff;
+          margin: 0 0 8px 0;
+        }
+
+        .chat-header p {
+          color: #808080;
+          margin: 0;
+        }
+
+        .add-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 20px;
+          background: #8b0000;
+          border: none;
+          border-radius: 8px;
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+          background: #a00000;
+        }
+
+        .search-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          background: #111;
+          border: 1px solid #1a1a1a;
+          border-radius: 10px;
+          margin-bottom: 24px;
+        }
+
+        .search-bar input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          color: #e0e0e0;
+          font-size: 14px;
+          outline: none;
+        }
+
+        .search-bar svg {
+          color: #606060;
+        }
+
+        /* Modal */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: #111;
+          border: 1px solid #2a2a2a;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 1px solid #1a1a1a;
+        }
+
+        .modal-header h3 {
+          margin: 0;
+          color: #fff;
+          font-size: 20px;
+        }
+
+        .close-btn {
+          background: none;
+          border: none;
+          color: #808080;
+          cursor: pointer;
+          padding: 4px;
+        }
+
+        .close-btn:hover {
+          color: #fff;
+        }
+
+        .channel-form {
+          padding: 24px;
+        }
+
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-group label {
+          display: block;
+          color: #808080;
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+
+        .input-with-icon {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 8px;
+        }
+
+        .input-with-icon svg {
+          color: #606060;
+        }
+
+        .input-with-icon input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          color: #e0e0e0;
+          font-size: 14px;
+          outline: none;
+        }
+
+        .form-group textarea {
+          width: 100%;
+          padding: 12px;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 8px;
+          color: #e0e0e0;
+          font-size: 14px;
+          outline: none;
+          resize: vertical;
+        }
+
+        .access-options {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .access-option {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+          background: #0a0a0a;
+          border: 1px solid #2a2a2a;
+          border-radius: 10px;
+          cursor: pointer;
+          text-align: left;
+          color: #808080;
+          transition: all 0.2s;
+        }
+
+        .access-option:hover {
+          border-color: #3a3a3a;
+        }
+
+        .access-option.active {
+          border-color: #8b0000;
+          background: rgba(139, 0, 0, 0.1);
+        }
+
+        .access-option.active svg,
+        .access-option.active span {
+          color: #c41e3a;
+        }
+
+        .access-option svg {
+          color: #606060;
+        }
+
+        .access-option span {
+          font-weight: 600;
+          color: #e0e0e0;
+        }
+
+        .access-option small {
+          margin-left: auto;
+          font-size: 12px;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+          padding-top: 16px;
+          border-top: 1px solid #1a1a1a;
+        }
+
+        .cancel-btn {
+          padding: 12px 24px;
+          background: transparent;
+          border: 1px solid #2a2a2a;
+          border-radius: 8px;
+          color: #808080;
+          cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+          background: #1a1a1a;
+          color: #e0e0e0;
+        }
+
+        .submit-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 24px;
+          background: #8b0000;
+          border: none;
+          border-radius: 8px;
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .submit-btn:hover {
+          background: #a00000;
+        }
+
+        /* Channels Grid */
+        .channels-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 16px;
+          margin-bottom: 40px;
+        }
+
+        .empty-state {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 60px 20px;
+          color: #606060;
+        }
+
+        .empty-state svg {
+          opacity: 0.3;
+          margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+          color: #808080;
+          margin: 0 0 8px 0;
+        }
+
+        .empty-state p {
+          margin: 0;
+        }
+
+        .channel-card {
+          display: flex;
+          gap: 16px;
+          padding: 20px;
+          background: #111;
+          border: 1px solid #1a1a1a;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+
+        .channel-card:hover {
+          border-color: #2a2a2a;
+        }
+
+        .channel-icon {
+          width: 48px;
+          height: 48px;
+          background: rgba(139, 0, 0, 0.2);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #c41e3a;
+          flex-shrink: 0;
+        }
+
+        .channel-info {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .channel-name-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 4px;
+        }
+
+        .channel-info h4 {
+          margin: 0;
+          color: #fff;
+          font-size: 16px;
+        }
+
+        .access-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 8px;
+          background: rgba(139, 0, 0, 0.1);
+          border-radius: 4px;
+          font-size: 11px;
+          color: #808080;
+        }
+
+        .channel-desc {
+          margin: 0 0 8px 0;
+          color: #606060;
+          font-size: 13px;
+        }
+
+        .channel-stats {
+          display: flex;
+          gap: 16px;
+          font-size: 12px;
+          color: #606060;
+        }
+
+        .channel-stats span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .channel-actions {
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+        }
+
+        .channel-actions button {
+          width: 36px;
+          height: 36px;
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          border-radius: 8px;
+          color: #808080;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .channel-actions button:hover {
+          background: #2a2a2a;
+          color: #e0e0e0;
+        }
+
+        .channel-actions button.delete:hover {
+          background: rgba(139, 0, 0, 0.3);
+          border-color: #8b0000;
+          color: #c41e3a;
+        }
+
+        /* Moderation Section */
+        .moderation-section {
+          background: #111;
+          border: 1px solid #1a1a1a;
+          border-radius: 12px;
+          padding: 24px;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+          color: #c41e3a;
+        }
+
+        .section-header h3 {
+          margin: 0;
+          color: #fff;
+          font-size: 18px;
+        }
+
+        .moderation-tools {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
+        }
+
+        .mod-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px;
+          background: #0a0a0a;
+          border-radius: 10px;
+        }
+
+        .mod-card svg {
+          color: #606060;
+        }
+
+        .mod-card h4 {
+          margin: 0;
+          color: #e0e0e0;
+          font-size: 14px;
+        }
+
+        .mod-card p {
+          margin: 4px 0 0 0;
+          color: #606060;
+          font-size: 12px;
+        }
+
+        .view-btn {
+          margin-left: auto;
+          padding: 8px 16px;
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          border-radius: 6px;
+          color: #808080;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+          background: #2a2a2a;
+          color: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+          .admin-chat {
+            padding: 16px;
+          }
+
+          .chat-header {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .add-btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .channels-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .channel-card {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
