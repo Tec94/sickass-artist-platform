@@ -357,7 +357,7 @@ export const getTrendingByCategory = query({
       throw new ConvexError('Failed to fetch trending by category')
     }
   },
-),
+})
 
 /**
  * Get related content recommendations for a specific gallery item

@@ -25,7 +25,8 @@ import './styles/responsive.css'
 import './styles/events.css'
 import './index.css'
 
-// Lazy load event pages for code splitting
+// Lazy load dashboard and event pages for code splitting
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
 const Events = lazy(() => import('./pages/Events').then(m => ({ default: m.Events })))
 const EventDetail = lazy(() => import('./pages/EventDetail').then(m => ({ default: m.EventDetail })))
 const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage').then(m => ({ default: m.ConfirmationPage })))
@@ -101,7 +102,11 @@ function App() {
               <Routes>
                 <Route path="/" element={<GearPage />}>
                   <Route path="R" element={<ContentPage />} />
-                  <Route path="N" element={<ContentPage />} />
+                  <Route path="N" element={
+                    <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
+                      <Dashboard />
+                    </Suspense>
+                  } />
                   <Route path="1" element={<Events />} />
                   <Route path="2" element={<Merch />} />
                   <Route path="3" element={<Gallery />} />

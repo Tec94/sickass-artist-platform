@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, ReactNode, useEffect, useState } from 'react'
+import { createContext, ReactNode, useEffect, useState, useContext } from 'react'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -96,4 +96,13 @@ export function UserProvider({ children }: UserProviderProps) {
   }
   
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
+}
+
+// Custom hook to use the user context
+export const useUser = () => {
+  const context = useContext(UserContext)
+  if (!context) {
+    throw new Error('useUser must be used within a UserProvider')
+  }
+  return context
 }
