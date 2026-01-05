@@ -47,10 +47,8 @@ const StatCard = ({ title, value, icon, trend, color }: StatCardProps) => (
 )
 
 export function AdminOverview({ onNavigate }: AdminOverviewProps) {
-  // Fetch stats from various sources
-  const products = useQuery(api.merch.getProducts, { page: 0, pageSize: 1 })
-  const channels = useQuery(api.chat.getChannels)
-  const categories = useQuery(api.forum.getCategories)
+  // Fetch stats from admin API
+  const stats = useQuery(api.admin.getAdminStats)
 
   const quickActions: { label: string; icon: React.ReactNode; tab: AdminTab; action: string }[] = [
     { label: 'Add Product', icon: <Package size={18} />, tab: 'merch', action: 'add' },
@@ -70,26 +68,26 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
       <div className="stats-grid">
         <StatCard 
           title="Total Products" 
-          value={products?.items?.length ?? '—'} 
+          value={stats?.productCount ?? '—'} 
           icon={<Package size={24} />}
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
           title="Chat Channels" 
-          value={channels?.length ?? '—'} 
+          value={stats?.channelCount ?? '—'} 
           icon={<MessageSquare size={24} />}
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
           title="Forum Categories" 
-          value={categories?.length ?? '—'} 
+          value={stats?.categoryCount ?? '—'} 
           icon={<ClipboardList size={24} />}
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
-          title="System Status" 
-          value="Online" 
-          icon={<Settings size={24} />}
+          title="Total Users" 
+          value={stats?.userCount ?? '—'} 
+          icon={<Users size={24} />}
           color="rgba(0, 128, 0, 0.3)"
         />
       </div>

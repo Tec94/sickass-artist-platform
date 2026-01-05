@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { 
@@ -19,8 +19,8 @@ import {
 } from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
-type UserRole = 'user' | 'member' | 'vip' | 'moderator' | 'admin'
-type FanTier = 'free' | 'supporter' | 'superfan' | 'mega'
+type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
+type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
 
 interface UserEditData {
   displayName: string
@@ -30,81 +30,76 @@ interface UserEditData {
 }
 
 const roleOptions: { value: UserRole; label: string; icon: React.ReactNode }[] = [
-  { value: 'user', label: 'User', icon: <User size={14} /> },
-  { value: 'member', label: 'Member', icon: <Users size={14} /> },
-  { value: 'vip', label: 'VIP', icon: <Crown size={14} /> },
-  { value: 'moderator', label: 'Moderator', icon: <Shield size={14} /> },
-  { value: 'admin', label: 'Admin', icon: <Star size={14} /> },
+  { value: 'fan', label: 'Fan', icon: <User size={14} /> },
+  { value: 'crew', label: 'Crew', icon: <Users size={14} /> },
+  { value: 'mod', label: 'Moderator', icon: <Shield size={14} /> },
+  { value: 'admin', label: 'Admin', icon: <Crown size={14} /> },
+  { value: 'artist', label: 'Artist', icon: <Star size={14} /> },
 ]
 
 const fanTierOptions: { value: FanTier; label: string; color: string }[] = [
-  { value: 'free', label: 'Free', color: '#808080' },
-  { value: 'supporter', label: 'Supporter', color: '#60a5fa' },
-  { value: 'superfan', label: 'Superfan', color: '#a855f7' },
-  { value: 'mega', label: 'Mega Fan', color: '#f59e0b' },
+  { value: 'bronze', label: 'Bronze', color: '#CD7F32' },
+  { value: 'silver', label: 'Silver', color: '#C0C0C0' },
+  { value: 'gold', label: 'Gold', color: '#FFD700' },
+  { value: 'platinum', label: 'Platinum', color: '#E5E4E2' },
 ]
 
 export function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
-  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const [editingUserId, setEditingUserId] = useState<Id<'users'> | null>(null)
   const [editData, setEditData] = useState<UserEditData | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
-  // Placeholder user data - would come from a users query
-  const users = [
-    {
-      _id: '1',
-      displayName: 'John Doe',
-      email: 'john@example.com',
-      role: 'member' as UserRole,
-      fanTier: 'supporter' as FanTier,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      imageUrl: null
-    },
-    {
-      _id: '2',
-      displayName: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'vip' as UserRole,
-      fanTier: 'superfan' as FanTier,
-      createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      imageUrl: null
-    },
-    {
-      _id: '3',
-      displayName: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin' as UserRole,
-      fanTier: 'mega' as FanTier,
-      createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
-      imageUrl: null
-    },
-  ]
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter
-    return matchesSearch && matchesRole
+  // Fetch real users from Convex
+  const usersData = useQuery(api.admin.getUsers, { 
+    page: 0, 
+    pageSize: 50, 
+    search: searchQuery || undefined,
+    role: roleFilter !== 'all' ? roleFilter : undefined 
   })
+
+  // Mutations
+  const updateUserRole = useMutation(api.admin.updateUserRole)
+  const updateUserTier = useMutation(api.admin.updateUserTier)
+
+  const users = usersData?.items || []
 
   const handleEditUser = (user: typeof users[0]) => {
     setEditData({
       displayName: user.displayName,
       email: user.email,
-      role: user.role,
-      fanTier: user.fanTier
+      role: user.role as UserRole,
+      fanTier: user.fanTier as FanTier
     })
     setEditingUserId(user._id)
   }
 
   const handleSaveUser = async () => {
     if (!editData || !editingUserId) return
-    // TODO: Call mutation when backend is ready
-    showToast('User updated', { type: 'success' })
-    setEditingUserId(null)
-    setEditData(null)
+    
+    setIsSaving(true)
+    try {
+      const originalUser = users.find(u => u._id === editingUserId)
+      
+      // Update role if changed
+      if (originalUser && originalUser.role !== editData.role) {
+        await updateUserRole({ userId: editingUserId, newRole: editData.role })
+      }
+      
+      // Update tier if changed
+      if (originalUser && originalUser.fanTier !== editData.fanTier) {
+        await updateUserTier({ userId: editingUserId, newTier: editData.fanTier })
+      }
+      
+      showToast('User updated successfully', { type: 'success' })
+      setEditingUserId(null)
+      setEditData(null)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update user', { type: 'error' })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getRoleIcon = (role: UserRole) => {
@@ -166,15 +161,15 @@ export function AdminUsers() {
       <div className="stats-row">
         <div className="stat-item">
           <Users size={18} />
-          <span>{users.length} Total Users</span>
+          <span>{usersData?.totalCount ?? users.length} Total Users</span>
         </div>
         <div className="stat-item">
           <Crown size={18} />
-          <span>{users.filter(u => u.fanTier !== 'free').length} Premium</span>
+          <span>{users.filter(u => u.fanTier !== 'bronze').length} Premium</span>
         </div>
         <div className="stat-item">
           <Shield size={18} />
-          <span>{users.filter(u => u.role === 'admin' || u.role === 'moderator').length} Staff</span>
+          <span>{users.filter(u => u.role === 'admin' || u.role === 'mod').length} Staff</span>
         </div>
       </div>
 
@@ -190,12 +185,12 @@ export function AdminUsers() {
         </div>
 
         <div className="table-body">
-          {filteredUsers.map(user => (
+          {users.map(user => (
             <div key={user._id} className="table-row">
               <div className="user-cell">
                 <div className="user-avatar">
-                  {user.imageUrl ? (
-                    <img src={user.imageUrl} alt={user.displayName} />
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.displayName} />
                   ) : (
                     <span>{user.displayName[0]}</span>
                   )}
@@ -245,7 +240,7 @@ export function AdminUsers() {
             </div>
           ))}
 
-          {filteredUsers.length === 0 && (
+          {users.length === 0 && (
             <div className="empty-row">
               <Users size={24} />
               <p>No users found matching your criteria</p>

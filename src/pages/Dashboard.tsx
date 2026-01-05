@@ -3,112 +3,67 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { ErrorBoundary, WidgetErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
-import { TrendingWidget } from '../components/Dashboard/TrendingWidget'
-import { EventsWidget } from '../components/Dashboard/EventsWidget'
-import { ForumWidget } from '../components/Dashboard/ForumWidget'
-import { MerchWidget } from '../components/Dashboard/MerchWidget'
-import { CreatorsWidget } from '../components/Dashboard/CreatorsWidget'
+import { 
+  TopMerchWidget,
+  TrendingForumWidget,
+  AnnouncementsWidget,
+  TrendingGalleryWidget,
+  ArtistMomentsWidget,
+  UpcomingEventsWidget
+} from '../components/Dashboard/DashboardWidgets'
 import '../components/Dashboard/dashboard.css'
 
-type WidgetName = 'hero' | 'trending' | 'events' | 'forum' | 'merch' | 'creators'
-
 export const Dashboard = () => {
-  const [renderedWidgets, setRenderedWidgets] = useState<Set<WidgetName>>(new Set(['hero']))
+  const [isLoaded, setIsLoaded] = useState(false)
 
-  // Progressive rendering: Priority 1 widgets render on mount
-  const trendingData = useQuery(
-    api.recommendations.getTrendingContent,
-    { 
-      page: 0, 
-      pageSize: 6, 
-      sortBy: 'trending',
-      dateRange: '30d'
-    }
-  )
+  // Use the optimized dashboard data query
+  const dashboardData = useQuery(api.dashboard.getDashboardData)
 
-  const eventsData = useQuery(
-    api.events.getEvents,
-    { 
-      page: 0, 
-      pageSize: 3, 
-      sortBy: 'asc',
-      startDate: Date.now()
-    }
-  )
-
-  // Progressive rendering: Priority 2 widgets render after 200ms delay
+  // Progressive rendering - delay secondary widgets
   useEffect(() => {
     const timer = setTimeout(() => {
-      setRenderedWidgets(prev => new Set([...prev, 'forum', 'merch', 'creators']))
-    }, 200)
-
+      setIsLoaded(true)
+    }, 100)
     return () => clearTimeout(timer)
   }, [])
-
-  // Mark priority 1 widgets as rendered when their queries start
-  useEffect(() => {
-    if (trendingData !== undefined || eventsData !== undefined) {
-      setRenderedWidgets(prev => new Set([...prev, 'trending', 'events']))
-    }
-  }, [trendingData, eventsData])
-
-  const handleWidgetRetry = (widgetName: string) => {
-    // Force re-render of the widget
-    setRenderedWidgets(prev => {
-      const newSet = new Set(prev)
-      newSet.delete(widgetName)
-      return newSet
-    })
-  }
 
   return (
     <div className="dashboard-container">
       {/* Hero Section - Always renders first */}
-        <ErrorBoundary level="section" componentName="HeroSection">
-          <HeroSection />
-        </ErrorBoundary>
+      <ErrorBoundary level="section" componentName="HeroSection">
+        <HeroSection />
+      </ErrorBoundary>
 
       {/* Dashboard Grid */}
       <div className="dashboard-grid">
-        {/* Priority 1 Widgets - Trending */}
-        {renderedWidgets.has('trending') && (
-          <WidgetErrorBoundary componentName="TrendingWidget">
-            <TrendingWidget 
-              data={trendingData}
-              onRetry={() => handleWidgetRetry('trending')}
-            />
-          </WidgetErrorBoundary>
-        )}
+        {/* Top Row - Key Widgets */}
+        <WidgetErrorBoundary componentName="UpcomingEventsWidget">
+          <UpcomingEventsWidget data={dashboardData?.upcomingEvents} />
+        </WidgetErrorBoundary>
 
-        {/* Priority 1 Widgets - Events */}
-        {renderedWidgets.has('events') && (
-          <WidgetErrorBoundary componentName="EventsWidget">
-            <EventsWidget 
-              data={eventsData}
-              onRetry={() => handleWidgetRetry('events')}
-            />
-          </WidgetErrorBoundary>
-        )}
+        <WidgetErrorBoundary componentName="TrendingGalleryWidget">
+          <TrendingGalleryWidget data={dashboardData?.trendingGallery} />
+        </WidgetErrorBoundary>
 
-        {/* Priority 2 Widgets - Forum (deferred) */}
-        {renderedWidgets.has('forum') && (
-          <WidgetErrorBoundary componentName="ForumWidget">
-            <ForumWidget onRetry={() => handleWidgetRetry('forum')} />
-          </WidgetErrorBoundary>
-        )}
+        <WidgetErrorBoundary componentName="TopMerchWidget">
+          <TopMerchWidget data={dashboardData?.topMerch} />
+        </WidgetErrorBoundary>
 
-        {/* Priority 2 Widgets - Merch (deferred) */}
-        {renderedWidgets.has('merch') && (
-          <WidgetErrorBoundary componentName="MerchWidget">
-            <MerchWidget onRetry={() => handleWidgetRetry('merch')} />
-          </WidgetErrorBoundary>
-        )}
+        {/* Second Row - Deferred */}
+        {isLoaded && (
+          <>
+            <WidgetErrorBoundary componentName="TrendingForumWidget">
+              <TrendingForumWidget data={dashboardData?.trendingForum} />
+            </WidgetErrorBoundary>
 
-        {/* Priority 2 Widgets - Creators (deferred) */}
-        {renderedWidgets.has('creators') && (
-          <WidgetErrorBoundary componentName="CreatorsWidget">
-            <CreatorsWidget onRetry={() => handleWidgetRetry('creators')} />
-          </WidgetErrorBoundary>
+            <WidgetErrorBoundary componentName="AnnouncementsWidget">
+              <AnnouncementsWidget data={dashboardData?.recentAnnouncements} />
+            </WidgetErrorBoundary>
+
+            <WidgetErrorBoundary componentName="ArtistMomentsWidget">
+              <ArtistMomentsWidget data={dashboardData?.artistMoments} />
+            </WidgetErrorBoundary>
+          </>
         )}
       </div>
 
@@ -123,7 +78,7 @@ export const Dashboard = () => {
 
         .dashboard-grid {
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(3, 1fr);
           gap: 24px;
           padding: 24px;
           max-width: 1400px;
@@ -134,34 +89,21 @@ export const Dashboard = () => {
         @media (min-width: 768px) and (max-width: 1199px) {
           .dashboard-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 32px;
-            padding: 32px;
+            gap: 20px;
+            padding: 20px;
           }
         }
 
-        /* Desktop: 2-3 columns */
-        @media (min-width: 1200px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            padding: 40px;
-          }
-        }
-
-        /* Ensure hero section spans full width */
-        .dashboard-grid > :first-child {
-          grid-column: 1 / -1;
-        }
-
-        /* Mobile optimizations */
+        /* Mobile: 1 column */
         @media (max-width: 767px) {
           .dashboard-container {
             padding: 0;
           }
           
           .dashboard-grid {
+            grid-template-columns: 1fr;
             padding: 16px;
-            gap: 20px;
+            gap: 16px;
           }
         }
       `}</style>

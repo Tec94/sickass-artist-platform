@@ -71,7 +71,7 @@ export const TrendingWidget = ({ data, onRetry }: TrendingWidgetProps) => {
           <TrendingUp size={48} className="empty-icon" />
           <h3>No trending content yet</h3>
           <p>Be the first to create some amazing content!</p>
-          <button className="explore-button" onClick={() => navigate('/3')}>
+          <button className="explore-button" onClick={() => navigate('/gallery')}>
             Explore Gallery
           </button>
         </div>
@@ -108,7 +108,7 @@ const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetCon
           <Icon size={20} />
           <h3>{title}</h3>
         </div>
-        <button className="see-all-button" onClick={() => navigate('/3')}>
+        <button className="see-all-button" onClick={() => navigate('/gallery')}>
           {actionLabel}
           <ArrowRight size={16} />
         </button>

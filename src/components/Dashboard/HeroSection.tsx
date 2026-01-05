@@ -1,16 +1,31 @@
 import { User, Star, MessageCircle, Share2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../../contexts/UserContext'
 
 export const HeroSection = () => {
   const navigate = useNavigate()
+  const { isSignedIn, userProfile, isLoading } = useUser()
 
   const handleProfileClick = (): void => {
-    navigate('/profile')
+    if (isSignedIn) {
+      navigate('/profile')
+    } else {
+      // Trigger sign-in modal via Clerk
+      const signInBtn = document.querySelector('[data-clerk-sign-in]') as HTMLElement
+      if (signInBtn) {
+        signInBtn.click()
+      } else {
+        navigate('/profile')
+      }
+    }
   }
 
   const handleSocialClick = (platform: string): void => {
     console.log(`Open ${platform}`)
   }
+
+  // Get display name with fallback
+  const displayName = userProfile?.displayName || userProfile?.username || 'Guest'
 
   return (
     <div className="hero-section">
@@ -18,25 +33,38 @@ export const HeroSection = () => {
         {/* User Avatar & Info */}
         <div className="hero-user">
           <div className="avatar-container">
-            <div className="user-avatar-placeholder" onClick={handleProfileClick}>
-              <User size={32} />
-            </div>
+            {isSignedIn && userProfile?.avatar ? (
+              <img 
+                src={userProfile.avatar} 
+                alt={displayName}
+                className="user-avatar"
+                onClick={handleProfileClick}
+              />
+            ) : (
+              <div className="user-avatar-placeholder" onClick={handleProfileClick}>
+                <User size={32} />
+              </div>
+            )}
             
             {/* Status indicators */}
-            <div className="status-indicators">
-              <div className="status-dot online" title="Online"></div>
-              <div className="status-dot verified" title="Verified">
-                <Star size={12} />
+            {isSignedIn && (
+              <div className="status-indicators">
+                <div className="status-dot online" title="Online"></div>
+                <div className="status-dot verified" title="Verified">
+                  <Star size={12} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="user-info">
             <h1 className="user-name">
-              Welcome to the Community
+              {isSignedIn ? `Welcome, ${displayName}` : 'Welcome to the Community'}
             </h1>
             <p className="user-subtitle">
-              Discover the latest content, events, and connect with fellow fans
+              {isSignedIn 
+                ? 'Explore the latest content, events, and connect with fellow fans'
+                : 'Sign in to discover exclusive content, events, and join the community'}
             </p>
           </div>
         </div>
@@ -46,22 +74,24 @@ export const HeroSection = () => {
           <div className="action-buttons">
             <button 
               className="action-btn primary"
-              onClick={() => navigate('/3')}
+              onClick={() => navigate('/gallery')}
             >
               <Star size={16} />
               Explore Gallery
             </button>
             <button 
               className="action-btn secondary"
-              onClick={() => navigate('/1')}
+              onClick={() => navigate('/events')}
             >
               <MessageCircle size={16} />
               View Events
             </button>
-            <button className="action-btn tertiary" onClick={handleProfileClick}>
-              <User size={16} />
-              Sign In
-            </button>
+            {!isSignedIn && !isLoading && (
+              <button className="action-btn tertiary" onClick={handleProfileClick}>
+                <User size={16} />
+                Sign In
+              </button>
+            )}
           </div>
         </div>
 
