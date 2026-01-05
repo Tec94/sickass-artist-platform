@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { showToast } from '../../lib/toast'
+import { useAuth } from '../../hooks/useAuth'
 
 type ProductCategory = 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other'
 type ProductStatus = 'active' | 'draft' | 'archived'
@@ -43,6 +44,7 @@ const initialFormData: ProductFormData = {
 }
 
 export function AdminMerch() {
+  const { isSignedIn, user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<Id<'merchProducts'> | null>(null)
   const [formData, setFormData] = useState<ProductFormData>(initialFormData)
@@ -63,9 +65,17 @@ export function AdminMerch() {
   const updateProduct = useMutation(api.admin.updateProduct)
   const archiveProduct = useMutation(api.admin.archiveProduct)
 
+  // Check if user has admin/mod/artist permissions
+  const hasAdminAccess = user && (user.role === 'admin' || user.role === 'mod' || user.role === 'artist')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!isSignedIn || !hasAdminAccess) {
+      showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
+      return
+    }
+
     if (!formData.name.trim()) {
       showToast('Product name is required', { type: 'error' })
       return
@@ -135,6 +145,11 @@ export function AdminMerch() {
   }
 
   const handleDelete = async (productId: Id<'merchProducts'>) => {
+    if (!isSignedIn || !hasAdminAccess) {
+      showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
+      return
+    }
+    
     if (!confirm('Are you sure you want to archive this product?')) return
     
     try {

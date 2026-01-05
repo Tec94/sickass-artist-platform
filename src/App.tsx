@@ -102,6 +102,15 @@ function App() {
               <FlashlightEffect className="app-root">
                 <ParallaxBackground />
                 <NavbarFallback />
+                <style>{`
+                  .app-root {
+                    height: 100vh;
+                    width: 100vw;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                  }
+                `}</style>
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<GearPage />}>

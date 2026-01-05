@@ -24,6 +24,8 @@ export const WindshieldFrame = ({ children }: WindshieldFrameProps) => {
           background: #000;
           border: 1px solid #111;
           box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+          display: flex;
+          flex-direction: column;
         }
 
         .windshield-bezel {
@@ -45,21 +47,40 @@ export const WindshieldFrame = ({ children }: WindshieldFrameProps) => {
         }
 
         .windshield-content-wrapper {
+          flex: 1;
           width: 100%;
-          height: 100%;
+          min-height: 0;
           border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
         }
 
         .windshield-content {
+          flex: 1;
           width: 100%;
-          height: 100%;
+          min-height: 0;
           padding: 40px;
           overflow-y: auto;
-          scrollbar-width: none;
+          scrollbar-width: thin;
+          scrollbar-color: #333 transparent;
         }
 
         .windshield-content::-webkit-scrollbar {
-          display: none;
+          width: 6px;
+        }
+
+        .windshield-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .windshield-content::-webkit-scrollbar-thumb {
+          background: #333;
+          border-radius: 3px;
+        }
+
+        .windshield-content::-webkit-scrollbar-thumb:hover {
+          background: #555;
         }
 
         @media (max-width: 768px) {

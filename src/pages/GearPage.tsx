@@ -97,7 +97,7 @@ export const GearPage = () => {
           height: 100vh;
           background: #000;
           color: white;
-          overflow: hidden;
+          overflow: clip;
           position: relative;
         }
 
@@ -115,10 +115,9 @@ export const GearPage = () => {
         .main-viewport {
           flex: 1;
           display: flex;
-          align-items: center;
-          justify-content: center;
           padding: 2.5vh 5vw;
           z-index: 10;
+          min-height: 0;
         }
 
 

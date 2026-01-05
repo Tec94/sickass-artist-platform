@@ -4,10 +4,16 @@ import { useNavigate } from 'react-router-dom'
 import { OrderCard } from '../components/Merch/OrderCard'
 import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 export function OrderHistory() {
   const navigate = useNavigate()
-  const orders = useQuery(api.orders.getUserOrders, { limit: 100 })
+  const { isSignedIn, isLoading } = useAuth()
+  // Skip query when not authenticated to prevent "Not authenticated" errors
+  const orders = useQuery(
+    api.orders.getUserOrders,
+    isSignedIn ? { limit: 100 } : 'skip'
+  )
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string | null>(null)
 
