@@ -66,7 +66,7 @@ export function Events() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">{total} events</span>
             {filters.city && (
-              <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full font-bold">
+              <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">
                 in {filters.city}
               </span>
             )}
@@ -77,7 +77,7 @@ export function Events() {
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-cyan-500/20 text-cyan-400'
+                  ? 'bg-red-500/20 text-red-500'
                   : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
               aria-label="Grid view"
@@ -88,7 +88,7 @@ export function Events() {
               onClick={() => setViewMode('list')}
               className={`p-2 rounded transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-cyan-500/20 text-cyan-400'
+                  ? 'bg-red-500/20 text-red-500'
                   : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
               aria-label="List view"
@@ -151,11 +151,11 @@ export function Events() {
                   <button
                     onClick={loadMore}
                     disabled={loading}
-                    className="bg-cyan-500/20 text-cyan-400 px-8 py-3 rounded-full font-bold hover:bg-cyan-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-red-500/20 text-red-500 px-8 py-3 rounded-full font-bold hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">
-                        <div className="animate-spin h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full"></div>
+                        <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
                         Loading...
                       </span>
                     ) : (
@@ -174,7 +174,7 @@ export function Events() {
               </p>
               <button
                 onClick={() => setFilters({ sortBy: 'asc' })}
-                className="bg-cyan-500/20 text-cyan-400 px-6 py-2 rounded-full font-bold hover:bg-cyan-500/30 transition-colors"
+                className="bg-red-500/20 text-red-500 px-6 py-2 rounded-full font-bold hover:bg-red-500/30 transition-colors"
               >
                 Reset Filters
               </button>

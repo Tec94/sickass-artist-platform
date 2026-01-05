@@ -24,10 +24,10 @@ import { useNavigate } from 'react-router-dom'
 
 // Category data for visual sections
 const categories = [
-  { id: 'apparel', name: 'Apparel', icon: '👕', description: 'T-shirts, hoodies & more', gradient: 'from-[#8b0000] to-[#5a0000]' },
-  { id: 'accessories', name: 'Accessories', icon: '🎧', description: 'Hats, bags & essentials', gradient: 'from-[#1a1a1a] to-[#0a0a0a]' },
-  { id: 'vinyl', name: 'Vinyl', icon: '📀', description: 'Limited edition records', gradient: 'from-[#2d1810] to-[#1a0f0a]' },
-  { id: 'limited', name: 'Limited Edition', icon: '⭐', description: 'Exclusive collectibles', gradient: 'from-[#3d1818] to-[#1a0a0a]' },
+  { id: 'apparel', name: 'Apparel', icon: '👕', description: 'T-shirts, hoodies & more', gradient: 'from-cyan-900 to-cyan-950' },
+  { id: 'accessories', name: 'Accessories', icon: '🎧', description: 'Hats, bags & essentials', gradient: 'from-blue-900 to-blue-950' },
+  { id: 'vinyl', name: 'Vinyl', icon: '📀', description: 'Limited edition records', gradient: 'from-indigo-900 to-indigo-950' },
+  { id: 'limited', name: 'Limited Edition', icon: '⭐', description: 'Exclusive collectibles', gradient: 'from-teal-900 to-teal-950' },
 ]
 
 export function Merch() {
@@ -113,9 +113,9 @@ export function Merch() {
                 onClick={() => navigate('/merch/cart')}
                 className="relative p-2.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-lg transition-all duration-200 group"
               >
-                <ShoppingCart className="w-5 h-5 text-[#c41e3a] group-hover:text-[#ff3355] transition-colors" />
+                <ShoppingCart className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#c41e3a] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                     {cartCount}
                   </span>
                 )}
@@ -143,7 +143,7 @@ export function Merch() {
               
               <h2 className="text-4xl md:text-6xl font-black leading-tight">
                 Exclusive
-                <span className="block text-[#c41e3a]">Artist Merch</span>
+                <span className="block text-cyan-400">Artist Merch</span>
               </h2>
               
               <p className="text-gray-400 text-lg max-w-md">
@@ -153,13 +153,13 @@ export function Merch() {
               <div className="flex flex-wrap gap-4">
                 <button 
                   onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="px-8 py-3 bg-[#c41e3a] hover:bg-[#a01830] rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+                  className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
                 >
                   Shop Now
                 </button>
                 <button 
                   onClick={() => handleCategoryClick('limited')}
-                  className="px-8 py-3 bg-transparent border border-[#2a2a2a] hover:border-[#c41e3a] rounded-lg font-semibold transition-all duration-200"
+                  className="px-8 py-3 bg-transparent border border-[#2a2a2a] hover:border-cyan-500 rounded-lg font-semibold transition-all duration-200"
                 >
                   View Limited Drops
                 </button>
@@ -200,12 +200,12 @@ export function Merch() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <Flame className="w-6 h-6 text-[#c41e3a]" />
+              <Flame className="w-6 h-6 text-cyan-400" />
               <h2 className="text-2xl font-bold">Trending Now</h2>
             </div>
             <button 
               onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="flex items-center gap-1 text-[#c41e3a] hover:text-[#ff3355] text-sm font-medium transition-colors"
+              className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
             >
               View All <ChevronRight className="w-4 h-4" />
             </button>
@@ -266,7 +266,7 @@ export function Merch() {
                 <h3 className="font-bold text-lg">{category.name}</h3>
                 <p className="text-gray-400 text-sm mt-1">{category.description}</p>
                 
-                <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 text-gray-500 group-hover:text-[#c41e3a] group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 text-gray-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300" />
               </button>
             ))}
           </div>
@@ -276,13 +276,13 @@ export function Merch() {
       {/* Promotional Banner */}
       <section className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1a0505] via-[#2d0a0a] to-[#1a0505] border border-[#3d1818] p-8 md:p-12">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#c41e3a]/10 rounded-full blur-[80px]" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#051a1a] via-[#0a2d2d] to-[#051a1a] border border-[#183d3d] p-8 md:p-12">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]" />
             
             <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
-                <div className="flex items-center gap-2 text-[#c41e3a] text-sm font-semibold mb-2">
-                  <Sparkles className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold mb-2">
+                  <Cross className="w-4 h-4" />
                   LIMITED TIME OFFER
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-2">Free Shipping on Orders $75+</h3>
@@ -291,7 +291,7 @@ export function Merch() {
               
               <button 
                 onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex-shrink-0 px-8 py-3 bg-[#c41e3a] hover:bg-[#a01830] rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+                className="flex-shrink-0 px-8 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
               >
                 Shop Now
               </button>
@@ -361,13 +361,13 @@ export function Merch() {
       </section>
 
       {/* Footer CTA */}
-      <section className="py-16 bg-gradient-to-t from-[#1a0505] to-transparent">
+      <section className="py-16 bg-gradient-to-t from-[#051a1a] to-transparent">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Join the Community</h2>
           <p className="text-gray-400 mb-8">
             Get exclusive access to limited drops, early releases, and members-only discounts.
           </p>
-          <button className="px-8 py-3 bg-[#c41e3a] hover:bg-[#a01830] rounded-lg font-semibold transition-all duration-200 hover:scale-105">
+          <button className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all duration-200 hover:scale-105">
             Sign Up for Updates
           </button>
         </div>

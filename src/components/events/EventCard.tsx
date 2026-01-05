@@ -64,7 +64,7 @@ export const EventCard = memo(function EventCard({
   return (
     <Link
       to={`/events/${event._id}`}
-      className={`block bg-gray-900/70 border border-gray-800 rounded-lg overflow-hidden transition-all duration-200 hover:border-cyan-500/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 ${
+      className={`block bg-gray-900/70 border border-gray-800 rounded-lg overflow-hidden transition-all duration-200 hover:border-red-500/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/10 ${
         compact ? 'flex flex-row' : ''
       }`}
     >
@@ -104,20 +104,20 @@ export const EventCard = memo(function EventCard({
         
         <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
           <span className="flex items-center gap-1">
-            <iconify-icon icon="solar:map-point-bold" class="text-cyan-400"></iconify-icon>
+            <iconify-icon icon="solar:map-point-bold" class="text-red-500"></iconify-icon>
             {event.city}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-gray-300 mb-2">
           <span className="flex items-center gap-1">
-            <iconify-icon icon="solar:calendar-bold" class="text-cyan-400"></iconify-icon>
+            <iconify-icon icon="solar:calendar-bold" class="text-red-500"></iconify-icon>
             {formatEventDate(event.startAtUtc, timezone)}
           </span>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-cyan-400 font-medium">
+          <span className="text-xs text-red-500 font-medium">
             {getTimeUntilEvent(event.startAtUtc)}
           </span>
           
@@ -128,7 +128,7 @@ export const EventCard = memo(function EventCard({
                 // Navigate to event detail for queue join
                 window.location.href = `/events/${event._id}`
               }}
-              className="text-xs bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-full font-bold hover:bg-cyan-500/30 transition-colors"
+              className="text-xs bg-red-500/20 text-red-500 px-3 py-1 rounded-full font-bold hover:bg-red-500/30 transition-colors"
             >
               View
             </button>

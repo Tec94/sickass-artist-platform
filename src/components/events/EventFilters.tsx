@@ -90,7 +90,7 @@ export function EventFilters({
         <div className="flex items-center gap-2">
           <h3 className="text-white font-bold text-sm">Filters</h3>
           {activeFilterCount > 0 && (
-            <span className="bg-cyan-500/20 text-cyan-400 text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full font-bold">
               {activeFilterCount}
             </span>
           )}
@@ -117,7 +117,7 @@ export function EventFilters({
                   onClick={() => handleDateRangeChange(range)}
                   className={`px-3 py-2 rounded text-xs font-bold transition-colors ${
                     selectedDateRange === range
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                      ? 'bg-red-500/20 text-red-500 border border-red-500/50'
                       : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
                   }`}
                 >
@@ -136,7 +136,7 @@ export function EventFilters({
               <select
                 value={filters.city || 'all'}
                 onChange={(e) => handleCityChange(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-red-500"
               >
                 <option value="all">All Cities</option>
                 {availableCities.map((city) => (
@@ -169,7 +169,7 @@ export function EventFilters({
                       filters.saleStatus === status.value
                     }
                     onChange={() => handleStatusChange(status.value)}
-                    className="text-cyan-500 focus:ring-cyan-500"
+                    className="text-red-500 focus:ring-red-500"
                   />
                   <span className="text-sm text-gray-300">{status.label}</span>
                 </label>
@@ -185,7 +185,7 @@ export function EventFilters({
             <select
               value={filters.sortBy || 'asc'}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-red-500"
             >
               <option value="asc">Soonest First</option>
               <option value="desc">Latest First</option>

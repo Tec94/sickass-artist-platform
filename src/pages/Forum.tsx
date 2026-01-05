@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { RotateCw } from 'lucide-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id, Thread, ThreadSortBy } from '../types/forum'
@@ -30,7 +31,7 @@ export function Forum() {
     }
   }, [categories, selectedCategoryId])
 
-  const { threads, isLoading: isThreadsLoading, hasMore, fetchMore } = useForumThreads({
+  const { threads, isLoading: isThreadsLoading, hasMore, fetchMore, refresh } = useForumThreads({
     categoryId: selectedCategoryId,
     sortBy,
     limit: 20,
@@ -90,17 +91,26 @@ export function Forum() {
              <h2 className="selected-category-name">{selectedCategory?.name || 'Forum'}</h2>
              <span className="thread-count">{threads.length} Threads</span>
            </div>
-           <div className="header-actions">
-             <button 
-               type="button"
-               onClick={openCreateThread} 
-               disabled={isCategoriesLoading}
-               className="create-thread-btn border-beam"
-             >
-               <iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
-               <span>New Thread</span>
-             </button>
-           </div>
+            <div className="header-actions">
+              <button 
+                type="button"
+                onClick={refresh} 
+                disabled={isThreadsLoading}
+                className="refresh-btn"
+                title="Refresh threads"
+              >
+                <RotateCw className={`w-4 h-4 ${isThreadsLoading ? 'animate-spin' : ''}`} />
+              </button>
+              <button 
+                type="button"
+                onClick={openCreateThread} 
+                disabled={isCategoriesLoading}
+                className="create-thread-btn border-beam"
+              >
+                <iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
+                <span>New Thread</span>
+              </button>
+            </div>
         </header>
 
         <div className="forum-content">
@@ -202,6 +212,36 @@ export function Forum() {
           font-size: 11px;
           color: var(--color-text-dim);
           font-weight: 600;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .refresh-btn {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-card-border);
+          color: var(--color-text-dim);
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .refresh-btn:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: white;
+          border-color: #444;
+        }
+
+        .refresh-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .create-thread-btn {

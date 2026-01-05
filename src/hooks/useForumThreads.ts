@@ -12,6 +12,7 @@ interface UseForumThreadsResult {
   error: null
   hasMore: boolean
   fetchMore: () => void
+  refresh: () => void
 }
 
 interface UseForumThreadsArgs {
@@ -43,10 +44,10 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
     api.forum.getThreads,
     categoryId
       ? {
-          categoryId,
-          sort: sortBy,
-          limit: currentLimit,
-        }
+        categoryId,
+        sort: sortBy,
+        limit: currentLimit,
+      }
       : 'skip'
   ) as unknown as { threads: unknown[]; nextCursor: unknown | null } | undefined
 
@@ -115,6 +116,11 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
     })
   }, [hasMore, isFetchingMore, limit])
 
+  const refresh = useCallback(() => {
+    setCurrentLimit(limit)
+    setIsFetchingMore(false)
+  }, [limit])
+
   useEffect(() => {
     if (isFetchingMore && data !== undefined) {
       setIsFetchingMore(false)
@@ -128,5 +134,6 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
     error: null,
     hasMore,
     fetchMore,
+    refresh,
   }
 }
