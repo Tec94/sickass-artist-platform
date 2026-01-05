@@ -954,7 +954,6 @@ export const getFilteredGallery = query({
         hasMore: skip + pageSize < total,
         totalCount: total,
         page: args.page,
-        total,
       }
     } catch (error) {
       console.error('Gallery filter error:', error)

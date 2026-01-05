@@ -357,7 +357,7 @@ export const getTrendingByCategory = query({
       throw new ConvexError('Failed to fetch trending by category')
     }
   },
-),
+})
 
 /**
  * Get related content recommendations for a specific gallery item
@@ -491,9 +491,8 @@ export const getCreatorContent = query({
     return await ctx.db
       .query('galleryContent')
       .withIndex('by_creator', q => q.eq('creatorId', args.creatorId))
-      .order('desc', 'createdAt')
+      .order('desc')
       .take(args.limit)
-      .collect()
   },
 })
 
