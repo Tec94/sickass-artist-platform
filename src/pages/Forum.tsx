@@ -169,6 +169,8 @@ export function Forum() {
         .forum-container {
           display: flex;
           width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
           height: 100%;
           background: rgba(10, 10, 10, 0.6);
           backdrop-filter: blur(20px);

@@ -261,6 +261,8 @@ export const Gallery = () => {
       <style>{`
         .gallery-layout {
           width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
           height: 100%;
         }
 

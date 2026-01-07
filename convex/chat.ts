@@ -6,6 +6,7 @@ import {
   canAccessChannel,
   isModerator,
   validateIdempotencyKey,
+  updateUserSocialPoints,
 } from "./helpers";
 
 type FanTier = "bronze" | "silver" | "gold" | "platinum";
@@ -123,7 +124,14 @@ export const getMessages = query({
       }
     }
 
-    const messages = allMessages.slice(0, limit);
+    const messages = allMessages.slice(0, limit).map(m => ({
+      ...m,
+      upVoteCount: m.upVoteCount || 0,
+      downVoteCount: m.downVoteCount || 0,
+      netVoteCount: m.netVoteCount || 0,
+      upVoterIds: m.upVoterIds || [],
+      downVoterIds: m.downVoterIds || [],
+    }));
 
     const hasMore = allMessages.length > limit;
 
@@ -159,6 +167,14 @@ export const subscribeToMessages = query({
 
     return messages
       .filter((m) => !m.isDeleted)
+      .map(m => ({
+        ...m,
+        upVoteCount: m.upVoteCount || 0,
+        downVoteCount: m.downVoteCount || 0,
+        netVoteCount: m.netVoteCount || 0,
+        upVoterIds: m.upVoterIds || [],
+        downVoterIds: m.downVoterIds || [],
+      }))
       .sort((a, b) => a.createdAt - b.createdAt);
   },
 });
@@ -255,6 +271,11 @@ export const sendMessage = mutation({
       deletedBy: undefined,
       reactionEmojis: [],
       reactionCount: 0,
+      upVoterIds: [],
+      downVoterIds: [],
+      upVoteCount: 0,
+      downVoteCount: 0,
+      netVoteCount: 0,
       idempotencyKey: args.idempotencyKey,
       createdAt: now,
     });
@@ -493,5 +514,82 @@ export const setTypingIndicator = mutation({
     }
 
     return { success: true };
+  },
+});
+
+export const castMessageVote = mutation({
+  args: {
+    messageId: v.id("messages"),
+    voteType: v.union(v.literal("up"), v.literal("down")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message || message.isDeleted) {
+      throw new ConvexError("Message not found");
+    }
+
+    const hasAccess = await canAccessChannel(ctx, userId, message.channelId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
+    }
+
+    const isCurrentlyUpvoted = message.upVoterIds?.includes(userId) || false;
+    const isCurrentlyDownvoted = message.downVoterIds?.includes(userId) || false;
+
+    let newUpVoterIds = message.upVoterIds || [];
+    let newDownVoterIds = message.downVoterIds || [];
+    let upDelta = 0;
+    let downDelta = 0;
+
+    if (args.voteType === "up") {
+      if (isCurrentlyUpvoted) {
+        // Toggle off
+        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+        upDelta = -1;
+      } else {
+        // Vote up
+        newUpVoterIds = [...newUpVoterIds, userId];
+        upDelta = 1;
+        if (isCurrentlyDownvoted) {
+          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+          downDelta = -1;
+        }
+      }
+    } else {
+      if (isCurrentlyDownvoted) {
+        // Toggle off
+        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+        downDelta = -1;
+      } else {
+        // Vote down
+        newDownVoterIds = [...newDownVoterIds, userId];
+        downDelta = 1;
+        if (isCurrentlyUpvoted) {
+          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+          upDelta = -1;
+        }
+      }
+    }
+
+    const newUpVoteCount = (message.upVoteCount || 0) + upDelta;
+    const newDownVoteCount = (message.downVoteCount || 0) + downDelta;
+    const newNetVoteCount = newUpVoteCount - newDownVoteCount;
+
+    await ctx.db.patch(args.messageId, {
+      upVoterIds: newUpVoterIds,
+      downVoterIds: newDownVoterIds,
+      upVoteCount: newUpVoteCount,
+      downVoteCount: newDownVoteCount,
+      netVoteCount: newNetVoteCount,
+    });
+
+    // Sync points to author
+    const pointDelta = upDelta - downDelta;
+    await updateUserSocialPoints(ctx, message.authorId, pointDelta);
+
+    return { success: true, netVoteCount: newNetVoteCount };
   },
 });

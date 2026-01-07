@@ -139,7 +139,7 @@ export const Explore: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1400px]">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Explore</h1>

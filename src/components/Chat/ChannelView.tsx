@@ -1,11 +1,12 @@
-import { useRef, useEffect, useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useRef, useEffect } from 'react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useChannelMessages } from '../../hooks/useChannelMessages'
 import { useTypingIndicators } from '../../hooks/useTypingIndicators'
 import { MessageThread } from './MessageThread'
 import { MessageInput } from './MessageInput'
 import { TypingIndicator } from './TypingIndicator'
+import { useAuth } from '../../hooks/useAuth'
 import type { Id } from '../../types/chat'
 
 interface ChannelViewProps {
@@ -13,11 +14,17 @@ interface ChannelViewProps {
 }
 
 export function ChannelView({ channelId }: ChannelViewProps) {
+  const { user } = useAuth()
   const { messages, isLoading, loadMore, hasMore } = useChannelMessages(channelId)
   const { typingUsers, isLoading: isTypingLoading } = useTypingIndicators(channelId)
   
   // Fetch real channel data from Convex
   const channelDetail = useQuery(api.chat.getChannelDetail, { channelId: channelId as any })
+  const settings = useQuery(api.userSettings.getChannelSettings, user ? { channelId, userId: user._id as any } : 'skip')
+  
+  const toggleMute = useMutation(api.userSettings.toggleMute)
+  const toggleDeafen = useMutation(api.userSettings.toggleDeafen)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -25,6 +32,18 @@ export function ChannelView({ channelId }: ChannelViewProps) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
+
+  const handleToggleMute = async () => {
+    if (user) {
+      await toggleMute({ channelId, userId: user._id as any })
+    }
+  }
+
+  const handleToggleDeafen = async () => {
+    if (user) {
+      await toggleDeafen({ channelId, userId: user._id as any })
+    }
+  }
 
   return (
     <div className="flex flex-col h-full w-full bg-[#111]">
@@ -36,7 +55,22 @@ export function ChannelView({ channelId }: ChannelViewProps) {
         <p className="text-[#808080] text-[13px] truncate">{channelDetail?.description}</p>
         
         <div className="flex items-center gap-4 ml-auto text-[#808080]">
-           <iconify-icon icon="solar:notification-lines-bold" className="hover:text-white cursor-pointer"></iconify-icon>
+           <button 
+             onClick={handleToggleMute}
+             className={`${settings?.muted ? 'text-[#c41e3a]' : 'hover:text-white'} transition-colors`}
+             title={settings?.muted ? 'Unmute' : 'Mute'}
+           >
+             <iconify-icon icon={settings?.muted ? "solar:volume-cross-bold" : "solar:notification-lines-bold"}></iconify-icon>
+           </button>
+
+           <button 
+             onClick={handleToggleDeafen}
+             className={`${settings?.deafened ? 'text-[#c41e3a]' : 'hover:text-white'} transition-colors`}
+             title={settings?.deafened ? 'Undeafen' : 'Deafen'}
+           >
+             <iconify-icon icon={settings?.deafened ? "solar:headphones-round-cross-bold" : "solar:headphones-round-bold"}></iconify-icon>
+           </button>
+
            <iconify-icon icon="solar:pin-bold" className="hover:text-white cursor-pointer"></iconify-icon>
            <iconify-icon icon="solar:users-group-rounded-bold" className="hover:text-white cursor-pointer"></iconify-icon>
            
@@ -53,8 +87,8 @@ export function ChannelView({ channelId }: ChannelViewProps) {
         </div>
       </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col custom-scrollbar">
+      {/* Messages - single scrollable container */}
+      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col hide-scrollbar">
         {isLoading && messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-2 text-[#808080]">
@@ -64,21 +98,13 @@ export function ChannelView({ channelId }: ChannelViewProps) {
           </div>
         ) : (
           <div className="flex flex-col justify-end min-h-full">
-            <div className="p-4 pb-2">
-              <div className="w-16 h-16 rounded-full bg-[#1a1a1a] flex items-center justify-center mb-4">
-                 <span className="text-white text-3xl font-light">#</span>
-              </div>
-              <h1 className="text-white text-3xl font-extrabold mb-1">Welcome to #{channelDetail?.name}!</h1>
-              <p className="text-[#808080]">This is the start of the #{channelDetail?.name} channel.</p>
-              <div className="h-[1px] bg-[#1a1a1a] w-full my-6"></div>
-            </div>
-            
             <MessageThread
               messages={messages}
               optimisticMessages={[]}
               isLoading={isLoading}
               onLoadMore={loadMore}
               hasMore={hasMore}
+              channelName={channelDetail?.name}
             />
           </div>
         )}
@@ -92,23 +118,12 @@ export function ChannelView({ channelId }: ChannelViewProps) {
             <TypingIndicator typingUsers={typingUsers} />
           </div>
         )}
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg px-4 py-2.5 flex items-center gap-4">
-          <button className="text-[#808080] hover:text-white transition-colors"><iconify-icon icon="solar:add-circle-bold" style={{ fontSize: '24px' }}></iconify-icon></button>
-          <div className="flex-1">
-            <MessageInput channelId={channelId} />
-          </div>
-          <div className="flex items-center gap-3 text-[#808080]">
-             <button className="hover:text-white transition-colors"><iconify-icon icon="solar:sticker-smiley-bold" style={{ fontSize: '22px' }}></iconify-icon></button>
-             <button className="text-[#c41e3a] hover:text-[#ff3355] transition-colors"><iconify-icon icon="solar:plain-bold" style={{ fontSize: '20px' }}></iconify-icon></button>
-          </div>
-        </div>
+        <MessageInput channelId={channelId} />
       </footer>
 
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; border: 2px solid #111; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* Overriding some default input styles to match theme */
         .message-input-custom textarea {
@@ -122,4 +137,3 @@ export function ChannelView({ channelId }: ChannelViewProps) {
     </div>
   )
 }
-

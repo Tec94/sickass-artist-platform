@@ -41,6 +41,9 @@ export default defineSchema({
     xp: v.number(),
     level: v.number(),
 
+    // Social Points (Karma)
+    votedPoints: v.optional(v.number()),
+
     // Badges earned
     badges: v.array(v.string()),
 
@@ -113,6 +116,14 @@ export default defineSchema({
     deletedBy: v.optional(v.id('users')),
     reactionEmojis: v.array(v.string()),
     reactionCount: v.number(),
+
+    // Voting
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
+    upVoteCount: v.optional(v.number()),
+    downVoteCount: v.optional(v.number()),
+    netVoteCount: v.optional(v.number()),
+
     idempotencyKey: v.string(),
     createdAt: v.number(),
   })
@@ -145,11 +156,11 @@ export default defineSchema({
     ),
     categoryId: v.id('categories'),
     tags: v.array(v.string()),
-    upVoterIds: v.array(v.id('users')),
-    downVoterIds: v.array(v.id('users')),
-    upVoteCount: v.number(),
-    downVoteCount: v.number(),
-    netVoteCount: v.number(),
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
+    upVoteCount: v.optional(v.number()),
+    downVoteCount: v.optional(v.number()),
+    netVoteCount: v.optional(v.number()),
     replyCount: v.number(),
     viewCount: v.number(),
     lastReplyAt: v.optional(v.number()),
@@ -178,10 +189,10 @@ export default defineSchema({
     ),
     content: v.string(),
     editedAt: v.optional(v.number()),
-    upVoterIds: v.array(v.id('users')),
-    downVoterIds: v.array(v.id('users')),
-    upVoteCount: v.number(),
-    downVoteCount: v.number(),
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
+    upVoteCount: v.optional(v.number()),
+    downVoteCount: v.optional(v.number()),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -396,7 +407,7 @@ export default defineSchema({
     thumbnailUrl: v.optional(v.string()), // Thumbnail for lists (optional)
     startAtUtc: v.number(),             // Event start time (UTC milliseconds, must be > now)
     endAtUtc: v.number(),               // Event end time (UTC milliseconds, must be > startAtUtc)
-    
+
     // Venue reference + snapshot (immutable after creation)
     venueId: v.id('venues'),            // Reference to venues table
     venueName: v.string(),              // Snapshot of venue.name (for searches if venue deleted)
@@ -404,11 +415,11 @@ export default defineSchema({
     country: v.string(),                // Snapshot of venue.country
     address: v.string(),                // Snapshot of venue.address (for map link)
     timezone: v.string(),               // Snapshot of venue.timezone (immutable, handles DST)
-    
+
     // Capacity & sales tracking
     capacity: v.number(),               // Total tickets available (1-100,000)
     ticketsSold: v.number(),            // Current tickets sold (starts at 0, incremented atomically)
-    
+
     // Sale status management
     saleStatus: v.union(
       v.literal('upcoming'),            // Sales not started yet
@@ -416,15 +427,15 @@ export default defineSchema({
       v.literal('sold_out'),            // All tickets sold
       v.literal('cancelled')            // Event cancelled
     ),
-    
+
     // Creator & search
     artistId: v.id('users'),            // Event creator (artist/admin/mod)
     searchText: v.string(),             // Computed: title + " " + venueName + " " + city (for search index)
     dedupeKey: v.string(),              // Unique: artistId:venueId:startAtUtc:slug(title) (prevents duplicates)
-    
+
     // Queue management
     nextQueueSeq: v.number(),           // Atomic counter for queue sequence (starts at 0, incremented in joinQueue)
-    
+
     // Metadata
     createdAt: v.number(),              // Creation timestamp (UTC milliseconds)
     updatedAt: v.number(),              // Last update timestamp (UTC milliseconds)
@@ -479,7 +490,7 @@ export default defineSchema({
     ),
     createdAt: v.number(),              // Creation timestamp (UTC milliseconds)
   })
-    .index('by_user', ['userId'])                       // My tickets page
+    .index('by_user', ['userId'])
     .index('by_event_user', ['eventId', 'userId'])      // Check if user has tickets for event
     .index('by_user_status', ['userId', 'status']),     // Filter my tickets by status
 
@@ -741,4 +752,15 @@ export default defineSchema({
     resolvedAt: v.optional(v.number()), // When issues were resolved
     resolvedBy: v.optional(v.id('users')), // Admin who resolved issues
   }),
+
+  // User settings for specific channels (mute, deafen)
+  userChannelSettings: defineTable({
+    userId: v.id('users'),
+    channelId: v.id('channels'),
+    muted: v.boolean(),
+    deafened: v.boolean(),
+    updatedAt: v.number(),
+  })
+    .index('by_user_channel', ['userId', 'channelId'])
+    .index('by_user', ['userId']),
 })

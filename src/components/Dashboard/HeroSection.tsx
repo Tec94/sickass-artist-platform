@@ -145,6 +145,9 @@ export const HeroSection = () => {
           overflow: hidden;
           border: 1px solid rgba(255, 0, 0, 0.08);
           box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
+          max-width: 1400px;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         /* Grain Overlay */
@@ -283,7 +286,7 @@ export const HeroSection = () => {
           margin: 0 0 20px 0;
           text-transform: uppercase;
           letter-spacing: -4px;
-          line-height: 0.85;
+          line-height: 1.1;
           background: linear-gradient(180deg, #FFFFFF 30%, #444444 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;

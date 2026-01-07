@@ -34,10 +34,11 @@ export function FullProfile({ user }: FullProfileProps) {
       </div>
 
       {/* Stats */}
-      <div className="profile-stats-grid grid grid-cols-3 gap-4">
+      <div className="profile-stats-grid grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Level', value: user.level, icon: 'solar:ranking-linear' },
           { label: 'XP', value: user.xp, icon: 'solar:bolt-linear' },
+          { label: 'Karma', value: user.votedPoints || 0, icon: 'solar:star-linear' },
           { label: 'Badges', value: user.badges.length, icon: 'solar:medal-ribbon-linear' },
         ].map((stat, i) => (
           <div 

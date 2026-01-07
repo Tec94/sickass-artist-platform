@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { GearStick } from '../components/GearNavigation/GearStick'
+
 import { WindshieldFrame } from '../components/GearNavigation/WindshieldFrame'
 import { NoodleConnector } from '../components/Effects/NoodleConnector'
 import { useGear, GearName } from '../contexts/GearContext'
@@ -75,9 +75,7 @@ export const GearPage = () => {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="gear-nav-overlay">
-        <GearStick />
-      </div>
+
 
       <div className="main-viewport">
         <WindshieldFrame>
@@ -97,16 +95,7 @@ export const GearPage = () => {
           position: relative;
         }
 
-        .gear-nav-overlay {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: 100;
-        }
 
-        .gear-nav-overlay > * {
-          pointer-events: auto;
-        }
 
         .main-viewport {
           flex: 1;

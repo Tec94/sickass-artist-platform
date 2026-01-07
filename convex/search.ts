@@ -27,13 +27,13 @@ export const searchThreads = query({
     }
 
     const searchTerm = args.query.toLowerCase().trim();
-    
+
     // Get all threads in the category
     const allThreads = await ctx.db
       .query("threads")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
       .collect();
-    
+
     const threads = allThreads.filter((t) => !t.isDeleted);
 
     // Search in title and tags
@@ -47,11 +47,11 @@ export const searchThreads = query({
     results.sort((a, b) => {
       const aTitleMatch = a.title.toLowerCase().includes(searchTerm);
       const bTitleMatch = b.title.toLowerCase().includes(searchTerm);
-      
+
       if (aTitleMatch && !bTitleMatch) return -1;
       if (!aTitleMatch && bTitleMatch) return 1;
-      
-      return b.netVoteCount - a.netVoteCount;
+
+      return (b.netVoteCount || 0) - (a.netVoteCount || 0);
     });
 
     return results.slice(0, limit);
@@ -81,13 +81,13 @@ export const searchMessages = query({
     }
 
     const searchTerm = args.query.toLowerCase().trim();
-    
+
     // Get all messages in the channel
     const allMessages = await ctx.db
       .query("messages")
       .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
       .collect();
-    
+
     const messages = allMessages.filter((m) => !m.isDeleted);
 
     // Search in content
@@ -350,7 +350,7 @@ async function searchThreadsGlobal(
         if (aTitleMatch && !bTitleMatch) return -1;
         if (!aTitleMatch && bTitleMatch) return 1;
         // Then by votes
-        return b.netVoteCount - a.netVoteCount;
+        return (b.netVoteCount || 0) - (a.netVoteCount || 0);
       })
       .slice(0, limit);
 
@@ -362,8 +362,8 @@ async function searchThreadsGlobal(
         (t.content.length > 100 ? "..." : ""),
       authorDisplayName: t.authorDisplayName,
       authorAvatar: t.authorAvatar,
-      netVoteCount: t.netVoteCount,
-      replyCount: t.replyCount,
+      netVoteCount: t.netVoteCount || 0,
+      replyCount: t.replyCount || 0,
       createdAt: t.createdAt,
     }));
   } catch {

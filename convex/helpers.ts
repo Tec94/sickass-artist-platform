@@ -133,3 +133,16 @@ export const generateIdempotencyKey = (
 ): string => {
   return `${userId}|${channelId}|${nonce}`
 }
+
+export const updateUserSocialPoints = async (
+  ctx: { db: any },
+  userId: Id<'users'>,
+  delta: number
+) => {
+  const user = await ctx.db.get(userId)
+  if (!user) return
+
+  await ctx.db.patch(userId, {
+    votedPoints: (user.votedPoints || 0) + delta,
+  })
+}

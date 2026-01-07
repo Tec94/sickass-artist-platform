@@ -35,10 +35,10 @@ export interface Thread {
   categoryId: Id<'categories'>
   tags: string[]
 
-  upVoteCount: number
-  downVoteCount: number
-  netVoteCount: number
-  userVote: UserVote
+  upVoteCount?: number
+  downVoteCount?: number
+  netVoteCount?: number
+  userVote?: UserVote
 
   replyCount: number
   viewCount: number
@@ -63,9 +63,9 @@ export interface Reply {
   authorRole?: UserRole | null
   content: string
 
-  upVoteCount: number
-  downVoteCount: number
-  userVote: UserVote
+  upVoteCount?: number
+  downVoteCount?: number
+  userVote?: UserVote
 
   createdAt: number
   editedAt: number | null

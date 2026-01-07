@@ -55,6 +55,8 @@ export function Profile() {
       <style>{`
         .profile-page-container {
           width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
           height: 100%;
           display: flex;
           flex-direction: column;

@@ -1,4 +1,7 @@
 import { useMemo } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import { useAuth } from '../../hooks/useAuth'
 import type { Channel, Id } from '../../types/chat'
 
 interface ChannelListProps {
@@ -9,9 +12,20 @@ interface ChannelListProps {
 }
 
 export function ChannelList({ channels, selectedChannelId, onSelectChannel, isLoading }: ChannelListProps) {
+  const { user } = useAuth()
+  const allSettings = useQuery(api.userSettings.getAllChannelSettings, user ? { userId: user._id as any } : 'skip')
+
   const sortedChannels = useMemo(() => {
     return [...channels].sort((a, b) => b.createdAt - a.createdAt)
   }, [channels])
+
+  const muteMap = useMemo(() => {
+    const map = new Map<string, boolean>()
+    allSettings?.forEach(s => {
+      if (s.muted) map.set(s.channelId, true)
+    })
+    return map
+  }, [allSettings])
 
   if (isLoading) {
     return (
@@ -35,30 +49,39 @@ export function ChannelList({ channels, selectedChannelId, onSelectChannel, isLo
       </div>
 
       <nav className="flex flex-col gap-0.5 mt-1">
-        {sortedChannels.map((channel) => (
-          <button
-            key={channel._id}
-            onClick={() => onSelectChannel(channel._id)}
-            className={`group relative flex items-center px-2 py-1.5 rounded-md transition-all duration-100 ${
-              selectedChannelId === channel._id
-                ? 'bg-[#2a1515] text-white border-l-2 border-[#c41e3a]'
-                : 'text-[#808080] hover:bg-[#1a1a1a] hover:text-[#e0e0e0]'
-            }`}
-          >
-            <span className="text-lg mr-1.5 opacity-60 font-light">#</span>
-            <span className="flex-1 text-left truncate font-medium text-[14px]">
-              {channel.name}
-            </span>
-            
-            {channel.messageCount > 0 && selectedChannelId !== channel._id && (
-              <span className="w-1.5 h-1.5 bg-[#c41e3a] rounded-full absolute left-[-4px] top-1/2 translate-y-[-50%]"></span>
-            )}
+        {sortedChannels.map((channel) => {
+          const isMuted = muteMap.get(channel._id)
+          
+          return (
+            <button
+              key={channel._id}
+              onClick={() => onSelectChannel(channel._id)}
+              className={`group relative flex items-center px-2 py-1.5 rounded-md transition-all duration-100 ${
+                selectedChannelId === channel._id
+                  ? 'bg-[#2a1515] text-white border-l-2 border-[#c41e3a]'
+                  : 'text-[#808080] hover:bg-[#1a1a1a] hover:text-[#e0e0e0]'
+              }`}
+            >
+              <span className="text-lg mr-1.5 opacity-60 font-light">#</span>
+              <span className={`flex-1 text-left truncate font-medium text-[14px] ${isMuted ? 'opacity-40' : ''}`}>
+                {channel.name}
+              </span>
+              
+              {channel.messageCount > 0 && selectedChannelId !== channel._id && !isMuted && (
+                <span className="w-1.5 h-1.5 bg-[#c41e3a] rounded-full absolute left-[-4px] top-1/2 translate-y-[-50%]"></span>
+              )}
 
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-               <iconify-icon icon="solar:volume-loud-bold" style={{ fontSize: '14px' }} className="hover:text-white text-[#808080]"></iconify-icon>
-            </div>
-          </button>
-        ))}
+              <div className="flex items-center gap-1 opacity-100 transition-opacity ml-1">
+                 {isMuted && (
+                   <iconify-icon icon="solar:volume-cross-bold" style={{ fontSize: '14px' }} className="text-[#c41e3a] opacity-60"></iconify-icon>
+                 )}
+                 <div className="opacity-0 group-hover:opacity-100">
+                   <iconify-icon icon="solar:volume-loud-bold" style={{ fontSize: '14px' }} className="hover:text-white text-[#808080]"></iconify-icon>
+                 </div>
+              </div>
+            </button>
+          )
+        })}
       </nav>
     </div>
   )

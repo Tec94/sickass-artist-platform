@@ -79,7 +79,7 @@ export function Merch() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Premium Header with Glass Effect */}
       <header className="sticky top-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-[1400px] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
@@ -133,7 +133,7 @@ export function Merch() {
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#5a0000] rounded-full blur-[100px]" />
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
+        <div className="relative max-w-[1400px] mx-auto px-4 py-16 md:py-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-full text-[#c41e3a] text-sm">
@@ -197,7 +197,7 @@ export function Merch() {
 
       {/* Trending Products Carousel */}
       <section className="py-16 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <Flame className="w-6 h-6 text-cyan-400" />
@@ -247,7 +247,7 @@ export function Merch() {
 
       {/* Category Cards */}
       <section className="py-16 bg-[#0f0f0f]">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center gap-3 mb-8">
             <Star className="w-6 h-6 text-[#c41e3a]" />
             <h2 className="text-2xl font-bold">Shop by Category</h2>
@@ -275,7 +275,7 @@ export function Merch() {
 
       {/* Promotional Banner */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#051a1a] via-[#0a2d2d] to-[#051a1a] border border-[#183d3d] p-8 md:p-12">
             <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]" />
             
@@ -302,7 +302,7 @@ export function Merch() {
 
       {/* Main Products Section */}
       <section id="products-section" className="py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold">All Products</h2>
             {filters.category && (

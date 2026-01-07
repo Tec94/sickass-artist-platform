@@ -66,9 +66,9 @@ export function useThreadVote({
   const castVote = useMutation(api.forum.castThreadVote)
 
   const [votes, setVotes] = useState<VoteState>({
-    upVoteCount: initialUpCount,
-    downVoteCount: initialDownCount,
-    netVoteCount: initialNetCount,
+    upVoteCount: initialUpCount ?? 0,
+    downVoteCount: initialDownCount ?? 0,
+    netVoteCount: initialNetCount ?? 0,
     userVote: initialUserVote,
   })
 
@@ -79,9 +79,9 @@ export function useThreadVote({
     if (isLoading) return
 
     setVotes({
-      upVoteCount: initialUpCount,
-      downVoteCount: initialDownCount,
-      netVoteCount: initialNetCount,
+      upVoteCount: initialUpCount ?? 0,
+      downVoteCount: initialDownCount ?? 0,
+      netVoteCount: initialNetCount ?? 0,
       userVote: initialUserVote,
     })
   }, [isLoading, initialDownCount, initialNetCount, initialUpCount, initialUserVote, threadId])

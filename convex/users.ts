@@ -36,6 +36,25 @@ export const getMe = query({
   },
 });
 
+// Get current user from auth context
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const clerkId = identity.subject;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .first();
+
+    return user;
+  },
+});
+
 export const getById = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -67,13 +86,15 @@ export const getByClerkId = query({
 });
 
 export const getByRole = query({
-  args: { role: v.union(
-    v.literal("artist"),
-    v.literal("admin"),
-    v.literal("mod"),
-    v.literal("crew"),
-    v.literal("fan")
-  ) },
+  args: {
+    role: v.union(
+      v.literal("artist"),
+      v.literal("admin"),
+      v.literal("mod"),
+      v.literal("crew"),
+      v.literal("fan")
+    )
+  },
   handler: async (ctx, args) => {
     const users = await ctx.db
       .query("users")
@@ -84,12 +105,14 @@ export const getByRole = query({
 });
 
 export const getByFanTier = query({
-  args: { tier: v.union(
-    v.literal("bronze"),
-    v.literal("silver"),
-    v.literal("gold"),
-    v.literal("platinum")
-  ) },
+  args: {
+    tier: v.union(
+      v.literal("bronze"),
+      v.literal("silver"),
+      v.literal("gold"),
+      v.literal("platinum")
+    )
+  },
   handler: async (ctx, args) => {
     const users = await ctx.db
       .query("users")
@@ -116,7 +139,7 @@ export const create = mutation({
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
       .first();
-    
+
     if (existingUser) {
       throw new ConvexError("Username already taken");
     }
@@ -125,7 +148,7 @@ export const create = mutation({
       .query("users")
       .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
       .first();
-    
+
     if (existingUserByClerkId) {
       throw new ConvexError("User already exists with this Clerk ID");
     }
@@ -145,6 +168,7 @@ export const create = mutation({
       xp: 0,
       level: 1,
       badges: [],
+      votedPoints: 0,
       createdAt: now,
       updatedAt: now,
       lastSignIn: now,
@@ -178,7 +202,7 @@ export const update = mutation({
     }
 
     const { username, bio } = args.updates;
-    
+
     if (username) {
       if (!isValidUsername(username)) {
         throw new ConvexError("Invalid username: must be 3-20 alphanumeric characters");
@@ -188,7 +212,7 @@ export const update = mutation({
         .query("users")
         .withIndex("by_username", (q) => q.eq("username", username))
         .first();
-      
+
       if (existingUser && existingUser._id !== args.userId) {
         throw new ConvexError("Username already taken");
       }
@@ -227,7 +251,7 @@ export const updateRole = mutation({
       role: args.newRole,
       updatedAt: Date.now(),
     });
-    
+
     return updated;
   },
 });
@@ -252,7 +276,7 @@ export const updateFanTier = mutation({
       fanTier: args.newTier,
       updatedAt: Date.now(),
     });
-    
+
     return updated;
   },
 });

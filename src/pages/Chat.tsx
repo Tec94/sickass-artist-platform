@@ -30,19 +30,7 @@ export function Chat() {
 
   return (
     <div className="flex h-full w-full bg-[#0a0a0a] text-[#e0e0e0] font-sans selection:bg-[#3d1818]/50">
-      {/* App Sidebar (Discord-style server bar) */}
-      <nav className="w-[72px] flex flex-col items-center py-3 gap-2 bg-[#0a0a0a] overflow-y-auto no-scrollbar border-r border-[#1a1a1a]">
-        <div className="w-[48px] h-[48px] bg-[#1a1a1a] rounded-[24px] hover:rounded-[16px] transition-all duration-200 flex items-center justify-center cursor-pointer group hover:bg-[#8b0000]">
-          <iconify-icon icon="solar:home-2-bold" style={{ fontSize: '28px' }} className="text-[#808080] group-hover:text-white"></iconify-icon>
-        </div>
-        <div className="w-8 h-[2px] bg-[#1a1a1a] rounded-full my-1"></div>
-        <div className="w-[48px] h-[48px] bg-[#8b0000] rounded-[16px] flex items-center justify-center cursor-pointer shadow-lg shadow-[#3d1818]/30">
-          <iconify-icon icon="solar:chat-round-dots-bold" style={{ fontSize: '28px', color: 'white' }}></iconify-icon>
-        </div>
-        <div className="w-[48px] h-[48px] bg-[#1a1a1a] rounded-[24px] hover:rounded-[16px] transition-all duration-200 flex items-center justify-center cursor-pointer group hover:bg-[#8b0000]">
-          <iconify-icon icon="solar:compass-bold" style={{ fontSize: '28px' }} className="text-[#808080] group-hover:text-white"></iconify-icon>
-        </div>
-      </nav>
+
 
       {/* Channel Sidebar */}
       <aside className="w-60 flex flex-col bg-[#0f0f0f] overflow-hidden border-r border-[#1a1a1a]">

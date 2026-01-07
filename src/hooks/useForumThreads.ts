@@ -49,10 +49,11 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
         limit: currentLimit,
       }
       : 'skip'
-  ) as unknown as { threads: unknown[]; nextCursor: unknown | null } | undefined
+  )
 
   const threads = useMemo(() => {
-    const rawThreads = (data?.threads ?? []) as Array<{
+    // getThreads returns an array directly, not { threads, nextCursor }
+    const rawThreads = (data ?? []) as Array<{
       _id: Id<'threads'>
       title: string
       content: string
@@ -89,21 +90,22 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
         authorRole: null,
         categoryId: t.categoryId,
         tags: t.tags,
-        upVoteCount: t.upVoteCount,
-        downVoteCount: t.downVoteCount,
-        netVoteCount: t.netVoteCount,
-        userVote: getUserVote(currentUserId, t.upVoterIds, t.downVoterIds),
-        replyCount: t.replyCount,
-        viewCount: t.viewCount,
+        upVoteCount: t.upVoteCount ?? 0,
+        downVoteCount: t.downVoteCount ?? 0,
+        netVoteCount: t.netVoteCount ?? 0,
+        userVote: getUserVote(currentUserId, t.upVoterIds ?? [], t.downVoterIds ?? []),
+        replyCount: t.replyCount ?? 0,
+        viewCount: t.viewCount ?? 0,
         lastReplyAt: t.lastReplyAt ?? null,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
         isDeleted: t.isDeleted,
         deletedAt: t.deletedAt ?? null,
       }))
-  }, [currentUserId, data?.threads])
+  }, [currentUserId, data])
 
-  const hasMore = data !== undefined && data.nextCursor !== null && currentLimit < 50
+  // Since getThreads returns a simple array, we check if we got the full limit
+  const hasMore = data !== undefined && (data as unknown[]).length >= currentLimit && currentLimit < 50
 
   const fetchMore = useCallback(() => {
     if (!hasMore) return

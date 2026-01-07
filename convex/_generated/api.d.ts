@@ -29,6 +29,7 @@ import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
 import type * as trending from "../trending.js";
 import type * as ugc from "../ugc.js";
+import type * as userSettings from "../userSettings.js";
 import type * as users from "../users.js";
 import type * as venues from "../venues.js";
 
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   search: typeof search;
   trending: typeof trending;
   ugc: typeof ugc;
+  userSettings: typeof userSettings;
   users: typeof users;
   venues: typeof venues;
 }>;

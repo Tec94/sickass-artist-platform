@@ -36,8 +36,8 @@ export function useReplyVote({
   initialUserVote = null,
 }: UseReplyVoteProps): OptimisticVoteResult {
   const [votes, setVotes] = useState<VoteState>({
-    upVoteCount: initialVotes.upVoteCount,
-    downVoteCount: initialVotes.downVoteCount,
+    upVoteCount: initialVotes.upVoteCount ?? 0,
+    downVoteCount: initialVotes.downVoteCount ?? 0,
     userVote: initialUserVote,
   })
 

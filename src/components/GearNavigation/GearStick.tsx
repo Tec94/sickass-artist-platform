@@ -74,10 +74,11 @@ export const GearStick = () => {
       <div className="gear-base">
         <div className="track-rail"></div>
         <div className="gear-stick-track" ref={trackRef}>
-          {GEAR_ORDER.map((gear) => (
+          {GEAR_ORDER.map((gear, index) => (
             <div
               key={gear}
               className={`gear-marker ${currentGear === gear ? 'marker-active' : ''}`}
+              style={{ top: `${(index / (GEAR_ORDER.length - 1)) * 100}%` }}
             >
               <span className="marker-label">{GEAR_LABELS[gear] || gear}</span>
             </div>
@@ -99,9 +100,9 @@ export const GearStick = () => {
       <style>{`
         .gear-stick-container {
           position: fixed;
-          right: 20px; /* Moved further right to avoid overlapping windshield content */
+          right: 20px;
           bottom: 50px;
-          height: 400px; /* Extended height */
+          height: 400px;
           width: 80px;
           z-index: 90;
           display: flex;
@@ -129,19 +130,18 @@ export const GearStick = () => {
         .gear-stick-track {
           position: relative;
           height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          padding: 40px 0; /* Increased padding */
+          width: 100%;
+          padding: 40px 0;
+          box-sizing: border-box;
         }
 
         .gear-marker {
+          position: absolute;
           width: 40px;
           height: 2px;
           background: #333;
-          position: relative;
           left: 50%;
-          transform: translateX(-50%);
+          transform: translate(-50%, -50%);
           display: flex;
           align-items: center;
           transition: var(--transition-standard);

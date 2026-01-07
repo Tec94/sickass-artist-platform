@@ -39,7 +39,7 @@ const VITAL_THRESHOLDS = {
 function logVital(name: string, value: number, threshold: typeof VITAL_THRESHOLDS[keyof typeof VITAL_THRESHOLDS]): void {
   const status = value <= threshold.good ? '✅' : value <= threshold.needsImprovement ? '⚠️' : '❌'
   const unit = name === 'CLS' ? '' : 'ms'
-  console.log(`[WEB VITAL] ${status} ${name}: ${value.toFixed(2)}${unit} (target: ≤${threshold.good}${unit})`)
+  // console.log(`[WEB VITAL] ${status} ${name}: ${value.toFixed(2)}${unit} (target: ≤${threshold.good}${unit})`)
 
   // Send to analytics
   if (value > threshold.good) {
@@ -88,7 +88,7 @@ export const usePerformanceMetrics = () => {
         // Track image-related LCP
         if (lastEntry.element) {
           const isImage = lastEntry.element.tagName === 'IMG' ||
-                          lastEntry.element.querySelector('img') !== null
+            lastEntry.element.querySelector('img') !== null
           if (isImage) {
             perfMonitor.trackImageLoad('LCP element', lcp, { type: 'lcp' })
           }
@@ -175,7 +175,7 @@ export const usePerformanceMetrics = () => {
           .join(', ')
 
         if (summary) {
-          console.log(`[WEB VITAL] Summary: ${summary}`)
+          // console.log(`[WEB VITAL] Summary: ${summary}`)
 
           // Set baselines from first page load
           if (vitals.lcp) perfMonitor.setBaseline('lcp', vitals.lcp)

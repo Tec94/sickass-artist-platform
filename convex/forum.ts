@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { getCurrentUser, canAccessCategory, isModerator } from "./helpers";
+import { getCurrentUser, canAccessCategory, isModerator, updateUserSocialPoints } from "./helpers";
 
 // QUERIES
 
@@ -115,9 +115,9 @@ export const getThreads = query({
     if (args.sort === "newest") {
       threads.sort((a, b) => b.createdAt - a.createdAt);
     } else if (args.sort === "top") {
-      threads.sort((a, b) => b.netVoteCount - a.netVoteCount);
+      threads.sort((a, b) => (b.netVoteCount || 0) - (a.netVoteCount || 0));
     } else if (args.sort === "mostReplies") {
-      threads.sort((a, b) => b.replyCount - a.replyCount);
+      threads.sort((a, b) => (b.replyCount || 0) - (a.replyCount || 0));
     }
 
     // Handle cursor for pagination
@@ -128,12 +128,19 @@ export const getThreads = query({
       }
     }
 
-    return threads.slice(0, limit);
+    return threads.slice(0, limit).map(t => ({
+      ...t,
+      upVoteCount: t.upVoteCount || 0,
+      downVoteCount: t.downVoteCount || 0,
+      netVoteCount: t.netVoteCount || 0,
+      upVoterIds: t.upVoterIds || [],
+      downVoterIds: t.downVoterIds || [],
+    }));
   },
 });
 
 export const getThreadDetail = query({
-  args: { 
+  args: {
     threadId: v.id("threads"),
     categoryId: v.id("categories")
   },
@@ -167,7 +174,14 @@ export const getThreadDetail = query({
     // Note: View count increment should be done via a separate mutation
     // Queries cannot mutate data
 
-    return thread;
+    return {
+      ...thread,
+      upVoteCount: thread.upVoteCount || 0,
+      downVoteCount: thread.downVoteCount || 0,
+      netVoteCount: thread.netVoteCount || 0,
+      upVoterIds: thread.upVoterIds || [],
+      downVoterIds: thread.downVoterIds || [],
+    };
   },
 });
 
@@ -204,7 +218,7 @@ export const getReplies = query({
 
     // Filter out deleted replies and apply cursor if provided
     let filteredReplies = allReplies.filter((r) => !r.isDeleted);
-    
+
     if (args.cursor) {
       const cursorIndex = filteredReplies.findIndex(
         (r) => r._id === args.cursor!.replyId
@@ -216,7 +230,56 @@ export const getReplies = query({
 
     // Sort by createdAt descending and take limit
     filteredReplies.sort((a, b) => b.createdAt - a.createdAt);
-    return filteredReplies.slice(0, args.limit);
+    return filteredReplies.slice(0, args.limit).map(r => ({
+      ...r,
+      upVoteCount: r.upVoteCount || 0,
+      downVoteCount: r.downVoteCount || 0,
+      upVoterIds: r.upVoterIds || [],
+      downVoterIds: r.downVoterIds || [],
+    }));
+  },
+});
+
+// Combined query for thread detail page - returns thread and all replies
+export const subscribeToThread = query({
+  args: {
+    threadId: v.id("threads"),
+  },
+  handler: async (ctx, args) => {
+    // Get thread
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread || thread.isDeleted) {
+      return null;
+    }
+
+    // Get all replies for this thread
+    const allReplies = await ctx.db
+      .query("replies")
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .collect();
+
+    const replies = allReplies
+      .filter((r) => !r.isDeleted)
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map(r => ({
+        ...r,
+        upVoteCount: r.upVoteCount || 0,
+        downVoteCount: r.downVoteCount || 0,
+        upVoterIds: r.upVoterIds || [],
+        downVoterIds: r.downVoterIds || [],
+      }));
+
+    return {
+      thread: {
+        ...thread,
+        upVoteCount: thread.upVoteCount || 0,
+        downVoteCount: thread.downVoteCount || 0,
+        netVoteCount: thread.netVoteCount || 0,
+        upVoterIds: thread.upVoterIds || [],
+        downVoterIds: thread.downVoterIds || [],
+      },
+      replies,
+    };
   },
 });
 
@@ -239,7 +302,7 @@ export const createThread = mutation({
       .query("threads")
       .withIndex("by_author", (q) => q.eq("authorId", userId))
       .collect();
-    
+
     const recentThreads = allRecentThreads.filter(
       (t) => t.createdAt > oneHourAgo && t.categoryId === args.categoryId
     );
@@ -381,7 +444,7 @@ export const createReply = mutation({
       .query("replies")
       .withIndex("by_author", (q) => q.eq("authorId", userId))
       .collect();
-    
+
     const recentReplies = allRecentReplies.filter(
       (r) => r.createdAt > thirtyMinutesAgo
     );
@@ -498,10 +561,10 @@ export const castThreadVote = mutation({
       .query("offlineQueue")
       .withIndex("by_user_status", (q) => q.eq("userId", userId))
       .collect();
-    
+
     const recentVotes = allRecentVotes.filter(
-      (v) => v.createdAt > sixtySecondsAgo && 
-             (v.type === "vote_thread" || v.type === "vote_reply")
+      (v) => v.createdAt > sixtySecondsAgo &&
+        (v.type === "vote_thread" || v.type === "vote_reply")
     );
 
     if (recentVotes.length >= 20) {
@@ -521,45 +584,41 @@ export const castThreadVote = mutation({
     }
 
     // Update vote arrays
-    const isCurrentlyUpvoted = thread.upVoterIds.includes(userId);
-    const isCurrentlyDownvoted = thread.downVoterIds.includes(userId);
+    const isCurrentlyUpvoted = thread.upVoterIds?.includes(userId) || false;
+    const isCurrentlyDownvoted = thread.downVoterIds?.includes(userId) || false;
 
-    let newUpVoterIds: typeof thread.upVoterIds;
-    let newDownVoterIds: typeof thread.downVoterIds;
-    let newUpVoteCount: number;
-    let newDownVoteCount: number;
+    let newUpVoterIds: typeof thread.upVoterIds = thread.upVoterIds || [];
+    let newDownVoterIds: typeof thread.downVoterIds = thread.downVoterIds || [];
+    let newUpVoteCount = thread.upVoteCount || 0;
+    let newDownVoteCount = thread.downVoteCount || 0;
 
     if (args.voteType === "up") {
       if (isCurrentlyUpvoted) {
         // Remove upvote
-        newUpVoterIds = thread.upVoterIds.filter((id) => id !== userId);
-        newUpVoteCount = thread.upVoteCount - 1;
-        newDownVoterIds = thread.downVoterIds;
-        newDownVoteCount = thread.downVoteCount;
+        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       } else {
         // Add upvote and remove downvote if present
-        newUpVoterIds = [...thread.upVoterIds, userId];
-        newUpVoteCount = thread.upVoteCount + 1;
-        newDownVoterIds = thread.downVoterIds.filter((id) => id !== userId);
-        newDownVoteCount = isCurrentlyDownvoted
-          ? thread.downVoteCount - 1
-          : thread.downVoteCount;
+        newUpVoterIds = [...newUpVoterIds, userId];
+        newUpVoteCount = newUpVoteCount + 1;
+        if (isCurrentlyDownvoted) {
+          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+          newDownVoteCount = Math.max(0, newDownVoteCount - 1);
+        }
       }
     } else {
       if (isCurrentlyDownvoted) {
         // Remove downvote
-        newDownVoterIds = thread.downVoterIds.filter((id) => id !== userId);
-        newDownVoteCount = thread.downVoteCount - 1;
-        newUpVoterIds = thread.upVoterIds;
-        newUpVoteCount = thread.upVoteCount;
+        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       } else {
         // Add downvote and remove upvote if present
-        newDownVoterIds = [...thread.downVoterIds, userId];
-        newDownVoteCount = thread.downVoteCount + 1;
-        newUpVoterIds = thread.upVoterIds.filter((id) => id !== userId);
-        newUpVoteCount = isCurrentlyUpvoted
-          ? thread.upVoteCount - 1
-          : thread.upVoteCount;
+        newDownVoterIds = [...newDownVoterIds, userId];
+        newDownVoteCount = newDownVoteCount + 1;
+        if (isCurrentlyUpvoted) {
+          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+          newUpVoteCount = Math.max(0, newUpVoteCount - 1);
+        }
       }
     }
 
@@ -574,6 +633,11 @@ export const castThreadVote = mutation({
       netVoteCount: newNetVoteCount,
       updatedAt: Date.now(),
     });
+
+    // Sync points to author
+    const oldNetVoteCount = thread.netVoteCount || 0;
+    const pointDelta = newNetVoteCount - oldNetVoteCount;
+    await updateUserSocialPoints(ctx, thread.authorId, pointDelta);
 
     const updatedThread = await ctx.db.get(args.threadId);
     return updatedThread;
@@ -595,10 +659,10 @@ export const castReplyVote = mutation({
       .query("offlineQueue")
       .withIndex("by_user_status", (q) => q.eq("userId", userId))
       .collect();
-    
+
     const recentVotes = allRecentVotes.filter(
-      (v) => v.createdAt > sixtySecondsAgo && 
-             (v.type === "vote_thread" || v.type === "vote_reply")
+      (v) => v.createdAt > sixtySecondsAgo &&
+        (v.type === "vote_thread" || v.type === "vote_reply")
     );
 
     if (recentVotes.length >= 20) {
@@ -624,45 +688,41 @@ export const castReplyVote = mutation({
     }
 
     // Update vote arrays
-    const isCurrentlyUpvoted = reply.upVoterIds.includes(userId);
-    const isCurrentlyDownvoted = reply.downVoterIds.includes(userId);
+    const isCurrentlyUpvoted = reply.upVoterIds?.includes(userId) || false;
+    const isCurrentlyDownvoted = reply.downVoterIds?.includes(userId) || false;
 
-    let newUpVoterIds: typeof reply.upVoterIds;
-    let newDownVoterIds: typeof reply.downVoterIds;
-    let newUpVoteCount: number;
-    let newDownVoteCount: number;
+    let newUpVoterIds: typeof reply.upVoterIds = reply.upVoterIds || [];
+    let newDownVoterIds: typeof reply.downVoterIds = reply.downVoterIds || [];
+    let newUpVoteCount = reply.upVoteCount || 0;
+    let newDownVoteCount = reply.downVoteCount || 0;
 
     if (args.voteType === "up") {
       if (isCurrentlyUpvoted) {
         // Remove upvote
-        newUpVoterIds = reply.upVoterIds.filter((id) => id !== userId);
-        newUpVoteCount = reply.upVoteCount - 1;
-        newDownVoterIds = reply.downVoterIds;
-        newDownVoteCount = reply.downVoteCount;
+        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+        newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       } else {
         // Add upvote and remove downvote if present
-        newUpVoterIds = [...reply.upVoterIds, userId];
-        newUpVoteCount = reply.upVoteCount + 1;
-        newDownVoterIds = reply.downVoterIds.filter((id) => id !== userId);
-        newDownVoteCount = isCurrentlyDownvoted
-          ? reply.downVoteCount - 1
-          : reply.downVoteCount;
+        newUpVoterIds = [...newUpVoterIds, userId];
+        newUpVoteCount = newUpVoteCount + 1;
+        if (isCurrentlyDownvoted) {
+          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+          newDownVoteCount = Math.max(0, newDownVoteCount - 1);
+        }
       }
     } else {
       if (isCurrentlyDownvoted) {
         // Remove downvote
-        newDownVoterIds = reply.downVoterIds.filter((id) => id !== userId);
-        newDownVoteCount = reply.downVoteCount - 1;
-        newUpVoterIds = reply.upVoterIds;
-        newUpVoteCount = reply.upVoteCount;
+        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+        newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       } else {
         // Add downvote and remove upvote if present
-        newDownVoterIds = [...reply.downVoterIds, userId];
-        newDownVoteCount = reply.downVoteCount + 1;
-        newUpVoterIds = reply.upVoterIds.filter((id) => id !== userId);
-        newUpVoteCount = isCurrentlyUpvoted
-          ? reply.upVoteCount - 1
-          : reply.upVoteCount;
+        newDownVoterIds = [...newDownVoterIds, userId];
+        newDownVoteCount = newDownVoteCount + 1;
+        if (isCurrentlyUpvoted) {
+          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+          newUpVoteCount = Math.max(0, newUpVoteCount - 1);
+        }
       }
     }
 
@@ -673,6 +733,12 @@ export const castReplyVote = mutation({
       upVoteCount: newUpVoteCount,
       downVoteCount: newDownVoteCount,
     });
+
+    // Sync points to author
+    const oldNetVoteCount = (reply.upVoteCount || 0) - (reply.downVoteCount || 0);
+    const newNetVoteCount = newUpVoteCount - newDownVoteCount;
+    const pointDelta = newNetVoteCount - oldNetVoteCount;
+    await updateUserSocialPoints(ctx, reply.authorId, pointDelta);
 
     const updatedReply = await ctx.db.get(args.replyId);
     return updatedReply;
@@ -769,15 +835,15 @@ export const recordOfflineVote = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
-    
+
     // Determine vote type and validate
     const voteType = args.threadId ? "vote_thread" : "vote_reply";
     const targetId = args.threadId || args.replyId;
-    
+
     if (!targetId) {
       throw new ConvexError("Must provide either threadId or replyId");
     }
-    
+
     // Insert into offline queue
     const queueItemId = await ctx.db.insert("offlineQueue", {
       userId,
@@ -791,7 +857,7 @@ export const recordOfflineVote = mutation({
       retryCount: 0,
       createdAt: Date.now(),
     });
-    
+
     return { queueItemId };
   },
 });
