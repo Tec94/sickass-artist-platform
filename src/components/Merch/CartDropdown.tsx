@@ -1,4 +1,3 @@
-import { ShoppingCart, X } from 'lucide-react'
 import { useState } from 'react'
 import { useCart } from '../../contexts/CartContext'
 import { useNavigate } from 'react-router-dom'
@@ -15,7 +14,7 @@ export function CartDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
       >
-        <ShoppingCart className="w-5 h-5 text-cyan-400" />
+        <iconify-icon icon="solar:cart-large-linear" width="20" height="20" class="text-cyan-400"></iconify-icon>
         {itemCount > 0 && (
           <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
             {itemCount > 9 ? '9+' : itemCount}
@@ -33,7 +32,7 @@ export function CartDropdown() {
               onClick={() => setIsOpen(false)}
               className="text-gray-400 hover:text-white transition-colors"
             >
-              <X className="w-4 h-4" />
+              <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
             </button>
           </div>
 

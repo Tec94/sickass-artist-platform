@@ -1,18 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { 
-  ShoppingBag, 
-  MessageSquare, 
-  Image, 
-  Sparkles,
-  ArrowRight,
-  Heart,
-  Eye,
-  MessageCircle,
-  ThumbsUp,
-  Clock,
-  Calendar,
-  MapPin
-} from 'lucide-react'
 
 // ==================== TOP MERCH WIDGET ====================
 
@@ -33,18 +19,18 @@ export const TopMerchWidget = ({ data }: TopMerchWidgetProps) => {
     <div className="mini-widget">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <ShoppingBag size={18} />
+          <iconify-icon icon="solar:bag-linear" width="18" height="18"></iconify-icon>
           <h3>Top Merch</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/store')}>
-          View All <ArrowRight size={14} />
+          View All <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <ShoppingBag size={24} />
+            <iconify-icon icon="solar:bag-linear" width="24" height="24"></iconify-icon>
             <p>No products yet</p>
           </div>
         ) : (
@@ -60,7 +46,7 @@ export const TopMerchWidget = ({ data }: TopMerchWidgetProps) => {
                     <img src={item.image} alt={item.name} />
                   ) : (
                     <div className="merch-placeholder">
-                      <ShoppingBag size={20} />
+                      <iconify-icon icon="solar:bag-linear" width="20" height="20"></iconify-icon>
                     </div>
                   )}
                 </div>
@@ -99,18 +85,18 @@ export const TrendingForumWidget = ({ data }: TrendingForumWidgetProps) => {
     <div className="mini-widget">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <MessageSquare size={18} />
+          <iconify-icon icon="solar:chat-square-dots-linear" width="18" height="18"></iconify-icon>
           <h3>Hot Discussions</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/forum')}>
-          View All <ArrowRight size={14} />
+          View All <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <MessageSquare size={24} />
+            <iconify-icon icon="solar:chat-square-dots-linear" width="24" height="24"></iconify-icon>
             <p>No discussions yet</p>
           </div>
         ) : (
@@ -126,8 +112,8 @@ export const TrendingForumWidget = ({ data }: TrendingForumWidgetProps) => {
                   <div className="forum-meta">
                     <span className="forum-author">{thread.authorDisplayName}</span>
                     <span className="forum-stats">
-                      <ThumbsUp size={12} /> {thread.netVoteCount}
-                      <MessageCircle size={12} /> {thread.replyCount}
+                      <iconify-icon icon="solar:like-linear" width="12" height="12"></iconify-icon> {thread.netVoteCount}
+                      <iconify-icon icon="solar:chat-round-dots-linear" width="12" height="12"></iconify-icon> {thread.replyCount}
                     </span>
                   </div>
                 </div>
@@ -168,18 +154,18 @@ export const AnnouncementsWidget = ({ data }: AnnouncementsWidgetProps) => {
     <div className="mini-widget">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <MessageCircle size={18} />
+          <iconify-icon icon="solar:chat-round-dots-linear" width="18" height="18"></iconify-icon>
           <h3>Announcements</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/chat')}>
-          View Chat <ArrowRight size={14} />
+          View Chat <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <MessageCircle size={24} />
+            <iconify-icon icon="solar:chat-round-dots-linear" width="24" height="24"></iconify-icon>
             <p>No announcements</p>
           </div>
         ) : (
@@ -196,7 +182,7 @@ export const AnnouncementsWidget = ({ data }: AnnouncementsWidgetProps) => {
                 <div className="announcement-content">
                   <span className="announcement-text">{msg.content.slice(0, 80)}...</span>
                   <span className="announcement-time">
-                    <Clock size={10} /> {formatTime(msg.createdAt)}
+                    <iconify-icon icon="solar:clock-circle-linear" width="10" height="10"></iconify-icon> {formatTime(msg.createdAt)}
                   </span>
                 </div>
               </div>
@@ -229,18 +215,18 @@ export const TrendingGalleryWidget = ({ data }: TrendingGalleryWidgetProps) => {
     <div className="mini-widget">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <Image size={18} />
+          <iconify-icon icon="solar:gallery-linear" width="18" height="18"></iconify-icon>
           <h3>Trending Gallery</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/gallery')}>
-          View All <ArrowRight size={14} />
+          View All <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <Image size={24} />
+            <iconify-icon icon="solar:gallery-linear" width="24" height="24"></iconify-icon>
             <p>No gallery content</p>
           </div>
         ) : (
@@ -256,12 +242,12 @@ export const TrendingGalleryWidget = ({ data }: TrendingGalleryWidgetProps) => {
                     <img src={item.thumbnailUrl} alt={item.title} />
                   ) : (
                     <div className="gallery-placeholder">
-                      <Image size={20} />
+                      <iconify-icon icon="solar:gallery-linear" width="20" height="20"></iconify-icon>
                     </div>
                   )}
                   <div className="gallery-overlay">
-                    <span><Heart size={12} /> {item.likeCount}</span>
-                    <span><Eye size={12} /> {item.viewCount}</span>
+                    <span><iconify-icon icon="solar:heart-linear" width="12" height="12"></iconify-icon> {item.likeCount}</span>
+                    <span><iconify-icon icon="solar:eye-linear" width="12" height="12"></iconify-icon> {item.viewCount}</span>
                   </div>
                 </div>
               </div>
@@ -302,18 +288,18 @@ export const ArtistMomentsWidget = ({ data }: ArtistMomentsWidgetProps) => {
     <div className="mini-widget featured">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <Sparkles size={18} />
+          <iconify-icon icon="solar:magic-stick-linear" width="18" height="18"></iconify-icon>
           <h3>Artist Moments</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/gallery?type=bts')}>
-          View All <ArrowRight size={14} />
+          View All <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <Sparkles size={24} />
+            <iconify-icon icon="solar:magic-stick-linear" width="24" height="24"></iconify-icon>
             <p>No moments yet</p>
           </div>
         ) : (
@@ -329,7 +315,7 @@ export const ArtistMomentsWidget = ({ data }: ArtistMomentsWidgetProps) => {
                     <img src={item.thumbnailUrl} alt={item.title} />
                   ) : (
                     <div className="moment-placeholder">
-                      <Sparkles size={20} />
+                      <iconify-icon icon="solar:magic-stick-linear" width="20" height="20"></iconify-icon>
                     </div>
                   )}
                   <div className="moment-badge">{getTypeLabel(item.type)}</div>
@@ -365,18 +351,18 @@ export const UpcomingEventsWidget = ({ data }: UpcomingEventsWidgetProps) => {
     <div className="mini-widget">
       <div className="mini-widget-header">
         <div className="mini-widget-title">
-          <Calendar size={18} />
+          <iconify-icon icon="solar:calendar-linear" width="18" height="18"></iconify-icon>
           <h3>Upcoming Events</h3>
         </div>
         <button className="mini-widget-action" onClick={() => navigate('/events')}>
-          View All <ArrowRight size={14} />
+          View All <iconify-icon icon="solar:arrow-right-linear" width="14" height="14"></iconify-icon>
         </button>
       </div>
       
       <div className="mini-widget-content">
         {!data || data.length === 0 ? (
           <div className="mini-widget-empty">
-            <Calendar size={24} />
+            <iconify-icon icon="solar:calendar-linear" width="24" height="24"></iconify-icon>
             <p>No upcoming events</p>
           </div>
         ) : (
@@ -394,7 +380,7 @@ export const UpcomingEventsWidget = ({ data }: UpcomingEventsWidgetProps) => {
                 <div className="event-info">
                   <span className="event-title">{event.title}</span>
                   <span className="event-location">
-                    <MapPin size={12} /> {event.city}
+                    <iconify-icon icon="solar:map-point-linear" width="12" height="12"></iconify-icon> {event.city}
                   </span>
                 </div>
                 <div className="event-tickets">

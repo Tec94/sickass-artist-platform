@@ -2,21 +2,6 @@ import { useState, useCallback } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Archive,
-  Package,
-  DollarSign,
-  Tag,
-  Image,
-  Save,
-  X,
-  ChevronDown,
-  AlertCircle
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -206,7 +191,7 @@ export function AdminMerch() {
 
       {/* Search */}
       <div className="search-bar">
-        <Search size={18} />
+        <iconify-icon icon="solar:magnifer-linear" width="18" height="18"></iconify-icon>
         <input 
           type="text"
           placeholder="Search products..."
@@ -222,7 +207,7 @@ export function AdminMerch() {
             <div className="modal-header">
               <h3>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
               <button className="close-btn" onClick={() => setShowForm(false)}>
-                <X size={20} />
+                <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
               </button>
             </div>
 
@@ -302,7 +287,9 @@ export function AdminMerch() {
                   {formData.tags.map(tag => (
                     <span key={tag} className="tag">
                       {tag}
-                      <button type="button" onClick={() => removeTag(tag)}><X size={12} /></button>
+                      <button type="button" onClick={() => removeTag(tag)}>
+                        <iconify-icon icon="solar:close-circle-linear" width="12" height="12"></iconify-icon>
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -325,7 +312,7 @@ export function AdminMerch() {
                     <div key={i} className="image-preview-item">
                       <img src={url} alt={`Preview ${i + 1}`} />
                       <button type="button" onClick={() => removeImage(url)}>
-                        <X size={14} />
+                        <iconify-icon icon="solar:close-circle-linear" width="14" height="14"></iconify-icon>
                       </button>
                     </div>
                   ))}
@@ -338,9 +325,9 @@ export function AdminMerch() {
                 </button>
                 <button type="submit" className="submit-btn" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <span className="animate-spin">⏳</span>
+                    <iconify-icon icon="solar:spinner-linear" width="16" height="16" class="animate-spin"></iconify-icon>
                   ) : (
-                    <Save size={16} />
+                    <iconify-icon icon="solar:diskette-linear" width="16" height="16"></iconify-icon>
                   )}
                   {isSubmitting ? 'Saving...' : editingId ? 'Update Product' : 'Create Product'}
                 </button>
@@ -354,7 +341,7 @@ export function AdminMerch() {
       <div className="products-list">
         {products?.items?.length === 0 && (
           <div className="empty-state">
-            <Package size={48} />
+            <iconify-icon icon="solar:box-linear" width="48" height="48"></iconify-icon>
             <h3>No products found</h3>
             <p>Create your first product to get started</p>
           </div>
@@ -366,7 +353,9 @@ export function AdminMerch() {
               {product.images?.[0] ? (
                 <img src={product.images[0]} alt={product.name} />
               ) : (
-                <div className="no-image"><Image size={24} /></div>
+                <div className="no-image">
+                  <iconify-icon icon="solar:gallery-linear" width="24" height="24"></iconify-icon>
+                </div>
               )}
             </div>
             <div className="product-info">
@@ -380,10 +369,10 @@ export function AdminMerch() {
             </div>
             <div className="product-actions">
               <button onClick={() => handleEdit(product)} title="Edit">
-                <Edit size={16} />
+                <iconify-icon icon="solar:pen-linear" width="16" height="16"></iconify-icon>
               </button>
               <button onClick={() => handleDelete(product._id)} title="Archive" className="delete">
-                <Archive size={16} />
+                <iconify-icon icon="solar:archive-linear" width="16" height="16"></iconify-icon>
               </button>
             </div>
           </div>

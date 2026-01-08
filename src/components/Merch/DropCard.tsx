@@ -2,7 +2,6 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { DropCountdown } from './DropCountdown'
 import { Doc } from '../../../convex/_generated/dataModel'
-import { Bell } from 'lucide-react'
 import { useState } from 'react'
 
 interface DropCardProps {
@@ -114,7 +113,7 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
                 : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
             }`}
           >
-            <Bell className="w-4 h-4" />
+            <iconify-icon icon="solar:bell-linear" width="16" height="16"></iconify-icon>
             {isNotifyChecked ? "You'll be notified" : 'Notify me'}
           </button>
         )}

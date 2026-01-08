@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalSearch } from '../../hooks/useGlobalSearch'
-import { Search, X, Loader2 } from 'lucide-react'
 import { SearchResults } from './SearchResults'
 import { RecentSearches } from './RecentSearches'
 import { SearchResultTabs } from './SearchResultTabs'
@@ -187,7 +186,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       >
         {/* Header */}
         <div className="flex items-center border-b border-cyan-500/20 px-4 py-3">
-          <Search className="h-5 w-5 text-cyan-400" />
+          <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="text-cyan-400"></iconify-icon>
           <input
             ref={inputRef}
             type="text"
@@ -203,7 +202,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             className="rounded p-1 hover:bg-cyan-500/20 transition-colors"
             aria-label="Close search"
           >
-            <X className="h-5 w-5" />
+            <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
           </button>
         </div>
 
@@ -221,7 +220,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           {/* Loading state */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+              <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-cyan-400"></iconify-icon>
             </div>
           )}
 

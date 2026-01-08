@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useGalleryFilters } from '../../hooks/useGalleryFilters'
@@ -92,11 +91,14 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
         className="w-full flex items-center justify-between p-4 hover:bg-gray-900/50 transition"
       >
         <h3 className="font-semibold text-white">{title}</h3>
-        <ChevronDown
-          className={`w-4 h-4 text-gray-400 transition-transform ${
+        <iconify-icon
+          icon="solar:alt-arrow-down-linear"
+          width="16"
+          height="16"
+          class={`text-gray-400 transition-transform ${
             expandedSection === sectionKey ? 'rotate-180' : ''
           }`}
-        />
+        ></iconify-icon>
       </button>
       {expandedSection === sectionKey && (
         <div className="px-4 pb-4 space-y-3 bg-gray-900/20">{children}</div>
@@ -156,7 +158,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
               onClick={onClose}
               className="p-1 hover:bg-gray-800 rounded transition"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <iconify-icon icon="solar:close-circle-linear" width="20" height="20" class="text-gray-400"></iconify-icon>
             </button>
           )}
         </div>

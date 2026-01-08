@@ -1,6 +1,3 @@
-import { useDropCountdown } from '../../hooks/useDropCountdown'
-import { Clock } from 'lucide-react'
-
 interface DropCountdownProps {
   startsAt: number
   endsAt: number
@@ -33,7 +30,7 @@ export function DropCountdown({
   if (isEnded) {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
-        <Clock className="w-4 h-4" />
+        <iconify-icon icon="solar:clock-circle-linear" width="16" height="16"></iconify-icon>
         <span>Drop ended</span>
       </div>
     )
@@ -42,7 +39,7 @@ export function DropCountdown({
   if (isActive) {
     return (
       <div className="flex items-center gap-2 text-green-400 font-semibold animate-pulse">
-        <Clock className="w-4 h-4" />
+        <iconify-icon icon="solar:clock-circle-linear" width="16" height="16"></iconify-icon>
         <span>Drop now live!</span>
       </div>
     )
@@ -51,7 +48,7 @@ export function DropCountdown({
   if (hours === 0 && minutes === 0 && seconds < 60) {
     return (
       <div className="flex items-center gap-2 text-red-400 font-semibold animate-pulse">
-        <Clock className="w-4 h-4" />
+        <iconify-icon icon="solar:clock-circle-linear" width="16" height="16"></iconify-icon>
         <span>Drop in {formatTime(seconds)}s</span>
       </div>
     )

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, Package } from 'lucide-react'
 import { Doc } from '../../../convex/_generated/dataModel'
 
 interface OrderCardProps {
@@ -34,7 +33,7 @@ export function OrderCard({ order }: OrderCardProps) {
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3">
-          <Package className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
+          <iconify-icon icon="solar:box-linear" width="20" height="20" class="text-gray-400 mt-1 flex-shrink-0"></iconify-icon>
           <div>
             <p className="font-mono text-white font-semibold">
               {order.orderNumber}
@@ -48,7 +47,7 @@ export function OrderCard({ order }: OrderCardProps) {
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition-colors flex-shrink-0" />
+        <iconify-icon icon="solar:alt-arrow-right-linear" width="20" height="20" class="text-gray-600 group-hover:text-cyan-400 transition-colors flex-shrink-0"></iconify-icon>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-3 text-sm">

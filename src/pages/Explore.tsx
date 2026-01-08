@@ -5,7 +5,6 @@ import { api } from '../../convex/_generated/api'
 import { TrendingGrid } from '../components/Explore/TrendingGrid'
 import { FilterBar } from '../components/Explore/FilterBar'
 import { CreatorCard } from '../components/Gallery/CreatorCard'
-import { Loader2 } from 'lucide-react'
 import type { ExploreFilters, TrendingItem } from '../types'
 
 // Default filters
@@ -173,7 +172,7 @@ export const Explore: React.FC = () => {
 
           {isLoading && displayedItems.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+              <iconify-icon icon="solar:spinner-linear" class="h-8 w-8 animate-spin text-cyan-400"></iconify-icon>
             </div>
           ) : displayedItems.length === 0 && !isLoading ? (
             <div className="rounded-lg border border-cyan-500/20 bg-slate-900/50 p-8 text-center">
@@ -189,7 +188,7 @@ export const Explore: React.FC = () => {
                 <div className="mt-8">
                   {(isLoadingMore || isLoading) && (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                      <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-cyan-400"></iconify-icon>
                     </div>
                   )}
                   {/* Sentinel element for intersection observer */}

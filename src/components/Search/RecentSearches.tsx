@@ -1,5 +1,4 @@
 import React from 'react'
-import { Clock, Search } from 'lucide-react'
 
 interface RecentSearchesProps {
   searches: string[]
@@ -18,7 +17,7 @@ export const RecentSearches: React.FC<RecentSearchesProps> = ({
     <div className="px-4 py-2">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Clock className="h-4 w-4" />
+          <iconify-icon icon="solar:clock-circle-linear" width="16" height="16"></iconify-icon>
           <span>Recent searches</span>
         </div>
         <button
@@ -35,7 +34,7 @@ export const RecentSearches: React.FC<RecentSearchesProps> = ({
             onClick={() => onSelect(search)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 text-sm text-gray-300 hover:bg-cyan-500/20 hover:text-cyan-300 transition-colors"
           >
-            <Search className="h-3 w-3" />
+            <iconify-icon icon="solar:magnifer-linear" width="12" height="12"></iconify-icon>
             <span className="truncate max-w-[150px]">{search}</span>
           </button>
         ))}

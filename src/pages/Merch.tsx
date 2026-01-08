@@ -9,17 +9,6 @@ import { useMerchFilters } from '../hooks/useMerchFilters'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { 
-  ShoppingCart, 
-  Package, 
-  Flame, 
-  Sparkles, 
-  Star,
-  ChevronRight,
-  Filter,
-  X,
-  Cross
-} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 // Category data for visual sections
@@ -96,7 +85,7 @@ export function Merch() {
                 onClick={() => setShowFilters(!showFilters)}
                 className="md:hidden p-2.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-lg transition-colors"
               >
-                <Filter className="w-5 h-5 text-gray-300" />
+                <iconify-icon icon="solar:filter-linear" width="20" height="20" class="text-gray-300"></iconify-icon>
               </button>
 
               {/* Orders button */}
@@ -105,7 +94,7 @@ export function Merch() {
                 className="p-2.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-lg transition-all duration-200 group"
                 title="Order History"
               >
-                <Package className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                <iconify-icon icon="solar:box-linear" width="20" height="20" class="text-gray-400 group-hover:text-white transition-colors"></iconify-icon>
               </button>
 
               {/* Cart button */}
@@ -113,7 +102,7 @@ export function Merch() {
                 onClick={() => navigate('/merch/cart')}
                 className="relative p-2.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-lg transition-all duration-200 group"
               >
-                <ShoppingCart className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <iconify-icon icon="solar:cart-large-linear" width="20" height="20" class="text-cyan-400 group-hover:text-cyan-300 transition-colors"></iconify-icon>
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                     {cartCount}
@@ -137,7 +126,7 @@ export function Merch() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#c41e3a]/10 border border-[#c41e3a]/30 rounded-full text-[#c41e3a] text-sm">
-                <Cross className="w-4 h-4" />
+                <iconify-icon icon="solar:medal-star-linear" width="16" height="16"></iconify-icon>
                 New Collection Available
               </div>
               
@@ -186,7 +175,7 @@ export function Merch() {
               {/* Floating Badge */}
               <div className="absolute -bottom-4 -right-4 px-4 py-2 bg-[#c41e3a] rounded-lg shadow-lg shadow-[#c41e3a]/30">
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Flame className="w-4 h-4" />
+                  <iconify-icon icon="solar:fire-linear" width="16" height="16"></iconify-icon>
                   Best Seller
                 </div>
               </div>
@@ -200,14 +189,14 @@ export function Merch() {
         <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <Flame className="w-6 h-6 text-cyan-400" />
+              <iconify-icon icon="solar:fire-linear" width="24" height="24" class="text-cyan-400"></iconify-icon>
               <h2 className="text-2xl font-bold">Trending Now</h2>
             </div>
             <button 
               onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
               className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
             >
-              View All <ChevronRight className="w-4 h-4" />
+              View All <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
             </button>
           </div>
           
@@ -249,7 +238,7 @@ export function Merch() {
       <section className="py-16 bg-[#0f0f0f]">
         <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center gap-3 mb-8">
-            <Star className="w-6 h-6 text-[#c41e3a]" />
+            <iconify-icon icon="solar:star-linear" width="24" height="24" class="text-[#c41e3a]"></iconify-icon>
             <h2 className="text-2xl font-bold">Shop by Category</h2>
           </div>
           
@@ -266,7 +255,7 @@ export function Merch() {
                 <h3 className="font-bold text-lg">{category.name}</h3>
                 <p className="text-gray-400 text-sm mt-1">{category.description}</p>
                 
-                <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 text-gray-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300" />
+                <iconify-icon icon="solar:alt-arrow-right-linear" class="absolute bottom-4 right-4 w-5 h-5 text-gray-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300"></iconify-icon>
               </button>
             ))}
           </div>
@@ -282,7 +271,7 @@ export function Merch() {
             <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold mb-2">
-                  <Cross className="w-4 h-4" />
+                  <iconify-icon icon="solar:medal-star-linear" width="16" height="16"></iconify-icon>
                   LIMITED TIME OFFER
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-2">Free Shipping on Orders $75+</h3>
@@ -311,7 +300,7 @@ export function Merch() {
                 className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full text-sm hover:border-[#c41e3a] transition-colors"
               >
                 {categories.find(c => c.id === filters.category)?.name || filters.category}
-                <X className="w-3 h-3" />
+                <iconify-icon icon="solar:close-circle-linear" width="12" height="12"></iconify-icon>
               </button>
             )}
           </div>
@@ -336,7 +325,7 @@ export function Merch() {
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-bold text-lg">Filters</h3>
                     <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-[#1a1a1a] rounded-lg">
-                      <X className="w-5 h-5" />
+                      <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
                     </button>
                   </div>
                   <MerchFilters

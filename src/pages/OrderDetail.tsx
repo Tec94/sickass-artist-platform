@@ -2,7 +2,6 @@ import { useQuery } from 'convex/react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../../convex/_generated/api'
 import { OrderTracking } from '../components/Merch/OrderTracking'
-import { ChevronLeft, Copy, Download } from 'lucide-react'
 import { useState } from 'react'
 import { showToast } from '../lib/toast'
 
@@ -34,7 +33,7 @@ export function OrderDetail() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 bg-gray-800 rounded-full animate-spin mx-auto mb-4"></div>
+          <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
           <p className="text-gray-400">Loading order...</p>
         </div>
       </div>
@@ -74,7 +73,7 @@ export function OrderDetail() {
             onClick={() => navigate('/merch/orders')}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-4"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
             Back to Orders
           </button>
           <h1 className="text-3xl font-bold text-white">Order Details</h1>
@@ -97,7 +96,12 @@ export function OrderDetail() {
                   className="p-2 hover:bg-gray-800 rounded transition-colors"
                   title="Copy order number"
                 >
-                  <Copy className={`w-5 h-5 ${copied ? 'text-green-400' : 'text-gray-400'}`} />
+                  <iconify-icon 
+                    icon="solar:copy-linear" 
+                    width="20" 
+                    height="20" 
+                    class={copied ? 'text-green-400' : 'text-gray-400'}
+                  ></iconify-icon>
                 </button>
               </div>
 
@@ -198,7 +202,7 @@ export function OrderDetail() {
                 onClick={handlePrintReceipt}
                 className="w-full mt-4 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded flex items-center justify-center gap-2 transition-colors"
               >
-                <Download className="w-4 h-4" />
+                <iconify-icon icon="solar:download-linear" width="16" height="16"></iconify-icon>
                 Print Receipt
               </button>
             </div>

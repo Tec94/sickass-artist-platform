@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { Users, Star, Trophy, ArrowRight, AlertCircle, UserPlus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface CreatorsWidgetProps {
@@ -17,8 +16,6 @@ interface CreatorItem {
   level?: number
   xp?: number
 }
-
-type CreatorsData = CreatorItem[]
 
 export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
   const navigate = useNavigate()
@@ -47,9 +44,9 @@ export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
   // Show error state if timeout reached and no data or actual error
   if ((!data || data.length === 0 || error) && timeoutReached) {
     return (
-      <WidgetContainer title="Featured Creators" icon={Users} actionLabel="View All">
+      <WidgetContainer title="Featured Creators" icon="solar:users-group-rounded-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Unable to load creators</h3>
           <p>Please check your connection and try again.</p>
           <button className="retry-button" onClick={onRetry}>
@@ -63,9 +60,9 @@ export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
   // Show empty state if no items
   if (data?.length === 0) {
     return (
-      <WidgetContainer title="Featured Creators" icon={Users} actionLabel="View All">
+      <WidgetContainer title="Featured Creators" icon="solar:users-group-rounded-linear" actionLabel="View All">
         <div className="widget-empty">
-          <Users size={48} className="empty-icon" />
+          <iconify-icon icon="solar:users-group-rounded-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No creators available</h3>
           <p>Discover amazing creators in our community!</p>
           <button className="explore-button" onClick={() => navigate('/3')}>
@@ -77,7 +74,7 @@ export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
   }
 
   return (
-    <WidgetContainer title="Featured Creators" icon={Users} actionLabel="View All">
+    <WidgetContainer title="Featured Creators" icon="solar:users-group-rounded-linear" actionLabel="View All">
       <div className="creators-grid">
         {data?.map((creator: any, index: number) => (
           <CreatorItem key={creator._id || index} creator={creator} index={index} navigate={navigate} />
@@ -90,24 +87,24 @@ export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: any
+  icon: string
   actionLabel: string
   children: React.ReactNode
 }
 
-const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetContainerProps) => {
+const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainerProps) => {
   const navigate = useNavigate()
 
   return (
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Icon size={20} />
+          <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
         <button className="see-all-button" onClick={() => navigate('/3')}>
           {actionLabel}
-          <ArrowRight size={16} />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
       {children}
@@ -123,11 +120,11 @@ interface CreatorItemProps {
 }
 
 const CreatorItem = ({ creator, index, navigate }: CreatorItemProps) => {
-  const getTierIcon = (tier?: string): React.ReactElement | null => {
+  const getTierIcon = (tier?: string): string | null => {
     switch (tier) {
-      case 'platinum': return <Trophy size={14} />
-      case 'gold': return <Star size={14} />
-      case 'silver': return <Star size={14} />
+      case 'platinum': return 'solar:cup-first-linear'
+      case 'gold': return 'solar:star-linear'
+      case 'silver': return 'solar:star-linear'
       default: return null
     }
   }
@@ -150,6 +147,8 @@ const CreatorItem = ({ creator, index, navigate }: CreatorItemProps) => {
     console.log('Follow creator:', creator.displayName)
   }
 
+  const tierIcon = getTierIcon(creator.fanTier)
+
   return (
     <div className="creator-item" onClick={handleClick} style={{ animationDelay: `${index * 100}ms` }}>
       <div className="creator-avatar">
@@ -160,12 +159,12 @@ const CreatorItem = ({ creator, index, navigate }: CreatorItemProps) => {
             {creator.displayName?.charAt(0) || 'C'}
           </div>
         )}
-        {creator.fanTier && creator.fanTier !== 'bronze' && (
+        {creator.fanTier && creator.fanTier !== 'bronze' && tierIcon && (
           <div 
             className="creator-tier-badge"
             style={{ color: getTierColor(creator.fanTier) }}
           >
-            {getTierIcon(creator.fanTier)}
+            <iconify-icon icon={tierIcon} width="14" height="14"></iconify-icon>
           </div>
         )}
       </div>
@@ -191,7 +190,7 @@ const CreatorItem = ({ creator, index, navigate }: CreatorItemProps) => {
           className="follow-button"
           onClick={handleFollowClick}
         >
-          <UserPlus size={14} />
+          <iconify-icon icon="solar:user-plus-linear" width="14" height="14"></iconify-icon>
           Follow
         </button>
       </div>
@@ -205,7 +204,7 @@ const CreatorsSkeleton = () => {
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Users size={20} />
+          <iconify-icon icon="solar:users-group-rounded-linear" width="20" height="20"></iconify-icon>
           <h3>Featured Creators</h3>
         </div>
       </div>

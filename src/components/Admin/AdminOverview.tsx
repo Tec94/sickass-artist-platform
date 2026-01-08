@@ -1,23 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { 
-  Package, 
-  MessageSquare, 
-  Users, 
-  ClipboardList, 
-  LayoutDashboard,
-  Settings,
-  MessageCircle,
-  Plus,
-  Search,
-  Filter,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Archive,
-  Eye
-} from 'lucide-react'
 
 export type AdminTab = 'overview' | 'merch' | 'chat' | 'forum' | 'queues' | 'users' | 'system'
 
@@ -28,7 +11,7 @@ interface AdminOverviewProps {
 interface StatCardProps {
   title: string
   value: string | number
-  icon: React.ReactNode
+  icon: string
   trend?: string
   color: string
 }
@@ -36,7 +19,7 @@ interface StatCardProps {
 const StatCard = ({ title, value, icon, trend, color }: StatCardProps) => (
   <div className="stat-card">
     <div className="stat-icon" style={{ background: color }}>
-      {icon}
+      <iconify-icon icon={icon} width="24" height="24"></iconify-icon>
     </div>
     <div className="stat-content">
       <span className="stat-value">{value}</span>
@@ -50,11 +33,11 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
   // Fetch stats from admin API
   const stats = useQuery(api.admin.getAdminStats)
 
-  const quickActions: { label: string; icon: React.ReactNode; tab: AdminTab; action: string }[] = [
-    { label: 'Add Product', icon: <Package size={18} />, tab: 'merch', action: 'add' },
-    { label: 'Create Channel', icon: <MessageSquare size={18} />, tab: 'chat', action: 'add' },
-    { label: 'New Category', icon: <ClipboardList size={18} />, tab: 'forum', action: 'add' },
-    { label: 'View Users', icon: <Users size={18} />, tab: 'users', action: 'view' },
+  const quickActions: { label: string; icon: string; tab: AdminTab; action: string }[] = [
+    { label: 'Add Product', icon: 'solar:box-linear', tab: 'merch', action: 'add' },
+    { label: 'Create Channel', icon: 'solar:chat-square-dots-linear', tab: 'chat', action: 'add' },
+    { label: 'New Category', icon: 'solar:clipboard-list-linear', tab: 'forum', action: 'add' },
+    { label: 'View Users', icon: 'solar:users-group-rounded-linear', tab: 'users', action: 'view' },
   ]
 
   return (
@@ -69,25 +52,25 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
         <StatCard 
           title="Total Products" 
           value={stats?.productCount ?? '—'} 
-          icon={<Package size={24} />}
+          icon="solar:box-linear"
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
           title="Chat Channels" 
           value={stats?.channelCount ?? '—'} 
-          icon={<MessageSquare size={24} />}
+          icon="solar:chat-square-dots-linear"
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
           title="Forum Categories" 
           value={stats?.categoryCount ?? '—'} 
-          icon={<ClipboardList size={24} />}
+          icon="solar:clipboard-list-linear"
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 
           title="Total Users" 
           value={stats?.userCount ?? '—'} 
-          icon={<Users size={24} />}
+          icon="solar:users-group-rounded-linear"
           color="rgba(0, 128, 0, 0.3)"
         />
       </div>
@@ -102,7 +85,7 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
               className="quick-action-btn"
               onClick={() => onNavigate(action.tab)}
             >
-              {action.icon}
+              <iconify-icon icon={action.icon} width="18" height="18"></iconify-icon>
               <span>{action.label}</span>
             </button>
           ))}
@@ -114,21 +97,21 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
         <h3>Recent Activity</h3>
         <div className="activity-list">
           <div className="activity-item">
-            <div className="activity-icon"><MessageCircle size={16} /></div>
+            <div className="activity-icon"><iconify-icon icon="solar:chat-square-dots-linear" width="16" height="16"></iconify-icon></div>
             <div className="activity-content">
               <span className="activity-text">New message in #general</span>
               <span className="activity-time">2 minutes ago</span>
             </div>
           </div>
           <div className="activity-item">
-            <div className="activity-icon"><Package size={16} /></div>
+            <div className="activity-icon"><iconify-icon icon="solar:box-linear" width="16" height="16"></iconify-icon></div>
             <div className="activity-content">
               <span className="activity-text">Product "Tour Hoodie" updated</span>
               <span className="activity-time">15 minutes ago</span>
             </div>
           </div>
           <div className="activity-item">
-            <div className="activity-icon"><Users size={16} /></div>
+            <div className="activity-icon"><iconify-icon icon="solar:users-group-rounded-linear" width="16" height="16"></iconify-icon></div>
             <div className="activity-content">
               <span className="activity-text">New user registration</span>
               <span className="activity-time">1 hour ago</span>

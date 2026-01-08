@@ -1,20 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { 
-  Database, 
-  Server, 
-  Activity, 
-  Zap,
-  HardDrive,
-  Cpu,
-  RefreshCw,
-  Trash2,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
 interface TableStats {
@@ -73,7 +59,7 @@ export function AdminSystem() {
           onClick={handleRefreshStats}
           disabled={isRefreshing}
         >
-          <RefreshCw size={18} />
+          <iconify-icon icon="solar:refresh-linear" width="18" height="18"></iconify-icon>
           Refresh
         </button>
       </div>
@@ -81,10 +67,10 @@ export function AdminSystem() {
       {/* System Health */}
       <div className="health-section">
         <div className="section-header">
-          <Activity size={20} />
+          <iconify-icon icon="solar:pulse-2-linear" width="20" height="20"></iconify-icon>
           <h3>System Health</h3>
           <span className="status-badge online">
-            <CheckCircle size={14} />
+            <iconify-icon icon="solar:check-circle-linear" width="14" height="14"></iconify-icon>
             All Systems Operational
           </span>
         </div>
@@ -92,7 +78,7 @@ export function AdminSystem() {
         <div className="metrics-grid">
           <div className="metric-card">
             <div className="metric-icon">
-              <Zap size={24} />
+              <iconify-icon icon="solar:bolt-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="metric-info">
               <span className="metric-value">{systemMetrics.uptime}</span>
@@ -102,7 +88,7 @@ export function AdminSystem() {
 
           <div className="metric-card">
             <div className="metric-icon">
-              <Clock size={24} />
+              <iconify-icon icon="solar:clock-circle-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="metric-info">
               <span className="metric-value">{systemMetrics.responseTime}</span>
@@ -112,7 +98,7 @@ export function AdminSystem() {
 
           <div className="metric-card">
             <div className="metric-icon">
-              <Server size={24} />
+              <iconify-icon icon="solar:server-path-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="metric-info">
               <span className="metric-value">{systemMetrics.activeConnections}</span>
@@ -122,7 +108,7 @@ export function AdminSystem() {
 
           <div className="metric-card">
             <div className="metric-icon">
-              <Cpu size={24} />
+              <iconify-icon icon="solar:cpu-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="metric-info">
               <span className="metric-value">{systemMetrics.queuedJobs}</span>
@@ -135,7 +121,7 @@ export function AdminSystem() {
       {/* Database Stats */}
       <div className="database-section">
         <div className="section-header">
-          <Database size={20} />
+          <iconify-icon icon="solar:database-linear" width="20" height="20"></iconify-icon>
           <h3>Database Tables</h3>
         </div>
 
@@ -143,7 +129,7 @@ export function AdminSystem() {
           {tableStats.map(table => (
             <div key={table.name} className="table-card">
               <div className="table-icon">
-                <HardDrive size={18} />
+                <iconify-icon icon="solar:hard-drive-linear" width="18" height="18"></iconify-icon>
               </div>
               <div className="table-info">
                 <span className="table-name">{table.name}</span>
@@ -157,14 +143,14 @@ export function AdminSystem() {
       {/* Actions */}
       <div className="actions-section">
         <div className="section-header">
-          <BarChart3 size={20} />
+          <iconify-icon icon="solar:chart-2-linear" width="20" height="20"></iconify-icon>
           <h3>Maintenance Actions</h3>
         </div>
 
         <div className="actions-grid">
           <div className="action-card">
             <div className="action-icon">
-              <RefreshCw size={24} />
+              <iconify-icon icon="solar:refresh-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="action-content">
               <h4>Clear Application Cache</h4>
@@ -177,7 +163,7 @@ export function AdminSystem() {
 
           <div className="action-card">
             <div className="action-icon">
-              <Database size={24} />
+              <iconify-icon icon="solar:database-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="action-content">
               <h4>Reindex Search</h4>
@@ -190,7 +176,7 @@ export function AdminSystem() {
 
           <div className="action-card">
             <div className="action-icon warning">
-              <Trash2 size={24} />
+              <iconify-icon icon="solar:trash-bin-trash-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="action-content">
               <h4>Cleanup Old Data</h4>
@@ -206,14 +192,14 @@ export function AdminSystem() {
       {/* Error Log */}
       <div className="log-section">
         <div className="section-header">
-          <AlertTriangle size={20} />
+          <iconify-icon icon="solar:danger-triangle-linear" width="20" height="20"></iconify-icon>
           <h3>Recent Errors</h3>
           <span className="error-count">0</span>
         </div>
 
         <div className="log-container">
           <div className="empty-log">
-            <CheckCircle size={32} />
+            <iconify-icon icon="solar:check-circle-linear" width="32" height="32"></iconify-icon>
             <p>No errors in the last 24 hours</p>
           </div>
         </div>

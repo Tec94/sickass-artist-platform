@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { AlertCircle } from 'lucide-react'
 import type { ShippingAddress } from '../../hooks/useCheckout'
 
 interface ShippingFormProps {
@@ -99,7 +98,7 @@ export function ShippingForm({ onSubmit, initialData, loading }: ShippingFormPro
         />
         {errors.name && (
           <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12"></iconify-icon>
             {errors.name}
           </p>
         )}
@@ -122,7 +121,7 @@ export function ShippingForm({ onSubmit, initialData, loading }: ShippingFormPro
         />
         {errors.email && (
           <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12"></iconify-icon>
             {errors.email}
           </p>
         )}
@@ -145,7 +144,7 @@ export function ShippingForm({ onSubmit, initialData, loading }: ShippingFormPro
         />
         {errors.addressLine1 && (
           <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12"></iconify-icon>
             {errors.addressLine1}
           </p>
         )}
@@ -225,7 +224,7 @@ export function ShippingForm({ onSubmit, initialData, loading }: ShippingFormPro
         />
         {errors.zipCode && (
           <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12"></iconify-icon>
             {errors.zipCode}
           </p>
         )}

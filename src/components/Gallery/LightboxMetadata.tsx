@@ -1,4 +1,3 @@
-import { Heart, Eye, Calendar, User, Tag, Share2, Download } from 'lucide-react'
 import type { GalleryContentItem } from '../../types/gallery'
 
 interface LightboxMetadataProps {
@@ -65,19 +64,24 @@ export const LightboxMetadata = ({ item }: LightboxMetadataProps) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center gap-2 text-gray-400">
-          <Heart className={`w-4 h-4 ${item.isLiked ? 'text-red-500 fill-red-500' : ''}`} />
+          <iconify-icon
+            icon="solar:heart-linear"
+            width="16"
+            height="16"
+            class={item.isLiked ? 'text-red-500 fill-red-500' : ''}
+          ></iconify-icon>
           <span className="text-sm">{item.likeCount} likes</span>
         </div>
         <div className="flex items-center gap-2 text-gray-400">
-          <Eye className="w-4 h-4" />
+          <iconify-icon icon="solar:eye-linear" width="16" height="16"></iconify-icon>
           <span className="text-sm">{item.viewCount} views</span>
         </div>
         <div className="flex items-center gap-2 text-gray-400">
-          <Calendar className="w-4 h-4" />
+          <iconify-icon icon="solar:calendar-linear" width="16" height="16"></iconify-icon>
           <span className="text-sm">{formatDate(item.createdAt)}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-400">
-          <User className="w-4 h-4" />
+          <iconify-icon icon="solar:user-circle-linear" width="16" height="16"></iconify-icon>
           <span className="text-sm uppercase tracking-tight">{item.type}</span>
         </div>
       </div>
@@ -85,7 +89,7 @@ export const LightboxMetadata = ({ item }: LightboxMetadataProps) => {
       {item.tags.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-gray-400 mb-1">
-            <Tag className="w-4 h-4" />
+            <iconify-icon icon="solar:tag-linear" width="16" height="16"></iconify-icon>
             <span className="text-xs font-semibold uppercase">Tags</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -106,14 +110,14 @@ export const LightboxMetadata = ({ item }: LightboxMetadataProps) => {
           onClick={handleDownload}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          <Download className="w-4 h-4" />
+          <iconify-icon icon="solar:download-linear" width="16" height="16"></iconify-icon>
           Download
         </button>
         <button
           onClick={handleShare}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          <Share2 className="w-4 h-4" />
+          <iconify-icon icon="solar:share-linear" width="16" height="16"></iconify-icon>
           Share
         </button>
       </div>

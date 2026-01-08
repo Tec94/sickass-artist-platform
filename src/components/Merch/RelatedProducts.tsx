@@ -1,7 +1,6 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ProductCard } from './ProductCard'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRef } from 'react'
 
 interface RelatedProductsProps {
@@ -63,13 +62,13 @@ export function RelatedProducts({
           onClick={() => scroll('left')}
           className="hidden md:flex absolute left-0 top-1/3 -translate-y-1/2 -translate-x-4 w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full items-center justify-center text-gray-300 hover:text-white transition-colors"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <iconify-icon icon="solar:alt-arrow-left-linear" width="20" height="20"></iconify-icon>
         </button>
         <button
           onClick={() => scroll('right')}
           className="hidden md:flex absolute right-0 top-1/3 -translate-y-1/2 translate-x-4 w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full items-center justify-center text-gray-300 hover:text-white transition-colors"
         >
-          <ChevronRight className="w-5 h-5" />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="20" height="20"></iconify-icon>
         </button>
       </div>
     </div>

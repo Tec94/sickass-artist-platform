@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { AlertCircle, RefreshCw } from 'lucide-react'
+
 import { constrainPan } from '../../hooks/useLightbox'
 
 interface LightboxImageProps {
@@ -147,14 +147,14 @@ export const LightboxImage = ({
       {/* Error state */}
       {loadError && (
         <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" style={{ color: '#ef4444' }}></iconify-icon>
           <p className="text-white text-sm max-w-xs">{loadError}</p>
           {retryCount < 3 && (
             <button
               onClick={handleRetry}
               className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
             >
-              <RefreshCw className="w-4 h-4" />
+              <iconify-icon icon="solar:refresh-linear" width="16" height="16"></iconify-icon>
               Retry
             </button>
           )}

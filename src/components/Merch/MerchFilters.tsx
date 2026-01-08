@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Filter, X } from 'lucide-react'
 import { MerchFilters as MerchFilterState } from '../../hooks/useMerchFilters'
 
 interface MerchFiltersProps {
@@ -53,7 +52,7 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
         onClick={() => setIsOpen(!isOpen)}
         className="md:hidden flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded text-gray-300 hover:text-white transition-colors"
       >
-        <Filter className="w-4 h-4" />
+        <iconify-icon icon="solar:filter-linear" width="16" height="16"></iconify-icon>
         Filters
         {hasActiveFilters && (
           <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
@@ -155,7 +154,7 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
             onClick={onReset}
             className="w-full py-2 px-3 bg-gray-800 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white rounded text-sm font-semibold transition-colors flex items-center justify-center gap-2"
           >
-            <X className="w-4 h-4" />
+            <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
             Clear Filters
           </button>
         )}

@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRecommendations } from '../../hooks/useRecommendations'
 import { GalleryCard } from './GalleryCard'
 import { GallerySkeleton } from './GallerySkeleton'
@@ -76,7 +75,7 @@ export const RelatedContent = ({ currentItem, onItemClick }: RelatedContentProps
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gradient-to-r from-black to-transparent hover:from-gray-900 transition rounded"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="20" height="20" class="text-white"></iconify-icon>
           </button>
         )}
 
@@ -86,7 +85,7 @@ export const RelatedContent = ({ currentItem, onItemClick }: RelatedContentProps
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gradient-to-l from-black to-transparent hover:from-gray-900 transition rounded"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <iconify-icon icon="solar:alt-arrow-right-linear" width="20" height="20" class="text-white"></iconify-icon>
           </button>
         )}
 

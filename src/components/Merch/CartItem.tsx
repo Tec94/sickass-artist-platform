@@ -1,4 +1,3 @@
-import { Trash2, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Id } from '../../../convex/_generated/dataModel'
 
@@ -78,7 +77,7 @@ export function CartItem({
       {/* Price change warning */}
       {item.priceChanged && (
         <div className="flex items-center gap-2 p-2 bg-orange-500/10 border border-orange-500/30 rounded text-orange-400 text-xs">
-          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          <iconify-icon icon="solar:info-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
           <span>
             Price {item.priceChangePercentage > 0 ? 'increased' : 'decreased'} {Math.abs(item.priceChangePercentage)}%
           </span>
@@ -88,7 +87,7 @@ export function CartItem({
       {/* Stock warning */}
       {!item.available && (
         <div className="flex items-center gap-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
-          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          <iconify-icon icon="solar:danger-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
           <span>Out of stock - Please remove or contact support</span>
         </div>
       )}
@@ -127,7 +126,7 @@ export function CartItem({
           disabled={isRemoving || loading}
           className="p-2 text-gray-400 hover:text-red-400 transition-colors disabled:text-gray-600"
         >
-          <Trash2 className="w-4 h-4" />
+          <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
 

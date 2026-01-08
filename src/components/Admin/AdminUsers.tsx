@@ -2,21 +2,6 @@ import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { 
-  Search, 
-  Users, 
-  Shield,
-  Crown,
-  Star,
-  User,
-  Edit,
-  MoreVertical,
-  ChevronDown,
-  Mail,
-  Calendar,
-  Save,
-  X
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
 type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
@@ -29,12 +14,12 @@ interface UserEditData {
   fanTier: FanTier
 }
 
-const roleOptions: { value: UserRole; label: string; icon: React.ReactNode }[] = [
-  { value: 'fan', label: 'Fan', icon: <User size={14} /> },
-  { value: 'crew', label: 'Crew', icon: <Users size={14} /> },
-  { value: 'mod', label: 'Moderator', icon: <Shield size={14} /> },
-  { value: 'admin', label: 'Admin', icon: <Crown size={14} /> },
-  { value: 'artist', label: 'Artist', icon: <Star size={14} /> },
+const roleOptions: { value: UserRole; label: string; icon: string }[] = [
+  { value: 'fan', label: 'Fan', icon: 'solar:user-linear' },
+  { value: 'crew', label: 'Crew', icon: 'solar:users-group-rounded-linear' },
+  { value: 'mod', label: 'Moderator', icon: 'solar:shield-check-linear' },
+  { value: 'admin', label: 'Admin', icon: 'solar:crown-linear' },
+  { value: 'artist', label: 'Artist', icon: 'solar:star-linear' },
 ]
 
 const fanTierOptions: { value: FanTier; label: string; color: string }[] = [
@@ -104,7 +89,7 @@ export function AdminUsers() {
 
   const getRoleIcon = (role: UserRole) => {
     const option = roleOptions.find(r => r.value === role)
-    return option?.icon || <User size={14} />
+    return option?.icon || 'solar:user-linear'
   }
 
   const getRoleColor = (role: UserRole) => {
@@ -134,7 +119,7 @@ export function AdminUsers() {
       {/* Filters */}
       <div className="filters-row">
         <div className="search-bar">
-          <Search size={18} />
+          <iconify-icon icon="solar:magnifer-linear" width="18" height="18"></iconify-icon>
           <input 
             type="text"
             placeholder="Search users by name or email..."
@@ -153,22 +138,22 @@ export function AdminUsers() {
               <option key={role.value} value={role.value}>{role.label}</option>
             ))}
           </select>
-          <ChevronDown size={16} />
+          <iconify-icon icon="solar:alt-arrow-down-linear" width="16" height="16"></iconify-icon>
         </div>
       </div>
 
       {/* Users Stats */}
       <div className="stats-row">
         <div className="stat-item">
-          <Users size={18} />
+          <iconify-icon icon="solar:users-group-rounded-linear" width="18" height="18"></iconify-icon>
           <span>{usersData?.totalCount ?? users.length} Total Users</span>
         </div>
         <div className="stat-item">
-          <Crown size={18} />
+          <iconify-icon icon="solar:crown-linear" width="18" height="18"></iconify-icon>
           <span>{users.filter(u => u.fanTier !== 'bronze').length} Premium</span>
         </div>
         <div className="stat-item">
-          <Shield size={18} />
+          <iconify-icon icon="solar:shield-check-linear" width="18" height="18"></iconify-icon>
           <span>{users.filter(u => u.role === 'admin' || u.role === 'mod').length} Staff</span>
         </div>
       </div>
@@ -199,7 +184,7 @@ export function AdminUsers() {
               </div>
 
               <div className="email-cell">
-                <Mail size={14} />
+                <iconify-icon icon="solar:letter-linear" width="14" height="14"></iconify-icon>
                 <span>{user.email}</span>
               </div>
 
@@ -212,7 +197,7 @@ export function AdminUsers() {
                     borderColor: `${getRoleColor(user.role)}40`
                   }}
                 >
-                  {getRoleIcon(user.role)}
+                  <iconify-icon icon={getRoleIcon(user.role)} width="14" height="14"></iconify-icon>
                   {roleOptions.find(r => r.value === user.role)?.label}
                 </span>
               </div>
@@ -222,19 +207,19 @@ export function AdminUsers() {
                   className="tier-badge"
                   style={{ color: getFanTierColor(user.fanTier) }}
                 >
-                  <Star size={12} />
+                  <iconify-icon icon="solar:star-linear" width="12" height="12"></iconify-icon>
                   {fanTierOptions.find(t => t.value === user.fanTier)?.label}
                 </span>
               </div>
 
-              <div className="date-cell">
-                <Calendar size={14} />
+               <div className="date-cell">
+                <iconify-icon icon="solar:calendar-linear" width="14" height="14"></iconify-icon>
                 <span>{new Date(user.createdAt).toLocaleDateString()}</span>
               </div>
 
               <div className="actions-cell">
                 <button onClick={() => handleEditUser(user)} title="Edit User">
-                  <Edit size={16} />
+                  <iconify-icon icon="solar:pen-linear" width="16" height="16"></iconify-icon>
                 </button>
               </div>
             </div>
@@ -242,7 +227,7 @@ export function AdminUsers() {
 
           {users.length === 0 && (
             <div className="empty-row">
-              <Users size={24} />
+              <iconify-icon icon="solar:users-group-rounded-linear" width="24" height="24"></iconify-icon>
               <p>No users found matching your criteria</p>
             </div>
           )}
@@ -256,7 +241,7 @@ export function AdminUsers() {
             <div className="modal-header">
               <h3>Edit User</h3>
               <button className="close-btn" onClick={() => setEditingUserId(null)}>
-                <X size={20} />
+                <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
               </button>
             </div>
 
@@ -312,7 +297,7 @@ export function AdminUsers() {
                   Cancel
                 </button>
                 <button type="button" className="submit-btn" onClick={handleSaveUser}>
-                  <Save size={16} />
+                  <iconify-icon icon="solar:diskette-linear" width="16" height="16"></iconify-icon>
                   Save Changes
                 </button>
               </div>

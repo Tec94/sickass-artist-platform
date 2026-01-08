@@ -1,4 +1,3 @@
-import { ShoppingCart, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Doc } from '../../../convex/_generated/dataModel'
 
@@ -119,7 +118,7 @@ export function ProductCard({ product, onAddToCart, loading }: ProductCardProps)
         {/* Error message */}
         {error && (
           <div className="flex items-center gap-2 text-xs text-red-400">
-            <AlertCircle className="w-3 h-3" />
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12"></iconify-icon>
             {error}
           </div>
         )}
@@ -130,7 +129,7 @@ export function ProductCard({ product, onAddToCart, loading }: ProductCardProps)
           disabled={!product.inStock || isAdding || loading}
           className="w-full py-2 px-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-semibold rounded flex items-center justify-center gap-2 transition-colors"
         >
-          <ShoppingCart className="w-4 h-4" />
+          <iconify-icon icon="solar:cart-large-linear" width="16" height="16"></iconify-icon>
           {isAdding ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
         </button>
       </div>

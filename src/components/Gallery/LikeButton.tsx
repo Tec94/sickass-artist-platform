@@ -1,4 +1,3 @@
-import { Heart, Loader2 } from 'lucide-react'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { useAuth } from '../../hooks/useAuth'
 import { perfMonitor } from '../../utils/performanceMonitor'
@@ -67,11 +66,13 @@ export const LikeButton = ({
       aria-label={isLiked ? 'Unlike' : 'Like'}
     >
       {isLoading || isPending ? (
-        <Loader2 className={`${iconSizes[size]} animate-spin`} />
+        <iconify-icon icon="solar:spinner-linear" class="animate-spin"></iconify-icon>
       ) : (
-        <Heart
-          className={`${iconSizes[size]} ${isLiked ? 'fill-current' : ''} transition-all`}
-        />
+        <iconify-icon
+          icon="solar:heart-linear"
+          class={isLiked ? 'fill-current' : ''}
+          style={{ transition: 'all 0.2s' }}
+        ></iconify-icon>
       )}
       {showCount && (
         <span className="text-sm font-medium tabular-nums">{likeCount}</span>

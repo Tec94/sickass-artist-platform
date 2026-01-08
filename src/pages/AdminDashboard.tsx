@@ -1,14 +1,4 @@
 import { useState } from 'react'
-import { 
-  LayoutDashboard, 
-  Package, 
-  MessageSquare, 
-  ClipboardList, 
-  Clock, 
-  Users, 
-  Settings,
-  ChevronLeft
-} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { 
   AdminOverview, 
@@ -21,14 +11,14 @@ import {
 } from '../components/Admin'
 import type { AdminTab } from '../components/Admin/AdminOverview'
 
-const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
-  { id: 'merch', label: 'Merch', icon: <Package size={18} /> },
-  { id: 'chat', label: 'Chat', icon: <MessageSquare size={18} /> },
-  { id: 'forum', label: 'Forum', icon: <ClipboardList size={18} /> },
-  { id: 'queues', label: 'Queues', icon: <Clock size={18} /> },
-  { id: 'users', label: 'Users', icon: <Users size={18} /> },
-  { id: 'system', label: 'System', icon: <Settings size={18} /> },
+const tabs: { id: AdminTab; label: string; icon: string }[] = [
+  { id: 'overview', label: 'Overview', icon: 'solar:chart-square-linear' },
+  { id: 'merch', label: 'Merch', icon: 'solar:box-linear' },
+  { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
+  { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
+  { id: 'queues', label: 'Queues', icon: 'solar:clock-circle-linear' },
+  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
+  { id: 'system', label: 'System', icon: 'solar:settings-linear' },
 ]
 
 export function AdminDashboard() {
@@ -74,7 +64,7 @@ export function AdminDashboard() {
             className="collapse-btn"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           >
-            <ChevronLeft size={18} />
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="18" height="18"></iconify-icon>
           </button>
         </div>
 
@@ -86,7 +76,7 @@ export function AdminDashboard() {
               onClick={() => setActiveTab(tab.id)}
               title={sidebarCollapsed ? tab.label : undefined}
             >
-              {tab.icon}
+              <iconify-icon icon={tab.icon} width="18" height="18"></iconify-icon>
               {!sidebarCollapsed && <span>{tab.label}</span>}
             </button>
           ))}
@@ -98,7 +88,7 @@ export function AdminDashboard() {
             onClick={() => navigate('/dashboard')}
             title={sidebarCollapsed ? 'Back to Site' : undefined}
           >
-            <ChevronLeft size={18} />
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="18" height="18"></iconify-icon>
             {!sidebarCollapsed && <span>Back to Site</span>}
           </button>
         </div>

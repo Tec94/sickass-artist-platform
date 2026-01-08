@@ -2,22 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  MessageSquare,
-  Hash,
-  Lock,
-  Globe,
-  Crown,
-  Users,
-  Save,
-  X,
-  Shield,
-  AlertTriangle
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
 type ChannelAccessLevel = 'public' | 'members' | 'vip'
@@ -124,9 +108,9 @@ export function AdminChat() {
 
   const getAccessIcon = (level: ChannelAccessLevel) => {
     switch (level) {
-      case 'public': return <Globe size={14} />
-      case 'members': return <Users size={14} />
-      case 'vip': return <Crown size={14} />
+      case 'public': return 'solar:global-linear'
+      case 'members': return 'solar:users-group-rounded-linear'
+      case 'vip': return 'solar:crown-linear'
     }
   }
 
@@ -147,14 +131,14 @@ export function AdminChat() {
           setEditingId(null)
           setShowForm(true)
         }}>
-          <Plus size={18} />
+          <iconify-icon icon="solar:add-circle-linear" width="18" height="18"></iconify-icon>
           Create Channel
         </button>
       </div>
 
       {/* Search */}
       <div className="search-bar">
-        <Search size={18} />
+        <iconify-icon icon="solar:magnifer-linear" width="18" height="18"></iconify-icon>
         <input 
           type="text"
           placeholder="Search channels..."
@@ -170,7 +154,7 @@ export function AdminChat() {
             <div className="modal-header">
               <h3>{editingId ? 'Edit Channel' : 'Create New Channel'}</h3>
               <button className="close-btn" onClick={() => setShowForm(false)}>
-                <X size={20} />
+                <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
               </button>
             </div>
 
@@ -178,7 +162,7 @@ export function AdminChat() {
               <div className="form-group">
                 <label>Channel Name *</label>
                 <div className="input-with-icon">
-                  <Hash size={16} />
+                  <iconify-icon icon="solar:hashtag-linear" width="16" height="16"></iconify-icon>
                   <input 
                     type="text"
                     value={formData.name}
@@ -206,7 +190,7 @@ export function AdminChat() {
                     className={`access-option ${formData.accessLevel === 'public' ? 'active' : ''}`}
                     onClick={() => setFormData(p => ({ ...p, accessLevel: 'public' }))}
                   >
-                    <Globe size={20} />
+                    <iconify-icon icon="solar:global-linear" width="20" height="20"></iconify-icon>
                     <span>Public</span>
                     <small>Anyone can view and chat</small>
                   </button>
@@ -215,7 +199,7 @@ export function AdminChat() {
                     className={`access-option ${formData.accessLevel === 'members' ? 'active' : ''}`}
                     onClick={() => setFormData(p => ({ ...p, accessLevel: 'members' }))}
                   >
-                    <Users size={20} />
+                    <iconify-icon icon="solar:users-group-rounded-linear" width="20" height="20"></iconify-icon>
                     <span>Members Only</span>
                     <small>Logged in users only</small>
                   </button>
@@ -224,7 +208,7 @@ export function AdminChat() {
                     className={`access-option ${formData.accessLevel === 'vip' ? 'active' : ''}`}
                     onClick={() => setFormData(p => ({ ...p, accessLevel: 'vip' }))}
                   >
-                    <Crown size={20} />
+                    <iconify-icon icon="solar:crown-linear" width="20" height="20"></iconify-icon>
                     <span>VIP</span>
                     <small>Premium members only</small>
                   </button>
@@ -237,9 +221,9 @@ export function AdminChat() {
                 </button>
                 <button type="submit" className="submit-btn" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <span className="animate-spin">⏳</span>
+                    <iconify-icon icon="solar:spinner-linear" width="16" height="16" class="animate-spin"></iconify-icon>
                   ) : (
-                    <Save size={16} />
+                    <iconify-icon icon="solar:diskette-linear" width="16" height="16"></iconify-icon>
                   )}
                   {isSubmitting ? 'Saving...' : editingId ? 'Update Channel' : 'Create Channel'}
                 </button>
@@ -253,7 +237,7 @@ export function AdminChat() {
       <div className="channels-grid">
         {filteredChannels.length === 0 && (
           <div className="empty-state">
-            <MessageSquare size={48} />
+            <iconify-icon icon="solar:chat-square-dots-linear" width="48" height="48"></iconify-icon>
             <h3>No channels found</h3>
             <p>Create your first channel to get started</p>
           </div>
@@ -262,25 +246,28 @@ export function AdminChat() {
         {filteredChannels.map(channel => (
           <div key={channel._id} className="channel-card">
             <div className="channel-icon">
-              <Hash size={24} />
+              <iconify-icon icon="solar:hashtag-linear" width="24" height="24"></iconify-icon>
             </div>
             <div className="channel-info">
               <div className="channel-name-row">
                 <h4># {channel.name}</h4>
-                <span className="access-badge">{getAccessIcon('public')} Public</span>
+                <span className="access-badge">
+                  <iconify-icon icon={getAccessIcon('public')} width="14" height="14"></iconify-icon> 
+                  Public
+                </span>
               </div>
               <p className="channel-desc">{channel.description || 'No description'}</p>
               <div className="channel-stats">
-                <span><MessageSquare size={14} /> — messages</span>
-                <span><Users size={14} /> — members</span>
+                <span><iconify-icon icon="solar:chat-square-dots-linear" width="14" height="14"></iconify-icon> — messages</span>
+                <span><iconify-icon icon="solar:users-group-rounded-linear" width="14" height="14"></iconify-icon> — members</span>
               </div>
             </div>
             <div className="channel-actions">
               <button onClick={() => handleEdit(channel)} title="Edit">
-                <Edit size={16} />
+                <iconify-icon icon="solar:pen-linear" width="16" height="16"></iconify-icon>
               </button>
               <button onClick={() => handleDelete(channel._id)} title="Delete" className="delete">
-                <Trash2 size={16} />
+                <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
               </button>
             </div>
           </div>
@@ -290,13 +277,13 @@ export function AdminChat() {
       {/* Moderation Section */}
       <div className="moderation-section">
         <div className="section-header">
-          <Shield size={20} />
+          <iconify-icon icon="solar:shield-check-linear" width="20" height="20"></iconify-icon>
           <h3>Chat Moderation</h3>
         </div>
         
         <div className="moderation-tools">
           <div className="mod-card">
-            <AlertTriangle size={24} />
+            <iconify-icon icon="solar:danger-triangle-linear" width="24" height="24"></iconify-icon>
             <div>
               <h4>Flagged Messages</h4>
               <p>0 messages pending review</p>
@@ -305,7 +292,7 @@ export function AdminChat() {
           </div>
           
           <div className="mod-card">
-            <Lock size={24} />
+            <iconify-icon icon="solar:lock-linear" width="24" height="24"></iconify-icon>
             <div>
               <h4>Banned Users</h4>
               <p>0 users currently banned</p>

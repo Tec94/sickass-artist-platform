@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RotateCw } from 'lucide-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id, Thread, ThreadSortBy } from '../types/forum'
@@ -99,7 +98,10 @@ export function Forum() {
                 className="refresh-btn"
                 title="Refresh threads"
               >
-                <RotateCw className={`w-4 h-4 ${isThreadsLoading ? 'animate-spin' : ''}`} />
+                <iconify-icon 
+                  icon="solar:refresh-linear" 
+                  class={isThreadsLoading ? 'animate-spin' : ''}
+                ></iconify-icon>
               </button>
               <button 
                 type="button"

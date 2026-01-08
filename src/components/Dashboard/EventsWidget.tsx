@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Calendar, MapPin, Clock, ArrowRight, AlertCircle, Ticket } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface EventsWidgetProps {
@@ -52,9 +51,9 @@ export const EventsWidget = ({ data, onRetry }: EventsWidgetProps) => {
   // Show error state if timeout reached and no data
   if ((!data || data.items?.length === 0) && timeoutReached) {
     return (
-      <WidgetContainer title="Upcoming Events" icon={Calendar} actionLabel="View All">
+      <WidgetContainer title="Upcoming Events" icon="solar:calendar-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Unable to load events</h3>
           <p>Please check your connection and try again.</p>
           <button className="retry-button" onClick={onRetry}>
@@ -68,9 +67,9 @@ export const EventsWidget = ({ data, onRetry }: EventsWidgetProps) => {
   // Show empty state if no items
   if (data?.items?.length === 0) {
     return (
-      <WidgetContainer title="Upcoming Events" icon={Calendar} actionLabel="View All">
+      <WidgetContainer title="Upcoming Events" icon="solar:calendar-linear" actionLabel="View All">
         <div className="widget-empty">
-          <Calendar size={48} className="empty-icon" />
+          <iconify-icon icon="solar:calendar-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No upcoming events</h3>
           <p>Check back soon for exciting events near you!</p>
           <button className="explore-button" onClick={() => navigate('/1')}>
@@ -82,7 +81,7 @@ export const EventsWidget = ({ data, onRetry }: EventsWidgetProps) => {
   }
 
   return (
-    <WidgetContainer title="Upcoming Events" icon={Calendar} actionLabel="View All">
+    <WidgetContainer title="Upcoming Events" icon="solar:calendar-linear" actionLabel="View All">
       <div className="events-list">
         {data?.items?.map((event: any, index: number) => (
           <EventItem key={event._id || index} event={event} index={index} navigate={navigate} />
@@ -95,24 +94,24 @@ export const EventsWidget = ({ data, onRetry }: EventsWidgetProps) => {
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: any
+  icon: string
   actionLabel: string
   children: React.ReactNode
 }
 
-const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetContainerProps) => {
+const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainerProps) => {
   const navigate = useNavigate()
 
   return (
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Icon size={20} />
+          <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
         <button className="see-all-button" onClick={() => navigate('/1')}>
           {actionLabel}
-          <ArrowRight size={16} />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
       {children}
@@ -166,7 +165,7 @@ const EventItem = ({ event, index, navigate }: EventItemProps) => {
           <img src={event.imageUrl} alt={event.title} />
         ) : (
           <div className="event-image-placeholder">
-            <Calendar size={24} />
+            <iconify-icon icon="solar:calendar-linear" width="24" height="24"></iconify-icon>
           </div>
         )}
         <div className="event-status" style={{ backgroundColor: getStatusColor(event.saleStatus) }}>
@@ -179,11 +178,11 @@ const EventItem = ({ event, index, navigate }: EventItemProps) => {
         
         <div className="event-details">
           <div className="event-detail">
-            <Clock size={14} />
+            <iconify-icon icon="solar:clock-circle-linear" width="14" height="14"></iconify-icon>
             <span>{formatDate(event.startAtUtc)}</span>
           </div>
           <div className="event-detail">
-            <MapPin size={14} />
+            <iconify-icon icon="solar:map-point-linear" width="14" height="14"></iconify-icon>
             <span>{event.city}</span>
           </div>
         </div>
@@ -201,7 +200,7 @@ const EventItem = ({ event, index, navigate }: EventItemProps) => {
         
         <div className="event-footer">
           <div className="availability">
-            <Ticket size={14} />
+            <iconify-icon icon="solar:ticket-linear" width="14" height="14"></iconify-icon>
             <span>{event.availablePercent}% available</span>
           </div>
           <div className="tickets-sold">
@@ -219,7 +218,7 @@ const EventsSkeleton = () => {
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Calendar size={20} />
+          <iconify-icon icon="solar:calendar-linear" width="20" height="20"></iconify-icon>
           <h3>Upcoming Events</h3>
         </div>
       </div>

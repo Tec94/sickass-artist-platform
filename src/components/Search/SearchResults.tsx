@@ -7,7 +7,6 @@ import type {
   SearchUGCResult,
   SearchChannelResult,
 } from '../../hooks/useGlobalSearch'
-import { MessageSquare, Hash } from 'lucide-react'
 
 interface SearchResultsProps {
   results: SearchResult
@@ -62,7 +61,7 @@ const ThreadResultItem = ({
     }`}
   >
     <div className="p-2 rounded bg-purple-500/20">
-      <MessageSquare className="h-4 w-4 text-purple-400" />
+      <iconify-icon icon="solar:chat-square-dots-linear" width="16" height="16" class="text-purple-400"></iconify-icon>
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-white font-medium truncate">{result.title}</p>
@@ -155,7 +154,7 @@ const ChannelResultItem = ({
     }`}
   >
     <div className="p-2 rounded bg-orange-500/20">
-      <Hash className="h-4 w-4 text-orange-400" />
+      <iconify-icon icon="solar:hashtag-linear" width="16" height="16" class="text-orange-400"></iconify-icon>
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-white font-medium truncate">{result.name}</p>

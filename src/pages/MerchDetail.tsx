@@ -11,7 +11,7 @@ import { MerchErrorBoundary } from '../components/Merch/ErrorBoundary'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { ChevronLeft } from 'lucide-react'
+import { showToast } from '../lib/toast'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -83,7 +83,7 @@ export function MerchDetail() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 bg-gray-800 rounded-full animate-spin mx-auto mb-4"></div>
+          <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
           <p className="text-gray-400">Loading product...</p>
         </div>
       </div>
@@ -100,7 +100,7 @@ export function MerchDetail() {
               onClick={() => navigate('/merch')}
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
               Back to Shop
             </button>
           </div>

@@ -1,4 +1,3 @@
-import { Copy, Check } from 'lucide-react'
 import { useState } from 'react'
 import { Doc } from '../../../convex/_generated/dataModel'
 
@@ -123,12 +122,12 @@ export function ProductInfo({
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4" />
+                <iconify-icon icon="solar:check-circle-linear" width="16" height="16"></iconify-icon>
                 Copied!
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4" />
+                <iconify-icon icon="solar:copy-linear" width="16" height="16"></iconify-icon>
                 Copy Link
               </>
             )}

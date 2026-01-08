@@ -1,5 +1,3 @@
-import { useCallback, useMemo, useState } from 'react'
-import { Heart, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
@@ -103,7 +101,7 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
 
         {isLocked && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
-            <Lock className="w-8 h-8 text-white" />
+            <iconify-icon icon="solar:lock-password-linear" width="32" height="32" class="text-white"></iconify-icon>
             <span className="text-xs font-semibold tracking-wide text-white bg-black/40 px-3 py-1 rounded-full">
               {requiredTierLabel}
             </span>
@@ -144,11 +142,12 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
             aria-pressed={isLiked}
             aria-label={isLiked ? 'Unlike' : 'Like'}
           >
-            <Heart
-              className={`w-4 h-4 ${
-                isLiked ? 'fill-red-500 text-red-500' : 'text-gray-400'
-              }`}
-            />
+            <iconify-icon
+              icon="solar:heart-linear"
+              width="16"
+              height="16"
+              class={isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'}
+            ></iconify-icon>
             <span>{formatNumber(likeCount)}</span>
           </button>
         </div>

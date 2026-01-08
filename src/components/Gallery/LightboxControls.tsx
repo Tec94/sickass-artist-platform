@@ -1,5 +1,4 @@
 import { memo } from 'react'
-import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react'
 
 interface LightboxControlsProps {
   currentIndex: number
@@ -36,7 +35,7 @@ export const LightboxControls = memo(({
         className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition"
         aria-label="Close"
       >
-        <X className="w-6 h-6" />
+        <iconify-icon icon="solar:close-circle-linear" width="24" height="24"></iconify-icon>
       </button>
 
       {/* Counter */}
@@ -51,7 +50,7 @@ export const LightboxControls = memo(({
         className="absolute left-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/50 hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-full transition"
         aria-label="Previous"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <iconify-icon icon="solar:alt-arrow-left-linear" width="24" height="24"></iconify-icon>
       </button>
 
       <button
@@ -60,7 +59,7 @@ export const LightboxControls = memo(({
         className="absolute right-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/50 hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-full transition"
         aria-label="Next"
       >
-        <ChevronRight className="w-6 h-6" />
+        <iconify-icon icon="solar:alt-arrow-right-linear" width="24" height="24"></iconify-icon>
       </button>
 
       {/* Zoom controls (desktop only) */}
@@ -71,7 +70,7 @@ export const LightboxControls = memo(({
           className="p-2 bg-black/50 hover:bg-black/70 disabled:opacity-30 text-white rounded transition"
           title="Zoom out (- key)"
         >
-          <ZoomOut className="w-5 h-5" />
+          <iconify-icon icon="solar:magnifer-zoom-out-linear" width="20" height="20"></iconify-icon>
         </button>
         <span className="px-2 py-2 bg-black/50 text-white text-xs font-medium rounded flex items-center">
           {zoom.toFixed(1)}x
@@ -82,7 +81,7 @@ export const LightboxControls = memo(({
           className="p-2 bg-black/50 hover:bg-black/70 disabled:opacity-30 text-white rounded transition"
           title="Zoom in (+ key)"
         >
-          <ZoomIn className="w-5 h-5" />
+          <iconify-icon icon="solar:magnifer-zoom-in-linear" width="20" height="20"></iconify-icon>
         </button>
         <button
           onClick={onResetZoom}

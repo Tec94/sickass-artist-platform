@@ -1,24 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { MessageCircle, Clock, User, ArrowRight, AlertCircle, Hash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface ForumWidgetProps {
   onRetry?: () => void
-}
-
-interface ThreadItem {
-  _id: string
-  title: string
-  content?: string
-  category?: string
-  createdAt: number
-  authorDisplayName: string
-  authorAvatar?: string
-  authorRole?: string
-  replyCount?: number
-  viewCount?: number
 }
 
 export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
@@ -48,9 +34,9 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   // Show error state if timeout reached and no data or actual error
   if ((!data || data.items?.length === 0 || error) && timeoutReached) {
     return (
-      <WidgetContainer title="Latest Discussions" icon={MessageCircle} actionLabel="View All">
+      <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Unable to load forum discussions</h3>
           <p>Please check your connection and try again.</p>
           <button className="retry-button" onClick={onRetry}>
@@ -64,9 +50,9 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   // Show empty state if no items
   if (data?.items?.length === 0) {
     return (
-      <WidgetContainer title="Latest Discussions" icon={MessageCircle} actionLabel="View All">
+      <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
         <div className="widget-empty">
-          <MessageCircle size={48} className="empty-icon" />
+          <iconify-icon icon="solar:chat-square-dots-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No discussions yet</h3>
           <p>Start the conversation in our community forum!</p>
           <button className="explore-button" onClick={() => navigate('/4')}>
@@ -78,7 +64,7 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   }
 
   return (
-    <WidgetContainer title="Latest Discussions" icon={MessageCircle} actionLabel="View All">
+    <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
       <div className="forum-list">
         {data?.items?.slice(0, 3).map((thread: any, index: number) => (
           <ThreadItem key={thread._id || index} thread={thread} index={index} navigate={navigate} />
@@ -91,24 +77,24 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: any
+  icon: string
   actionLabel: string
   children: React.ReactNode
 }
 
-const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetContainerProps) => {
+const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainerProps) => {
   const navigate = useNavigate()
 
   return (
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Icon size={20} />
+          <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
         <button className="see-all-button" onClick={() => navigate('/4')}>
           {actionLabel}
-          <ArrowRight size={16} />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
       {children}
@@ -144,11 +130,11 @@ const ThreadItem = ({ thread, index, navigate }: ThreadItemProps) => {
     <div className="thread-item" onClick={handleClick} style={{ animationDelay: `${index * 100}ms` }}>
       <div className="thread-header">
         <div className="thread-category">
-          <Hash size={12} />
+          <iconify-icon icon="solar:hashtag-linear" width="12" height="12"></iconify-icon>
           <span>{thread.category || 'General'}</span>
         </div>
         <div className="thread-time">
-          <Clock size={12} />
+          <iconify-icon icon="solar:clock-circle-linear" width="12" height="12"></iconify-icon>
           <span>{formatTime(thread.createdAt)}</span>
         </div>
       </div>
@@ -179,11 +165,11 @@ const ThreadItem = ({ thread, index, navigate }: ThreadItemProps) => {
         
         <div className="thread-stats">
           <div className="stat">
-            <MessageCircle size={12} />
+            <iconify-icon icon="solar:chat-square-dots-linear" width="12" height="12"></iconify-icon>
             <span>{thread.replyCount || 0}</span>
           </div>
           <div className="stat">
-            <User size={12} />
+            <iconify-icon icon="solar:user-circle-linear" width="12" height="12"></iconify-icon>
             <span>{thread.viewCount || 0}</span>
           </div>
         </div>
@@ -198,7 +184,7 @@ const ForumSkeleton = () => {
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <MessageCircle size={20} />
+          <iconify-icon icon="solar:chat-square-dots-linear" width="20" height="20"></iconify-icon>
           <h3>Latest Discussions</h3>
         </div>
       </div>

@@ -1,4 +1,3 @@
-import { Check, Clock, Truck, Package } from 'lucide-react'
 import { Doc } from '../../../convex/_generated/dataModel'
 
 interface OrderTrackingProps {
@@ -10,28 +9,28 @@ export function OrderTracking({ order }: OrderTrackingProps) {
     {
       status: 'paid',
       label: 'Order Placed',
-      icon: Package,
+      icon: 'solar:box-linear',
       completed: ['paid', 'processing', 'shipped', 'delivered'].includes(order.status),
       date: order.createdAt,
     },
     {
       status: 'processing',
       label: 'Processing',
-      icon: Clock,
+      icon: 'solar:clock-circle-linear',
       completed: ['processing', 'shipped', 'delivered'].includes(order.status),
       date: undefined,
     },
     {
       status: 'shipped',
       label: 'Shipped',
-      icon: Truck,
+      icon: 'solar:delivery-linear',
       completed: ['shipped', 'delivered'].includes(order.status),
       date: order.shippedAt,
     },
     {
       status: 'delivered',
       label: 'Delivered',
-      icon: Check,
+      icon: 'solar:check-circle-linear',
       completed: order.status === 'delivered',
       date: order.deliveredAt,
     },
@@ -41,7 +40,6 @@ export function OrderTracking({ order }: OrderTrackingProps) {
     <div className="space-y-6">
       <div className="space-y-4">
         {stages.map((stage, index) => {
-          const Icon = stage.icon
           const isLast = index === stages.length - 1
 
           return (
@@ -54,7 +52,7 @@ export function OrderTracking({ order }: OrderTrackingProps) {
                       : 'bg-gray-800 text-gray-400'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <iconify-icon icon={stage.icon} width="20" height="20"></iconify-icon>
                 </div>
                 {!isLast && (
                   <div

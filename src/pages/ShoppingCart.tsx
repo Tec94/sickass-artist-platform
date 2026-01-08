@@ -3,7 +3,7 @@ import { useCart } from '../contexts/CartContext'
 import { CartItem } from '../components/Merch/CartItem'
 import { CartSummary } from '../components/Merch/CartSummary'
 import { showToast } from '../lib/toast'
-import { ChevronLeft } from 'lucide-react'
+import { showToast } from '../lib/toast'
 import { useState } from 'react'
 
 export function ShoppingCart() {
@@ -49,7 +49,7 @@ export function ShoppingCart() {
             onClick={() => navigate('/merch')}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-4"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
             Continue Shopping
           </button>
           <h1 className="text-3xl font-bold text-white">Shopping Cart</h1>
@@ -60,7 +60,7 @@ export function ShoppingCart() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="text-center py-12">
-            <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
             <p className="text-gray-400">Loading cart...</p>
           </div>
         ) : isEmpty ? (

@@ -1,5 +1,4 @@
 import { memo, useEffect, useRef } from 'react'
-import { Lock, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { GalleryContentItem } from '../../types/gallery'
 import { FanTier } from '../../types/gallery'
@@ -83,17 +82,15 @@ export const TierLockedOverlay = memo(function TierLockedOverlay({
         aria-labelledby="lock-title"
         aria-describedby="lock-description"
       >
-        <button
-          ref={closeButtonRef}
           onClick={onClose}
           className="absolute top-4 right-4 p-1 hover:bg-gray-800 rounded transition-colors"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
         </button>
 
         <div className="text-center">
-          <Lock className={`w-16 h-16 mx-auto mb-4 ${tierColor}`} />
+          <iconify-icon icon="solar:lock-password-linear" width="64" height="64" class={`mx-auto mb-4 ${tierColor}`}></iconify-icon>
           <h2 id="lock-title" className="text-xl font-bold mb-2 text-white">
             This Content Requires
           </h2>

@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react'
 
 interface CartSummaryProps {
   subtotal: number
@@ -53,7 +52,7 @@ export function CartSummary({
           className="w-full py-3 px-4 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
         >
           {loading ? 'Processing...' : 'Proceed to Checkout'}
-          {!loading && <ArrowRight className="w-4 h-4" />}
+          {!loading && <iconify-icon icon="solar:arrow-right-linear" width="16" height="16"></iconify-icon>}
         </button>
       </div>
     </div>

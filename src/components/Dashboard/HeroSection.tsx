@@ -1,4 +1,3 @@
-import { User, Star, MessageCircle, Twitter, Instagram, Disc } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 
@@ -61,7 +60,7 @@ export const HeroSection = () => {
               />
             ) : (
               <div className="user-avatar-placeholder" onClick={handleProfileClick}>
-                <User size={32} />
+                <iconify-icon icon="solar:user-linear" width="32" height="32"></iconify-icon>
               </div>
             )}
           </div>
@@ -85,19 +84,19 @@ export const HeroSection = () => {
               className="action-btn primary"
               onClick={() => navigate('/gallery')}
             >
-              <Star size={16} />
+              <iconify-icon icon="solar:star-linear" width="16" height="16"></iconify-icon>
               Explore Gallery
             </button>
             <button 
               className="action-btn secondary"
               onClick={() => navigate('/events')}
             >
-              <MessageCircle size={16} />
+              <iconify-icon icon="solar:calendar-linear" width="16" height="16"></iconify-icon>
               View Events
             </button>
             {!isSignedIn && !isLoading && (
               <button className="action-btn tertiary" onClick={handleProfileClick}>
-                <User size={16} />
+                <iconify-icon icon="solar:user-linear" width="16" height="16"></iconify-icon>
                 Sign In
               </button>
             )}
@@ -113,7 +112,7 @@ export const HeroSection = () => {
               onClick={() => handleSocialClick('twitter')}
               title="Twitter"
             >
-              <Twitter size={18} />
+              <iconify-icon icon="simple-icons:x" width="18" height="18"></iconify-icon>
             </button>
             <button 
               className="social-link"
@@ -121,7 +120,7 @@ export const HeroSection = () => {
               title="Instagram"
               style={{ marginLeft: '12px' }}
             >
-              <Instagram size={18} />
+              <iconify-icon icon="simple-icons:instagram" width="18" height="18"></iconify-icon>
             </button>
             <button 
               className="social-link"
@@ -129,7 +128,7 @@ export const HeroSection = () => {
               title="Discord"
               style={{ marginLeft: '12px' }}
             >
-              <Disc size={18} />
+              <iconify-icon icon="simple-icons:discord" width="18" height="18"></iconify-icon>
             </button>
           </div>
         </div>

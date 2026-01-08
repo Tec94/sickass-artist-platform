@@ -1,4 +1,3 @@
-import { TrendingUp, Eye, Heart, Clock, ArrowRight, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { LoadingSkeleton } from '../LoadingSkeleton'
 import { useQueryWithTimeout } from '../../hooks/useQueryWithTimeout'
@@ -67,9 +66,9 @@ export const TrendingWidget = ({
   // Show timeout error after 5s
   if (timedOut) {
     return (
-      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+      <WidgetContainer title="Trending Now" icon="solar:chart-square-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Request timed out</h3>
           <p>Unable to load trending content. Please try again.</p>
           <button className="retry-button" onClick={handleRetry}>
@@ -83,7 +82,7 @@ export const TrendingWidget = ({
   // Show loading skeleton if data is loading
   if (isLoading && !data) {
     return (
-      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+      <WidgetContainer title="Trending Now" icon="solar:chart-square-linear" actionLabel="View All">
         <LoadingSkeleton 
           type="gallery" 
           count={4}
@@ -96,9 +95,9 @@ export const TrendingWidget = ({
   // Show error state if there's an error and no data
   if (error && !data?.items?.length) {
     return (
-      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+      <WidgetContainer title="Trending Now" icon="solar:chart-square-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Unable to load trending content</h3>
           <p>Please check your connection and try again.</p>
           <button className="retry-button" onClick={handleRetry}>
@@ -112,9 +111,9 @@ export const TrendingWidget = ({
   // Show empty state if no items
   if (data?.items?.length === 0) {
     return (
-      <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+      <WidgetContainer title="Trending Now" icon="solar:chart-square-linear" actionLabel="View All">
         <div className="widget-empty">
-          <TrendingUp size={48} className="empty-icon" />
+          <iconify-icon icon="solar:chart-square-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No trending content yet</h3>
           <p>Be the first to create some amazing content!</p>
           <button className="explore-button" onClick={() => navigate('/gallery')}>
@@ -126,7 +125,7 @@ export const TrendingWidget = ({
   }
 
   return (
-    <WidgetContainer title="Trending Now" icon={TrendingUp} actionLabel="View All">
+    <WidgetContainer title="Trending Now" icon="solar:chart-square-linear" actionLabel="View All">
       <div className="trending-grid">
         {data?.items?.slice(0, 4).map((item: TrendingItem, index: number) => (
           <TrendingItemComponent key={item.id || index} item={item} index={index} navigate={navigate} />
@@ -139,24 +138,24 @@ export const TrendingWidget = ({
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: React.ComponentType<{ size?: number; className?: string }>
+  icon: string
   actionLabel: string
   children: React.ReactNode
 }
 
-const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetContainerProps) => {
+const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainerProps) => {
   const navigate = useNavigate()
 
   return (
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Icon size={20} />
+          <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
         <button className="see-all-button" onClick={() => navigate('/gallery')}>
           {actionLabel}
-          <ArrowRight size={16} />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
       {children}
@@ -193,7 +192,7 @@ const TrendingItemComponent = ({ item, index, navigate }: TrendingItemProps) => 
           <img src={item.thumbnailUrl} alt={item.title} />
         ) : (
           <div className="thumbnail-placeholder">
-            <TrendingUp size={24} />
+            <iconify-icon icon="solar:chart-square-linear" width="24" height="24"></iconify-icon>
           </div>
         )}
         <div className="trending-rank">#{index + 1}</div>
@@ -215,15 +214,15 @@ const TrendingItemComponent = ({ item, index, navigate }: TrendingItemProps) => 
         
         <div className="trending-stats">
           <div className="stat">
-            <Heart size={14} />
+            <iconify-icon icon="solar:heart-linear" width="14" height="14"></iconify-icon>
             <span>{formatNumber(item.likeCount || 0)}</span>
           </div>
           <div className="stat">
-            <Eye size={14} />
+            <iconify-icon icon="solar:eye-linear" width="14" height="14"></iconify-icon>
             <span>{formatNumber(item.viewCount || 0)}</span>
           </div>
           <div className="stat">
-            <Clock size={14} />
+            <iconify-icon icon="solar:clock-circle-linear" width="14" height="14"></iconify-icon>
             <span>{new Date(item.createdAt).toLocaleDateString()}</span>
           </div>
         </div>

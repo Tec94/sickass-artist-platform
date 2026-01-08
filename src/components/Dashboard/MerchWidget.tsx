@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { ShoppingBag, Star, Clock, ArrowRight, AlertCircle, Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface MerchWidgetProps {
@@ -45,9 +44,9 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
   // Show error state if timeout reached and no data or actual error
   if ((!data || data.length === 0 || error) && timeoutReached) {
     return (
-      <WidgetContainer title="Featured Drops" icon={ShoppingBag} actionLabel="View All">
+      <WidgetContainer title="Featured Drops" icon="solar:bag-linear" actionLabel="View All">
         <div className="widget-error">
-          <AlertCircle size={48} className="error-icon" />
+          <iconify-icon icon="solar:danger-circle-linear" width="48" height="48" class="error-icon"></iconify-icon>
           <h3>Unable to load merchandise</h3>
           <p>Please check your connection and try again.</p>
           <button className="retry-button" onClick={onRetry}>
@@ -61,9 +60,9 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
   // Show empty state if no items
   if (data?.length === 0) {
     return (
-      <WidgetContainer title="Featured Drops" icon={ShoppingBag} actionLabel="View All">
+      <WidgetContainer title="Featured Drops" icon="solar:bag-linear" actionLabel="View All">
         <div className="widget-empty">
-          <ShoppingBag size={48} className="empty-icon" />
+          <iconify-icon icon="solar:bag-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No drops available</h3>
           <p>Check back soon for exclusive merchandise!</p>
           <button className="explore-button" onClick={() => navigate('/2')}>
@@ -75,7 +74,7 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
   }
 
   return (
-    <WidgetContainer title="Featured Drops" icon={ShoppingBag} actionLabel="View All">
+    <WidgetContainer title="Featured Drops" icon="solar:bag-linear" actionLabel="View All">
       <div className="merch-grid">
         {data?.slice(0, 4).map((drop: any, index: number) => (
           <DropItem key={drop._id || index} drop={drop} index={index} navigate={navigate} />
@@ -88,24 +87,24 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
 // Widget Container Component
 interface WidgetContainerProps {
   title: string
-  icon: any
+  icon: string
   actionLabel: string
   children: React.ReactNode
 }
 
-const WidgetContainer = ({ title, icon: Icon, actionLabel, children }: WidgetContainerProps) => {
+const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainerProps) => {
   const navigate = useNavigate()
 
   return (
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <Icon size={20} />
+          <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
         <button className="see-all-button" onClick={() => navigate('/2')}>
           {actionLabel}
-          <ArrowRight size={16} />
+          <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
       </div>
       {children}
@@ -150,7 +149,7 @@ const DropItem = ({ drop, index, navigate }: DropItemProps) => {
           <img src={drop.imageUrl} alt={drop.name} />
         ) : (
           <div className="drop-image-placeholder">
-            <Package size={24} />
+            <iconify-icon icon="solar:box-linear" width="24" height="24"></iconify-icon>
           </div>
         )}
         <div className={`drop-status status-${status}`}>
@@ -166,14 +165,14 @@ const DropItem = ({ drop, index, navigate }: DropItemProps) => {
             {drop.price ? `$${(drop.price / 100).toFixed(2)}` : 'TBD'}
           </div>
           <div className="drop-availability">
-            <Star size={14} />
+            <iconify-icon icon="solar:star-linear" width="14" height="14"></iconify-icon>
             <span>Limited Edition</span>
           </div>
         </div>
         
         {drop.startsAt && (
           <div className="drop-timer">
-            <Clock size={14} />
+            <iconify-icon icon="solar:clock-circle-linear" width="14" height="14"></iconify-icon>
             <span>Starts {formatDate(drop.startsAt)}</span>
           </div>
         )}
@@ -188,7 +187,7 @@ const MerchSkeleton = () => {
     <div className="widget-container">
       <div className="widget-header">
         <div className="widget-title">
-          <ShoppingBag size={20} />
+          <iconify-icon icon="solar:bag-linear" width="20" height="20"></iconify-icon>
           <h3>Featured Drops</h3>
         </div>
       </div>

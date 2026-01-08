@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart, Eye } from 'lucide-react'
+
 import type { TrendingItem, FanTier } from '../../../types'
 
 interface TrendingGridProps {
@@ -100,11 +100,11 @@ const TrendingCard = memo(function TrendingCard({ item }: { item: TrendingItem }
 
           <div className="flex gap-3 text-xs text-gray-500 flex-shrink-0">
             <span className="flex items-center gap-1">
-              <Heart className="w-3 h-3 text-red-400" />
+              <iconify-icon icon="solar:heart-linear" width="12" height="12" style={{ color: '#f87171' }}></iconify-icon>
               {formatNumber(item.likeCount)}
             </span>
             <span className="flex items-center gap-1">
-              <Eye className="w-3 h-3 text-blue-400" />
+              <iconify-icon icon="solar:view-linear" width="12" height="12" style={{ color: '#60a5fa' }}></iconify-icon>
               {formatNumber(item.viewCount)}
             </span>
           </div>

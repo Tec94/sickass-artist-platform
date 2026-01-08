@@ -9,7 +9,6 @@ import { MerchErrorBoundary } from '../components/Merch/ErrorBoundary'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 
 export function Checkout() {
@@ -85,7 +84,7 @@ export function Checkout() {
               onClick={() => navigate('/merch/cart')}
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-4"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
               Back to Cart
             </button>
             <h1 className="text-3xl font-bold text-white">Checkout</h1>
@@ -200,7 +199,7 @@ function CartReviewStep({ onNext }: { onNext: () => void }) {
         className="w-full mt-6 py-3 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
       >
         Continue to Shipping
-        <ChevronRight className="w-4 h-4" />
+        <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
       </button>
     </div>
   )

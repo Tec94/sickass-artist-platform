@@ -3,7 +3,7 @@ import { api } from '../../convex/_generated/api'
 import { useNavigate } from 'react-router-dom'
 import { OrderCard } from '../components/Merch/OrderCard'
 import { useState, useMemo } from 'react'
-import { Search } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 import { useAuth } from '../hooks/useAuth'
 
 export function OrderHistory() {
@@ -55,7 +55,7 @@ export function OrderHistory() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="space-y-4 mb-8">
           <div className="relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+            <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="absolute left-3 top-3 text-gray-500"></iconify-icon>
             <input
               type="text"
               placeholder="Search by order number or email..."
@@ -84,7 +84,7 @@ export function OrderHistory() {
 
         {!orders ? (
           <div className="text-center py-12">
-            <div className="w-12 h-12 bg-gray-800 rounded-full animate-spin mx-auto mb-4"></div>
+            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
             <p className="text-gray-400">Loading orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (

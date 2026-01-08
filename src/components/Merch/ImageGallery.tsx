@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ImageGalleryProps {
@@ -48,13 +47,13 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
               onClick={handlePrevious}
               className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <iconify-icon icon="solar:alt-arrow-left-linear" width="20" height="20"></iconify-icon>
             </button>
             <button
               onClick={handleNext}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
             >
-              <ChevronRight className="w-5 h-5" />
+              <iconify-icon icon="solar:alt-arrow-right-linear" width="20" height="20"></iconify-icon>
             </button>
           </>
         )}
@@ -107,7 +106,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                 onClick={() => setLightboxOpen(false)}
                 className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
               >
-                <X className="w-6 h-6" />
+                <iconify-icon icon="solar:close-circle-linear" width="24" height="24"></iconify-icon>
               </button>
 
               {/* Lightbox navigation */}
@@ -120,7 +119,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                     }}
                     className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
                   >
-                    <ChevronLeft className="w-6 h-6" />
+                    <iconify-icon icon="solar:alt-arrow-left-linear" width="24" height="24"></iconify-icon>
                   </button>
                   <button
                     onClick={(e) => {
@@ -129,7 +128,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                     }}
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/75 rounded-full text-white transition-colors"
                   >
-                    <ChevronRight className="w-6 h-6" />
+                    <iconify-icon icon="solar:alt-arrow-right-linear" width="24" height="24"></iconify-icon>
                   </button>
                 </>
               )}

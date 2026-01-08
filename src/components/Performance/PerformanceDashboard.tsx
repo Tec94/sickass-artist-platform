@@ -1,10 +1,3 @@
-/**
- * Performance Dashboard Component
- * Displays real-time performance metrics and alerts
- */
-
-import { useState, useEffect } from 'react'
-import { X, Activity, AlertTriangle, CheckCircle, BarChart3, Zap } from 'lucide-react'
 import { perfMonitor, type PerformanceReport } from '../../utils/performanceMonitor'
 
 interface PerformanceDashboardProps {
@@ -61,14 +54,14 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-cyan-500" />
+            <iconify-icon icon="solar:chart-square-linear" width="20" height="20" class="text-cyan-500"></iconify-icon>
             <h2 className="text-lg font-bold text-white">Performance</h2>
           </div>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-800 rounded transition"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <iconify-icon icon="solar:close-circle-linear" width="20" height="20" class="text-gray-400"></iconify-icon>
           </button>
         </div>
 
@@ -78,7 +71,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
           {report.alerts.length > 0 && (
             <div className="bg-red-950/30 border border-red-900 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <iconify-icon icon="solar:danger-triangle-linear" width="16" height="16" class="text-red-500"></iconify-icon>
                 <span className="text-sm font-semibold text-red-400">
                   {report.alerts.length} Slow Operations
                 </span>
@@ -97,7 +90,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
           {/* Summary Stats */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-4 h-4 text-cyan-500" />
+              <iconify-icon icon="solar:graph-linear" width="16" height="16" class="text-cyan-500"></iconify-icon>
               <span className="text-sm font-semibold text-white">Performance Summary</span>
             </div>
             <div className="space-y-2">
@@ -163,7 +156,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
           {report.metrics.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="w-4 h-4 text-cyan-500" />
+                <iconify-icon icon="solar:bolt-linear" width="16" height="16" class="text-cyan-500"></iconify-icon>
                 <span className="text-sm font-semibold text-white">Recent Activity</span>
               </div>
               <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -184,14 +177,14 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
             onClick={handleClearMetrics}
             className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded transition flex items-center justify-center gap-2"
           >
-            <CheckCircle className="w-4 h-4" />
+            <iconify-icon icon="solar:check-circle-linear" width="16" height="16"></iconify-icon>
             Clear Metrics
           </button>
           <button
             onClick={handleExportMetrics}
             className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition flex items-center justify-center gap-2"
           >
-            <Activity className="w-4 h-4" />
+            <iconify-icon icon="solar:chart-square-linear" width="16" height="16"></iconify-icon>
             Export Report
           </button>
           <div className="text-xs text-gray-500 text-center pt-2">

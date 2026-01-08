@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckCircle, Copy } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { showToast } from '../lib/toast'
 
@@ -55,7 +55,7 @@ export function OrderConfirmation() {
 
       <div className="relative max-w-2xl mx-auto px-4 py-16 flex flex-col items-center">
         <div className="mb-8">
-          <CheckCircle className="w-24 h-24 text-green-400 animate-bounce" />
+          <iconify-icon icon="solar:check-circle-linear" width="96" height="96" class="text-green-400 animate-bounce"></iconify-icon>
         </div>
 
         <h1 className="text-4xl font-bold text-white mb-2 text-center">
@@ -75,7 +75,7 @@ export function OrderConfirmation() {
               onClick={handleCopy}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded text-sm transition-colors"
             >
-              <Copy className="w-4 h-4" />
+              <iconify-icon icon="solar:copy-linear" width="16" height="16"></iconify-icon>
               {copied ? 'Copied!' : 'Copy Order Number'}
             </button>
           </div>

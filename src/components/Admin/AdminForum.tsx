@@ -2,24 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Pin,
-  Lock,
-  Unlock,
-  MessageSquare,
-  FolderOpen,
-  Tag,
-  Save,
-  X,
-  ChevronRight,
-  AlertTriangle,
-  Flag,
-  MoreVertical
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
 interface CategoryFormData {
@@ -206,10 +188,10 @@ export function AdminForum() {
                 </div>
                 <div className="category-actions" onClick={e => e.stopPropagation()}>
                   <button onClick={() => handleEditCategory(category)} title="Edit">
-                    <Edit size={14} />
+                    <iconify-icon icon="solar:pen-linear" width="14" height="14"></iconify-icon>
                   </button>
                   <button onClick={() => handleDeleteCategory(category._id)} title="Delete">
-                    <Trash2 size={14} />
+                    <iconify-icon icon="solar:trash-bin-trash-linear" width="14" height="14"></iconify-icon>
                   </button>
                 </div>
               </div>
@@ -217,7 +199,7 @@ export function AdminForum() {
 
             {(!categories || categories.length === 0) && (
               <div className="empty-message">
-                <FolderOpen size={24} />
+                <iconify-icon icon="solar:folder-open-linear" width="24" height="24"></iconify-icon>
                 <p>No categories yet</p>
               </div>
             )}
@@ -229,7 +211,7 @@ export function AdminForum() {
           <div className="panel-header">
             <h3>Threads</h3>
             <div className="search-input">
-              <Search size={16} />
+              <iconify-icon icon="solar:magnifer-linear" width="16" height="16"></iconify-icon>
               <input 
                 type="text"
                 placeholder="Search threads..."
@@ -243,7 +225,7 @@ export function AdminForum() {
             {/* Placeholder thread items */}
             <div className="thread-item">
               <div className="thread-status">
-                <Pin size={14} className="pinned" />
+                <iconify-icon icon="solar:pin-linear" width="14" height="14" class="pinned"></iconify-icon>
               </div>
               <div className="thread-content">
                 <h4>Welcome to the Community Forum</h4>
@@ -256,15 +238,15 @@ export function AdminForum() {
                 </div>
               </div>
               <div className="thread-actions">
-                <button title="Unpin"><Pin size={16} /></button>
-                <button title="Lock"><Lock size={16} /></button>
-                <button title="Delete" className="delete"><Trash2 size={16} /></button>
+                <button title="Unpin"><iconify-icon icon="solar:pin-linear" width="16" height="16"></iconify-icon></button>
+                <button title="Lock"><iconify-icon icon="solar:lock-linear" width="16" height="16"></iconify-icon></button>
+                <button title="Delete" className="delete"><iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon></button>
               </div>
             </div>
 
             <div className="thread-item">
               <div className="thread-status">
-                <Lock size={14} className="locked" />
+                <iconify-icon icon="solar:lock-linear" width="14" height="14" class="locked"></iconify-icon>
               </div>
               <div className="thread-content">
                 <h4>Forum Rules and Guidelines</h4>
@@ -277,15 +259,15 @@ export function AdminForum() {
                 </div>
               </div>
               <div className="thread-actions">
-                <button title="Pin"><Pin size={16} /></button>
-                <button title="Unlock"><Unlock size={16} /></button>
-                <button title="Delete" className="delete"><Trash2 size={16} /></button>
+                <button title="Pin"><iconify-icon icon="solar:pin-linear" width="16" height="16"></iconify-icon></button>
+                <button title="Unlock"><iconify-icon icon="solar:lock-unlock-linear" width="16" height="16"></iconify-icon></button>
+                <button title="Delete" className="delete"><iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon></button>
               </div>
             </div>
 
             {!selectedCategory && (
               <div className="empty-message center">
-                <MessageSquare size={32} />
+                <iconify-icon icon="solar:chat-square-dots-linear" width="32" height="32"></iconify-icon>
                 <p>Select a category to view threads</p>
               </div>
             )}
@@ -296,14 +278,14 @@ export function AdminForum() {
       {/* Flagged Content Section */}
       <div className="flagged-section">
         <div className="section-header">
-          <Flag size={20} />
+          <iconify-icon icon="solar:flag-linear" width="20" height="20"></iconify-icon>
           <h3>Flagged Content</h3>
           <span className="badge">0</span>
         </div>
         
         <div className="flagged-list">
           <div className="empty-message">
-            <AlertTriangle size={24} />
+            <iconify-icon icon="solar:danger-triangle-linear" width="24" height="24"></iconify-icon>
             <p>No flagged content to review</p>
           </div>
         </div>
@@ -316,7 +298,7 @@ export function AdminForum() {
             <div className="modal-header">
               <h3>{editingCategoryId ? 'Edit Category' : 'Create Category'}</h3>
               <button className="close-btn" onClick={() => setShowCategoryForm(false)}>
-                <X size={20} />
+                <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
               </button>
             </div>
 
@@ -379,7 +361,7 @@ export function AdminForum() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  <Save size={16} />
+                  <iconify-icon icon="solar:diskette-linear" width="16" height="16"></iconify-icon>
                   {editingCategoryId ? 'Update' : 'Create'}
                 </button>
               </div>

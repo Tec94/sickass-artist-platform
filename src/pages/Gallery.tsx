@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Filter, Activity } from 'lucide-react';
 import type { GalleryContentItem } from '../types/gallery';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useGalleryFilters } from '../hooks/useGalleryFilters';
@@ -152,7 +151,7 @@ export const Gallery = () => {
                 className="filter-toggle-btn"
                 title="Performance Dashboard"
               >
-                <Activity className="w-5 h-5" />
+                <iconify-icon icon="solar:chart-square-linear" width="20" height="20"></iconify-icon>
               </button>
             )}
 
@@ -169,7 +168,7 @@ export const Gallery = () => {
               title="Toggle filters"
               aria-label="Toggle filters"
             >
-              <Filter className="w-5 h-5" />
+              <iconify-icon icon="solar:filter-linear" width="20" height="20"></iconify-icon>
               {appliedCount > 0 && (
                 <span className="filter-badge">{appliedCount}</span>
               )}
@@ -200,7 +199,7 @@ export const Gallery = () => {
         <main className="gallery-viewport flex-1">
           {data?.total === 0 && !isLoading ? (
             <div className="empty-state">
-              <Filter className="w-16 h-16 text-gray-600 mb-4" />
+              <iconify-icon icon="solar:filter-linear" width="64" height="64" class="text-gray-600 mb-4"></iconify-icon>
               <h3 className="text-xl font-bold text-white mb-2">No content found</h3>
               <p className="text-gray-400 mb-4">
                 Try adjusting your filters to see more content

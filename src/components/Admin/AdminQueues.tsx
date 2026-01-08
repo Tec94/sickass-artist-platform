@@ -1,22 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { 
-  Clock, 
-  Users, 
-  CheckCircle, 
-  XCircle,
-  Play,
-  FastForward,
-  RotateCcw,
-  Trash2,
-  RefreshCw,
-  Calendar,
-  AlertCircle,
-  Wifi,
-  WifiOff,
-  Activity
-} from 'lucide-react'
 import { showToast } from '../../lib/toast'
 
 interface QueueStats {
@@ -80,7 +64,7 @@ export function AdminQueues() {
       {/* Event Queue Section */}
       <div className="section">
         <div className="section-header">
-          <Calendar size={20} />
+          <iconify-icon icon="solar:calendar-linear" width="20" height="20"></iconify-icon>
           <h3>Event Queue Management</h3>
         </div>
 
@@ -104,28 +88,28 @@ export function AdminQueues() {
             {/* Queue Stats */}
             <div className="stats-grid">
               <div className="stat-card waiting">
-                <Clock size={24} />
+                <iconify-icon icon="solar:clock-circle-linear" width="24" height="24"></iconify-icon>
                 <div className="stat-info">
                   <span className="stat-value">{queueStats.waiting}</span>
                   <span className="stat-label">Waiting</span>
                 </div>
               </div>
               <div className="stat-card admitted">
-                <CheckCircle size={24} />
+                <iconify-icon icon="solar:check-circle-linear" width="24" height="24"></iconify-icon>
                 <div className="stat-info">
                   <span className="stat-value">{queueStats.admitted}</span>
                   <span className="stat-label">Admitted</span>
                 </div>
               </div>
               <div className="stat-card expired">
-                <XCircle size={24} />
+                <iconify-icon icon="solar:close-circle-linear" width="24" height="24"></iconify-icon>
                 <div className="stat-info">
                   <span className="stat-value">{queueStats.expired}</span>
                   <span className="stat-label">Expired</span>
                 </div>
               </div>
               <div className="stat-card total">
-                <Users size={24} />
+                <iconify-icon icon="solar:users-group-rounded-linear" width="24" height="24"></iconify-icon>
                 <div className="stat-info">
                   <span className="stat-value">{queueStats.total}</span>
                   <span className="stat-label">Total</span>
@@ -136,23 +120,23 @@ export function AdminQueues() {
             {/* Queue Actions */}
             <div className="actions-grid">
               <button className="action-btn primary" onClick={() => handleAdmitNext(1)}>
-                <Play size={18} />
+                <iconify-icon icon="solar:play-linear" width="18" height="18"></iconify-icon>
                 Admit Next
               </button>
               <button className="action-btn primary" onClick={() => handleAdmitNext(5)}>
-                <FastForward size={18} />
+                <iconify-icon icon="solar:forward-linear" width="18" height="18"></iconify-icon>
                 Admit Next 5
               </button>
               <button className="action-btn primary" onClick={() => handleAdmitNext(10)}>
-                <FastForward size={18} />
+                <iconify-icon icon="solar:forward-linear" width="18" height="18"></iconify-icon>
                 Admit Next 10
               </button>
               <button className="action-btn warning" onClick={handleExpireAll}>
-                <RotateCcw size={18} />
+                <iconify-icon icon="solar:restart-linear" width="18" height="18"></iconify-icon>
                 Expire All Waiting
               </button>
               <button className="action-btn danger" onClick={handleClearQueue}>
-                <Trash2 size={18} />
+                <iconify-icon icon="solar:trash-bin-trash-linear" width="18" height="18"></iconify-icon>
                 Clear Queue
               </button>
             </div>
@@ -169,7 +153,7 @@ export function AdminQueues() {
                   <span>Actions</span>
                 </div>
                 <div className="empty-message">
-                  <Users size={24} />
+                  <iconify-icon icon="solar:users-group-rounded-linear" width="24" height="24"></iconify-icon>
                   <p>No queue entries for this event</p>
                 </div>
               </div>
@@ -177,7 +161,7 @@ export function AdminQueues() {
           </>
         ) : (
           <div className="empty-state">
-            <Calendar size={48} />
+            <iconify-icon icon="solar:calendar-linear" width="48" height="48"></iconify-icon>
             <h4>Select an Event</h4>
             <p>Choose an event from the dropdown to view and manage its queue</p>
           </div>
@@ -187,14 +171,14 @@ export function AdminQueues() {
       {/* Offline Queue Section */}
       <div className="section">
         <div className="section-header">
-          <Activity size={20} />
+          <iconify-icon icon="solar:pulse-2-linear" width="20" height="20"></iconify-icon>
           <h3>Offline Queue Status</h3>
         </div>
 
         <div className="offline-stats">
           <div className="offline-card">
             <div className="offline-icon online">
-              <Wifi size={20} />
+              <iconify-icon icon="solar:wi-fi-router-linear" width="20" height="20"></iconify-icon>
             </div>
             <div className="offline-info">
               <span className="offline-label">Connection Status</span>
@@ -204,7 +188,7 @@ export function AdminQueues() {
 
           <div className="offline-card">
             <div className="offline-icon">
-              <Clock size={20} />
+              <iconify-icon icon="solar:clock-circle-linear" width="20" height="20"></iconify-icon>
             </div>
             <div className="offline-info">
               <span className="offline-label">Pending Actions</span>
@@ -214,7 +198,7 @@ export function AdminQueues() {
 
           <div className="offline-card">
             <div className="offline-icon">
-              <CheckCircle size={20} />
+              <iconify-icon icon="solar:check-circle-linear" width="20" height="20"></iconify-icon>
             </div>
             <div className="offline-info">
               <span className="offline-label">Completed</span>
@@ -224,7 +208,7 @@ export function AdminQueues() {
 
           <div className="offline-card">
             <div className="offline-icon warning">
-              <AlertCircle size={20} />
+              <iconify-icon icon="solar:danger-circle-linear" width="20" height="20"></iconify-icon>
             </div>
             <div className="offline-info">
               <span className="offline-label">Failed</span>
@@ -235,11 +219,11 @@ export function AdminQueues() {
 
         <div className="offline-actions">
           <button className="action-btn secondary">
-            <RefreshCw size={16} />
+            <iconify-icon icon="solar:refresh-linear" width="16" height="16"></iconify-icon>
             Force Sync
           </button>
           <button className="action-btn secondary">
-            <Trash2 size={16} />
+            <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
             Clear Failed
           </button>
         </div>
@@ -248,12 +232,12 @@ export function AdminQueues() {
           <h4>Recent Sync Activity</h4>
           <div className="log-entries">
             <div className="log-entry">
-              <span className="log-icon success"><CheckCircle size={14} /></span>
+              <span className="log-icon success"><iconify-icon icon="solar:check-circle-linear" width="14" height="14"></iconify-icon></span>
               <span className="log-text">Queue synced successfully</span>
               <span className="log-time">5 min ago</span>
             </div>
             <div className="log-entry">
-              <span className="log-icon success"><CheckCircle size={14} /></span>
+              <span className="log-icon success"><iconify-icon icon="solar:check-circle-linear" width="14" height="14"></iconify-icon></span>
               <span className="log-text">3 pending actions processed</span>
               <span className="log-time">10 min ago</span>
             </div>
