@@ -76,18 +76,18 @@ export function Merch() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-200 selection:bg-red-600 selection:text-white">
+    <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
       <MerchNavbar 
         cartCount={cartCount} 
         onOpenCart={() => setIsCartOpen(true)}
         onGoHome={() => setActiveCategory('')}
       />
       
-      <main className="max-w-[1600px] mx-auto">
-          <div className="flex flex-col md:flex-row px-4 sm:px-6 lg:px-8 pb-12">
+      <main className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row pb-12">
             
             {/* Sidebar */}
-            <div className="hidden md:block w-64 flex-shrink-0 pr-8 pt-8 sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar">
+            <div className="hidden md:block w-64 flex-shrink-0 pr-8 pt-8 sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto">
                 <MerchSidebar 
                     activeCategory={activeCategory} 
                     onCategoryChange={setActiveCategory} 
@@ -100,10 +100,10 @@ export function Merch() {
             <div className="flex-1 pt-8">
               <div className="mb-8">
                 <div className="flex items-baseline justify-between mb-2">
-                  <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight display-text text-white">
+                  <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-white">
                     {activeCategory || 'All Products'}
                   </h2>
-                  <span className="text-sm text-gray-500 font-mono">{filteredProducts.length} SIGNALS DETECTED</span>
+                  <span className="text-sm text-gray-500">{filteredProducts.length} items</span>
                 </div>
                 <div className="w-full h-px bg-neutral-800"></div>
                 
@@ -113,9 +113,9 @@ export function Merch() {
                     <button 
                       key={cat}
                       onClick={() => setActiveCategory(cat === 'All Products' ? '' : cat)}
-                      className={`whitespace-nowrap px-4 py-2 rounded border text-xs font-bold uppercase ${
+                      className={`whitespace-nowrap px-4 py-2 border text-xs font-bold uppercase ${
                         (cat === 'All Products' && !activeCategory) || activeCategory === cat 
-                        ? 'bg-red-600 text-white border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)]' 
+                        ? 'bg-red-600 text-white border-red-600' 
                         : 'bg-black text-gray-400 border-neutral-800'
                       }`}
                     >
@@ -135,16 +135,15 @@ export function Merch() {
                           name: product.name,
                           price: product.price,
                           images: product.images || [],
-                          stock: 100, // Placeholder as we might not have stock in list view
+                          stock: 100,
                           category: product.category
                       }}
-                       // Passing undefined to let card handle navigation default
                     />
                   ))}
                 </div>
               ) : (
-                <div className="py-20 text-center border border-dashed border-neutral-800 rounded-lg">
-                  <p className="text-gray-500 text-lg font-mono">No signals found in this frequency.</p>
+                <div className="py-20 text-center border border-dashed border-neutral-800">
+                  <p className="text-gray-500 text-lg">No products found.</p>
                   <button 
                     onClick={() => { setMaxPrice(200); setActiveCategory(''); }} 
                     className="mt-4 text-sm text-red-500 hover:text-red-400 underline"
@@ -162,20 +161,29 @@ export function Merch() {
         onClose={() => setIsCartOpen(false)}
         items={cart?.items?.map(item => ({
           _id: item.variantId,
-          name: item.productName || 'Product',
-          price: item.price,
+          name: (item as any).product?.name || 'Product',
+          price: (item as any).currentPrice || item.priceAtAddTime || 0,
           quantity: item.quantity,
-          images: item.imageUrl ? [item.imageUrl] : [],
-          selectedSize: item.size,
-          selectedVariant: item.color
+          images: (item as any).product?.imageUrls || [(item as any).product?.thumbnailUrl] || [],
+          selectedSize: (item as any).variant?.size,
+          selectedVariant: (item as any).variant?.color
         })) || []}
-        onRemove={async (id) => {
-           // Current API remove logic needs item Id, but our drawer passes variantId as Id usually. 
-           // Let's assume we need to find the cart item ID.
-           // Simplified for this port: we might need a specific mutation for removal by variantId or cartItemId
-           showToast('Remove functionality requires API update', { type: 'error' })
+        onRemove={() => {
+           showToast('Remove from cart coming soon', { type: 'info' })
         }}
       />
+
+      <style>{`
+        .merch-page {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          overflow-y: auto;
+          background: #050505;
+          color: #e5e5e5;
+        }
+      `}</style>
     </div>
   )
 }

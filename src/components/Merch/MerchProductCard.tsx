@@ -114,7 +114,7 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         }
 
         .merch-product-card:hover .card-image-container {
-          border-color: rgba(34, 211, 238, 0.3);
+          border-color: rgba(220, 38, 38, 0.4);
         }
 
         .card-image {
@@ -127,7 +127,7 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         }
 
         .card-image.primary {
-          opacity: 0.9;
+          opacity: 1;
         }
 
         .card-image.primary.hidden {
@@ -148,8 +148,8 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
 
         .card-badges {
           position: absolute;
-          top: 0.5rem;
-          left: 0.5rem;
+          top: 0.75rem;
+          left: 0.75rem;
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
@@ -157,34 +157,34 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         }
 
         .badge {
-          padding: 0.25rem 0.5rem;
+          padding: 0.35rem 0.6rem;
           font-size: 10px;
-          font-weight: 700;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.15em;
         }
 
         .badge.new {
-          background: #22d3ee;
-          color: black;
-          box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+          background: #dc2626;
+          color: white;
+          box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .badge.sold-out {
-          background: #1a1a1a;
-          color: #808080;
-          border: 1px solid #333;
+          background: #0a0a0a;
+          color: #737373;
+          border: 1px solid #262626;
         }
 
         .wishlist-btn {
           position: absolute;
-          top: 0.5rem;
-          right: 0.5rem;
+          top: 0.75rem;
+          right: 0.75rem;
           padding: 0.5rem;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(5, 5, 5, 0.7);
           backdrop-filter: blur(4px);
-          border: 1px solid #333;
-          border-radius: 50%;
+          border: 1px solid #262626;
           color: white;
           cursor: pointer;
           opacity: 0;
@@ -197,8 +197,9 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         }
 
         .wishlist-btn:hover {
-          background: #22d3ee;
-          border-color: #22d3ee;
+          background: #dc2626;
+          border-color: #dc2626;
+          box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
         }
 
         .quick-view-overlay {
@@ -207,13 +208,12 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
           left: 0;
           right: 0;
           padding: 0.75rem 1rem;
-          background: rgba(34, 211, 238, 0.95);
-          backdrop-filter: blur(4px);
+          background: #dc2626;
           display: flex;
           justify-content: center;
           transform: translateY(100%);
-          transition: transform 0.3s;
-          border-top: 1px solid rgba(34, 211, 238, 0.5);
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 -5px 20px rgba(220, 38, 38, 0.4);
         }
 
         .quick-view-overlay.visible {
@@ -221,64 +221,69 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         }
 
         .quick-view-overlay span {
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.15em;
-          color: black;
+          letter-spacing: 0.2em;
+          color: white;
         }
 
         .card-content {
           display: flex;
           flex-direction: column;
           flex-grow: 1;
+          padding-top: 0.5rem;
         }
 
         .card-title {
-          font-size: 14px;
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 16px;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.02em;
+          letter-spacing: -0.01em;
           color: white;
           margin-bottom: 0.25rem;
-          transition: color 0.2s;
+          transition: all 0.2s;
         }
 
         .merch-product-card:hover .card-title {
-          color: #22d3ee;
+          color: #dc2626;
+          text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
         }
 
         .card-price {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
           margin-bottom: 0.5rem;
         }
 
         .current-price {
           font-size: 14px;
           font-family: monospace;
-          color: #808080;
+          color: #dc2626;
+          font-weight: 700;
         }
 
         .original-price {
           font-size: 12px;
           font-family: monospace;
-          color: #404040;
+          color: #525252;
           text-decoration: line-through;
         }
 
         .mobile-add-btn {
           display: none;
           width: 100%;
-          padding: 0.75rem;
+          padding: 0.85rem;
           margin-top: auto;
-          background: #1a1a1a;
-          border: 1px solid #333;
+          background: #171717;
+          border: 1px solid #262626;
           color: white;
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 800;
           text-transform: uppercase;
+          letter-spacing: 0.1em;
           cursor: pointer;
           transition: all 0.2s;
         }

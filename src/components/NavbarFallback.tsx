@@ -33,10 +33,7 @@ export const NavbarFallback: React.FC = () => {
 
         <style>{`
           .navbar-v2 {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            position: relative;
             height: 64px;
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(20px);
@@ -45,13 +42,13 @@ export const NavbarFallback: React.FC = () => {
           }
 
           .navbar-v2-container {
-            max-width: 1400px;
+            max-width: 100%;
             height: 100%;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 40px;
+            padding: 0 75px;
           }
 
           .navbar-v2-left {

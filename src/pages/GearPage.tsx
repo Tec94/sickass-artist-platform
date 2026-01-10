@@ -77,10 +77,8 @@ export const GearPage = () => {
     >
 
 
-      <div className="main-viewport">
-        <WindshieldFrame>
-          <Outlet />
-        </WindshieldFrame>
+      <div className="gear-content-wrapper">
+        <Outlet />
       </div>
 
 
@@ -89,33 +87,31 @@ export const GearPage = () => {
           display: flex;
           flex-direction: column;
           height: 100vh;
+          width: 100vw;
           background: #000;
           color: white;
-          overflow: clip;
+          overflow: hidden;
           position: relative;
         }
 
-
-
-        .main-viewport {
+        .gear-content-wrapper {
           flex: 1;
           display: flex;
-          padding: 2.5vh 5vw;
-          z-index: 10;
+          flex-direction: column;
           min-height: 0;
+          overflow: hidden;
+          padding: 0 5vw; /* Restoring some horizontal space for non-wide content */
         }
 
-
-        @media (max-width: 1024px) {
-          .main-viewport {
-            padding: 2vh 2vw;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .main-viewport {
-            padding: 0;
-          }
+        /* Fullscreen pages (like Chat) should ignore this padding */
+        .gear-content-wrapper > .chat-layout,
+        .gear-content-wrapper > .merch-page,
+        .gear-content-wrapper > .merch-detail-page {
+          padding: 0;
+          margin-left: -5vw;
+          margin-right: -5vw;
+          width: 100vw;
+          max-width: none;
         }
       `}</style>
     </div>

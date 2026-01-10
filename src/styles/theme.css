@@ -1,11 +1,14 @@
 :root {
-  --color-primary: #FF0000;
-  --color-bg: #000000;
-  --color-card-bg: #0A0A0A;
-  --color-card-border: #1A1A1A;
-  --color-text-main: #FFFFFF;
-  --color-text-dim: #808080;
-  --color-red-dim: #330000;
+  --color-primary: #dc2626; /* Refined scarlet */
+  --color-bg: #050505;
+  --color-card-bg: #0a0a0a;
+  --color-card-border: #171717;
+  --color-text-main: #e5e5e5;
+  --color-text-dim: #737373;
+  --color-red-dim: #450a0a;
+  
+  /* Store-specific monospace font */
+  --font-store: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   
   --transition-standard: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   --animation-stagger: 0.1s;
@@ -21,8 +24,21 @@ html, body {
   padding: 0;
   background-color: var(--color-bg);
   color: var(--color-text-main);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .display-text {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Scarlet Glow Utilities */
+.glow-text {
+  text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
+.glow-border {
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
 }
 
 /* Flashlight Effect Utility */
@@ -36,7 +52,7 @@ html, body {
   inset: 0;
   background: radial-gradient(
     600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 0, 0, 0.05),
+    rgba(220, 38, 38, 0.05),
     transparent 40%
   );
   z-index: 0;
@@ -128,9 +144,9 @@ body {
 }
 
 body {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background-color: var(--color-bg-dark);
-  color: var(--color-text);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
 }
 
 @media (prefers-reduced-motion: reduce) {

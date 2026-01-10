@@ -151,10 +151,11 @@ export const MerchSidebar = ({
         }
 
         .section-header h3 {
-          font-size: 10px;
-          font-weight: 700;
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 11px;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.2em;
+          letter-spacing: 0.25em;
           margin: 0;
         }
 
@@ -170,21 +171,22 @@ export const MerchSidebar = ({
           border: none;
           border-left: 2px solid transparent;
           text-align: left;
-          font-size: 14px;
-          color: #808080;
+          font-size: 13px;
+          color: #737373;
           cursor: pointer;
           transition: all 0.2s;
+          font-weight: 500;
         }
 
         .category-item:hover {
-          color: #b0b0b0;
+          color: white;
           padding-left: 0.5rem;
         }
 
         .category-item.active {
-          color: #22d3ee;
-          font-weight: 600;
-          border-left-color: #22d3ee;
+          color: #dc2626;
+          font-weight: 700;
+          border-left-color: #dc2626;
           padding-left: 0.5rem;
         }
 
@@ -193,18 +195,19 @@ export const MerchSidebar = ({
           justify-content: space-between;
           font-size: 11px;
           font-family: monospace;
-          color: #808080;
+          color: #737373;
           margin-bottom: 0.5rem;
         }
 
         .price-value {
-          color: #22d3ee;
+          color: #dc2626;
+          font-weight: 700;
         }
 
         .price-slider {
           width: 100%;
           height: 4px;
-          background: #1a1a1a;
+          background: #171717;
           border-radius: 2px;
           appearance: none;
           cursor: pointer;
@@ -214,20 +217,20 @@ export const MerchSidebar = ({
           appearance: none;
           width: 14px;
           height: 14px;
-          background: #22d3ee;
+          background: #dc2626;
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+          box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
         }
 
         .price-slider::-moz-range-thumb {
           width: 14px;
           height: 14px;
-          background: #22d3ee;
+          background: #dc2626;
           border-radius: 50%;
           cursor: pointer;
           border: none;
-          box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+          box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
         }
 
         .collection-item {
@@ -240,26 +243,27 @@ export const MerchSidebar = ({
         }
 
         .collection-item:hover span {
-          color: #b0b0b0;
+          color: white;
         }
 
         .collection-item:hover .checkbox {
-          border-color: #22d3ee;
-          background: rgba(34, 211, 238, 0.1);
+          border-color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
         }
 
         .checkbox {
           width: 14px;
           height: 14px;
-          border: 1px solid #333;
+          border: 1px solid #262626;
           border-radius: 3px;
           transition: all 0.2s;
         }
 
         .collection-item span {
-          font-size: 14px;
-          color: #808080;
+          font-size: 13px;
+          color: #737373;
           transition: color 0.2s;
+          font-weight: 500;
         }
       `}</style>
     </div>

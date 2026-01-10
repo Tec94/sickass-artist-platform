@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
 
 interface MerchNavbarProps {
   cartCount: number
@@ -8,22 +6,21 @@ interface MerchNavbarProps {
 }
 
 export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProps) => {
-  const navigate = useNavigate()
-  const { isSignedIn } = useAuth()
-
   return (
     <nav className="merch-navbar">
-      {/* Top Banner */}
+      {/* Top Banner - Redesigned to match reference */}
       <div className="merch-banner">
-        Transmission: Free Shipping on all Vinyl Bundles over $50
+        <div className="banner-container">
+          FREE SHIPPING ON ORDERS OVER $50
+        </div>
       </div>
       
       <div className="navbar-container">
         <div className="navbar-content">
-          {/* Left: Mobile Menu & Search */}
+          {/* Left: Navigation Links */}
           <div className="navbar-left">
             <button className="mobile-menu-btn">
-              <iconify-icon icon="solar:hamburger-menu-linear" width="20" height="20"></iconify-icon>
+              <iconify-icon icon="solar:hamburger-menu-linear" width="24" height="24"></iconify-icon>
             </button>
             <div className="desktop-links">
               {['SHOP ALL', 'MUSIC', 'MERCH'].map((item) => (
@@ -40,35 +37,28 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
 
           {/* Center: Logo */}
           <div className="navbar-center" onClick={onGoHome}>
-            <div className="logo-wrapper">
-              <h1 className="logo-text">
-                NEON ECHO
-              </h1>
-              <div className="logo-underline"></div>
-            </div>
+            <h1 className="logo-text">ROA WOLVES</h1>
           </div>
 
           {/* Right: Icons */}
           <div className="navbar-right">
             <div className="search-box">
+              <iconify-icon icon="solar:magnifer-linear" width="18" height="18" class="search-icon"></iconify-icon>
               <input 
                 type="text" 
-                placeholder="SEARCH_DB..." 
+                placeholder="Search..." 
                 className="search-input"
               />
-              <iconify-icon icon="solar:magnifer-linear" width="12" height="12" class="search-icon"></iconify-icon>
             </div>
             
-            <button className="icon-btn wishlist-icon">
-              <iconify-icon icon="solar:heart-linear" width="20" height="20"></iconify-icon>
+            <button className="icon-btn">
+              <iconify-icon icon="solar:heart-linear" width="24" height="24"></iconify-icon>
             </button>
 
-            <button onClick={onOpenCart} className="icon-btn cart-icon">
-              <iconify-icon icon="solar:bag-3-linear" width="20" height="20"></iconify-icon>
+            <button onClick={onOpenCart} className="icon-btn cart-btn">
+              <iconify-icon icon="solar:bag-3-linear" width="24" height="24"></iconify-icon>
               {cartCount > 0 && (
-                <span className="cart-badge">
-                  {cartCount}
-                </span>
+                <span className="cart-badge">{cartCount}</span>
               )}
             </button>
           </div>
@@ -79,66 +69,62 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
         .merch-navbar {
           position: sticky;
           top: 0;
-          z-index: 40;
           width: 100%;
-          background: rgba(5, 5, 5, 0.95);
-          backdrop-filter: blur(4px);
+          background: #050505;
           border-bottom: 1px solid #1a1a1a;
+          z-index: 30;
         }
 
         .merch-banner {
-          background: rgba(127, 29, 29, 0.2);
-          color: #ef4444;
-          border-bottom: 1px solid rgba(127, 29, 29, 0.3);
-          font-size: 10px;
-          text-align: center;
-          padding: 0.5rem 0;
-          letter-spacing: 0.2em;
+          background: #dc2626;
+          color: white;
+          font-size: 11px;
+          letter-spacing: 0.15em;
           text-transform: uppercase;
-          font-weight: 700;
+          font-weight: 500;
+          font-family: var(--font-store, ui-monospace, monospace);
+          height: 34px;
+          display: flex;
+          align-items: center;
+          width: 100%;
+        }
+
+        .banner-container {
+          width: 100%;
+          padding: 0 75px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-top: 1px;
         }
 
         .navbar-container {
-          max-width: 80rem;
+          width: 100%;
+          max-width: 100%;
           margin: 0 auto;
-          padding: 0 1rem;
-        }
-
-        @media (min-width: 640px) {
-          .merch-banner { font-size: 12px; }
-          .navbar-container { padding: 0 1.5rem; }
-        }
-
-        @media (min-width: 1024px) {
-          .navbar-container { padding: 0 2rem; }
+          padding: 0 75px;
         }
 
         .navbar-content {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          height: 5rem;
+          height: 72px; /* Increased by 40% from 52px approx */
+          position: relative;
         }
 
         .navbar-left, .navbar-right {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 12px;
         }
 
         .mobile-menu-btn {
-          padding: 0.5rem;
-          margin-left: -0.5rem;
-          color: #9ca3af;
+          padding: 8px;
+          color: #737373;
           background: transparent;
           border: none;
           cursor: pointer;
-          border-radius: 0.375rem;
-        }
-
-        .mobile-menu-btn:hover {
-          color: white;
-          background: #1a1a1a;
         }
 
         @media (min-width: 768px) {
@@ -153,121 +139,95 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
           .desktop-links {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 4px;
           }
         }
 
         .nav-link {
-          padding: 0.5rem 1rem;
-          border-radius: 0.25rem;
-          color: #9ca3af;
+          padding: 8px 16px;
+          color: #737373;
           background: transparent;
           border: none;
-          font-family: monospace;
-          font-size: 12px;
+          font-family: var(--font-store, ui-monospace, monospace);
+          font-size: 14px; /* Increased by 40% from 10px */
+          font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.1em;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: color 0.2s;
         }
 
         .nav-link:hover {
           color: white;
-          background: #1a1a1a;
         }
 
         .navbar-center {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
           cursor: pointer;
         }
 
-        .logo-wrapper {
-          position: relative;
-        }
-
         .logo-text {
-          font-size: 1.875rem;
-          font-weight: 700;
-          letter-spacing: -0.05em;
+          font-family: var(--font-store, ui-monospace, monospace);
+          font-size: 24px; /* Increased by 40% from 16px approx */
+          font-weight: 800;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           color: white;
           margin: 0;
-          transition: color 0.3s;
+          transition: all 0.2s;
         }
 
         .navbar-center:hover .logo-text {
-          color: #ef4444;
-          text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
-
-        .logo-underline {
-          position: absolute;
-          bottom: -0.25rem;
-          left: 0;
-          width: 100%;
-          height: 1px;
-          background: #dc2626;
-          transform: scaleX(0);
-          transition: transform 0.3s;
-        }
-
-        .navbar-center:hover .logo-underline {
-          transform: scaleX(1);
+          color: #dc2626;
+          text-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
         }
 
         .search-box {
           display: none;
           position: relative;
+          align-items: center;
         }
 
         @media (min-width: 768px) {
-          .search-box { display: block; }
-        }
-
-        .search-input {
-          padding-left: 2rem;
-          padding-right: 0.75rem;
-          padding-top: 0.375rem;
-          padding-bottom: 0.375rem;
-          font-size: 12px;
-          background: #111;
-          border: 1px solid #1a1a1a;
-          border-radius: 0.25rem;
-          color: #d1d5db;
-          width: 8rem;
-          transition: all 0.2s;
-          font-family: monospace;
-        }
-
-        .search-input:focus {
-          outline: none;
-          border-color: #dc2626;
-          color: white;
-          width: 12rem;
+          .search-box { display: flex; }
         }
 
         .search-icon {
           position: absolute;
-          left: 0.625rem;
-          top: 0.625rem;
-          color: #4b5563;
+          left: 10px;
+          color: #525252;
           pointer-events: none;
         }
 
-        .search-input:focus ~ .search-icon {
-          color: #ef4444;
+        .search-input {
+          padding: 8px 12px 8px 36px;
+          font-size: 13px;
+          background: #111;
+          border: 1px solid #262626;
+          color: #a3a3a3;
+          width: 140px;
+          transition: all 0.2s;
+          font-family: var(--font-store, ui-monospace, monospace);
+        }
+
+        .search-input::placeholder {
+          color: #525252;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: #404040;
+          color: white;
+          width: 180px;
         }
 
         .icon-btn {
-          padding: 0.5rem;
-          color: #9ca3af;
+          padding: 8px;
+          color: #737373;
           background: transparent;
           border: none;
-          border-radius: 0.25rem;
-          position: relative;
           cursor: pointer;
           transition: color 0.2s;
           display: flex;
@@ -277,32 +237,27 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
 
         .icon-btn:hover {
           color: white;
-          background: #111;
         }
 
-        .wishlist-icon:hover {
-          color: #ef4444;
-        }
-
-        .cart-icon:hover svg {
-          color: #ef4444;
+        .cart-btn {
+          position: relative;
         }
 
         .cart-badge {
           position: absolute;
-          top: 0.25rem;
-          right: 0.25rem;
+          top: 0;
+          right: 0;
           background: #dc2626;
           color: white;
-          font-size: 9px;
+          font-size: 10px;
           font-weight: 700;
-          height: 0.875rem;
-          width: 0.875rem;
-          border-radius: 50%;
+          min-width: 16px;
+          height: 16px;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 0 8px rgba(220, 38, 38, 0.8);
+          font-family: var(--font-store, ui-monospace, monospace);
         }
       `}</style>
     </nav>
