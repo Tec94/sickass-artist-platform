@@ -8,7 +8,9 @@ import {
   logErrorToStorage,
   RETRY_DELAYS
 } from '../utils/errorHandler'
+import { trackError } from '../utils/analytics'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type NodeJSTimeout = any
 
 interface ErrorBoundaryProps {
@@ -82,6 +84,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     
     // Log error to localStorage
     logErrorToStorage(error, this.errorContext)
+    
+    // Track error in analytics
+    trackError(
+      error.name || 'UnknownError',
+      error.message || 'An unknown error occurred'
+    )
     
     // Call optional error handler
     this.props.onError?.(error, errorInfo)

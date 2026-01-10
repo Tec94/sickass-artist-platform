@@ -7,9 +7,11 @@ import { useForumCategories } from '../hooks/useForumCategories'
 import { useForumThreads } from '../hooks/useForumThreads'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateReply } from '../hooks/useCreateReply'
+import { useAnalytics } from '../hooks/useAnalytics'
 import { CategoryList, ThreadDetail, ThreadForm, ThreadList } from '../components/Forum'
 
 export function Forum() {
+  useAnalytics() // Track page views
   const { user } = useAuth()
 
   const { categories, isLoading: isCategoriesLoading } = useForumCategories()

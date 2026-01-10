@@ -3,6 +3,8 @@ import type { GalleryContentItem } from '../types/gallery';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useGalleryFilters } from '../hooks/useGalleryFilters';
 import { usePerformanceMetrics, usePerformanceOperation } from '../hooks/usePerformanceMetrics';
+import { useAnalytics } from '../hooks/useAnalytics';
+import { trackFilterApplied, trackFilterCleared } from '../utils/analytics';
 import { perfMonitor } from '../utils/performanceMonitor';
 import { AdvancedFilters } from '../components/Gallery/AdvancedFilters';
 import { FilterChips } from '../components/Gallery/FilterChips';
@@ -19,6 +21,7 @@ const TABS = [
 ];
 
 export const Gallery = () => {
+  useAnalytics() // Track page views
   const [accumulatedItems, setAccumulatedItems] = useState<GalleryContentItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -88,8 +91,10 @@ export const Gallery = () => {
     const contentType = tabId as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive';
     if (filters.types.includes(contentType)) {
       setFilter('types', filters.types.filter(t => t !== tabId));
+      trackFilterCleared('contentType');
     } else {
       setFilter('types', [...filters.types, contentType]);
+      trackFilterApplied('contentType', contentType);
     }
   };
 

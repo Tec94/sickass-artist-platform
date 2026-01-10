@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Doc } from '../../../convex/_generated/dataModel'
+import { trackItemShared } from '../../utils/analytics'
 
 interface ProductInfoProps {
   product: Doc<'merchProducts'>
@@ -27,6 +28,7 @@ export function ProductInfo({
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+    trackItemShared('product', product._id, 'copy_link')
   }
 
   const handleShare = (platform: 'twitter' | 'instagram') => {
@@ -34,6 +36,7 @@ export function ProductInfo({
     const url = window.location.href
 
     if (platform === 'twitter') {
+      trackItemShared('product', product._id, 'twitter')
       window.open(
         `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
         '_blank'

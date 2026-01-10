@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
+import { trackCTA } from '../../utils/analytics'
 
 export const HeroSection = () => {
   const navigate = useNavigate()
   const { isSignedIn, userProfile, isLoading } = useUser()
 
   const handleProfileClick = (): void => {
+    trackCTA('sign_in', 'hero_section')
     if (isSignedIn) {
       navigate('/profile')
     } else {
@@ -82,14 +84,20 @@ export const HeroSection = () => {
           <div className="action-buttons">
             <button 
               className="action-btn primary"
-              onClick={() => navigate('/gallery')}
+              onClick={() => {
+                trackCTA('explore_gallery', 'hero_section')
+                navigate('/gallery')
+              }}
             >
               <iconify-icon icon="solar:star-linear" width="16" height="16"></iconify-icon>
               Explore Gallery
             </button>
             <button 
               className="action-btn secondary"
-              onClick={() => navigate('/events')}
+              onClick={() => {
+                trackCTA('view_events', 'hero_section')
+                navigate('/events')
+              }}
             >
               <iconify-icon icon="solar:calendar-linear" width="16" height="16"></iconify-icon>
               View Events

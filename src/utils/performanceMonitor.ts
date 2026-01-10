@@ -3,6 +3,8 @@
  * Tracks and reports performance metrics for the gallery
  */
 
+import { trackPerformanceMetric, trackPerformanceRegression } from './analytics'
+
 interface PerformanceMetric {
   name: string
   value: number
@@ -212,6 +214,9 @@ class PerformanceMonitor {
    */
   private sendToAnalytics(metric: PerformanceMetric): void {
     try {
+      // Track in our analytics system
+      trackPerformanceMetric(metric.name, metric.value)
+
       // Google Analytics
       if (window.gtag) {
         window.gtag('event', metric.name, {
@@ -244,6 +249,8 @@ class PerformanceMonitor {
       this.alert(
         `PERFORMANCE REGRESSION: ${metric.name} is ${((metric.value / baseline - 1) * 100).toFixed(0)}% slower than baseline`
       )
+      // Track regression in analytics
+      trackPerformanceRegression(metric.name, metric.value, baseline)
     }
   }
 

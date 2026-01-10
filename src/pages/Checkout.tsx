@@ -9,15 +9,25 @@ import { MerchErrorBoundary } from '../components/Merch/ErrorBoundary'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAnalytics } from '../hooks/useAnalytics'
+import { trackCheckoutStart, trackCheckoutComplete } from '../utils/analytics'
 
 export function Checkout() {
+  useAnalytics() // Track page views
   const navigate = useNavigate()
   const checkout = useCheckout()
-  const { isEmpty } = useCart()
+  const { isEmpty, total, itemCount } = useCart()
   const createOrderMutation = useMutation(api.orders.createOrder)
   const { retryWithBackoff } = useAutoRetry()
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // Track checkout start when page loads
+  useEffect(() => {
+    if (!isEmpty && total > 0) {
+      trackCheckoutStart(total, itemCount)
+    }
+  }, [isEmpty, total, itemCount])
 
   if (isEmpty) {
     return (
@@ -54,6 +64,9 @@ export function Checkout() {
         confirmationCode: result.confirmationCode,
         orderId: result.orderId,
       })
+
+      // Track checkout complete
+      trackCheckoutComplete(result.orderNumber, result.total)
 
       navigate('/merch/confirmation', {
         state: {

@@ -4,6 +4,7 @@ import { Id } from '../../convex/_generated/dataModel'
 import { useCallback, useRef, useEffect } from 'react'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { useAuth } from './useAuth'
+import { trackCartAdd, trackCartRemove } from '../utils/analytics'
 
 export interface CartItem {
   variantId: Id<'merchVariants'>
@@ -37,6 +38,8 @@ export function useShoppingCart() {
   const addItem = useCallback(async (variantId: Id<'merchVariants'>, quantity: number) => {
     try {
       await addToCartMutation({ variantId, quantity })
+      // Track analytics
+      trackCartAdd(variantId, quantity)
       // Cart syncs automatically via Convex
     } catch (err) {
       const parsed = parseConvexError(err)
@@ -63,6 +66,11 @@ export function useShoppingCart() {
 
   const removeItem = useCallback(async (variantId: Id<'merchVariants'>) => {
     try {
+      // Track before removing (we need the quantity from the current cart state)
+      const item = optimisticCartRef.current?.items?.find((i) => i.variantId === variantId)
+      if (item) {
+        trackCartRemove(variantId, item.quantity)
+      }
       await removeFromCartMutation({ variantId })
     } catch (err) {
       const parsed = parseConvexError(err)

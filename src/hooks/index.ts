@@ -3,6 +3,7 @@ export { usePerformanceMetrics, usePerformanceOperation, usePerformanceRegressio
 
 // Analytics hooks
 export { useEventAnalytics } from './useEventAnalytics'
+export { useAnalytics } from './useAnalytics'
 
 // Offline hooks
 export { useOfflineQueue } from './useOfflineQueue'

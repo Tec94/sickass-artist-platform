@@ -1,0 +1,136 @@
+/* Consent Banner Styles */
+.consent-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85));
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  z-index: 999;
+  animation: slideUp 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.consent-content {
+  flex: 1;
+  max-width: 800px;
+}
+
+.consent-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text, #ffffff);
+}
+
+.consent-content p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-dim, rgba(255, 255, 255, 0.7));
+}
+
+.consent-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.consent-actions button {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  white-space: nowrap;
+}
+
+.consent-actions .button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.consent-actions .button-primary:hover {
+  background: linear-gradient(135deg, #7c93ee 0%, #8a5bb5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.consent-actions .button-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text, #ffffff);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.consent-actions .button-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .consent-banner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .consent-content h3 {
+    font-size: 15px;
+  }
+
+  .consent-content p {
+    font-size: 13px;
+  }
+
+  .consent-actions {
+    width: 100%;
+    flex-direction: row;
+  }
+
+  .consent-actions button {
+    flex: 1;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .consent-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .consent-actions button {
+    width: 100%;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .consent-banner {
+    border-top: 2px solid #ffffff;
+  }
+
+  .consent-actions .button-secondary {
+    border: 2px solid #ffffff;
+  }
+}
