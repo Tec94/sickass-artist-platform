@@ -7,6 +7,7 @@ export { useEventAnalytics } from './useEventAnalytics'
 // Offline hooks
 export { useOfflineQueue } from './useOfflineQueue'
 export { useSyncOfflineQueue } from './useSyncOfflineQueue'
+export { useOnlineStatus } from './useOnlineStatus'
 
 // Gallery hooks
 export { useGalleryFilters } from './useGalleryFilters'

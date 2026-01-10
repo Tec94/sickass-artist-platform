@@ -82,6 +82,7 @@ export const TierLockedOverlay = memo(function TierLockedOverlay({
         aria-labelledby="lock-title"
         aria-describedby="lock-description"
       >
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1 hover:bg-gray-800 rounded transition-colors"
           aria-label="Close"
