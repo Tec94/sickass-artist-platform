@@ -5,9 +5,11 @@ import { EventFilters } from '../components/events/EventFilters'
 import { EventSearch } from '../components/events/EventSearch'
 import { useEventList } from '../hooks/useEventList'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { useAnalytics } from '../hooks/useAnalytics'
 import type { EventFilters as EventFiltersType } from '../types/events'
 
 export function Events() {
+  useAnalytics() // Track page views
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const animate = useScrollAnimation()

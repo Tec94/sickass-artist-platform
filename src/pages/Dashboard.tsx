@@ -11,9 +11,11 @@ import {
   ArtistMomentsWidget,
   UpcomingEventsWidget
 } from '../components/Dashboard/DashboardWidgets'
+import { useAnalytics } from '../hooks/useAnalytics'
 import '../components/Dashboard/dashboard.css'
 
 export const Dashboard = () => {
+  useAnalytics() // Track page views
   const [isLoaded, setIsLoaded] = useState(false)
 
   // Use the optimized dashboard data query

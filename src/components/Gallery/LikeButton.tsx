@@ -1,6 +1,7 @@
 import { useOptimisticLike } from '../../hooks/useOptimisticLike'
 import { useAuth } from '../../hooks/useAuth'
 import { perfMonitor } from '../../utils/performanceMonitor'
+import { trackLike, trackUnlike } from '../../utils/analytics'
 
 interface LikeButtonProps {
   contentId: string
@@ -8,7 +9,6 @@ interface LikeButtonProps {
   initialLiked: boolean
   initialCount: number
   onError?: (error: Error) => void
-  size?: 'sm' | 'md' | 'lg'
   showCount?: boolean
   compact?: boolean
 }
@@ -19,7 +19,6 @@ export const LikeButton = ({
   initialLiked,
   initialCount,
   onError,
-  size = 'md',
   showCount = true,
   compact = false,
 }: LikeButtonProps) => {
@@ -35,22 +34,24 @@ export const LikeButton = ({
     }
 
     const startTime = performance.now()
+    const willLike = !isLiked
 
     try {
       await toggleLike()
       const duration = performance.now() - startTime
       perfMonitor.trackLikeResponse(duration, true)
+      
+      // Track analytics
+      if (willLike) {
+        trackLike(contentType, contentId)
+      } else {
+        trackUnlike(contentType, contentId)
+      }
     } catch (err) {
       const duration = performance.now() - startTime
       perfMonitor.trackLikeResponse(duration, false)
       onError?.(err as Error)
     }
-  }
-
-  const iconSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
   }
 
   return (

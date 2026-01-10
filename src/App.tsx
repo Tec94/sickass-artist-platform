@@ -22,6 +22,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { TestErrorPage } from './pages/TestErrorPage'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { ConflictModal } from './components/ConflictModal'
+import { ConsentBanner } from './components/ConsentBanner'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import './styles/theme.css'
 import './styles/animations.css'
@@ -237,6 +238,9 @@ function AppContent() {
         {conflicts.map((conflict) => (
           <ConflictModal key={conflict.id} item={conflict} onResolve={(choice) => resolveConflict(conflict.id, choice)} />
         ))}
+
+        {/* Consent Banner */}
+        <ConsentBanner />
       </>
     )
 }
