@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'
 import { perfMonitor, type PerformanceReport } from '../../utils/performanceMonitor'
 
 interface PerformanceDashboardProps {

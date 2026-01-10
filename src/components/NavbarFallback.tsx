@@ -2,11 +2,11 @@ import React from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { UserHeader } from './Auth/UserHeader'
 import { SignInButtons } from './Auth/SignInButtons'
-import { CartDropdown } from './Merch/CartDropdown'
 import { GearDisplay } from './GearNavigation/GearDisplay'
 import { SearchModal } from './Search/SearchModal'
 import { SearchTrigger } from './Search/SearchTrigger'
 import { useSearchModal } from '../hooks/useSearchModal'
+
 
 export const NavbarFallback: React.FC = () => {
   const { isSignedIn } = useAuth()
@@ -26,7 +26,6 @@ export const NavbarFallback: React.FC = () => {
 
           <div className="navbar-v2-right">
             <div className="flex items-center gap-4">
-              <CartDropdown />
               {isSignedIn ? <UserHeader /> : <SignInButtons />}
             </div>
           </div>

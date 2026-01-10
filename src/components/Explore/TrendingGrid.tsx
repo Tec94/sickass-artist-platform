@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import type { TrendingItem, FanTier } from '../../../types'
+import type { TrendingItem, FanTier } from '../../types'
 
 interface TrendingGridProps {
   items: TrendingItem[]

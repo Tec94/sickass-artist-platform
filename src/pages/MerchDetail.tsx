@@ -13,12 +13,16 @@ import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { showToast } from '../lib/toast'
 
+import { MerchNavbar } from '../components/Merch/MerchNavbar'
+import { MerchCartDrawer } from '../components/Merch/MerchCartDrawer'
+
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
   const product = useQuery(api.merch.getProductDetail,
     productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
   )
+  const cart = useQuery(api.cart.getCart)
   
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)
@@ -26,6 +30,7 @@ export function MerchDetail() {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
 
   // Auto-select first available variant
   const selectedVariant = product?.variants.find(v => v._id === selectedVariantId) ||
@@ -51,7 +56,7 @@ export function MerchDetail() {
           quantity,
         })
       )
-      showToast('Added to cart!', { type: 'success' })
+      setIsCartOpen(true) // Open drawer on add
     } catch (err) {
       const parsed = parseConvexError(err)
       logError(parsed, {
@@ -92,23 +97,25 @@ export function MerchDetail() {
 
   return (
     <MerchErrorBoundary>
-      <div className="min-h-screen bg-black">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-black/80 border-b border-gray-800 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <button
-              onClick={() => navigate('/merch')}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
-            >
-              <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
-              Back to Shop
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-[#050505] text-gray-200">
+        <MerchNavbar 
+          cartCount={cart?.itemCount || 0} 
+          onOpenCart={() => setIsCartOpen(true)}
+          onGoHome={() => navigate('/merch')}
+        />
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate('/merch')}
+            className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest"
+          >
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
+            Back to Shop
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
             {/* Left: Image gallery */}
             <div>
               <ImageGallery
@@ -118,7 +125,7 @@ export function MerchDetail() {
             </div>
 
             {/* Right: Product info & variants */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               <ProductInfo
                 product={product}
                 selectedVariant={selectedVariant}
@@ -127,7 +134,7 @@ export function MerchDetail() {
                 loading={isLoading}
               />
 
-              <div className="border-t border-gray-800 pt-6">
+              <div className="border-t border-gray-800 pt-8">
                 <VariantSelector
                   variants={product.variants}
                   selectedVariantId={selectedVariant?._id || null}
@@ -159,6 +166,22 @@ export function MerchDetail() {
             />
           )}
         </div>
+        <MerchCartDrawer
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cart?.items?.map(item => ({
+            _id: item.variantId,
+            name: item.productName || 'Product',
+            price: item.price,
+            quantity: item.quantity,
+            images: item.imageUrl ? [item.imageUrl] : [],
+            selectedSize: item.size,
+            selectedVariant: item.color
+          })) || []}
+          onRemove={(id) => {
+             showToast('Remove functionality requires API update', { type: 'error' })
+          }}
+        />
       </div>
     </MerchErrorBoundary>
   )

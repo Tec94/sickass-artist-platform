@@ -3,7 +3,6 @@ import { useCart } from '../contexts/CartContext'
 import { CartItem } from '../components/Merch/CartItem'
 import { CartSummary } from '../components/Merch/CartSummary'
 import { showToast } from '../lib/toast'
-import { showToast } from '../lib/toast'
 import { useState } from 'react'
 
 export function ShoppingCart() {

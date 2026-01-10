@@ -37,5 +37,14 @@ npm run build
 - `convex/`: Backend schema and API functions.
 - `src/hooks/`: Custom state and logic hooks.
 
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs) folder:
+
+- **[Documentation Index](./docs/README.md)** - Complete guide to all documentation
+- **Features** - Analytics, offline support, performance monitoring, and more
+- **Schema** - Database schema documentation for all tables
+- **Implementation Guides** - Step-by-step guides for key features
+
 ---
 License: MIT
