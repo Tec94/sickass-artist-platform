@@ -8,7 +8,6 @@ import { Explore } from './pages/Explore'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
-import { ContentPage } from './pages/ContentPage'
 import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
@@ -21,6 +20,9 @@ import { EventDetailSkeleton, PurchaseLoadingState } from './components/events/S
 import { MerchErrorBoundary } from './components/Merch/ErrorBoundary'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { TestErrorPage } from './pages/TestErrorPage'
+import { OfflineIndicator } from './components/OfflineIndicator'
+import { ConflictModal } from './components/ConflictModal'
+import { useOfflineQueue } from './hooks/useOfflineQueue'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
@@ -92,16 +94,14 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
 })))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 
-function App() {
+function AppContent() {
+  const { conflicts, resolveConflict } = useOfflineQueue()
+
   return (
-    <UserProvider>
-      <CartProvider>
-        <ErrorBoundary level="page">
-          <BrowserRouter>
-            <GearProvider>
-              <FlashlightEffect className="app-root">
-                <ParallaxBackground />
-                <NavbarFallback />
+    <>
+      <FlashlightEffect className="app-root">
+        <ParallaxBackground />
+        <NavbarFallback />
                 <style>{`
                   .app-root {
                     height: 100vh;
@@ -229,9 +229,29 @@ function App() {
               </Routes>
             </Suspense>
           </FlashlightEffect>
-        </GearProvider>
-      </BrowserRouter>
-      </ErrorBoundary>
+
+        {/* Offline Indicator */}
+        <OfflineIndicator />
+
+        {/* Conflict Modals */}
+        {conflicts.map((conflict) => (
+          <ConflictModal key={conflict.id} item={conflict} onResolve={(choice) => resolveConflict(conflict.id, choice)} />
+        ))}
+      </>
+    )
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <CartProvider>
+        <ErrorBoundary level="page">
+          <BrowserRouter>
+            <GearProvider>
+              <AppContent />
+            </GearProvider>
+          </BrowserRouter>
+        </ErrorBoundary>
       </CartProvider>
     </UserProvider>
   )
