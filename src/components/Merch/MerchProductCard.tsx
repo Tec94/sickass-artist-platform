@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import { Id } from '../../../convex/_generated/dataModel'
+import { showToast } from '../../lib/toast'
 
 interface MerchProductCardProps {
   product: {
@@ -7,27 +11,62 @@ interface MerchProductCardProps {
     name: string
     price: number
     originalPrice?: number
-    images: string[]
+    imageUrls: string[]
+    thumbnailUrl?: string
     isNew?: boolean
-    stock?: number
+    totalStock?: number
     category?: string
+    variants?: any[]
   }
-  onAddToCart?: (productId: string) => void
 }
 
-export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps) => {
+export const MerchProductCard = ({ product }: MerchProductCardProps) => {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
-  const isOutOfStock = product.stock === 0
+  const isOutOfStock = product.totalStock === 0
+
+  const toggleWishlist = useMutation(api.merch.toggleWishlist)
+  const addToCart = useMutation(api.cart.addToCart)
+  const wishlist = useQuery(api.merch.getWishlist)
+  
+  const isWishlisted = wishlist?.some(item => item._id === product._id)
 
   const handleClick = () => {
     navigate(`/merch/${product._id}`)
   }
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (onAddToCart && !isOutOfStock) {
-      onAddToCart(product._id)
+    try {
+      await toggleWishlist({ productId: product._id as Id<'merchProducts'> })
+      showToast(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', { type: 'success' })
+    } catch (err) {
+      showToast('Login to wishlist items', { type: 'error' })
+    }
+  }
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isOutOfStock) return
+
+    // If product has variants, we should probably navigate to detail to let them choose
+    if (product.variants && product.variants.length > 1) {
+      navigate(`/merch/${product._id}`)
+      return
+    }
+
+    // Default to first variant if available
+    const variantId = product.variants?.[0]?._id
+    if (!variantId) {
+      navigate(`/merch/${product._id}`)
+      return
+    }
+
+    try {
+      await addToCart({ variantId, quantity: 1 })
+      showToast('Added to cart', { type: 'success' })
+    } catch (err) {
+      showToast('Failed to add to cart', { type: 'error' })
     }
   }
 
@@ -40,13 +79,13 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
     >
       <div className="card-image-container">
         <img 
-          src={product.images[0] || '/placeholder.png'} 
+          src={product.thumbnailUrl || product.imageUrls[0] || '/placeholder.png'} 
           alt={product.name}
-          className={`card-image primary ${isHovered && product.images[1] ? 'hidden' : ''}`}
+          className={`card-image primary ${isHovered && product.imageUrls[1] ? 'hidden' : ''}`}
         />
-        {product.images[1] && (
+        {product.imageUrls[1] && (
           <img 
-            src={product.images[1]} 
+            src={product.imageUrls[1]} 
             alt={product.name}
             className={`card-image secondary ${isHovered ? 'visible' : ''}`}
           />
@@ -64,10 +103,14 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
 
         {/* Wishlist Button */}
         <button 
-          className={`wishlist-btn ${isHovered ? 'visible' : ''}`}
-          onClick={(e) => e.stopPropagation()}
+          className={`wishlist-btn ${isHovered || isWishlisted ? 'visible' : ''} ${isWishlisted ? 'active' : ''}`}
+          onClick={handleWishlist}
         >
-          <iconify-icon icon="solar:heart-linear" width="16" height="16"></iconify-icon>
+          <iconify-icon 
+            icon={isWishlisted ? "solar:heart-bold" : "solar:heart-linear"} 
+            width="16" 
+            height="16"
+          ></iconify-icon>
         </button>
 
         {/* Quick View Overlay */}
@@ -88,10 +131,10 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
         {/* Mobile Quick Add */}
         <button 
           className="mobile-add-btn"
-          onClick={handleQuickAdd}
+          onClick={handleAddToCart}
           disabled={isOutOfStock}
         >
-          {isOutOfStock ? 'Out of Stock' : 'View Details'}
+          {isOutOfStock ? 'Sold Out' : (product.variants && product.variants.length > 1 ? 'Select Options' : 'Add to Cart')}
         </button>
       </div>
 
@@ -196,9 +239,16 @@ export const MerchProductCard = ({ product, onAddToCart }: MerchProductCardProps
           opacity: 1;
         }
 
+        .wishlist-btn.active {
+          color: #dc2626;
+          border-color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+        }
+
         .wishlist-btn:hover {
           background: #dc2626;
           border-color: #dc2626;
+          color: white;
           box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
         }
 

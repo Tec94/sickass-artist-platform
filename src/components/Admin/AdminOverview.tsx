@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
-export type AdminTab = 'overview' | 'merch' | 'chat' | 'forum' | 'queues' | 'users' | 'system'
+export type AdminTab = 'overview' | 'merch' | 'events' | 'chat' | 'forum' | 'queues' | 'users' | 'system'
 
 interface AdminOverviewProps {
   onNavigate: (tab: AdminTab) => void
@@ -35,6 +35,7 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
 
   const quickActions: { label: string; icon: string; tab: AdminTab; action: string }[] = [
     { label: 'Add Product', icon: 'solar:box-linear', tab: 'merch', action: 'add' },
+    { label: 'Create Event', icon: 'solar:calendar-linear', tab: 'events', action: 'add' },
     { label: 'Create Channel', icon: 'solar:chat-square-dots-linear', tab: 'chat', action: 'add' },
     { label: 'New Category', icon: 'solar:clipboard-list-linear', tab: 'forum', action: 'add' },
     { label: 'View Users', icon: 'solar:users-group-rounded-linear', tab: 'users', action: 'view' },
@@ -53,6 +54,12 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
           title="Total Products" 
           value={stats?.productCount ?? '—'} 
           icon="solar:box-linear"
+          color="rgba(139, 0, 0, 0.3)"
+        />
+        <StatCard 
+          title="Total Events" 
+          value={stats?.eventCount ?? '—'} 
+          icon="solar:calendar-linear"
           color="rgba(139, 0, 0, 0.3)"
         />
         <StatCard 

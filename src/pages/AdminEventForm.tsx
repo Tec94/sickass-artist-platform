@@ -35,7 +35,7 @@ export function AdminEventForm() {
     try {
       const event = await submit()
       if (event) {
-        navigate('/admin/events')
+        navigate('/R?tab=events')
       }
     } catch (err) {
       // Error is handled by the hook
@@ -49,7 +49,7 @@ export function AdminEventForm() {
         <div className="form-header">
           <button
             type="button"
-            onClick={() => navigate('/admin/events')}
+            onClick={() => navigate('/R?tab=events')}
             className="back-button"
           >
             <iconify-icon icon="solar:arrow-left-bold"></iconify-icon>
@@ -276,7 +276,7 @@ export function AdminEventForm() {
                   onChange={(e) => updateField('saleStatus', e.target.value as 'upcoming' | 'on_sale')}
                   className="field-select"
                 >
-                  <option value="upcoming">Upcoming (Sales Not Started)</option>
+                  <option value="upcoming">Upcoming</option>
                   <option value="on_sale">On Sale</option>
                 </select>
               </div>
@@ -284,7 +284,7 @@ export function AdminEventForm() {
           </section>
 
           {/* Ticket Types Section */}
-          <section className="form-section">
+          <section className="form-section full-width">
             <div className="section-header">
               <h2 className="section-title">Ticket Types</h2>
               <button
@@ -394,10 +394,10 @@ export function AdminEventForm() {
 
           {/* Submit Section */}
           <div className="form-actions">
-            {submitError && (
+            {(submitError || Object.keys(errors).length > 0) && (
               <div className="submit-error">
                 <iconify-icon icon="solar:danger-triangle-bold"></iconify-icon>
-                <span>{submitError}</span>
+                <span>{submitError || 'Please fix the errors above to continue'}</span>
               </div>
             )}
 
@@ -424,9 +424,22 @@ export function AdminEventForm() {
 
       <style>{`
         .admin-event-form-page {
-          max-width: 900px;
+          max-width: 1000px;
           margin: 0 auto;
-          padding: 40px 20px;
+          padding: 20px;
+          height: 100%;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: var(--color-primary) transparent;
+        }
+
+        .admin-event-form-page::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .admin-event-form-page::-webkit-scrollbar-thumb {
+          background: var(--color-primary);
+          border-radius: 3px;
         }
 
         .form-container {
@@ -476,11 +489,23 @@ export function AdminEventForm() {
         }
 
         .event-form {
-          padding: 32px;
+          padding: 24px 32px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          align-items: start;
         }
 
         .form-section {
-          margin-bottom: 40px;
+          margin-bottom: 0px;
+          background: rgba(255, 255, 255, 0.02);
+          padding: 24px;
+          border-radius: 12px;
+          border: 1px solid var(--color-card-border);
+        }
+
+        .form-section.full-width {
+          grid-column: 1 / -1;
         }
 
         .form-section:last-child {
@@ -655,9 +680,16 @@ export function AdminEventForm() {
         }
 
         .form-actions {
-          margin-top: 40px;
-          padding-top: 32px;
+          grid-column: 1 / -1;
+          margin-top: 24px;
+          padding-top: 24px;
           border-top: 1px solid var(--color-card-border);
+          position: sticky;
+          bottom: -20px;
+          background: var(--color-card-bg);
+          z-index: 10;
+          margin: 24px -32px -32px -32px;
+          padding: 24px 32px;
         }
 
         .submit-error {

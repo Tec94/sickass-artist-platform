@@ -54,12 +54,34 @@ export type SearchChannelResult = {
   isLocked: boolean
 }
 
+export type SearchMerchResult = {
+  _id: string
+  name: string
+  description: string
+  price: number
+  thumbnailUrl: string
+  category: string
+  inStock: boolean
+}
+
+export type SearchEventResult = {
+  _id: string
+  title: string
+  description: string
+  imageUrl: string
+  city: string
+  startAtUtc: number
+  saleStatus: string
+}
+
 export type SearchResult = {
   users: SearchUserResult[]
   threads: SearchThreadResult[]
   gallery: SearchGalleryResult[]
   ugc: SearchUGCResult[]
   channels: SearchChannelResult[]
+  merch: SearchMerchResult[]
+  events: SearchEventResult[]
   totalResults: number
   query: string
 }

@@ -23,6 +23,7 @@ export function Merch() {
   const [activeCategory, setActiveCategory] = useState('')
   const [maxPrice, setMaxPrice] = useState(200)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   
   // Fetch all products (for client-side filtering to match reference behavior exactly)
   // In a real app with many products, this would be server-side filtered
@@ -33,6 +34,14 @@ export function Merch() {
   })
   
   const cartCount = cart?.itemCount || 0
+
+  const handleCollectionToggle = useCallback((collection: string) => {
+    setSelectedCollections(prev => 
+      prev.includes(collection)
+        ? prev.filter(c => c !== collection)
+        : [...prev, collection]
+    )
+  }, [])
 
   const handleAddToCart = useCallback(
     async (productId: string) => {
@@ -57,19 +66,23 @@ export function Merch() {
 
     // Category Filtering
     if (activeCategory === 'new arrivals') {
-        // Assuming we had an isNew flag, but we check if it's recent? 
-        // For now, let's just use the category ID if it matches, or skip if 'new arrivals' isn't a direct category in DB
-        // Our DB categories are 'apparel', 'accessories', etc.
-        // We will just filter by the category string if it's not empty
+        // Just show all for now if special category
     } else if (activeCategory) {
       filtered = filtered.filter(p => p.category === activeCategory)
+    }
+
+    // Collection (Tags) Filtering
+    if (selectedCollections.length > 0) {
+      filtered = filtered.filter(p => 
+        p.tags.some(tag => selectedCollections.includes(tag.toLowerCase()))
+      )
     }
 
     // Price Filtering
     filtered = filtered.filter(p => (p.price / 100) <= maxPrice)
 
     return filtered
-  }, [productsQuery, activeCategory, maxPrice])
+  }, [productsQuery, activeCategory, maxPrice, selectedCollections])
 
   const handleAddToCartFromDrawer = async (variantId: string, quantity: number) => {
       // Implementation for drawer if needed, but drawer usually handles removal
@@ -93,6 +106,8 @@ export function Merch() {
                     onCategoryChange={setActiveCategory} 
                     maxPrice={maxPrice}
                     onPriceChange={setMaxPrice}
+                    selectedCollections={selectedCollections}
+                    onCollectionToggle={handleCollectionToggle}
                 />
             </div>
             
@@ -130,14 +145,7 @@ export function Merch() {
                   {filteredProducts.map(product => (
                     <MerchProductCard 
                       key={product._id} 
-                      product={{
-                          _id: product._id,
-                          name: product.name,
-                          price: product.price,
-                          images: product.images || [],
-                          stock: 100,
-                          category: product.category
-                      }}
+                      product={product as any}
                     />
                   ))}
                 </div>

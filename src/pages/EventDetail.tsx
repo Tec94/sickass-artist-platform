@@ -71,6 +71,17 @@ export function EventDetail() {
 
   return (
     <div className="event-detail-layout">
+      {/* Navigation Header */}
+      <div className="detail-nav-header">
+        <button 
+          onClick={() => navigate('/events')}
+          className="back-btn"
+        >
+          <iconify-icon icon="solar:arrow-left-bold"></iconify-icon>
+          <span>Back to Events</span>
+        </button>
+      </div>
+
       {/* Hero Section */}
       <div ref={animate} data-animate className="event-hero">
         <div className="hero-image-container">
@@ -83,14 +94,6 @@ export function EventDetail() {
         </div>
 
         <div className="hero-content">
-          <div className="hero-breadcrumb">
-            <Link to="/events" className="breadcrumb-link">
-              Events
-            </Link>
-            <span className="breadcrumb-separator">/</span>
-            <span className="breadcrumb-current">{event.title}</span>
-          </div>
-
           <div className="flex items-start gap-4 mb-4">
             <h1 className="hero-title">{event.title}</h1>
             <div className={`${statusBadge.bgColor} ${statusBadge.color} px-3 py-1 rounded-full text-sm font-bold`}>
@@ -283,6 +286,44 @@ export function EventDetail() {
           max-width: 1400px;
           margin: 0 auto;
           padding: 0 20px 40px;
+          height: 100%;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: var(--color-primary) transparent;
+        }
+
+        .event-detail-layout::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .event-detail-layout::-webkit-scrollbar-thumb {
+          background: var(--color-primary);
+          border-radius: 3px;
+        }
+
+        .detail-nav-header {
+          padding: 20px 0;
+          display: flex;
+          align-items: center;
+        }
+
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--color-card-border);
+          border-radius: 8px;
+          padding: 10px 16px;
+          color: white;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateX(-4px);
         }
 
         .event-hero {
@@ -316,32 +357,6 @@ export function EventDetail() {
           left: 0;
           right: 0;
           padding: 40px;
-        }
-
-        .hero-breadcrumb {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          margin-bottom: 16px;
-        }
-
-        .breadcrumb-link {
-          color: var(--color-primary);
-          text-decoration: none;
-          transition: opacity 0.2s;
-        }
-
-        .breadcrumb-link:hover {
-          opacity: 0.8;
-        }
-
-        .breadcrumb-separator {
-          color: var(--color-text-dim);
-        }
-
-        .breadcrumb-current {
-          color: white;
         }
 
         .hero-title {

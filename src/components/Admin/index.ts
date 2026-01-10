@@ -1,5 +1,6 @@
 export { AdminOverview } from './AdminOverview'
 export { AdminMerch } from './AdminMerch'
+export { AdminEvents } from './AdminEvents'
 export { AdminChat } from './AdminChat'
 export { AdminForum } from './AdminForum'
 export { AdminQueues } from './AdminQueues'

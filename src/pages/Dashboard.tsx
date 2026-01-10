@@ -71,11 +71,23 @@ export const Dashboard = () => {
 
       <style>{`
         .dashboard-container {
-          min-height: 100vh;
+          height: 100%;
+          overflow-y: auto;
           background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a0000 100%);
           padding: 0;
           margin: 0;
           width: 100%;
+          scrollbar-width: thin;
+          scrollbar-color: var(--color-primary) transparent;
+        }
+
+        .dashboard-container::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .dashboard-container::-webkit-scrollbar-thumb {
+          background: var(--color-primary);
+          border-radius: 3px;
         }
 
         .dashboard-grid {

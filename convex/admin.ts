@@ -604,11 +604,12 @@ export const deleteReply = mutation({
 export const getAdminStats = query({
     args: {},
     handler: async (ctx) => {
-        const [products, channels, categories, users] = await Promise.all([
+        const [products, channels, categories, users, events] = await Promise.all([
             ctx.db.query("merchProducts").collect(),
             ctx.db.query("channels").collect(),
             ctx.db.query("categories").collect(),
             ctx.db.query("users").collect(),
+            ctx.db.query("events").collect(),
         ])
 
         return {
@@ -616,6 +617,7 @@ export const getAdminStats = query({
             channelCount: channels.length,
             categoryCount: categories.length,
             userCount: users.length,
+            eventCount: events.length,
             adminCount: users.filter(u => u.role === "admin").length,
             modCount: users.filter(u => u.role === "mod").length,
         }

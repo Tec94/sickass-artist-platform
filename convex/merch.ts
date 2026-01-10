@@ -1,4 +1,5 @@
-import { query } from './_generated/server'
+import { query, mutation } from './_generated/server'
+import { getCurrentUser } from './helpers'
 import { v, ConvexError } from 'convex/values'
 
 // Query: Get paginated products with filters & search
@@ -137,8 +138,8 @@ export const getProductDetail = query({
       .collect()
 
     const related = allRelated
-      .filter(p => 
-        p._id !== args.productId && 
+      .filter(p =>
+        p._id !== args.productId &&
         (p.status === 'active' || p.status === 'draft')
       )
       .slice(0, 4)
@@ -238,5 +239,64 @@ export const getVariantBySku = query({
 
     const product = await ctx.db.get(variant.productId)
     return { ...variant, product }
+  }
+})
+
+// Mutation: Toggle product in wishlist
+export const toggleWishlist = mutation({
+  args: { productId: v.id('merchProducts') },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+
+    const existing = await ctx.db
+      .query('merchWishlist')
+      .withIndex('by_user_product', q => q.eq('userId', user._id).eq('productId', args.productId))
+      .first()
+
+    if (existing) {
+      await ctx.db.delete(existing._id)
+      return { wishlisted: false }
+    } else {
+      await ctx.db.insert('merchWishlist', {
+        userId: user._id,
+        productId: args.productId,
+        createdAt: Date.now(),
+      })
+      return { wishlisted: true }
+    }
+  }
+})
+
+// Query: Get user's wishlist
+export const getWishlist = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) return []
+
+    const wishlistItems = await ctx.db
+      .query('merchWishlist')
+      .withIndex('by_user', q => q.eq('userId', user._id))
+      .collect()
+
+    const products = await Promise.all(
+      wishlistItems.map(async (item) => {
+        const product = await ctx.db.get(item.productId)
+        if (!product || product.status === 'archived') return null
+
+        const variants = await ctx.db
+          .query('merchVariants')
+          .withIndex('by_product', q => q.eq('productId', product._id))
+          .collect()
+
+        return {
+          ...product,
+          variants,
+          inStock: variants.some(v => v.stock > 0),
+        }
+      })
+    )
+
+    return products.filter((p): p is NonNullable<typeof p> => p !== null)
   }
 })

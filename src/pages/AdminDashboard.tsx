@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { 
   AdminOverview, 
   AdminMerch, 
+  AdminEvents,
   AdminChat, 
   AdminForum, 
   AdminQueues, 
@@ -14,6 +15,7 @@ import type { AdminTab } from '../components/Admin/AdminOverview'
 const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'overview', label: 'Overview', icon: 'solar:chart-square-linear' },
   { id: 'merch', label: 'Merch', icon: 'solar:box-linear' },
+  { id: 'events', label: 'Events', icon: 'solar:calendar-linear' },
   { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
   { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
   { id: 'queues', label: 'Queues', icon: 'solar:clock-circle-linear' },
@@ -22,12 +24,27 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
 ]
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = (searchParams.get('tab') as AdminTab) || 'overview'
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const navigate = useNavigate()
 
-  const handleNavigate = (tab: AdminTab) => {
+  // Sync state with URL params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as AdminTab
+    if (tabFromUrl && tabFromUrl !== activeTab && tabs.some(t => t.id === tabFromUrl)) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [searchParams, activeTab])
+
+  const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab)
+    setSearchParams({ tab })
+  }
+
+  const handleNavigate = (tab: AdminTab) => {
+    handleTabChange(tab)
   }
 
   const renderContent = () => {
@@ -36,6 +53,8 @@ export function AdminDashboard() {
         return <AdminOverview onNavigate={handleNavigate} />
       case 'merch':
         return <AdminMerch />
+      case 'events':
+        return <AdminEvents />
       case 'chat':
         return <AdminChat />
       case 'forum':
@@ -73,7 +92,7 @@ export function AdminDashboard() {
             <button
               key={tab.id}
               className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               title={sidebarCollapsed ? tab.label : undefined}
             >
               <iconify-icon icon={tab.icon} width="18" height="18"></iconify-icon>

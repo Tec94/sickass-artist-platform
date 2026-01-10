@@ -216,11 +216,6 @@ function AppContent() {
                     </Suspense>
                   </ProtectedRoute>
                 } />
-                <Route path="/admin/events" element={
-                  <ProtectedRoute>
-                    <AdminEvents />
-                  </ProtectedRoute>
-                } />
                 <Route path="/admin/events/new" element={
                   <ProtectedRoute>
                     <AdminEventForm />

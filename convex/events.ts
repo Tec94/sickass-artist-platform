@@ -377,10 +377,10 @@ export const getEventDetail = query({
           queueEntry: queueData,
           checkoutSession: checkoutSession
             ? {
-                _id: checkoutSession._id,
-                expiresAtUtc: checkoutSession.expiresAtUtc,
-                createdAtUtc: checkoutSession.createdAtUtc,
-              }
+              _id: checkoutSession._id,
+              expiresAtUtc: checkoutSession.expiresAtUtc,
+              createdAtUtc: checkoutSession.createdAtUtc,
+            }
             : undefined,
           tickets: tickets,
         }
@@ -517,7 +517,7 @@ export const getQueueState = query({
     // Determine status: upgrade waiting to admitted if position is within limit
     let status = queueEntry.status
     if (status === 'waiting' && (position < CHECKOUT_LIMIT || !!checkoutSession)) {
-        status = 'admitted'
+      status = 'admitted'
     }
 
     return {
@@ -557,7 +557,7 @@ export const createEvent = mutation({
   },
   handler: async (ctx, args): Promise<Id<'events'>> => {
     const user = await getCurrentUser(ctx)
-    
+
     // Data validation
     if (args.title.length < 1 || args.title.length > 200) {
       throw new ValidationError('Title must be between 1-200 characters', 'title')
@@ -568,15 +568,15 @@ export const createEvent = mutation({
     if (args.capacity <= 0) {
       throw new ValidationError('Capacity must be greater than 0', 'capacity')
     }
-    
+
     // Check for duplicate events
     const existingEvent = await ctx.db
       .query('events')
       .withIndex('by_dedupe', (q) => q.eq('dedupeKey', args.dedupeKey))
       .first()
-    
+
     if (existingEvent) {
-      throw new ValidationError('Event already exists', 'dedupeKey')
+      return existingEvent._id
     }
 
     // Get venue data for snapshot
@@ -622,7 +622,7 @@ export const createTicketType = mutation({
   handler: async (ctx, args): Promise<Id<'eventTickets'>> => {
     const user = await getCurrentUser(ctx)
     const event = await ctx.db.get(args.eventId)
-    
+
     if (!event) {
       throw new ValidationError('Event not found', 'eventId')
     }
@@ -639,8 +639,18 @@ export const createTicketType = mutation({
     if (args.quantity < 1) {
       throw new ValidationError('Quantity must be at least 1', 'quantity')
     }
-    if (args.saleEndsAtUtc > event.startAtUtc) {
-      throw new ValidationError('Sale cannot end after event starts', 'saleEndsAtUtc')
+    if (args.saleEndsAtUtc > event.endAtUtc) {
+      throw new ValidationError('Sale cannot end after event ends', 'saleEndsAtUtc')
+    }
+
+    // Check for duplicate ticket type for this event
+    const existingTicket = await ctx.db
+      .query('eventTickets')
+      .withIndex('by_event_type', (q) => q.eq('eventId', args.eventId).eq('type', args.type))
+      .first()
+
+    if (existingTicket) {
+      return existingTicket._id
     }
 
     const ticketTypeId = await ctx.db.insert('eventTickets', {
@@ -667,7 +677,7 @@ export const joinQueue = mutation({
   handler: async (ctx, args): Promise<{ seq: number; position: number; expiresAtUtc: number }> => {
     const user = await getCurrentUser(ctx)
     const event = await ctx.db.get(args.eventId)
-    
+
     if (!event) {
       throw new ValidationError('Event not found', 'eventId')
     }
@@ -689,14 +699,14 @@ export const joinQueue = mutation({
     }
 
     const now = Date.now()
-    
+
     // Atomic sequence allocation using patch
     await ctx.db.patch(args.eventId, {
       nextQueueSeq: event.nextQueueSeq + 1,
     })
-    
+
     const seq = event.nextQueueSeq + 1
-    
+
     await ctx.db.insert('eventQueue', {
       eventId: args.eventId,
       userId: user._id,
@@ -711,11 +721,11 @@ export const joinQueue = mutation({
     // Calculate position
     const waitingEntries = await ctx.db
       .query('eventQueue')
-      .withIndex('by_event_status_seq', (q) => 
+      .withIndex('by_event_status_seq', (q) =>
         q.eq('eventId', args.eventId).eq('status', 'waiting').lt('seq', seq)
       )
       .collect()
-    
+
     const position = waitingEntries.length
 
     return {
@@ -733,7 +743,7 @@ export const leaveQueue = mutation({
   },
   handler: async (ctx, args): Promise<void> => {
     const user = await getCurrentUser(ctx)
-    
+
     const queueEntry = await ctx.db
       .query('eventQueue')
       .withIndex('by_event_user', (q) => q.eq('eventId', args.eventId).eq('userId', user._id))
@@ -748,7 +758,7 @@ export const leaveQueue = mutation({
     }
 
     const now = Date.now()
-    
+
     // Update status and set cooldown
     await ctx.db.patch(queueEntry._id, {
       status: 'left',
@@ -767,6 +777,37 @@ export const leaveQueue = mutation({
   },
 })
 
+// M10: deleteEvent
+export const deleteEvent = mutation({
+  args: { eventId: v.id('events') },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    const event = await ctx.db.get(args.eventId)
+
+    if (!event) {
+      throw new ConvexError('Event not found')
+    }
+
+    // Check if user is the creator or a moderator
+    if (event.artistId.toString() !== user._id.toString() && !isModerator(user)) {
+      throw new ConvexError('Not authorized to delete this event')
+    }
+
+    const ticketTypes = await ctx.db
+      .query('eventTickets')
+      .withIndex('by_event', q => q.eq('eventId', args.eventId))
+      .collect()
+
+    for (const tt of ticketTypes) {
+      await ctx.db.delete(tt._id)
+    }
+
+    await ctx.db.delete(args.eventId)
+
+    return { success: true }
+  }
+})
+
 // M5: startCheckout
 export const startCheckout = mutation({
   args: {
@@ -776,7 +817,7 @@ export const startCheckout = mutation({
   },
   handler: async (ctx, args): Promise<{ checkoutSessionId: Id<'checkoutSessions'>; expiresAtUtc: number }> => {
     const user = await getCurrentUser(ctx)
-    
+
     // Frontend validation replicated on server
     if (args.quantity < 1 || args.quantity > MAX_TICKETS_PER_PURCHASE) {
       throw new ValidationError(`Quantity must be between 1-${MAX_TICKETS_PER_PURCHASE}`, 'quantity')
@@ -847,7 +888,7 @@ export const purchaseTicket = mutation({
   },
   handler: async (ctx, args): Promise<{ ticketId: Id<'userTickets'>; confirmationCode: string }> => {
     const user = await getCurrentUser(ctx)
-    
+
     // Validation
     if (args.quantity < 1 || args.quantity > MAX_TICKETS_PER_PURCHASE) {
       throw new ValidationError(`Quantity must be between 1-${MAX_TICKETS_PER_PURCHASE}`, 'quantity')
@@ -876,8 +917,8 @@ export const purchaseTicket = mutation({
       .withIndex('by_event_user', (q) => q.eq('eventId', args.eventId).eq('userId', user._id))
       .collect()
 
-    const duplicateTicket = existingTickets.find(t => 
-      t.ticketType === ticketType.type && 
+    const duplicateTicket = existingTickets.find(t =>
+      t.ticketType === ticketType.type &&
       t.quantity === args.quantity &&
       t.status === 'valid'
     )
@@ -904,7 +945,7 @@ export const purchaseTicket = mutation({
 
     // Atomic transaction: Purchase + inventory deduct + queue removal + session cleanup
     const now = Date.now()
-    
+
     // 1. Create ticket record
     const ticketId = await ctx.db.insert('userTickets', {
       userId: user._id,
@@ -956,7 +997,7 @@ export const purchaseTicket = mutation({
 // Cron: Cleanup expired queue entries and checkout sessions
 export const cleanupExpiredEntries = mutation({
   args: {},
-  handler: async (ctx): Promise<{ 
+  handler: async (ctx): Promise<{
     queueEntriesCleaned: number
     checkoutSessionsCleaned: number
     archivedEvents: number

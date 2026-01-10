@@ -5,13 +5,17 @@ interface MerchSidebarProps {
   onCategoryChange: (category: string) => void
   maxPrice: number
   onPriceChange: (price: number) => void
+  selectedCollections: string[]
+  onCollectionToggle: (collection: string) => void
 }
 
 export const MerchSidebar = ({
   activeCategory,
   onCategoryChange,
   maxPrice,
-  onPriceChange
+  onPriceChange,
+  selectedCollections,
+  onCollectionToggle
 }: MerchSidebarProps) => {
   const [sections, setSections] = useState({
     categories: true,
@@ -112,9 +116,20 @@ export const MerchSidebar = ({
         {sections.collections && (
           <div className="section-content">
             {collections.map((col) => (
-              <label key={col} className="collection-item">
-                <div className="checkbox"></div>
-                <span>{col}</span>
+              <label 
+                key={col} 
+                className="collection-item"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onCollectionToggle(col.toLowerCase());
+                }}
+              >
+                <div className={`checkbox ${selectedCollections.includes(col.toLowerCase()) ? 'checked' : ''}`}>
+                  {selectedCollections.includes(col.toLowerCase()) && (
+                    <iconify-icon icon="solar:check-read-linear" width="10" height="10"></iconify-icon>
+                  )}
+                </div>
+                <span className={selectedCollections.includes(col.toLowerCase()) ? 'active' : ''}>{col}</span>
               </label>
             ))}
           </div>
@@ -257,6 +272,15 @@ export const MerchSidebar = ({
           border: 1px solid #262626;
           border-radius: 3px;
           transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+        
+        .checkbox.checked {
+          background: #dc2626;
+          border-color: #dc2626;
         }
 
         .collection-item span {
@@ -264,6 +288,10 @@ export const MerchSidebar = ({
           color: #737373;
           transition: color 0.2s;
           font-weight: 500;
+        }
+
+        .collection-item span.active {
+          color: white;
         }
       `}</style>
     </div>

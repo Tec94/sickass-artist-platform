@@ -151,12 +151,34 @@ type SearchChannelResult = {
   isLocked: boolean;
 };
 
+type SearchMerchResult = {
+  _id: Id<"merchProducts">;
+  name: string;
+  description: string;
+  price: number;
+  thumbnailUrl: string;
+  category: string;
+  inStock: boolean;
+};
+
+type SearchEventResult = {
+  _id: Id<"events">;
+  title: string;
+  description: string;
+  imageUrl: string;
+  city: string;
+  startAtUtc: number;
+  saleStatus: string;
+};
+
 type GlobalSearchResult = {
   users: SearchUserResult[];
   threads: SearchThreadResult[];
   gallery: SearchGalleryResult[];
   ugc: SearchUGCResult[];
   channels: SearchChannelResult[];
+  merch: SearchMerchResult[];
+  events: SearchEventResult[];
   totalResults: number;
   query: string;
 };
@@ -176,7 +198,9 @@ export const globalSearch = query({
           v.literal("thread"),
           v.literal("gallery"),
           v.literal("ugc"),
-          v.literal("channel")
+          v.literal("channel"),
+          v.literal("merch"),
+          v.literal("event")
         )
       )
     ),
@@ -192,7 +216,7 @@ export const globalSearch = query({
 
     const searchTerm = args.query.toLowerCase().trim();
     const limit = Math.min(args.limit || 20, 50);
-    const typesToSearch = args.types || ["user", "thread", "gallery", "ugc", "channel"];
+    const typesToSearch = args.types || ["user", "thread", "gallery", "ugc", "channel", "merch", "event"];
 
     // Validate input
     if (!searchTerm || searchTerm.length < 2) {
@@ -202,6 +226,8 @@ export const globalSearch = query({
         gallery: [],
         ugc: [],
         channels: [],
+        merch: [],
+        events: [],
         totalResults: 0,
         query: args.query,
       };
@@ -218,6 +244,8 @@ export const globalSearch = query({
       gallery: [],
       ugc: [],
       channels: [],
+      merch: [],
+      events: [],
       totalResults: 0,
       query: args.query,
     };
@@ -229,6 +257,8 @@ export const globalSearch = query({
       galleryResults,
       ugcResults,
       channelResults,
+      merchResults,
+      eventResults,
     ] = await Promise.all([
       typesToSearch.includes("user")
         ? searchUsersHelper(ctx, searchTerm, limit)
@@ -245,6 +275,12 @@ export const globalSearch = query({
       typesToSearch.includes("channel")
         ? searchChannels(ctx, searchTerm, limit, currentUser?._id)
         : Promise.resolve([]),
+      typesToSearch.includes("merch")
+        ? searchMerchGlobal(ctx, searchTerm, limit)
+        : Promise.resolve([]),
+      typesToSearch.includes("event")
+        ? searchEventsGlobal(ctx, searchTerm, limit)
+        : Promise.resolve([]),
     ]);
 
     results.users = userResults;
@@ -252,16 +288,20 @@ export const globalSearch = query({
     results.gallery = galleryResults;
     results.ugc = ugcResults;
     results.channels = channelResults;
+    results.merch = merchResults;
+    results.events = eventResults;
     results.totalResults =
       userResults.length +
       threadResults.length +
       galleryResults.length +
       ugcResults.length +
-      channelResults.length;
+      channelResults.length +
+      merchResults.length +
+      eventResults.length;
 
     return results;
   },
-});
+})
 
 /**
  * Search users by username/displayName using by_username index
@@ -552,8 +592,91 @@ async function searchChannels(
         slug: c.slug,
         description: c.description,
         category: c.category,
-        messageCount: c.messageCount,
-        isLocked: Boolean(c.requiredRole || c.requiredFanTier),
+        messageCount: c.messageCount || 0,
+        isLocked: !!(c.requiredRole || c.requiredFanTier),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Search merch products globally
+ */
+async function searchMerchGlobal(
+  ctx: QueryCtx,
+  searchTerm: string,
+  limit: number
+): Promise<SearchMerchResult[]> {
+  try {
+    const products = await ctx.db.query("merchProducts").collect();
+
+    const results = products.filter(p =>
+      p.status !== 'archived' &&
+      (p.name.toLowerCase().includes(searchTerm) ||
+        p.description.toLowerCase().includes(searchTerm) ||
+        p.tags.some(t => t.toLowerCase().includes(searchTerm)))
+    );
+
+    return results
+      .sort((a, b) => {
+        const aNameMatch = a.name.toLowerCase().includes(searchTerm);
+        const bNameMatch = b.name.toLowerCase().includes(searchTerm);
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        return b.createdAt - a.createdAt;
+      })
+      .slice(0, limit)
+      .map(p => ({
+        _id: p._id,
+        name: p.name,
+        description: p.description.slice(0, 100) + (p.description.length > 100 ? "..." : ""),
+        price: p.price,
+        thumbnailUrl: p.thumbnailUrl || p.imageUrls[0] || "",
+        category: p.category,
+        inStock: p.totalStock > 0,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Search events globally
+ */
+async function searchEventsGlobal(
+  ctx: QueryCtx,
+  searchTerm: string,
+  limit: number
+): Promise<SearchEventResult[]> {
+  try {
+    const events = await ctx.db.query("events").collect();
+
+    const results = events.filter(e =>
+      e.saleStatus !== 'cancelled' &&
+      (e.title.toLowerCase().includes(searchTerm) ||
+        e.description.toLowerCase().includes(searchTerm) ||
+        e.city.toLowerCase().includes(searchTerm) ||
+        e.venueName.toLowerCase().includes(searchTerm))
+    );
+
+    return results
+      .sort((a, b) => {
+        const aTitleMatch = a.title.toLowerCase().includes(searchTerm);
+        const bTitleMatch = b.title.toLowerCase().includes(searchTerm);
+        if (aTitleMatch && !bTitleMatch) return -1;
+        if (!aTitleMatch && bTitleMatch) return 1;
+        return a.startAtUtc - b.startAtUtc; // Soonest first
+      })
+      .slice(0, limit)
+      .map(e => ({
+        _id: e._id,
+        title: e.title,
+        description: e.description.slice(0, 100) + (e.description.length > 100 ? "..." : ""),
+        imageUrl: e.imageUrl,
+        city: e.city,
+        startAtUtc: e.startAtUtc,
+        saleStatus: e.saleStatus,
       }));
   } catch {
     return [];

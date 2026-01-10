@@ -6,7 +6,7 @@ import { SearchResults } from './SearchResults'
 import { RecentSearches } from './RecentSearches'
 import { SearchResultTabs } from './SearchResultTabs'
 
-type ResultFilter = 'all' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels'
+type ResultFilter = 'all' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels' | 'merch' | 'events'
 
 interface SearchModalProps {
   isOpen: boolean
@@ -24,6 +24,8 @@ function getFlatResults(
     ...results.gallery.map((g) => ({ ...g, type: 'gallery' as const })),
     ...results.ugc.map((u) => ({ ...u, type: 'ugc' as const })),
     ...results.channels.map((c) => ({ ...c, type: 'channel' as const })),
+    ...results.merch.map((m) => ({ ...m, type: 'merch' as const })),
+    ...results.events.map((e) => ({ ...e, type: 'event' as const })),
   ]
 
   if (filter === 'all') return all
@@ -73,6 +75,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         navigate(`/?gear=3&ugcId=${result.ugcId}`)
       } else if (result.type === 'channel' && result._id) {
         navigate(`/?gear=6&channelId=${result._id}`)
+      } else if (result.type === 'merch' && result._id) {
+        navigate(`/merch/${result._id}`)
+      } else if (result.type === 'event' && result._id) {
+        navigate(`/events/${result._id}`)
       }
 
       onClose()
@@ -108,7 +114,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       // Tab to switch filter tabs
       if (e.key === 'Tab') {
         e.preventDefault()
-        const tabs: ResultFilter[] = ['all', 'users', 'threads', 'gallery', 'ugc', 'channels']
+        const tabs: ResultFilter[] = ['all', 'users', 'threads', 'gallery', 'ugc', 'channels', 'merch', 'events']
         const currentIndex = tabs.indexOf(resultFilter)
         const nextIndex = e.shiftKey
           ? (currentIndex - 1 + tabs.length) % tabs.length
@@ -178,19 +184,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       {/* Modal */}
       <div
         ref={modalRef}
-        className="fixed left-1/2 top-1/4 z-50 w-full max-w-2xl -translate-x-1/2 rounded-lg border border-cyan-500/30 bg-slate-900/95 shadow-2xl"
+        className="fixed left-1/2 top-1/4 z-50 w-full max-w-2xl -translate-x-1/2 rounded-lg border border-red-500/30 bg-slate-900/95 shadow-2xl"
         onKeyDown={handleKeyDownOnModal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="search-title"
       >
         {/* Header */}
-        <div className="flex items-center border-b border-cyan-500/20 px-4 py-3">
-          <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="text-cyan-400"></iconify-icon>
+        <div className="flex items-center border-b border-red-500/20 px-4 py-3">
+          <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="text-red-400"></iconify-icon>
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search users, threads, gallery, UGC..."
+            placeholder="Search users, threads, merch, events..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -199,7 +205,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           />
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-cyan-500/20 transition-colors"
+            className="rounded p-1 hover:bg-red-500/20 transition-colors"
             aria-label="Close search"
           >
             <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
@@ -220,7 +226,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           {/* Loading state */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-cyan-400"></iconify-icon>
+              <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-red-400"></iconify-icon>
             </div>
           )}
 
@@ -230,7 +236,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               <p className="text-red-400">{error.message}</p>
               <button
                 onClick={() => setQuery(query)}
-                className="mt-2 text-cyan-400 hover:underline"
+                className="mt-2 text-red-400 hover:underline"
               >
                 Try again
               </button>
@@ -275,7 +281,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Footer hint */}
-        <div className="border-t border-cyan-500/20 px-4 py-2 text-xs text-gray-500">
+        <div className="border-t border-red-500/20 px-4 py-2 text-xs text-gray-500">
           <kbd className="rounded bg-slate-800 px-2 py-1">↑↓</kbd> Navigate
           <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">Enter</kbd> Select
           <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">ESC</kbd> Close

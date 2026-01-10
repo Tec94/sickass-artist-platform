@@ -184,7 +184,7 @@ export function AdminMerch() {
           setEditingId(null)
           setShowForm(true)
         }}>
-          <Plus size={18} />
+          <iconify-icon icon="solar:plus-linear" width="18" height="18"></iconify-icon>
           Add Product
         </button>
       </div>

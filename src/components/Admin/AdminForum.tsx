@@ -170,7 +170,7 @@ export function AdminForum() {
               setEditingCategoryId(null)
               setShowCategoryForm(true)
             }} title="Add Category">
-              <Plus size={18} />
+              <iconify-icon icon="solar:plus-linear" width="18" height="18"></iconify-icon>
             </button>
           </div>
 

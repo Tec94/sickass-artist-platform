@@ -763,4 +763,14 @@ export default defineSchema({
   })
     .index('by_user_channel', ['userId', 'channelId'])
     .index('by_user', ['userId']),
+
+  // Merch wishlist - User's favorite products
+  merchWishlist: defineTable({
+    userId: v.id('users'),
+    productId: v.id('merchProducts'),
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_product', ['productId'])
+    .index('by_user_product', ['userId', 'productId']),
 })

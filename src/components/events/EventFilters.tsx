@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import type { EventFilters } from '../../types/events'
+import type { EventFilters as EventFiltersType } from '../../types/events'
 
 interface EventFiltersProps {
-  filters: EventFilters
-  onChange: (filters: EventFilters) => void
+  filters: EventFiltersType
+  onChange: (filters: EventFiltersType) => void
   availableCities?: string[]
   eventCount?: number
 }
@@ -14,8 +14,17 @@ export function EventFilters({
   availableCities = [],
   eventCount = 0,
 }: EventFiltersProps) {
-  const [showFilters, setShowFilters] = useState(true)
+  const [sections, setSections] = useState({
+    dates: true,
+    location: true,
+    status: true,
+    sort: true
+  })
   const [selectedDateRange, setSelectedDateRange] = useState<string>('all')
+
+  const toggleSection = (key: keyof typeof sections) => {
+    setSections(prev => ({ ...prev, [key]: !prev[key] }))
+  }
 
   const handleCityChange = useCallback((city: string) => {
     onChange({
@@ -71,147 +80,178 @@ export function EventFilters({
     })
   }, [filters, onChange])
 
-  const handleResetAll = useCallback(() => {
-    onChange({
-      sortBy: 'asc',
-    })
-  }, [onChange])
-
-  const activeFilterCount = [
-    filters.city,
-    filters.saleStatus,
-    filters.startDate,
-  ].filter(Boolean).length
-
   return (
-    <div className="bg-gray-900/70 border border-gray-800 rounded-lg p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-white font-bold text-sm">Filters</h3>
-          {activeFilterCount > 0 && (
-            <span className="bg-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full font-bold">
-              {activeFilterCount}
-            </span>
-          )}
-        </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          <iconify-icon icon={showFilters ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}></iconify-icon>
+    <div className="event-filters-sidebar">
+      {/* Dates Section */}
+      <div className="sidebar-section">
+        <button className="section-header" onClick={() => toggleSection('dates')}>
+          <h3>Date Range</h3>
+          <iconify-icon icon={sections.dates ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
         </button>
+        {sections.dates && (
+          <div className="section-content">
+            {['All Dates', 'Today', 'This Week', 'This Month'].map((range) => (
+              <button
+                key={range}
+                onClick={() => handleDateRangeChange(range.toLowerCase().replace('this ', ''))}
+                className={`filter-item ${selectedDateRange === range.toLowerCase().replace('this ', '') ? 'active' : ''}`}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {showFilters && (
-        <div className="space-y-4">
-          {/* Date Range */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Date Range
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {['all', 'today', 'week', 'month'].map((range) => (
+      {/* Location Section */}
+      {availableCities.length > 0 && (
+        <div className="sidebar-section">
+          <button className="section-header" onClick={() => toggleSection('location')}>
+            <h3>Location</h3>
+            <iconify-icon icon={sections.location ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
+          </button>
+          {sections.location && (
+            <div className="section-content">
+              <button
+                onClick={() => handleCityChange('all')}
+                className={`filter-item ${!filters.city ? 'active' : ''}`}
+              >
+                All Cities
+              </button>
+              {availableCities.map((city) => (
                 <button
-                  key={range}
-                  onClick={() => handleDateRangeChange(range)}
-                  className={`px-3 py-2 rounded text-xs font-bold transition-colors ${
-                    selectedDateRange === range
-                      ? 'bg-red-500/20 text-red-500 border border-red-500/50'
-                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
-                  }`}
+                  key={city}
+                  onClick={() => handleCityChange(city)}
+                  className={`filter-item ${filters.city === city ? 'active' : ''}`}
                 >
-                  {range.charAt(0).toUpperCase() + range.slice(1)}
+                  {city}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* City Filter */}
-          {availableCities.length > 0 && (
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                City
-              </label>
-              <select
-                value={filters.city || 'all'}
-                onChange={(e) => handleCityChange(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-              >
-                <option value="all">All Cities</option>
-                {availableCities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </div>
           )}
-
-          {/* Sale Status */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Sale Status
-            </label>
-            <div className="space-y-2">
-              {[
-                { value: 'all', label: 'All Events' },
-                { value: 'on_sale', label: 'On Sale' },
-                { value: 'upcoming', label: 'Coming Soon' },
-              ].map((status) => (
-                <label key={status.value} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="saleStatus"
-                    value={status.value}
-                    checked={
-                      (!filters.saleStatus && status.value === 'all') ||
-                      filters.saleStatus === status.value
-                    }
-                    onChange={() => handleStatusChange(status.value)}
-                    className="text-red-500 focus:ring-red-500"
-                  />
-                  <span className="text-sm text-gray-300">{status.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Sort By */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Sort By
-            </label>
-            <select
-              value={filters.sortBy || 'asc'}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-            >
-              <option value="asc">Soonest First</option>
-              <option value="desc">Latest First</option>
-            </select>
-          </div>
-
-          {/* Active Filters & Reset */}
-          {activeFilterCount > 0 && (
-            <div className="pt-4 border-t border-gray-800">
-              <button
-                onClick={handleResetAll}
-                className="w-full bg-red-500/20 text-red-400 px-4 py-2 rounded text-sm font-bold hover:bg-red-500/30 transition-colors"
-              >
-                Reset All Filters
-              </button>
-            </div>
-          )}
-
-          {/* Event Count */}
-          <div className="pt-2 text-center">
-            <span className="text-xs text-gray-400">
-              {eventCount} {eventCount === 1 ? 'event' : 'events'} found
-            </span>
-          </div>
         </div>
       )}
+
+      {/* Status Section */}
+      <div className="sidebar-section">
+        <button className="section-header" onClick={() => toggleSection('status')}>
+          <h3>Sale Status</h3>
+          <iconify-icon icon={sections.status ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
+        </button>
+        {sections.status && (
+          <div className="section-content">
+            {[
+              { value: 'all', label: 'All Status' },
+              { value: 'on_sale', label: 'On Sale' },
+              { value: 'upcoming', label: 'Upcoming' },
+            ].map((status) => (
+              <button
+                key={status.value}
+                onClick={() => handleStatusChange(status.value)}
+                className={`filter-item ${(!filters.saleStatus && status.value === 'all') || filters.saleStatus === status.value ? 'active' : ''}`}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sort Section */}
+      <div className="sidebar-section">
+        <button className="section-header" onClick={() => toggleSection('sort')}>
+          <h3>Sort By</h3>
+          <iconify-icon icon={sections.sort ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
+        </button>
+        {sections.sort && (
+          <div className="section-content">
+            <button
+              onClick={() => handleSortChange('asc')}
+              className={`filter-item ${filters.sortBy === 'asc' ? 'active' : ''}`}
+            >
+              Soonest First
+            </button>
+            <button
+              onClick={() => handleSortChange('desc')}
+              className={`filter-item ${filters.sortBy === 'desc' ? 'active' : ''}`}
+            >
+              Latest First
+            </button>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .event-filters-sidebar {
+          width: 100%;
+          padding-right: 1.5rem;
+        }
+
+        .sidebar-section {
+          margin-bottom: 1.5rem;
+          border-left: 2px solid #1a1a1a;
+          padding-left: 1rem;
+        }
+
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0.5rem 0;
+          color: #808080;
+          transition: color 0.2s;
+        }
+
+        .section-header:hover {
+          color: white;
+        }
+
+        .section-header h3 {
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.25em;
+          margin: 0;
+        }
+
+        .section-content {
+          margin-top: 0.75rem;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .filter-item {
+          display: block;
+          width: 100%;
+          padding: 0.5rem 0;
+          background: transparent;
+          border: none;
+          border-left: 2px solid transparent;
+          text-align: left;
+          font-size: 13px;
+          color: #737373;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-weight: 500;
+        }
+
+        .filter-item:hover {
+          color: white;
+          padding-left: 0.5rem;
+        }
+
+        .filter-item.active {
+          color: #dc2626;
+          font-weight: 700;
+          border-left-color: #dc2626;
+          padding-left: 0.5rem;
+        }
+      `}</style>
     </div>
   )
 }
