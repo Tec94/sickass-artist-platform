@@ -292,87 +292,92 @@ export const adminAdjustPoints = mutation({
       throw new ConvexError('Only admins can adjust points')
     }
 
-    const idempotencyKey = `admin-${args.adminId}-${Date.now()}-${Math.random()}`
+    if (!Number.isInteger(args.amount) || args.amount === 0) {
+      throw new ConvexError('Adjustment amount must be a non-zero integer')
+    }
+
+    if (Math.abs(args.amount) > 10000) {
+      throw new ConvexError('Suspiciously high point adjustment')
+    }
+
+    const now = Date.now()
+    const idempotencyKey = `admin-${args.adminId}-${now}-${Math.random()}`
+
+    const user = await ctx.db.get(args.userId)
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
+    const rewards = await ctx.db
+      .query('userRewards')
+      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
+      .first()
 
     // For negative adjustments, deduct points; for positive, add points
     if (args.amount < 0) {
-      // Negative adjustment - deduct points directly
-      const rewards = await ctx.db
-        .query('userRewards')
-        .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-        .first()
-
       if (!rewards) {
         throw new ConvexError('User rewards not found')
       }
 
-      // Log transaction (negative amount)
+      const nextAvailable = rewards.availablePoints + args.amount
+      if (nextAvailable < 0) {
+        throw new ConvexError(
+          `Insufficient points: have ${rewards.availablePoints}, cannot deduct ${-args.amount}`
+        )
+      }
+
       await ctx.db.insert('pointTransactions', {
         userId: args.userId,
         amount: args.amount,
         type: 'admin_adjust',
         description: `[ADMIN] ${args.reason}`,
         idempotencyKey,
-        createdAt: Date.now(),
+        createdAt: now,
       })
 
-      // Update user rewards (deduct from available)
-      const newAvailable = Math.max(0, rewards.availablePoints + args.amount) // amount is negative
       await ctx.db.patch(rewards._id, {
-        availablePoints: newAvailable,
-        updatedAt: Date.now(),
+        totalPoints: rewards.totalPoints + args.amount,
+        availablePoints: nextAvailable,
+        lastInteractionDate: now,
+        updatedAt: now,
       })
 
       return { success: true }
-    } else {
-      // Positive adjustment - award points
-      const user = await ctx.db.get(args.userId)
-      if (!user) {
-        throw new ConvexError('User not found')
-      }
-
-      // Create transaction
-      const txId = await ctx.db.insert('pointTransactions', {
-        userId: args.userId,
-        amount: args.amount,
-        type: 'admin_adjust',
-        description: `[ADMIN] ${args.reason}`,
-        idempotencyKey,
-        createdAt: Date.now(),
-      })
-
-      // Update user rewards
-      const rewards = await ctx.db
-        .query('userRewards')
-        .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-        .first()
-
-      if (!rewards) {
-        // Create if missing
-        await ctx.db.insert('userRewards', {
-          userId: args.userId,
-          totalPoints: args.amount,
-          availablePoints: args.amount,
-          redeemedPoints: 0,
-          currentStreak: 0,
-          maxStreak: 0,
-          lastInteractionDate: Date.now(),
-          lastLoginDate: new Date().toISOString().split('T')[0],
-          unseenMilestones: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        })
-      } else {
-        // Update existing
-        await ctx.db.patch(rewards._id, {
-          totalPoints: rewards.totalPoints + args.amount,
-          availablePoints: rewards.availablePoints + args.amount,
-          lastInteractionDate: Date.now(),
-          updatedAt: Date.now(),
-        })
-      }
-
-      return { transactionId: txId, success: true }
     }
+
+    // Positive adjustment
+    const txId = await ctx.db.insert('pointTransactions', {
+      userId: args.userId,
+      amount: args.amount,
+      type: 'admin_adjust',
+      description: `[ADMIN] ${args.reason}`,
+      idempotencyKey,
+      createdAt: now,
+    })
+
+    if (!rewards) {
+      await ctx.db.insert('userRewards', {
+        userId: args.userId,
+        totalPoints: args.amount,
+        availablePoints: args.amount,
+        redeemedPoints: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        lastInteractionDate: now,
+        lastLoginDate: new Date().toISOString().split('T')[0],
+        unseenMilestones: [],
+        createdAt: now,
+        updatedAt: now,
+      })
+    } else {
+      await ctx.db.patch(rewards._id, {
+        totalPoints: rewards.totalPoints + args.amount,
+        availablePoints: rewards.availablePoints + args.amount,
+        lastInteractionDate: now,
+        updatedAt: now,
+      })
+    }
+
+    return { transactionId: txId, success: true }
   },
 })
