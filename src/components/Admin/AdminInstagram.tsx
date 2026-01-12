@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import type { Id, Doc } from '../../../convex/_generated/dataModel'
 
 export function AdminInstagram() {
   const posts = useQuery(api.instagram.getAllInstagramPosts, { limit: 50 })
@@ -123,7 +123,7 @@ export function AdminInstagram() {
           </div>
         ) : (
           <div className="posts-grid">
-            {posts.map((post) => (
+            {posts.map((post: Doc<'instagramPosts'>) => (
               <div 
                 key={post._id} 
                 className={`post-card ${post.isFeatured ? 'featured' : ''}`}

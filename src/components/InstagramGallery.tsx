@@ -1,12 +1,13 @@
 import { useQuery } from 'convex/react'
-import { api } from '@/convex/_generated/api'
+import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { Doc } from '../../convex/_generated/dataModel'
 
 export const InstagramGallery = () => {
   const posts = useQuery(api.instagram.getFeaturedInstagramPosts, { limit: 12 })
   const status = useQuery(api.instagram.getInstagramStatus)
-  const [selectedPost, setSelectedPost] = useState<typeof posts extends (infer T)[] ? T : never | null>(null)
+  const [selectedPost, setSelectedPost] = useState<Doc<'instagramPosts'> | null>(null)
 
   if (!posts || !status) {
     return (
@@ -48,7 +49,7 @@ export const InstagramGallery = () => {
             No Instagram posts featured yet
           </div>
         ) : (
-          posts.map((post) => (
+          posts.map((post: Doc<'instagramPosts'>) => (
             <motion.div
               key={post._id}
               className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-800"
