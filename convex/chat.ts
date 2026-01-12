@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 import {
   getCurrentUser,
   canAccessChannel,
@@ -285,6 +286,20 @@ export const sendMessage = mutation({
       lastMessageAt: now,
       lastMessageId: messageId,
     });
+
+    // Award points for sending a message
+    const pointsIdempotencyKey = `message-${messageId}`;
+    try {
+      await ctx.runMutation(api.points.awardPoints, {
+        userId: userId,
+        type: 'chat_message',
+        amount: 3,
+        description: 'Sent chat message',
+        idempotencyKey: pointsIdempotencyKey,
+      });
+    } catch (error) {
+      console.error('Failed to award points:', error);
+    }
 
     const message = await ctx.db.get(messageId);
     return message;

@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import { api } from "./_generated/api";
 import { getCurrentUser, canAccessCategory, isModerator, updateUserSocialPoints } from "./helpers";
 
 // QUERIES
@@ -371,6 +372,21 @@ export const createThread = mutation({
       });
     }
 
+    // Award points for thread creation
+    const idempotencyKey = `thread-${threadId}`;
+    try {
+      await ctx.runMutation(api.points.awardPoints, {
+        userId: userId,
+        type: 'thread_post',
+        amount: 20,
+        description: 'Posted in forum',
+        idempotencyKey,
+      });
+    } catch (error) {
+      console.error('Failed to award points:', error);
+      // Don't fail thread creation if points fail
+    }
+
     return { threadId };
   },
 });
@@ -501,6 +517,20 @@ export const createReply = mutation({
       await ctx.db.patch(thread.categoryId, {
         lastThreadAt: Date.now(),
       });
+    }
+
+    // Award points for forum reply
+    const idempotencyKey = `reply-${replyId}`;
+    try {
+      await ctx.runMutation(api.points.awardPoints, {
+        userId: userId,
+        type: 'forum_reply',
+        amount: 10,
+        description: 'Replied in forum',
+        idempotencyKey,
+      });
+    } catch (error) {
+      console.error('Failed to award points:', error);
     }
 
     return { replyId };
