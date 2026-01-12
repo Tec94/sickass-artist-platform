@@ -531,9 +531,10 @@ export const getTrendingSubmissions = query({
     const baseQuery = ctx.db.query('songSubmissions')
 
     if (args.leaderboardId) {
+      const leaderboardId = args.leaderboardId
       const submissions = await baseQuery
         .withIndex('by_leaderboardId_upvotes', (q) => 
-          q.eq('leaderboardId', args.leaderboardId)
+          q.eq('leaderboardId', leaderboardId)
         )
         .filter((q) => q.gt(q.field('createdAt'), weekAgo))
         .order('desc')

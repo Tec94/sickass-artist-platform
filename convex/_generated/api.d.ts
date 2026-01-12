@@ -21,6 +21,7 @@ import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
 import type * as httpActions from "../httpActions.js";
 import type * as inventoryRepair from "../inventoryRepair.js";
+import type * as leaderboard from "../leaderboard.js";
 import type * as merch from "../merch.js";
 import type * as migrations from "../migrations.js";
 import type * as offlineQueue from "../offlineQueue.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   helpers: typeof helpers;
   httpActions: typeof httpActions;
   inventoryRepair: typeof inventoryRepair;
+  leaderboard: typeof leaderboard;
   merch: typeof merch;
   migrations: typeof migrations;
   offlineQueue: typeof offlineQueue;
