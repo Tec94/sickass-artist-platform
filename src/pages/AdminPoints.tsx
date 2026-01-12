@@ -15,12 +15,12 @@ export const AdminPoints = () => {
 
   const targetBalance = useQuery(
     api.points.getUserBalance,
-    userId ? { userId: userId as Id<'users'> } : undefined
+    userId ? { userId: userId as Id<'users'> } : 'skip'
   )
 
   const txHistory = useQuery(
     api.points.getUserTransactionHistory,
-    userId ? { userId: userId as Id<'users'>, limit: 25 } : undefined
+    userId ? { userId: userId as Id<'users'>, limit: 25 } : 'skip'
   )
 
   if (authLoading) {
