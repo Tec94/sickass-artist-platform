@@ -96,6 +96,8 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const RewardShop = lazy(() => import('./pages/RewardShop').then(m => ({ default: m.RewardShop })))
 const AdminRedemptions = lazy(() => import('./pages/AdminRedemptions').then(m => ({ default: m.AdminRedemptions })))
+const AdminRewards = lazy(() => import('./pages/AdminRewards').then(m => ({ default: m.AdminRewards })))
+const AdminPoints = lazy(() => import('./pages/AdminPoints').then(m => ({ default: m.AdminPoints })))
 
 function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
@@ -236,6 +238,16 @@ function AppContent() {
                 <Route path="/admin/redemptions" element={
                   <ProtectedRoute>
                     <AdminRedemptions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/rewards" element={
+                  <ProtectedRoute>
+                    <AdminRewards />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/points" element={
+                  <ProtectedRoute>
+                    <AdminPoints />
                   </ProtectedRoute>
                 } />
                 <Route path="/test-errors" element={<TestErrorPage />} />
