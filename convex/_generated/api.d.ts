@@ -26,6 +26,7 @@ import type * as migrations from "../migrations.js";
 import type * as offlineQueue from "../offlineQueue.js";
 import type * as orders from "../orders.js";
 import type * as points from "../points.js";
+import type * as quests from "../quests.js";
 import type * as recommendations from "../recommendations.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   offlineQueue: typeof offlineQueue;
   orders: typeof orders;
   points: typeof points;
+  quests: typeof quests;
   recommendations: typeof recommendations;
   scheduler: typeof scheduler;
   search: typeof search;

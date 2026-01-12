@@ -8,8 +8,8 @@ interface ThreadFormInitialData {
 }
 
 interface ThreadFormProps {
-  categories: Category[]
-  initialCategoryId: Id<'categories'> | null
+  categories?: Category[]
+  initialCategoryId?: Id<'categories'> | null
   onSubmit: (categoryId: Id<'categories'>, title: string, content: string, tags: string[]) => Promise<void>
   onCancel: () => void
   initialData?: ThreadFormInitialData
@@ -23,7 +23,7 @@ const parseTags = (value: string): string[] => {
     .filter((t, idx, arr) => arr.indexOf(t) === idx)
 }
 
-export function ThreadForm({ categories, initialCategoryId, onSubmit, onCancel, initialData }: ThreadFormProps) {
+export function ThreadForm({ categories = [], initialCategoryId, onSubmit, onCancel, initialData }: ThreadFormProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(
     initialCategoryId ?? (categories.length > 0 ? categories[0]._id : null)
   )

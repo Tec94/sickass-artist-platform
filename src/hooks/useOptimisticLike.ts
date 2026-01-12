@@ -36,19 +36,17 @@ export const useOptimisticLike = (
   const maxRetriesRef = useRef(3)
 
   // Mutations
-  const likeContentMutation = useMutation(
-    contentType === 'gallery' ? api.gallery.likeGalleryContent : api.ugc.likeUGC
-  )
-  const unlikeContentMutation = useMutation(
-    contentType === 'gallery' ? api.gallery.unlikeGalleryContent : api.ugc.unlikeUGC
-  )
+  const likeGallery = useMutation(api.gallery.likeGalleryContent)
+  const unlikeGallery = useMutation(api.gallery.unlikeGalleryContent)
+  const likeUGC = useMutation(api.ugc.likeUGC)
+  const unlikeUGC = useMutation(api.ugc.unlikeUGC)
 
   // Offline queue
   const { addToQueue } = useOfflineQueue()
 
   // Retry with exponential backoff
   const retryWithBackoff = useCallback(
-    async (action: () => Promise<void>, maxRetries = 3) => {
+    async (action: () => Promise<any>, maxRetries = 3) => {
       let lastError: Error | null = null
 
       for (let i = 0; i < maxRetries; i++) {
@@ -95,9 +93,17 @@ export const useOptimisticLike = (
       setIsPending(true)
 
       try {
-        const mutation = newLiked
-          ? () => likeContentMutation({ [contentType === 'gallery' ? 'contentId' : 'ugcId']: contentId })
-          : () => unlikeContentMutation({ [contentType === 'gallery' ? 'contentId' : 'ugcId']: contentId })
+        const mutation = () => {
+          if (contentType === 'gallery') {
+            return newLiked
+              ? likeGallery({ contentId })
+              : unlikeGallery({ contentId })
+          } else {
+            return newLiked
+              ? likeUGC({ ugcId: contentId })
+              : unlikeUGC({ ugcId: contentId })
+          }
+        }
 
         // Try with retries
         await retryWithBackoff(mutation, maxRetriesRef.current)
@@ -133,7 +139,7 @@ export const useOptimisticLike = (
         throw error
       }
     })
-  }, [user, isLiked, likeCount, contentId, contentType, likeContentMutation, unlikeContentMutation, addToQueue, retryWithBackoff])
+  }, [user, isLiked, likeCount, contentId, contentType, likeGallery, unlikeGallery, likeUGC, unlikeUGC, addToQueue, retryWithBackoff])
 
   // Cleanup on unmount
   useEffect(() => {

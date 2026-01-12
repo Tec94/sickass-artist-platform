@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
@@ -28,14 +28,12 @@ export function EventQueueManager({ eventId, onQueueJoined, onCheckoutStarted }:
   // Get event details and queue state
   const eventDetail = useQuery(
     api.events.getEventDetail,
-    { eventId },
-    { enabled: !!eventId }
+    eventId ? { eventId } : 'skip'
   )
 
   const queueState = useQuery(
     api.events.getQueueState,
-    { eventId },
-    { enabled: !!eventId }
+    eventId ? { eventId } : 'skip'
   )
 
   // Handle queue errors
@@ -295,7 +293,7 @@ export function EventQueueManager({ eventId, onQueueJoined, onCheckoutStarted }:
             <span className="font-medium">When:</span> {formatDateTime(eventDetail.event.startAtUtc, eventDetail.event.timezone)}
           </div>
           <div>
-            <span className="font-medium">Where:</span> {eventDetail.event.venueName}, {eventDetail.event.city}
+            <span className="font-medium">Where:</span> {eventDetail.event.address}, {eventDetail.event.city}
           </div>
           <div>
             <span className="font-medium">Capacity:</span> {eventDetail.event.capacity} | 

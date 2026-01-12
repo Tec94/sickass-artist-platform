@@ -458,6 +458,7 @@ export const getUserTickets = query({
             startAtUtc: event.startAtUtc,
             endAtUtc: event.endAtUtc,
             city: event.city,
+            timezone: event.timezone,
           },
           ticketType: ticket.ticketType,
           quantity: ticket.quantity,

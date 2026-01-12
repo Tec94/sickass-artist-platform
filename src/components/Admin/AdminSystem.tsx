@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+// useQuery and api will be used when real stats are fetched
 import { showToast } from '../../lib/toast'
 
 interface TableStats {

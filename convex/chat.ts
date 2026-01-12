@@ -445,7 +445,6 @@ export const pinMessage = mutation({
     return { success: true };
   },
 });
-
 export const deleteMessage = mutation({
   args: { messageId: v.id("messages") },
   handler: async (ctx, args) => {
@@ -469,6 +468,72 @@ export const deleteMessage = mutation({
       deletedAt: Date.now(),
       deletedBy: userId,
       content: "[deleted]",
+    });
+
+    return { success: true };
+  },
+});
+
+export const editMessage = mutation({
+  args: { messageId: v.id("messages"), newContent: v.string() },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      throw new ConvexError("Message not found");
+    }
+
+    if (message.authorId !== userId) {
+      throw new ConvexError("You can only edit your own messages");
+    }
+
+    const trimmedContent = args.newContent.trim();
+    if (!trimmedContent) {
+      throw new ConvexError("Message content cannot be empty");
+    }
+
+    if (trimmedContent.length > 5000) {
+      throw new ConvexError("Message must be 5000 characters or less");
+    }
+
+    await ctx.db.patch(args.messageId, {
+      content: trimmedContent,
+      editedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const editMessage = mutation({
+  args: { messageId: v.id("messages"), newContent: v.string() },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      throw new ConvexError("Message not found");
+    }
+
+    if (message.authorId !== userId) {
+      throw new ConvexError("You can only edit your own messages");
+    }
+
+    const trimmedContent = args.newContent.trim();
+    if (!trimmedContent) {
+      throw new ConvexError("Message content cannot be empty");
+    }
+
+    if (trimmedContent.length > 5000) {
+      throw new ConvexError("Message must be 5000 characters or less");
+    }
+
+    await ctx.db.patch(args.messageId, {
+      content: trimmedContent,
+      editedAt: Date.now(),
     });
 
     return { success: true };

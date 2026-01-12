@@ -81,7 +81,7 @@ export const OptimizedImage = memo(function OptimizedImage({
   const imgRef = useRef<HTMLImageElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
-  const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadStartTimeRef = useRef<number>(0)
 
   const computedAspectRatio = height && width ? width / height : aspectRatio

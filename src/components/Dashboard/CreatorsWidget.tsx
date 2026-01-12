@@ -22,10 +22,15 @@ export const CreatorsWidget = ({ onRetry }: CreatorsWidgetProps) => {
   const [timeoutReached, setTimeoutReached] = useState(false)
 
   // Fetch recommended creators
-  const { data, isLoading, error } = useQuery(
+  const queryResult = useQuery(
     api.recommendations.getRecommendedCreators,
     { limit: 6 }
   )
+  
+  // Convex useQuery returns data directly, undefined while loading
+  const data = queryResult
+  const isLoading = queryResult === undefined
+  const error = null // Convex throws on error instead
 
   // Set timeout for 3 seconds
   useEffect(() => {

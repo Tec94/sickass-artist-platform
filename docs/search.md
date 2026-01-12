@@ -1,55 +1,27 @@
 # Search & Discovery
 
-Search functionality and content discovery features.
-
-## Search Implementation
-
-Full-text search with Convex SearchIndex.
-
-```typescript
-const results = await ctx.db
-  .query('events')
-  .withSearchIndex('search_events', q => 
-    q.search('searchText', query)
-      .eq('saleStatus', 'on_sale')
-      .eq('city', city)
-  )
-  .take(50)
-```
+User exploration tools including global search and trending content algorithms.
 
 ## Features
 
-- Full-text search across titles, descriptions, and metadata
-- Filter by status, category, city, tags
-- Result pagination (50 max per query)
-- Relevance scoring
-- Search highlighting (client-side)
+### Global Search (`Ctrl+K`)
+- **Keyboard Navigation:** Full support for `↑/↓` (nav), `Tab` (tabs), and `Enter` (select).
+- **Debouncing:** 300ms delay to minimize API overhead.
+- **Focus Management:** Focus-trapped modal for accessibility.
 
-## Searchable Content
+### Trending Algorithm
+Surfaces engaging content using a weighted formula with a **7-day half-life**.
 
--Events**: title + venue name + city
-- **Gallery**: title + creator + tags
-- **Merch**: product name + description + tags
-- **Forum**: thread title + content preview
+```text
+SCORE = (Likes × 2 + Views × 0.5 + Comments × 1.5) / (1 + DaysOld / 7)
+```
 
 ## Performance
+- **Precomputed Scores:** Trending scores are precalculated for O(1) query performance.
+- **Infinite Scroll:** Cursor-based pagination for fluid browsing.
+- **Failsafe:** Graceful fallback to in-memory storage if `localStorage` is unavailable.
 
-- Search query: <500ms
-- Results limited to 100 items
-- Caching for popular searches
-- Skeleton loading states
-
-## Discovery Features
-
-- **Trending content**: Based on engagement score × recency
-- **Related items**: Weighted recommendation algorithm
-- **Creator portfolios**: All content by creator
-- **Tag-based discovery**: Browse by tags
-
-## Future Enhancements
-
-- Typo tolerance / fuzzy matching
-- Search suggestions
-- Recent searches
-- Algolia-style faceted search
-- Advanced filters UI
+## Best Practices
+- Use semantic HTML and ARIA labels for search results.
+- Provide clear "No results" states with helpful suggestions.
+- Ensure the search modal is near-instant (< 100ms) to open.

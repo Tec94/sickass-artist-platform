@@ -6,18 +6,17 @@ Complete documentation for the Sickass Artist Platform.
 
 ### Core Features
 - **[Analytics](./analytics.md)** - Privacy-first analytics with event tracking and consent management
-- **[Offline Support](./offline-support.md)** - Service worker, offline queue, and conflict resolution  
-- **[Loading Skeletons](./loading-skeletons.md)** - Zero-CLS skeleton system with shimmer animations
+- **[Offline Support](./offline.md)** - Service worker, offline queue, and conflict resolution
+- **[Loading Skeletons](./skeletons.md)** - Zero-CLS skeleton system with shimmer animations
 - **[Performance](./performance.md)** - Core Web Vitals tracking and monitoring
-- **[Optimistic Updates](./optimistic-updates.md)** - Optimistic UI for likes and interactions
-- **[Search](./search.md)** - Search functionality and content discovery
+- **[Optimistic Updates](./optimistic.md)** - Optimistic UI for likes and interactions
+- **[Search & Discovery](./search.md)** - Search functionality and trending content
+- **[Points System](./points.md)** - Gamification and user rewards
+- **[Project History](./history.md)** - Major implementation milestones
 
 ### Content Features
-- **[Gallery](./gallery.md)** - Gallery with lightbox, filtering, and image optimization
-- **[Trending](./trending.md)** - Trending algorithm with precomputed scores
-
-### Data & Testing
-- **[Merch Data](./merch-data.md)** - Seed data for development/testing
+- **[Gallery](./gallery.md)** - Media gallery with lightbox and image optimization
+- **[Merchandise](./merch.md)** - E-commerce system, cart, and orders
 
 ## Schema Documentation
 
@@ -39,8 +38,8 @@ All database schema docs are in `schema/` subfolder:
 ### Common Tasks
 - **Add feature tracking** → [Analytics](./analytics.md)
 - **Optimize performance** → [Performance](./performance.md)
-- **Handle offline** → [Offline Support](./offline-support.md)
-- **Implement loading states** → [Loading Skeletons](./loading-skeletons.md)
+- **Handle offline** → [Offline](./offline.md)
+- **Implement loading states** → [Skeletons](./skeletons.md)
 
 ## File Organization
 
@@ -48,22 +47,22 @@ All database schema docs are in `schema/` subfolder:
 docs/
 ├── README.md (this file)
 ├── analytics.md
-├── offline-support.md
-├── loading-skeletons.md
-├── performance.md
-├── optimistic-updates.md
-├── search.md
 ├── gallery.md
-├── trending.md
-├── merch-data.md
-├── merchSeedData.ts
+├── history.md
+├── merch.md
+├── merch-seed.ts
+├── offline.md
+├── optimistic.md
+├── performance.md
+├── points.md
+├── search.md
+├── skeletons.md
 └── schema/
     ├── core.md
+    ├── error-mitigations.md
     ├── events.md
     ├── gallery.md
-    ├── merch.md
-    └── error-mitigations.md
-``
+    └── merch.md
 
 ## Contributing
 

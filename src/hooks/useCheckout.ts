@@ -47,14 +47,14 @@ export function useCheckout() {
   const nextStep = useCallback(() => {
     setState(prev => ({
       ...prev,
-      step: Math.min(4, (prev.step + 1) as 1 | 2 | 3 | 4),
+      step: Math.min(4, prev.step + 1) as 1 | 2 | 3 | 4,
     }))
   }, [])
 
   const prevStep = useCallback(() => {
     setState(prev => ({
       ...prev,
-      step: Math.max(1, (prev.step - 1) as 1 | 2 | 3 | 4),
+      step: Math.max(1, prev.step - 1) as 1 | 2 | 3 | 4,
     }))
   }, [])
 

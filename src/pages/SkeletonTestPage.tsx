@@ -1,4 +1,3 @@
-import React from 'react'
 import { SkeletonDemo } from '../components/SkeletonDemo'
 
 /**

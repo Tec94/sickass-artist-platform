@@ -11,7 +11,8 @@ const GEAR_PATHS: Record<GearName, string> = {
   '2': '/store',
   '3': '/gallery',
   '4': '/forum',
-  '5': '/chat'
+  '5': '/chat',
+  '6': '/admin'
 }
 
 export const useGearNavigation = () => {

@@ -86,12 +86,14 @@ export function useReplyVoteExtended({
       setVotes(optimistic)
 
       try {
-        const result = await castVote({ replyId, direction })
-        setVotes({
-          upVoteCount: result.upVoteCount,
-          downVoteCount: result.downVoteCount,
-          userVote: result.userVote,
-        })
+        const result = await castVote({ replyId, voteType: direction })
+        if (result) {
+          setVotes({
+            upVoteCount: result.upVoteCount ?? 0,
+            downVoteCount: result.downVoteCount ?? 0,
+            userVote: (result as { userVote?: UserVote }).userVote ?? null,
+          })
+        }
       } catch (err) {
         setVotes(previous)
         setError(err as Error)

@@ -17,7 +17,7 @@ interface ConvexErrorData {
 
 export function parseConvexError(error: unknown): ParsedConvexError {
   const originalMessage = error instanceof Error ? error.message : String(error)
-  
+
   // Network errors
   if (originalMessage.includes('fetch') || originalMessage.includes('network')) {
     return {
@@ -30,7 +30,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'warning'
     }
   }
-  
+
   // Inventory errors
   if (originalMessage.includes('out of stock') || originalMessage.includes('stock')) {
     return {
@@ -43,7 +43,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'warning'
     }
   }
-  
+
   // Duplicate/conflict errors
   if (originalMessage.includes('duplicate') || originalMessage.includes('already exists')) {
     return {
@@ -56,7 +56,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'info'
     }
   }
-  
+
   // Auth errors
   if (originalMessage.includes('not signed in') || originalMessage.includes('unauthorized')) {
     return {
@@ -69,7 +69,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'warning'
     }
   }
-  
+
   // Validation errors
   if (originalMessage.includes('validation') || originalMessage.includes('invalid')) {
     return {
@@ -82,7 +82,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'warning'
     }
   }
-  
+
   // Check for ConvexError specifically (for custom errors thrown from the server)
   if (error instanceof ConvexError) {
     const data = error.data as ConvexErrorData
@@ -96,7 +96,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
       severity: 'error'
     }
   }
-  
+
   // Default: unknown error
   return {
     code: 'UNKNOWN_ERROR',
@@ -109,17 +109,7 @@ export function parseConvexError(error: unknown): ParsedConvexError {
   }
 }
 
-interface AnalyticsAPI {
-  track: (event: string, properties?: Record<string, unknown>) => void
-  logEvent: (eventName: string, value?: string | number, metadata?: Record<string, unknown>) => void
-}
-
-declare global {
-  interface Window {
-    statsig?: AnalyticsAPI
-    analytics?: AnalyticsAPI
-  }
-}
+// Window extensions declared in src/types/global.d.ts
 
 // Log errors to analytics
 export async function logError(error: ParsedConvexError, context: {
@@ -136,7 +126,7 @@ export async function logError(error: ParsedConvexError, context: {
     if (hasStatsig && window.statsig) {
       window.statsig.logEvent('merch_error', undefined, { ...error, ...context })
     }
-    
+
     if (hasAnalytics && window.analytics) {
       window.analytics.track('merch_error', { ...error, ...context })
     }

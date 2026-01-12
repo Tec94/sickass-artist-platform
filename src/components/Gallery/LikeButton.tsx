@@ -11,6 +11,7 @@ interface LikeButtonProps {
   onError?: (error: Error) => void
   showCount?: boolean
   compact?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export const LikeButton = ({

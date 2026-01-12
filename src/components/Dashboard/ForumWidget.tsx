@@ -12,10 +12,15 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   const [timeoutReached, setTimeoutReached] = useState(false)
 
   // Fetch recent threads with timeout handling
-  const { data, isLoading, error } = useQuery(
+  const queryResult = useQuery(
     api.forum.getThreads,
-    { page: 0, pageSize: 5 }
+    { limit: 5, sort: 'newest' as const }
   )
+  
+  // Convex useQuery returns data directly, undefined while loading
+  const data = queryResult
+  const isLoading = queryResult === undefined
+  const error = null // Convex throws on error instead
 
   // Set timeout for 3 seconds
   useEffect(() => {

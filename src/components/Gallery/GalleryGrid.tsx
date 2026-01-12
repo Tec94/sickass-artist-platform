@@ -73,7 +73,7 @@ export const GalleryGrid = memo(function GalleryGrid({
   )
 
   const {
-    data: items = initialItems || [],
+    data: items = (initialItems || []) as GalleryContentItem[],
     isLoading = initialIsLoading,
     error = initialError,
     timedOut

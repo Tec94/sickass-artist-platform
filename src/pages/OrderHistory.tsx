@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { OrderCard } from '../components/Merch/OrderCard'
 import { useState, useMemo } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { useAuth } from '../hooks/useAuth'
 
 export function OrderHistory() {
   const navigate = useNavigate()

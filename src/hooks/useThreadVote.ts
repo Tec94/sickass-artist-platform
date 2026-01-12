@@ -96,13 +96,15 @@ export function useThreadVote({
       setVotes(optimistic)
 
       try {
-        const result = await castVote({ threadId, direction })
-        setVotes({
-          upVoteCount: result.upVoteCount,
-          downVoteCount: result.downVoteCount,
-          netVoteCount: result.netVoteCount,
-          userVote: result.userVote,
-        })
+        const result = await castVote({ threadId, voteType: direction })
+        if (result) {
+          setVotes({
+            upVoteCount: result.upVoteCount ?? 0,
+            downVoteCount: result.downVoteCount ?? 0,
+            netVoteCount: result.netVoteCount ?? 0,
+            userVote: (result as { userVote?: UserVote }).userVote ?? null,
+          })
+        }
       } catch (err) {
         setVotes(previous)
         setError(err as Error)

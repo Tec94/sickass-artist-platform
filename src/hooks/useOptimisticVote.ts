@@ -23,7 +23,7 @@ interface UseOptimisticVoteProps {
   initialUserVote?: 'up' | 'down' | null
 }
 
-interface CastThreadVoteResult {
+interface _CastThreadVoteResult {
   threadId: Id<'threads'>
   upVoteCount: number
   downVoteCount: number
@@ -42,9 +42,7 @@ export function useOptimisticVote({
     userVote: initialUserVote,
   })
 
-  const castVoteMutation = useMutation(
-    (api as unknown as { forum: { castThreadVote: (args: { threadId: Id<'threads'>; direction: 'up' | 'down' }) => Promise<CastThreadVoteResult> } }).forum.castThreadVote
-  )
+  const castVoteMutation = useMutation(api.forum.castThreadVote)
 
   const handleVote = useCallback(
     async (direction: 'up' | 'down') => {
@@ -86,14 +84,16 @@ export function useOptimisticVote({
       try {
         const result = await castVoteMutation({
           threadId,
-          direction,
+          voteType: direction,
         })
 
-        setVotes({
-          upVoteCount: result.upVoteCount,
-          downVoteCount: result.downVoteCount,
-          userVote: result.userVote,
-        })
+        if (result) {
+          setVotes({
+            upVoteCount: result.upVoteCount ?? 0,
+            downVoteCount: result.downVoteCount ?? 0,
+            userVote: (result as { userVote?: 'up' | 'down' | null }).userVote ?? null,
+          })
+        }
       } catch (error) {
         console.error('Failed to cast vote:', error)
         setVotes(oldVotes)

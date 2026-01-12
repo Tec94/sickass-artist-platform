@@ -11,9 +11,7 @@ const MOCK_PRODUCTS_CONTEXT = [
 let ai: GoogleGenAI | null = null;
 
 const initializeGenAI = () => {
-    // In a real app, this should be in .env
-    // Using a placeholder or process.env if available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (apiKey) {
         ai = new GoogleGenAI({ apiKey });
     }
@@ -40,19 +38,14 @@ export const generateFanResponse = async (userMessage: string): Promise<string> 
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [{
-                role: 'user',
-                parts: [{ text: userMessage }]
-            }],
+            model: 'gemini-2.5-flash',
+            contents: userMessage,
             config: {
-                systemInstruction: {
-                    parts: [{ text: systemInstruction }]
-                },
+                systemInstruction,
             }
         });
 
-        return response.response.text() || "I received static interference. Can you repeat that?";
+        return response.text || "I received static interference. Can you repeat that?";
     } catch (error) {
         console.error("Gemini Error:", error);
         return "Connection lost. Try again later.";

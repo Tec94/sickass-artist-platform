@@ -34,7 +34,7 @@ export function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [editingUserId, setEditingUserId] = useState<Id<'users'> | null>(null)
   const [editData, setEditData] = useState<UserEditData | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+  const [_isSaving, setIsSaving] = useState(false)
 
   // Fetch real users from Convex
   const usersData = useQuery(api.admin.getUsers, { 
@@ -95,9 +95,9 @@ export function AdminUsers() {
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case 'admin': return '#ef4444'
-      case 'moderator': return '#8b5cf6'
-      case 'vip': return '#f59e0b'
-      case 'member': return '#4ade80'
+      case 'mod': return '#8b5cf6'
+      case 'artist': return '#f59e0b'
+      case 'crew': return '#4ade80'
       default: return '#808080'
     }
   }

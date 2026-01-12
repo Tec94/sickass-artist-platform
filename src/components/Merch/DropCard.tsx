@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { DropCountdown } from './DropCountdown'
-import { Doc } from '../../../convex/_generated/dataModel'
+import { Doc, Id } from '../../../convex/_generated/dataModel'
 import { useState } from 'react'
 
 interface DropCardProps {
   drop: Doc<'merchDrops'> & {
-    products?: Doc<'merchProducts'>[]
+    products?: Id<'merchProducts'>[]
     productCount?: number
   }
   serverTime?: number

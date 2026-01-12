@@ -17,7 +17,7 @@ export function useDropCountdown(
 ): UseDropCountdownReturn {
   const [timeLeft, setTimeLeft] = useState(0)
   const [timeDiff, setTimeDiff] = useState(0)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Sync with server time on mount
   useEffect(() => {

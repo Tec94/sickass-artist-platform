@@ -97,7 +97,7 @@ class EventOfflineQueue {
     })
   }
 
-  async markActionFailed(id: string): Promise<void> {
+  async markActionFailed(id: string, reason?: string): Promise<void> {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {
@@ -158,7 +158,7 @@ class EventOfflineQueue {
         const actions = request.result as StoredAction[]
         const pendingActions = actions.filter(a => a.retryCount < a.maxRetries)
         const failedActions = actions.filter(a => a.retryCount >= a.maxRetries)
-        const oldestPending = pendingActions.length > 0 
+        const oldestPending = pendingActions.length > 0
           ? Math.min(...pendingActions.map(a => a.timestamp))
           : null
 
@@ -189,8 +189,8 @@ export async function queueJoinQueue(eventId: string): Promise<string> {
 }
 
 export async function queueStartCheckout(
-  eventId: string, 
-  ticketTypeId: string, 
+  eventId: string,
+  ticketTypeId: string,
   quantity: number
 ): Promise<string> {
   return eventOfflineQueue.addAction({
@@ -310,7 +310,7 @@ export async function getStorageUsage(): Promise<{
       console.warn('Failed to get storage estimate:', error)
     }
   }
-  
+
   return { used: 0, quota: 0, percentage: 0 }
 }
 
@@ -333,7 +333,7 @@ export async function cleanupOldActions(maxAge = 7 * 24 * 60 * 60 * 1000): Promi
 
 // Debug utilities (development only)
 export function debugOfflineQueue(): void {
-  if (process.env.NODE_ENV !== 'development') return
+  if (!import.meta.env.DEV) return
 
   eventOfflineQueue.getStats().then(stats => {
     console.group('🔄 Event Offline Queue Debug')

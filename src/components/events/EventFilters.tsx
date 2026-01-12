@@ -12,7 +12,7 @@ export function EventFilters({
   filters,
   onChange,
   availableCities = [],
-  eventCount = 0,
+  _eventCount = 0,
 }: EventFiltersProps) {
   const [sections, setSections] = useState({
     dates: true,

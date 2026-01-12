@@ -46,17 +46,7 @@ export function clearErrorLogs(): void {
   errorLogs.length = 0
 }
 
-interface AnalyticsAPI {
-  track: (event: string, properties?: Record<string, unknown>) => void
-  logEvent: (eventName: string, value?: string | number, metadata?: Record<string, unknown>) => void
-}
-
-declare global {
-  interface Window {
-    statsig?: AnalyticsAPI
-    analytics?: AnalyticsAPI
-  }
-}
+// Window extensions declared in src/types/global.d.ts
 
 async function sendToAnalytics(log: ErrorLog) {
   // Send to Statsig or other analytics
@@ -67,7 +57,7 @@ async function sendToAnalytics(log: ErrorLog) {
     if (hasStatsig && window.statsig) {
       window.statsig.logEvent('merch_critical_error', undefined, { ...log })
     }
-    
+
     if (hasAnalytics && window.analytics) {
       window.analytics.track('merch_critical_error', { ...log as unknown as Record<string, unknown> })
     }

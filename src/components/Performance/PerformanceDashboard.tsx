@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { perfMonitor, type PerformanceReport } from '../../utils/performanceMonitor'
+import { perfMonitor, type PerformanceReport, type MetricSummary } from '../../utils/performanceMonitor'
 
 interface PerformanceDashboardProps {
   isOpen: boolean
@@ -90,12 +90,9 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
 
           {/* Summary Stats */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <iconify-icon icon="solar:graph-linear" width="16" height="16" class="text-cyan-500"></iconify-icon>
-              <span className="text-sm font-semibold text-white">Performance Summary</span>
-            </div>
             <div className="space-y-2">
               {Object.entries(report.summary).map(([name, stats]) => {
+                const s = stats as MetricSummary
                 const thresholds: Record<string, number> = {
                   'image-load': 800,
                   'lightbox-open': 300,
@@ -105,7 +102,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
                   'query-fetch': 500,
                 }
                 const threshold = thresholds[name] || Infinity
-                const statusColor = getStatusColor(stats.avg, threshold)
+                const statusColor = getStatusColor(s.avg, threshold)
 
                 return (
                   <div key={name} className="bg-gray-900 rounded-lg p-3">
@@ -113,38 +110,38 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
                       <span className="text-sm text-gray-300 capitalize">{name}</span>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs ${statusColor} font-semibold`}>
-                          {stats.avg.toFixed(0)}ms
+                          {s.avg.toFixed(0)}ms
                         </span>
                         <span className="text-xs text-gray-500">
-                          ({stats.count} ops)
+                          ({s.count} ops)
                         </span>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
                         <span className="text-gray-500">min</span>
-                        <div className="text-gray-300">{stats.min.toFixed(0)}ms</div>
+                        <div className="text-gray-300">{s.min.toFixed(0)}ms</div>
                       </div>
                       <div>
                         <span className="text-gray-500">p95</span>
-                        <div className="text-gray-300">{stats.p95.toFixed(0)}ms</div>
+                        <div className="text-gray-300">{s.p95.toFixed(0)}ms</div>
                       </div>
                       <div>
                         <span className="text-gray-500">max</span>
-                        <div className="text-gray-300">{stats.max.toFixed(0)}ms</div>
+                        <div className="text-gray-300">{s.max.toFixed(0)}ms</div>
                       </div>
                     </div>
                     {/* Progress bar */}
                     <div className="mt-2 h-1 bg-gray-800 rounded overflow-hidden">
                       <div
                         className={`h-full ${
-                          stats.avg <= threshold * 0.8
+                          s.avg <= threshold * 0.8
                             ? 'bg-green-500'
-                            : stats.avg <= threshold
+                            : s.avg <= threshold
                             ? 'bg-yellow-500'
                             : 'bg-red-500'
                         }`}
-                        style={{ width: `${Math.min((stats.avg / threshold) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((s.avg / threshold) * 100, 100)}%` }}
                       />
                     </div>
                   </div>

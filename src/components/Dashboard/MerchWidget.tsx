@@ -22,10 +22,15 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
   const [timeoutReached, setTimeoutReached] = useState(false)
 
   // Fetch active merch drops
-  const { data, isLoading, error } = useQuery(
+  const queryResult = useQuery(
     api.drops.getActiveDrops,
     {}
   )
+  
+  // Convex useQuery returns data directly, undefined while loading
+  const data = queryResult
+  const isLoading = queryResult === undefined
+  const error = null // Convex throws on error instead
 
   // Set timeout for 3 seconds
   useEffect(() => {

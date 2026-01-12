@@ -150,7 +150,7 @@ export const Gallery = () => {
             </nav>
 
             {/* Performance dashboard button (dev only) */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <button
                 onClick={() => setShowPerfDashboard(!showPerfDashboard)}
                 className="filter-toggle-btn"
@@ -245,7 +245,7 @@ export const Gallery = () => {
       </div>
 
       {/* Performance Dashboard (dev only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <PerformanceDashboard
           isOpen={showPerfDashboard}
           onClose={() => setShowPerfDashboard(false)}

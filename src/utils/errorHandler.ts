@@ -53,22 +53,22 @@ const MAX_ERROR_LOGS = 20
  */
 export function shouldProcessError(): boolean {
   const now = Date.now()
-  
+
   // Remove old errors outside the 60-second window
-  const recentErrors = errorTimestamps.filter(timestamp => 
+  const recentErrors = errorTimestamps.filter(timestamp =>
     now - timestamp < ERROR_FREQUENCY_WINDOW
   )
-  
+
   // Update the array
   errorTimestamps.length = 0
   errorTimestamps.push(...recentErrors)
-  
+
   // Check if we've exceeded the limit
   if (errorTimestamps.length >= MAX_ERRORS_PER_WINDOW) {
     console.warn('[ErrorHandler] Error frequency limit reached. Suppressing error.')
     return false
   }
-  
+
   // Add current error timestamp
   errorTimestamps.push(now)
   return true
@@ -81,19 +81,20 @@ export function shouldProcessError(): boolean {
  */
 export function getUserFriendlyErrorMessage(error: unknown): string {
   if (!error) return ERROR_MESSAGES.UNKNOWN_ERROR
-  
+
   let errorCode = 'UNKNOWN_ERROR'
-  
+  let errorMessage = ''
+
   // Handle Convex errors
   if (error instanceof ConvexError) {
     const data = error.data as { code?: string; message?: string }
     errorCode = data?.code || 'CONVEX_ERROR'
     errorMessage = data?.message || error.message
   }
-  
+
   // Handle Error objects
   if (error instanceof Error) {
-    const errorMessage = error.message
+    if (!errorMessage) errorMessage = error.message
     // Try to extract error code from message
     if (errorMessage.includes('NOT_AUTHENTICATED')) errorCode = 'NOT_AUTHENTICATED'
     else if (errorMessage.includes('NOT_AUTHORIZED')) errorCode = 'NOT_AUTHORIZED'
@@ -104,7 +105,7 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
     else if (errorMessage.includes('timeout')) errorCode = 'TIMEOUT'
     else if (errorMessage.includes('server')) errorCode = 'SERVER_ERROR'
   }
-  
+
   // Return mapped message or fallback
   return ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] || ERROR_MESSAGES.UNKNOWN_ERROR
 }
@@ -116,40 +117,40 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
  */
 export function shouldRetry(error: unknown): boolean {
   if (!error) return false
-  
+
   const errorMessage = String(error)
-  
+
   // Don't retry auth/permission errors
-  if (errorMessage.includes('NOT_AUTHENTICATED') || 
-      errorMessage.includes('NOT_AUTHORIZED') ||
-      errorMessage.includes('AUTH_ERROR')) {
+  if (errorMessage.includes('NOT_AUTHENTICATED') ||
+    errorMessage.includes('NOT_AUTHORIZED') ||
+    errorMessage.includes('AUTH_ERROR')) {
     return false
   }
-  
+
   // Don't retry validation/input errors
-  if (errorMessage.includes('INVALID_INPUT') || 
-      errorMessage.includes('VALIDATION_ERROR') ||
-      errorMessage.includes('already exists') ||
-      errorMessage.includes('duplicate')) {
+  if (errorMessage.includes('INVALID_INPUT') ||
+    errorMessage.includes('VALIDATION_ERROR') ||
+    errorMessage.includes('already exists') ||
+    errorMessage.includes('duplicate')) {
     return false
   }
-  
+
   // Don't retry stock/conflict errors
-  if (errorMessage.includes('STOCK_ERROR') || 
-      errorMessage.includes('CONFLICT_ERROR') ||
-      errorMessage.includes('out of stock')) {
+  if (errorMessage.includes('STOCK_ERROR') ||
+    errorMessage.includes('CONFLICT_ERROR') ||
+    errorMessage.includes('out of stock')) {
     return false
   }
-  
+
   // Retry network, timeout, and server errors
-  if (errorMessage.includes('network') || 
-      errorMessage.includes('fetch') ||
-      errorMessage.includes('timeout') ||
-      errorMessage.includes('server') ||
-      errorMessage.includes('connection')) {
+  if (errorMessage.includes('network') ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('server') ||
+    errorMessage.includes('connection')) {
     return true
   }
-  
+
   // Default: don't retry unknown errors
   return false
 }
@@ -167,21 +168,21 @@ export function logErrorToStorage(error: unknown, context: ErrorContext): void {
       code: context.errorCode || 'UNKNOWN_ERROR',
       context: context
     }
-    
+
     // Get existing logs
     const existingLogs = getErrorLogsFromStorage()
-    
+
     // Add new log
     existingLogs.push(errorLog)
-    
+
     // Keep only last 20 errors
     if (existingLogs.length > MAX_ERROR_LOGS) {
       existingLogs.shift()
     }
-    
+
     // Save to localStorage
     localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(existingLogs))
-    
+
   } catch (e) {
     console.error('[ErrorHandler] Failed to log error to storage:', e)
   }
@@ -220,7 +221,7 @@ export function clearErrorLogsFromStorage(): void {
 export function getRetryDelay(retryCount: number): number | null {
   if (retryCount < 0) return RETRY_DELAYS[0]
   if (retryCount >= RETRY_DELAYS.length) return null
-  
+
   return RETRY_DELAYS[retryCount]
 }
 
@@ -241,8 +242,8 @@ export function createErrorContext(
     component,
     timestamp: Date.now(),
     stackTrace: error instanceof Error ? error.stack : undefined,
-    errorCode: error instanceof Error ? 
-      Object.keys(ERROR_MESSAGES).find(code => 
+    errorCode: error instanceof Error ?
+      Object.keys(ERROR_MESSAGES).find(code =>
         error.message.includes(code)
       ) || 'UNKNOWN_ERROR' : 'UNKNOWN_ERROR'
   }
@@ -266,7 +267,7 @@ export function handleError(
 } {
   // Check if we should process this error (frequency tracking)
   const shouldProcess = shouldProcessError()
-  
+
   if (!shouldProcess) {
     return {
       shouldProcess: false,
@@ -276,19 +277,19 @@ export function handleError(
       errorContext: context
     }
   }
-  
+
   // Get user-friendly message
   const userMessage = getUserFriendlyErrorMessage(error)
-  
+
   // Check if error should be retried
   const shouldRetryError = shouldRetry(error)
-  
+
   // Get retry delay
   const retryDelay = shouldRetryError ? RETRY_DELAYS[0] : null // Start with first delay
-  
+
   // Log error to storage
   logErrorToStorage(error, context)
-  
+
   return {
     shouldProcess: true,
     shouldRetry: shouldRetryError,

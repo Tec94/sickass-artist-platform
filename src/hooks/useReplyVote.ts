@@ -23,7 +23,7 @@ interface UseReplyVoteProps {
   initialUserVote?: 'up' | 'down' | null
 }
 
-interface CastReplyVoteResult {
+interface _CastReplyVoteResult {
   replyId: Id<'replies'>
   upVoteCount: number
   downVoteCount: number
@@ -41,9 +41,7 @@ export function useReplyVote({
     userVote: initialUserVote,
   })
 
-  const castVoteMutation = useMutation(
-    (api as unknown as { forum: { castReplyVote: (args: { replyId: Id<'replies'>; direction: 'up' | 'down' }) => Promise<CastReplyVoteResult> } }).forum.castReplyVote
-  )
+  const castVoteMutation = useMutation(api.forum.castReplyVote)
 
   const handleVote = useCallback(
     async (direction: 'up' | 'down') => {
@@ -85,14 +83,16 @@ export function useReplyVote({
       try {
         const result = await castVoteMutation({
           replyId,
-          direction,
+          voteType: direction,
         })
 
-        setVotes({
-          upVoteCount: result.upVoteCount,
-          downVoteCount: result.downVoteCount,
-          userVote: result.userVote,
-        })
+        if (result) {
+          setVotes({
+            upVoteCount: result.upVoteCount ?? 0,
+            downVoteCount: result.downVoteCount ?? 0,
+            userVote: (result as { userVote?: 'up' | 'down' | null }).userVote ?? null,
+          })
+        }
       } catch (error) {
         console.error('Failed to cast vote:', error)
         setVotes(oldVotes)

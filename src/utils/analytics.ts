@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Analytics Event Types
-export type AnalyticsEventName = 
+export type AnalyticsEventName =
   | 'page_view'
   | 'page_unload'
   | 'cta_click'
@@ -73,11 +73,11 @@ function generateId(): string {
 
 class AnalyticsManager {
   private eventQueue: AnalyticsEvent[] = []
-  private batchTimer: NodeJS.Timeout | null = null
+  private batchTimer: ReturnType<typeof setTimeout> | null = null
   private hasConsent = this.checkConsent()
   private lastEventTime = 0
   private sessionId = this.generateSessionId()
-  private currentUser: { id?: string; tier?: string } | null = null
+  private currentUser: { id?: string; tier?: 'artist' | 'admin' | 'mod' | 'fan' } | null = null
 
   constructor() {
     // Flush on page unload
@@ -93,16 +93,16 @@ class AnalyticsManager {
 
   private generateSessionId(): string {
     if (typeof sessionStorage === 'undefined') return generateId()
-    
+
     const stored = sessionStorage.getItem('analytics_session')
     if (stored) return stored
-    
+
     const id = generateId()
     sessionStorage.setItem('analytics_session', id)
     return id
   }
 
-  setCurrentUser(user: { id?: string; tier?: string } | null) {
+  setCurrentUser(user: { id?: string; tier?: 'artist' | 'admin' | 'mod' | 'fan' } | null) {
     this.currentUser = user
   }
 
@@ -179,14 +179,14 @@ class AnalyticsManager {
 
     const events = [...this.eventQueue]
     this.eventQueue = []
-    
+
     if (this.batchTimer) {
       clearTimeout(this.batchTimer)
       this.batchTimer = null
     }
 
     // Log in dev
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('[Analytics] Flushing events:', events)
     }
 
@@ -206,7 +206,7 @@ class AnalyticsManager {
         const db = await getDB()
         const transaction = db.transaction(STORE_NAME, 'readwrite')
         const store = transaction.objectStore(STORE_NAME)
-        
+
         for (const event of events) {
           store.add({
             ...event,

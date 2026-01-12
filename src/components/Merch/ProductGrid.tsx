@@ -111,14 +111,14 @@ export function ProductGrid({
       </div>
 
       {/* Load more trigger */}
-      {result.hasMore && (
+      {result?.hasMore && (
         <div ref={loadMoreRef} className="mt-8 text-center">
           <p className="text-gray-500 text-sm">Loading more...</p>
         </div>
       )}
 
       {/* End of results */}
-      {!result.hasMore && result.items.length > 0 && (
+      {result !== undefined && !result?.hasMore && accumulatedItems.length > 0 && (
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">No more products to load</p>
         </div>

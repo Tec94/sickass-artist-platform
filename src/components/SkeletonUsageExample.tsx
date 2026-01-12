@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { useQueryWithTimeout } from '../hooks/useQueryWithTimeout'
 
@@ -9,52 +9,61 @@ import { useQueryWithTimeout } from '../hooks/useQueryWithTimeout'
 export function SkeletonUsageExample() {
   const [retryCount, setRetryCount] = useState(0)
 
-  // Example 1: Basic usage with timeout
-  const { 
-    data: galleryItems, 
-    isLoading: galleryLoading, 
-    error: galleryError, 
-    timedOut: galleryTimedOut 
-  } = useQueryWithTimeout(
-    // Simulated query function
-    async (args: { limit: number }) => {
-      // Simulate slow network
+  // Example 1: Basic usage with local state simulation (demo only)
+  const [galleryItems, setGalleryItems] = useState<any[] | undefined>(undefined)
+  const [galleryLoading, setGalleryLoading] = useState(true)
+  const [galleryTimedOut, setGalleryTimedOut] = useState(false)
+  const [galleryError, setGalleryError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    setGalleryLoading(true)
+    setGalleryTimedOut(false)
+    
+    const timer = setTimeout(() => {
+      if (!galleryItems) setGalleryTimedOut(true)
+    }, 5000)
+
+    const fetchData = async () => {
       await new Promise(resolve => setTimeout(resolve, 2000))
-      return args.limit > 5 ? [] : Array.from({ length: args.limit }, (_, i) => ({
+      setGalleryItems(Array.from({ length: 8 }, (_, i) => ({
         id: `item-${i}`,
         title: `Gallery Item ${i + 1}`,
         creator: `@user${i}`,
         imageUrl: `/placeholder-${i}.jpg`,
         likeCount: Math.floor(Math.random() * 1000),
         viewCount: Math.floor(Math.random() * 5000)
-      }))
-    },
-    { limit: 8 },
-    { timeoutMs: 5000 }
-  )
+      })))
+      setGalleryLoading(false)
+      clearTimeout(timer)
+    }
 
-  // Example 2: Product grid with faster timeout
-  const { 
-    data: products, 
-    isLoading: productsLoading
-  } = useQueryWithTimeout(
-    async (args: { category: string }) => {
+    fetchData()
+    return () => clearTimeout(timer)
+  }, [retryCount])
+
+  // Example 2: Product grid (simpler)
+  const [products, setProducts] = useState<any[] | undefined>(undefined)
+  const [productsLoading, setProductsLoading] = useState(true)
+
+  useEffect(() => {
+    setProductsLoading(true)
+    const fetchData = async () => {
       await new Promise(resolve => setTimeout(resolve, 1500))
-      return args.category === 'empty' ? [] : Array.from({ length: 12 }, (_, i) => ({
+      setProducts(Array.from({ length: 12 }, (_, i) => ({
         id: `product-${i}`,
         name: `Product ${i + 1}`,
         price: (Math.random() * 100 + 10).toFixed(2),
         imageUrl: `/product-${i}.jpg`,
         inStock: Math.random() > 0.2
-      }))
-    },
-    { category: 'electronics' },
-    { timeoutMs: 3000 }
-  )
+      })))
+      setProductsLoading(false)
+    }
+    fetchData()
+  }, [])
 
   const handleRetry = () => {
+    setGalleryItems(undefined)
     setRetryCount(prev => prev + 1)
-    // In real app, this would trigger a refetch
   }
 
   return (

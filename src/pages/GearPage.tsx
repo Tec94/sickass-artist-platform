@@ -1,8 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
-import { WindshieldFrame } from '../components/GearNavigation/WindshieldFrame'
-import { NoodleConnector } from '../components/Effects/NoodleConnector'
-import { useGear, GearName } from '../contexts/GearContext'
+import { GearName, useGear } from '../contexts/GearContext'
 import { useEffect, useState } from 'react'
 
 const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5', '6']
@@ -28,7 +26,8 @@ const GEAR_PATHS: Record<GearName, string> = {
   '2': '/store',
   '3': '/gallery',
   '4': '/forum',
-  '5': '/chat'
+  '5': '/chat',
+  '6': '/admin'
 }
 
 export const GearPage = () => {

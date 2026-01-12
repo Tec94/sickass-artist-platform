@@ -1,68 +1,38 @@
-# Analytics & Monitoring
+# Analytics & Privacy
 
-Privacy-first analytics infrastructure with event tracking, consent management, and fallback logging.
+Privacy-first event tracking system with batching and consent management.
 
-## System Architecture
+## Core Features
+- **Privacy:** PII sanitization (blocks emails, passwords, etc.).
+- **Consent:** GDPR-compliant banner; no tracking until user accepts.
+- **Batching:** Events are batched (30s / 50 events) using `fetch` `keepalive` to ensure delivery.
+- **Resilience:** Failed events are stored in IndexedDB and retried.
 
-- **Event Batching**: Events batched and flushed every 30s or 50 events
-- **Privacy**: PII sanitization, GDPR consent required
-- **Fallback**: IndexedDB storage for failed events
-- **Session**: Session ID persisted in sessionStorage
+## Implementation Guide
 
-## Key Features
-
-### Event Tracking
-- **Page Events**: `page_view`, `page_unload`
-- **User Actions**: `cta_click`, `like/unlike`, `follow/unfollow`, `search`
-- **Content**: `item_view`, `item_shared`
-- **E-commerce**: `cart_add/remove`, `checkout_start/complete`
-- **System**: `error`, `performance_metric`, `performance_regression`
-
-### PII Sanitization
-Blocks sensitive keys: email, password, token, auth, ssn, credit, card. Only primitive values allowed.
-
-### Consent Management
-GDPR-compliant banner with Accept/Decline options. No tracking until consent given.
-
-## Implementation
-
-### Files
-- `src/utils/analytics.ts` - Analytics manager
-- `src/hooks/useAnalytics.ts` - React hook for page tracking
-- `src/components/ConsentBanner.tsx` - Consent UI
-- `src/styles/consent-banner.css` - Styles
-
-### Usage
-
+### Page Tracking
+Use the `useAnalytics` hook in any page component.
 ```typescript
-// Automatic page tracking
 import { useAnalytics } from '../hooks/useAnalytics'
-useAnalytics()
 
-// Manual events
+export function Dashboard() {
+  useAnalytics() // Auto-tracks page_view
+  return <div>Dashboard</div>
+}
+```
+
+### Manual Events
+```typescript
 import { trackCTA, trackLike, trackError } from '../utils/analytics'
+
 trackCTA('explore_gallery', 'hero_section')
 trackLike('gallery', contentId)
-trackError(error.name, error.message)
+trackError('NetworkError', 'Failed to fetch')
 ```
 
-## Configuration
-
-```typescript
-const BATCH_TIMEOUT = 30000 // 30 seconds
-const EVENT_THROTTLE = 100  // Max 1 event per 100ms
-const MAX_QUEUE = 50        // Auto-flush threshold
-```
-
-## Storage
-
-- **localStorage**: `analytics_consent`, `consent_dismissed`
-- **sessionStorage**: `analytics_session`
-- **IndexedDB**: Database `sickass-analytics`, store `analyticsQueue`
-
-## Future Enhancements
-
-- Server-side analytics endpoint
-- Analytics dashboard
-- Funnel analysis
-- A/B testing integration
+## Internal Data Flow
+1. **Trigger:** Interaction occurs.
+2. **Sanitize:** PII and non-primitives are removed.
+3. **Consent Check:** Verified against `localStorage.analytics_consent`.
+4. **Queue:** Added to in-memory batch.
+5. **Flush:** POST to `/api/analytics` or fallback to **IndexedDB**.

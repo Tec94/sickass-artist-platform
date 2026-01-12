@@ -1,5 +1,5 @@
-import React from 'react'
-import { LoadingSkeleton } from '../LoadingSkeleton'
+// SkeletonDemo component - demonstrates loading skeleton patterns
+import { LoadingSkeleton } from './LoadingSkeleton'
 
 /**
  * Example component demonstrating loading skeleton usage

@@ -1,3 +1,4 @@
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../../convex/_generated/api'

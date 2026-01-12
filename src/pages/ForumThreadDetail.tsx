@@ -42,7 +42,7 @@ export function ForumThreadDetail() {
       <header ref={animate} data-animate className="thread-detail-header">
         <button
           type="button"
-          onClick={() => navigate('/2')}
+          onClick={() => navigate('/forum')}
           className="back-btn"
         >
           <iconify-icon icon="solar:arrow-left-linear"></iconify-icon>
@@ -72,7 +72,7 @@ export function ForumThreadDetail() {
             }}
             onDelete={async () => {
               await deleteThreadMutation({ threadId: thread._id, categoryId: thread.categoryId })
-              navigate('/2')
+              navigate('/forum')
             }}
             isModerator={Boolean(isModerator)}
           />
@@ -81,10 +81,10 @@ export function ForumThreadDetail() {
 
       {isThreadFormOpen && editingThread && (
         <ThreadForm
-          categoryId={editingThread.categoryId}
+          initialCategoryId={editingThread.categoryId}
           initialData={{ title: editingThread.title, content: editingThread.content, tags: editingThread.tags }}
           onCancel={() => setIsThreadFormOpen(false)}
-          onSubmit={async (title, content) => {
+          onSubmit={async (categoryId, title, content, tags) => {
             await editThreadMutation({ threadId: editingThread._id, newTitle: title, newContent: content })
             setIsThreadFormOpen(false)
           }}

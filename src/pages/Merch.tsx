@@ -1,7 +1,6 @@
 import { useCallback, useState, useMemo } from 'react'
-import { useMutation, useQuery } from 'convex/react'
+import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { Doc } from '../../convex/_generated/dataModel'
 
 // Components
 import { MerchNavbar } from '../components/Merch/MerchNavbar'
@@ -10,13 +9,9 @@ import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { MerchCartDrawer } from '../components/Merch/MerchCartDrawer'
 
 // Utils
-import { useAutoRetry } from '../hooks/useAutoRetry'
-import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 
 export function Merch() {
-  const { retryWithBackoff } = useAutoRetry()
-  const addToCartMutation = useMutation(api.cart.addToCart)
   const cart = useQuery(api.cart.getCart)
   
   // State
@@ -43,21 +38,6 @@ export function Merch() {
     )
   }, [])
 
-  const handleAddToCart = useCallback(
-    async (productId: string) => {
-      // Find the product to get its default variant if needed
-      // Ideally we would open a quick add modal or select default variant
-      // For now, we will just navigate to detail page which is the safer interaction
-      // matching the reference's "Quick View" behavior or detail navigation
-      // But if we want direct add, we need a variant ID.
-      // Let's assume we navigate for now as it handles variants correctly
-      // But wait, the reference `handleAddToCart` adds directly if it's a simple item.
-      // Our backend requires variantId.
-      // So we will stick to navigation for safety unless we query variant data here.
-    },
-    []
-  )
-
   // Filter Logic - mimicking the client-side logic from reference App.tsx
   const filteredProducts = useMemo(() => {
     if (!productsQuery?.items) return []
@@ -83,10 +63,6 @@ export function Merch() {
 
     return filtered
   }, [productsQuery, activeCategory, maxPrice, selectedCollections])
-
-  const handleAddToCartFromDrawer = async (variantId: string, quantity: number) => {
-      // Implementation for drawer if needed, but drawer usually handles removal
-  }
 
   return (
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>

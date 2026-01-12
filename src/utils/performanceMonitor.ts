@@ -5,7 +5,7 @@
 
 import { trackPerformanceMetric, trackPerformanceRegression } from './analytics'
 
-interface PerformanceMetric {
+export interface PerformanceMetric {
   name: string
   value: number
   unit: string
@@ -13,7 +13,7 @@ interface PerformanceMetric {
   context?: Record<string, string | number | boolean>
 }
 
-interface MetricSummary {
+export interface MetricSummary {
   avg: number
   min: number
   max: number
@@ -21,22 +21,13 @@ interface MetricSummary {
   p95: number
 }
 
-interface PerformanceReport {
+export interface PerformanceReport {
   metrics: PerformanceMetric[]
   summary: Record<string, MetricSummary>
   alerts: PerformanceMetric[]
 }
 
-interface AnalyticsAPI {
-  track: (event: string, properties?: Record<string, unknown>) => void
-}
-
-declare global {
-  interface Window {
-    gtag?: (command: string, eventName: string, options?: Record<string, unknown>) => void
-    analytics?: AnalyticsAPI
-  }
-}
+// Window extensions declared in src/types/global.d.ts
 
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = []
@@ -200,7 +191,7 @@ class PerformanceMonitor {
    */
   private logMetric(metric: PerformanceMetric): void {
     // Log to console in dev
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const contextStr = metric.context ? ` ${JSON.stringify(metric.context)}` : ''
       console.log(`[PERF] ${metric.name}: ${metric.value.toFixed(2)}${metric.unit}${contextStr}`)
     }
@@ -375,7 +366,7 @@ class PerformanceMonitor {
 export const perfMonitor = new PerformanceMonitor()
 
 // Expose in dev tools
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   (window as typeof globalThis & { __perfMonitor?: typeof perfMonitor }).__perfMonitor = perfMonitor
 
   // Add keyboard shortcut for performance report

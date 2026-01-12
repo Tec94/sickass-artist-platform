@@ -62,8 +62,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         quantity,
         checkoutSessionId,
       })
-      if (result && result.ticketId) {
-        onSuccess(result.ticketId)
+      if (result && (result as { ticketId?: string }).ticketId) {
+        onSuccess((result as { ticketId: string }).ticketId)
       }
     } catch (err) {
       // Error is handled by the hook

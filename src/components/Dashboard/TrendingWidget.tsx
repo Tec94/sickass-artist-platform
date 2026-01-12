@@ -57,7 +57,7 @@ export const TrendingWidget = ({
     isLoading = !initialData,
     error,
     timedOut
-  } = queryResult
+  } = queryResult as { data?: { items: TrendingItem[]; hasMore: boolean; totalCount: number; page: number } | undefined; isLoading: boolean; error: Error | null; timedOut: boolean }
 
   const handleRetry = () => {
     onRetry?.()

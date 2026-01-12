@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useMutation, useQuery } from 'convex/react'
+import { useAction, useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useOnlineStatus } from './useOnlineStatus'
-import type { Doc, Id } from '../../convex/_generated/dataModel'
+import type { Id } from '../../convex/_generated/dataModel'
 
 interface UseSyncOfflineQueueResult {
   isSyncing: boolean
@@ -24,10 +24,10 @@ export function useSyncOfflineQueue({
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
 
   const isOnline = useOnlineStatus()
-  const processOfflineQueue = useMutation(api.offlineQueue.processOfflineQueue)
-  const retryFailedQueueItems = useMutation(api.offlineQueue.retryFailedQueueItems)
+  const processOfflineQueue = useAction(api.offlineQueue.processOfflineQueue)
+  const retryFailedQueueItems = useAction(api.offlineQueue.retryFailedQueueItems)
   const cleanupOldQueue = useMutation(api.offlineQueue.cleanupOldQueue)
-  
+
   // Get pending queue items count
   const pendingItems = useQuery(
     userId ? api.offlineQueue.getPendingItems : 'skip',
@@ -69,10 +69,10 @@ export function useSyncOfflineQueue({
     try {
       // First, retry any failed items that are ready
       await retryFailedQueueItems()
-      
+
       // Then process the queue
       const result = await processOfflineQueue()
-      
+
       if (result.processed > 0) {
         setLastSyncTime(Date.now())
       }
@@ -97,7 +97,7 @@ export function useSyncOfflineQueue({
       const timer = setTimeout(() => {
         performSync()
       }, 1000)
-      
+
       return () => clearTimeout(timer)
     }
   }, [isOnline, pendingCount, performSync, isSyncing])
