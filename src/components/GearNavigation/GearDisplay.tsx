@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import { useGear } from '../../contexts/GearContext'
-import { useGearNavigation } from '../../hooks/useGearNavigation'
+import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useGear, GearName } from '../../contexts/GearContext'
 import { useAuth } from '../../hooks/useAuth'
-import { GearName } from '../../contexts/GearContext'
 import './GearDisplay.css'
 
 const GEARS: { id: GearName, icon: string, label: string }[] = [
@@ -16,10 +15,26 @@ const GEARS: { id: GearName, icon: string, label: string }[] = [
 ]
 
 export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'horizontal' }) => {
-  const { currentGear } = useGear()
-  const { navigateToGear } = useGearNavigation()
+  const { currentGear, setCurrentGear } = useGear()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [hoveredGear, setHoveredGear] = useState<GearName | null>(null)
+
+  const GEAR_PATHS: Record<GearName, string> = {
+    'R': '/R',
+    'N': '/dashboard',
+    '1': '/events',
+    '2': '/store',
+    '3': '/gallery',
+    '4': '/forum',
+    '5': '/chat',
+    '6': '/admin'
+  }
+
+  const navigateToGear = useCallback((gear: GearName) => {
+    setCurrentGear(gear)
+    navigate(GEAR_PATHS[gear])
+  }, [setCurrentGear, navigate])
 
   return (
     <nav className={`gear-display ${variant}`} role="navigation" aria-label="Gear navigation">

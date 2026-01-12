@@ -5,15 +5,11 @@ interface StatsigAPI {
   updateUser: (user: unknown) => void
 }
 
-interface AnalyticsAPI {
-  track: (event: string, properties?: Record<string, unknown>) => void
-  identify: (userId?: string, traits?: Record<string, unknown>) => void
-}
-
+// Window.analytics is declared in usePerformanceMetrics.ts
 declare global {
   interface Window {
     statsig?: StatsigAPI
-    analytics?: AnalyticsAPI
+    // analytics?: AnalyticsAPI is declared in usePerformanceMetrics.ts
   }
 }
 
@@ -142,7 +138,7 @@ export function useEventAnalytics() {
           return {
             name,
             start: startMark.startTime,
-            end: measure.endTime,
+            end: startMark.startTime + measure.duration,
             duration: measure.duration
           }
         }

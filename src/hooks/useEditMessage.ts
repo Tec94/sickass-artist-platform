@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id, Doc } from '../../convex/_generated/dataModel'
 
@@ -44,13 +44,14 @@ export function useEditMessage({
       setError(null)
 
       try {
-        const updatedMessage = await editMessageMutation({
+        await editMessageMutation({
           messageId,
           newContent: newContent.trim(),
         })
 
-        // Update local state optimistically handled by Convex reactive query
-        return updatedMessage
+        // Mutation returns { success: true }, but the updated message will be available via reactive query
+        // Return null since we can't get the message directly from the mutation
+        return null
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to edit message'

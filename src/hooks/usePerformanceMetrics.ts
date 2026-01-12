@@ -37,8 +37,8 @@ const VITAL_THRESHOLDS = {
 } as const
 
 function logVital(name: string, value: number, threshold: typeof VITAL_THRESHOLDS[keyof typeof VITAL_THRESHOLDS]): void {
-  const status = value <= threshold.good ? '✅' : value <= threshold.needsImprovement ? '⚠️' : '❌'
-  const unit = name === 'CLS' ? '' : 'ms'
+  // const status = value <= threshold.good ? '✅' : value <= threshold.needsImprovement ? '⚠️' : '❌'
+  // const unit = name === 'CLS' ? '' : 'ms'
   // console.log(`[WEB VITAL] ${status} ${name}: ${value.toFixed(2)}${unit} (target: ≤${threshold.good}${unit})`)
 
   // Send to analytics
@@ -116,7 +116,7 @@ export const usePerformanceMetrics = () => {
     // Measure Cumulative Layout Shift (CLS)
     let clsValue = 0
     const clsObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as { hadRecentInput: boolean; value: number }[]) {
+      for (const entry of list.getEntries() as unknown as { hadRecentInput: boolean; value: number }[]) {
         if (!entry.hadRecentInput) {
           clsValue += entry.value
         }
@@ -247,7 +247,7 @@ export const usePerformanceRegression = () => {
   const prevMetricsRef = useRef<Map<string, number>>(new Map())
 
   const compare = (name: string, currentValue: number): boolean => {
-    const prevValue = prevMetricsRef.get(name)
+    const prevValue = prevMetricsRef.current.get(name)
     if (prevValue) {
       const regression = (currentValue - prevValue) / prevValue
       if (regression > 0.2) { // 20% regression
@@ -258,7 +258,7 @@ export const usePerformanceRegression = () => {
         return true
       }
     }
-    prevMetricsRef.set(name, currentValue)
+    prevMetricsRef.current.set(name, currentValue)
     return false
   }
 

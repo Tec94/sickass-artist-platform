@@ -19,8 +19,8 @@ export function ContentCard({ item, isLocked, onClick }: ContentCardProps) {
   const { likeCount, isLiked, isPending, handleLike } = useOptimisticLike(
     item.contentId,
     'gallery',
-    item.likeCount,
-    item.isLiked
+    item.isLiked,
+    item.likeCount
   )
 
   const requiredTierLabel = useMemo(() => {

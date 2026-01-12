@@ -16,7 +16,7 @@ export const useAnalytics = () => {
     if (userProfile) {
       analytics.setCurrentUser({
         id: userProfile._id,
-        tier: userProfile.tier as 'artist' | 'admin' | 'mod' | 'fan',
+        tier: userProfile.role as 'artist' | 'admin' | 'mod' | 'fan',
       })
     } else {
       analytics.setCurrentUser(null)

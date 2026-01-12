@@ -23,9 +23,20 @@ export const useRecommendations = ({
     if (!enabled) return
 
     const cached = recommendationCache.get(contentId)
-    if (cached) {
-      setCached(cached)
-      setIsFromCache(true)
+    if (cached && Array.isArray(cached)) {
+      // Check if cached items are already GalleryContentItem format
+      const isValid = cached.length > 0 && cached.every(item => 
+        item !== null && 
+        typeof item === 'object' &&
+        'contentId' in item &&
+        'creator' in item &&
+        'isLiked' in item &&
+        'isLocked' in item
+      )
+      if (isValid) {
+        setCached(cached as GalleryContentItem[])
+        setIsFromCache(true)
+      }
     }
   }, [contentId, enabled])
 
@@ -37,9 +48,21 @@ export const useRecommendations = ({
 
   // Cache new results
   useEffect(() => {
-    if (recommendations && !isFromCache) {
-      recommendationCache.set(contentId, recommendations, 60)
-      setCached(recommendations)
+    if (recommendations && !isFromCache && Array.isArray(recommendations)) {
+      // Check if recommendations are already in GalleryContentItem format
+      const isValid = recommendations.length > 0 && recommendations.every(item => 
+        item !== null && 
+        typeof item === 'object' &&
+        'contentId' in item &&
+        'creator' in item &&
+        'isLiked' in item &&
+        'isLocked' in item
+      )
+      if (isValid) {
+        const validRecommendations = recommendations as GalleryContentItem[]
+        recommendationCache.set(contentId, validRecommendations, 60)
+        setCached(validRecommendations)
+      }
     }
   }, [recommendations, contentId, isFromCache])
 

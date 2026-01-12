@@ -104,15 +104,27 @@ export const RelatedContent = ({ currentItem, onItemClick }: RelatedContentProps
               ))}
             </>
           ) : (
-            data.map((item, index) => (
-              <button
-                key={item.contentId}
-                onClick={() => onItemClick(item, index)}
-                className="flex-shrink-0 w-72 snap-start group"
-              >
-                <GalleryCard item={item} onClick={() => onItemClick(item, index)} />
-              </button>
-            ))
+            data
+              .filter((item): item is GalleryContentItem => {
+                // Type guard: ensure item has required fields
+                return (
+                  item !== null &&
+                  typeof item === 'object' &&
+                  'contentId' in item &&
+                  'creator' in item &&
+                  'isLiked' in item &&
+                  'isLocked' in item
+                )
+              })
+              .map((item, index) => (
+                <button
+                  key={item.contentId}
+                  onClick={() => onItemClick(item, index)}
+                  className="flex-shrink-0 w-72 snap-start group"
+                >
+                  <GalleryCard item={item} onClick={() => onItemClick(item, index)} />
+                </button>
+              ))
           )}
         </div>
       </div>

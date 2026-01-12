@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ExploreFilters } from '../../../types'
+import type { ExploreFilters } from '../../types/explore'
 
 interface FilterBarProps {
   filters: ExploreFilters

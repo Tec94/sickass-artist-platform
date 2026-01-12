@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import { useQueryWithTimeout } from '../hooks/useQueryWithTimeout'
 
 /**
  * Complete example of using skeleton loading states
@@ -13,7 +12,7 @@ export function SkeletonUsageExample() {
   const [galleryItems, setGalleryItems] = useState<any[] | undefined>(undefined)
   const [galleryLoading, setGalleryLoading] = useState(true)
   const [galleryTimedOut, setGalleryTimedOut] = useState(false)
-  const [galleryError, setGalleryError] = useState<Error | null>(null)
+  const [galleryError, _setGalleryError] = useState<Error | null>(null)
 
   useEffect(() => {
     setGalleryLoading(true)
@@ -168,7 +167,7 @@ export function SkeletonUsageExample() {
           )}
 
           {/* Loading more skeleton */}
-          {galleryLoading && galleryItems?.length > 0 && (
+          {galleryLoading && (galleryItems?.length ?? 0) > 0 && (
             <LoadingSkeleton 
               type="gallery" 
               count={4}

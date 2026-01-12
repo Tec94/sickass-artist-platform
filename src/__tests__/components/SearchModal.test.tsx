@@ -4,7 +4,6 @@ import { SearchTrigger } from '../../components/Search/SearchTrigger'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { useGlobalSearch } from '../../hooks/useGlobalSearch'
-import React from 'react'
 
 // Mock useGlobalSearch
 vi.mock('../../hooks/useGlobalSearch')

@@ -35,14 +35,14 @@ export function useSearchThreads({
   const shouldSearch = debouncedQuery.trim().length >= 2
 
   const results = useQuery(
-    shouldSearch ? api.search.searchThreads : 'skip',
+    api.search.searchThreads,
     shouldSearch
       ? {
           categoryId,
           query: debouncedQuery,
           limit,
         }
-      : undefined
+      : 'skip'
   )
 
   useEffect(() => {

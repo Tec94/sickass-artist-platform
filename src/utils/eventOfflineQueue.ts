@@ -97,7 +97,7 @@ class EventOfflineQueue {
     })
   }
 
-  async markActionFailed(id: string, reason?: string): Promise<void> {
+  async markActionFailed(id: string, _reason?: string): Promise<void> {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {

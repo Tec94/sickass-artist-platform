@@ -27,7 +27,7 @@ export function AdminForum() {
   const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<Id<'categories'> | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [_isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch data
   const categories = useQuery(api.forum.getCategories)
@@ -36,9 +36,10 @@ export function AdminForum() {
   const createCategory = useMutation(api.admin.createCategory)
   const updateCategory = useMutation(api.admin.updateCategory)
   const deleteCategoryMut = useMutation(api.admin.deleteCategory)
-  const pinThread = useMutation(api.admin.pinThread)
-  const lockThread = useMutation(api.admin.lockThread)
-  const deleteThreadMut = useMutation(api.admin.deleteThread)
+  // Unused mutations - reserved for future thread moderation features
+  // const pinThread = useMutation(api.admin.pinThread)
+  // const lockThread = useMutation(api.admin.lockThread)
+  // const deleteThreadMut = useMutation(api.admin.deleteThread)
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,40 +115,10 @@ export function AdminForum() {
     }
   }
 
-  const handlePinThread = async (threadId: Id<'threads'>, isPinned: boolean) => {
-    try {
-      await pinThread({ threadId, pinned: !isPinned })
-      showToast(isPinned ? 'Thread unpinned' : 'Thread pinned', { type: 'success' })
-    } catch (error) {
-      console.error('Error pinning thread:', error)
-      showToast('Failed to update thread. Please try again.', { type: 'error' })
-    }
-  }
-
-  const handleLockThread = async (threadId: Id<'threads'>, isLocked: boolean) => {
-    try {
-      await lockThread({ threadId, locked: !isLocked })
-      showToast(isLocked ? 'Thread unlocked' : 'Thread locked', { type: 'success' })
-    } catch (error) {
-      console.error('Error locking thread:', error)
-      showToast('Failed to update thread. Please try again.', { type: 'error' })
-    }
-  }
-
-  const handleDeleteThread = async (threadId: Id<'threads'>) => {
-    if (!confirm('Delete this thread? This action cannot be undone.')) return
-    
-    try {
-      await deleteThreadMut({ threadId })
-      showToast('Thread deleted successfully!', { type: 'success' })
-    } catch (error) {
-      console.error('Error deleting thread:', error)
-      showToast(
-        error instanceof Error ? error.message : 'Failed to delete thread. Please try again.',
-        { type: 'error' }
-      )
-    }
-  }
+  // Unused handler functions - reserved for future thread moderation features
+  // const _handlePinThread = async (_threadId: Id<'threads'>, _isPinned: boolean) => { ... }
+  // const _handleLockThread = async (_threadId: Id<'threads'>, _isLocked: boolean) => { ... }
+  // const _handleDeleteThread = async (_threadId: Id<'threads'>) => { ... }
 
   return (
     <div className="admin-forum">

@@ -73,11 +73,14 @@ export const GalleryGrid = memo(function GalleryGrid({
   )
 
   const {
-    data: items = (initialItems || []) as GalleryContentItem[],
+    data: queryData,
     isLoading = initialIsLoading,
     error = initialError,
     timedOut
   } = queryResult
+
+  // Use provided items or transform query data
+  const items: GalleryContentItem[] = initialItems || (Array.isArray(queryData) ? queryData as GalleryContentItem[] : [])
 
   const handleCardClick = useCallback((item: GalleryContentItem, index: number) => {
     if (item.isLocked) {

@@ -37,14 +37,14 @@ export function useSearchMessages({
   const shouldSearch = debouncedQuery.trim().length >= 2
 
   const results = useQuery(
-    shouldSearch ? api.search.searchMessages : 'skip',
+    api.search.searchMessages,
     shouldSearch
       ? {
           channelId,
           query: debouncedQuery,
           limit,
         }
-      : undefined
+      : 'skip'
   )
 
   useEffect(() => {

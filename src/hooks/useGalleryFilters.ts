@@ -24,28 +24,28 @@ export const useGalleryFilters = () => {
   const filters: GalleryFilters = useMemo(() => {
     try {
       const typesParam = searchParams.get('types')?.split(',').filter(Boolean) || []
-      const validTypes = typesParam.filter((t): t is 'show' | 'bts' | 'edit' | 'wip' | 'exclusive' => 
+      const validTypes = typesParam.filter((t): t is 'show' | 'bts' | 'edit' | 'wip' | 'exclusive' =>
         ['show', 'bts', 'edit', 'wip', 'exclusive'].includes(t)
       )
-      
+
       const dateRangeParam = searchParams.get('date') || 'all'
       const dateRangeOptions: readonly string[] = ['7d', '30d', '90d', 'all']
-      const validDateRange = dateRangeOptions.includes(dateRangeParam) 
+      const validDateRange = dateRangeOptions.includes(dateRangeParam)
         ? dateRangeParam as '7d' | '30d' | '90d' | 'all'
         : 'all'
-      
+
       const tierParam = searchParams.get('tier') || 'all'
       const tierOptions: readonly string[] = ['all', 'bronze', 'silver', 'gold', 'platinum']
       const validTier = tierOptions.includes(tierParam)
         ? tierParam as 'all' | 'bronze' | 'silver' | 'gold' | 'platinum'
         : 'all'
-      
+
       const sortParam = searchParams.get('sort') || 'newest'
       const sortOptions: readonly string[] = ['newest', 'oldest', 'mostLiked', 'mostViewed', 'trending']
       const validSort = sortOptions.includes(sortParam)
         ? sortParam as 'newest' | 'oldest' | 'mostLiked' | 'mostViewed' | 'trending'
         : 'newest'
-      
+
       return {
         types: validTypes,
         dateRange: validDateRange,
@@ -75,7 +75,7 @@ export const useGalleryFilters = () => {
 
   useEffect(() => {
     if (queryFilters) {
-      setResultsCount(queryFilters.total)
+      setResultsCount(queryFilters.items?.length ?? 0)
       setIsLoading(false)
     }
   }, [queryFilters])
@@ -83,7 +83,7 @@ export const useGalleryFilters = () => {
   // Set filter and sync to URL
   const setFilter = useCallback((key: keyof GalleryFilters, value: GalleryFilters[typeof key]) => {
     const newParams = new URLSearchParams(searchParams)
-    
+
     if (Array.isArray(value) && value.length === 0) {
       newParams.delete(mapFilterKeyToParam(key))
     } else if (value === null || value === 'all') {
@@ -93,7 +93,7 @@ export const useGalleryFilters = () => {
     } else {
       newParams.set(mapFilterKeyToParam(key), String(value))
     }
-    
+
     // Reset page when filter changes (unless changing page itself)
     if (key !== 'page') {
       newParams.set('page', '0')

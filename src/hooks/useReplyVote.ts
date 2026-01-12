@@ -23,13 +23,6 @@ interface UseReplyVoteProps {
   initialUserVote?: 'up' | 'down' | null
 }
 
-interface _CastReplyVoteResult {
-  replyId: Id<'replies'>
-  upVoteCount: number
-  downVoteCount: number
-  userVote: 'up' | 'down' | null
-}
-
 export function useReplyVote({
   replyId,
   initialVotes,

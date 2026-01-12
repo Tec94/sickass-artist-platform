@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
@@ -122,7 +122,7 @@ export function AdminMerch() {
       price: product.price,
       category: product.category as ProductCategory,
       tags: product.tags || [],
-      images: product.images || [],
+      images: product.imageUrls || [],
       status: product.status as ProductStatus
     })
     setEditingId(product._id)
@@ -350,8 +350,8 @@ export function AdminMerch() {
         {products?.items?.map(product => (
           <div key={product._id} className="product-card">
             <div className="product-image">
-              {product.images?.[0] ? (
-                <img src={product.images[0]} alt={product.name} />
+              {product.imageUrls?.[0] ? (
+                <img src={product.imageUrls[0]} alt={product.name} />
               ) : (
                 <div className="no-image">
                   <iconify-icon icon="solar:gallery-linear" width="24" height="24"></iconify-icon>

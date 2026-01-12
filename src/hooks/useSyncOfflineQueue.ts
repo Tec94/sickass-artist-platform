@@ -30,8 +30,8 @@ export function useSyncOfflineQueue({
 
   // Get pending queue items count
   const pendingItems = useQuery(
-    userId ? api.offlineQueue.getPendingItems : 'skip',
-    userId ? { userId } : undefined
+    api.offlineQueue.getPendingItems,
+    userId ? { userId } : 'skip'
   )
 
   // Run cleanup every hour

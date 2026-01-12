@@ -4,7 +4,7 @@ import { useLightbox } from '../../hooks/useLightbox'
 import { mockGalleryItems } from '../mocks'
 
 // Mock Image class to avoid issues in test environment
-global.Image = class {
+(globalThis as any).Image = class {
   onload: () => void = () => {}
   onerror: () => void = () => {}
   _src: string = ''

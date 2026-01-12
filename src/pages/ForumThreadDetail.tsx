@@ -84,7 +84,7 @@ export function ForumThreadDetail() {
           initialCategoryId={editingThread.categoryId}
           initialData={{ title: editingThread.title, content: editingThread.content, tags: editingThread.tags }}
           onCancel={() => setIsThreadFormOpen(false)}
-          onSubmit={async (categoryId, title, content, tags) => {
+          onSubmit={async (_categoryId, title, content, _tags) => {
             await editThreadMutation({ threadId: editingThread._id, newTitle: title, newContent: content })
             setIsThreadFormOpen(false)
           }}

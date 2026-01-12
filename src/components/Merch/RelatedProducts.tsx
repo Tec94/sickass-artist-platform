@@ -17,7 +17,7 @@ export function RelatedProducts({
   const result = useQuery(api.merch.getProducts, {
     page: 0,
     pageSize: 8,
-    category,
+    category: category as 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other' | undefined,
     sortBy: 'newest',
   })
 

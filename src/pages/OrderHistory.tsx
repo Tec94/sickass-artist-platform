@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export function OrderHistory() {
   const navigate = useNavigate()
-  const { isSignedIn, isLoading } = useAuth()
+  const { isSignedIn, isLoading: _isLoading } = useAuth()
   // Skip query when not authenticated to prevent "Not authenticated" errors
   const orders = useQuery(
     api.orders.getUserOrders,

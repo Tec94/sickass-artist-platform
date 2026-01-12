@@ -123,16 +123,16 @@ export function useQueueOperations() {
       return result
     } catch (err) {
       const eventError = parseEventError(err)
-      
+
       // Retry logic for network errors
       if (eventError.type === 'network' && retryCount.current < maxRetries) {
         retryCount.current++
         const delay = Math.pow(2, retryCount.current) * 1000 // Exponential backoff
-        
+
         await new Promise(resolve => setTimeout(resolve, delay))
         return joinQueue(eventId)
       }
-      
+
       setError(eventError)
       throw eventError
     } finally {
@@ -228,32 +228,27 @@ export function useCheckoutOperations() {
 export function useEventQueries() {
   const getEvents = useQuery(
     api.events.getEvents,
-    { page: 0, pageSize: 20 },
-    { enabled: true }
+    { page: 0, pageSize: 20 }
   )
 
   const getEventDetail = useQuery(
     api.events.getEventDetail,
-    {} as { eventId: Id<'events'> },
-    { enabled: false }
+    'skip'
   )
 
   const getUserTickets = useQuery(
     api.events.getUserTickets,
-    { upcomingOnly: false },
-    { enabled: true }
+    { upcomingOnly: false }
   )
 
   const getQueueState = useQuery(
     api.events.getQueueState,
-    {} as { eventId: Id<'events'> },
-    { enabled: false }
+    'skip'
   )
 
   const searchEvents = useQuery(
     api.events.searchEvents,
-    { query: '', limit: 20 },
-    { enabled: false }
+    'skip'
   )
 
   return {
@@ -377,7 +372,7 @@ export function useOfflineEventQueue() {
     if (!isOnline || offlineQueue.length === 0) return
 
     const processed: string[] = []
-    
+
     for (const item of offlineQueue) {
       try {
         // This is a simplified approach for offline queue processing
@@ -393,7 +388,7 @@ export function useOfflineEventQueue() {
     // Remove processed items
     if (processed.length > 0) {
       setOfflineQueue(prev => prev.filter(item => !processed.includes(item.id)))
-      
+
       try {
         const stored = JSON.parse(localStorage.getItem('event_offline_queue') || '[]')
         const remaining = stored.filter((item: { id: string }) => !processed.includes(item.id))

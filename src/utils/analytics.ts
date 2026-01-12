@@ -169,8 +169,8 @@ class AnalyticsManager {
     return this.currentUser?.id
   }
 
-  private getCurrentUserTier(): string | undefined {
-    return this.currentUser?.tier as 'artist' | 'admin' | 'mod' | 'fan' | undefined
+  private getCurrentUserTier(): 'artist' | 'admin' | 'mod' | 'fan' | undefined {
+    return this.currentUser?.tier
   }
 
   private async flush() {

@@ -34,7 +34,6 @@ export function AdminEvents() {
   const calculateRevenue = (eventId: string) => {
     if (!myTickets) return 0
     
-    // @ts-expect-error - tickets type from getUserTickets is complex
     const eventTickets = myTickets.filter((t: any) => t.event._id === eventId)
     // This is a simplified calculation - in a real app, you'd query actual sales data
     return eventTickets.reduce((sum: number, ticket: any) => {

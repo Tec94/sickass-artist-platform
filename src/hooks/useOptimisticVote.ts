@@ -23,14 +23,6 @@ interface UseOptimisticVoteProps {
   initialUserVote?: 'up' | 'down' | null
 }
 
-interface _CastThreadVoteResult {
-  threadId: Id<'threads'>
-  upVoteCount: number
-  downVoteCount: number
-  netVoteCount: number
-  userVote: 'up' | 'down' | null
-}
-
 export function useOptimisticVote({
   threadId,
   initialVotes,

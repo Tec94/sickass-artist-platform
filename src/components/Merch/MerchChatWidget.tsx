@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { generateFanResponse } from '../../services/geminiService';
 
 export const MerchChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +23,15 @@ export const MerchChatWidget: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
-    const response = await generateFanResponse(userMsg);
+    // Mock response - geminiService has been removed
+    const mockResponses = [
+      "Check out our latest drops in the store! 🔥",
+      "Tour dates for Europe and North America coming soon!",
+      "For sizing, we recommend going up one size for that baggy fit on hoodies.",
+      "The new album 'Midnight Frequency' drops next month!",
+      "Got questions about merch? I'm here to help!"
+    ];
+    const response = mockResponses[Math.floor(Math.random() * mockResponses.length)];
     
     setMessages(prev => [...prev, { role: 'bot', text: response }]);
     setIsLoading(false);

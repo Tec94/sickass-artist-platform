@@ -140,7 +140,7 @@ class PerformanceMonitor {
       timestamp: Date.now(),
       context: {
         query: queryName,
-        recordCount,
+        recordCount: recordCount ?? 0,
       },
     }
 

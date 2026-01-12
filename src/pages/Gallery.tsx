@@ -191,18 +191,18 @@ export const Gallery = () => {
         {/* Results count */}
         {data && (
           <div className="px-4 py-2 text-sm text-gray-400">
-            {data.total === 0 ? (
+            {(data.items?.length ?? 0) === 0 ? (
               <span>No results found</span>
             ) : (
               <span>
-                Showing {accumulatedItems.length} of {data.total} items
+                Showing {accumulatedItems.length} of {data.items?.length ?? 0} items
               </span>
             )}
           </div>
         )}
 
         <main className="gallery-viewport flex-1">
-          {data?.total === 0 && !isLoading ? (
+          {(data?.items?.length ?? 0) === 0 && !isLoading ? (
             <div className="empty-state">
               <iconify-icon icon="solar:filter-linear" width="64" height="64" class="text-gray-600 mb-4"></iconify-icon>
               <h3 className="text-xl font-bold text-white mb-2">No content found</h3>

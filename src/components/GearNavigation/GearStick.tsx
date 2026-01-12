@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useGear } from '../../contexts/GearContext'
-import { useGearNavigation } from '../../hooks/useGearNavigation'
-import { GearName } from '../../contexts/GearContext'
+import { useNavigate } from 'react-router-dom'
+import { useGear, GearName } from '../../contexts/GearContext'
 import { useScrollAnimation } from '../../hooks/useScrollAnimation'
 
 const GEAR_ORDER: GearName[] = ['R', 'N', '1', '2', '3', '4', '5', '6']
@@ -18,11 +17,27 @@ const GEAR_LABELS: Record<GearName, string> = {
 }
 
 export const GearStick = () => {
-  const { currentGear } = useGear()
-  const { navigateToGear } = useGearNavigation()
+  const { currentGear, setCurrentGear } = useGear()
+  const navigate = useNavigate()
   const animate = useScrollAnimation()
   const [isDragging, setIsDragging] = useState(false)
   const trackRef = useRef<HTMLDivElement>(null)
+
+  const GEAR_PATHS: Record<GearName, string> = {
+    'R': '/R',
+    'N': '/dashboard',
+    '1': '/events',
+    '2': '/store',
+    '3': '/gallery',
+    '4': '/forum',
+    '5': '/chat',
+    '6': '/admin'
+  }
+
+  const navigateToGear = useCallback((gear: GearName) => {
+    setCurrentGear(gear)
+    navigate(GEAR_PATHS[gear])
+  }, [setCurrentGear, navigate])
 
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()

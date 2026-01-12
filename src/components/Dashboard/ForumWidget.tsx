@@ -11,15 +11,21 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   const navigate = useNavigate()
   const [timeoutReached, setTimeoutReached] = useState(false)
 
+  // Get categories first to find a default category
+  const categories = useQuery(api.forum.getCategories)
+  const firstCategoryId = categories?.[0]?._id
+
   // Fetch recent threads with timeout handling
   const queryResult = useQuery(
     api.forum.getThreads,
-    { limit: 5, sort: 'newest' as const }
+    firstCategoryId
+      ? { categoryId: firstCategoryId, limit: 5, sort: 'newest' as const }
+      : 'skip'
   )
   
-  // Convex useQuery returns data directly, undefined while loading
+  // Convex useQuery returns data directly (array), undefined while loading
   const data = queryResult
-  const isLoading = queryResult === undefined
+  const isLoading = queryResult === undefined || !firstCategoryId
   const error = null // Convex throws on error instead
 
   // Set timeout for 3 seconds
@@ -37,7 +43,7 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   }
 
   // Show error state if timeout reached and no data or actual error
-  if ((!data || data.items?.length === 0 || error) && timeoutReached) {
+  if ((!data || (Array.isArray(data) && data.length === 0) || error) && timeoutReached) {
     return (
       <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
         <div className="widget-error">
@@ -53,7 +59,7 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   }
 
   // Show empty state if no items
-  if (data?.items?.length === 0) {
+  if (Array.isArray(data) && data.length === 0) {
     return (
       <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
         <div className="widget-empty">
@@ -71,7 +77,7 @@ export const ForumWidget = ({ onRetry }: ForumWidgetProps) => {
   return (
     <WidgetContainer title="Latest Discussions" icon="solar:chat-square-dots-linear" actionLabel="View All">
       <div className="forum-list">
-        {data?.items?.slice(0, 3).map((thread: any, index: number) => (
+        {Array.isArray(data) && data.slice(0, 3).map((thread: any, index: number) => (
           <ThreadItem key={thread._id || index} thread={thread} index={index} navigate={navigate} />
         ))}
       </div>

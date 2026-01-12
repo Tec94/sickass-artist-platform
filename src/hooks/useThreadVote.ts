@@ -20,10 +20,10 @@ interface UseThreadVoteResult {
 
 interface UseThreadVoteArgs {
   threadId: Id<'threads'>
-  initialUpCount: number
-  initialDownCount: number
-  initialNetCount: number
-  initialUserVote: UserVote
+  initialUpCount?: number
+  initialDownCount?: number
+  initialNetCount?: number
+  initialUserVote?: UserVote
 }
 
 const applyOptimisticVote = (votes: VoteState, direction: VoteDirection): VoteState => {
@@ -69,7 +69,7 @@ export function useThreadVote({
     upVoteCount: initialUpCount ?? 0,
     downVoteCount: initialDownCount ?? 0,
     netVoteCount: initialNetCount ?? 0,
-    userVote: initialUserVote,
+    userVote: initialUserVote ?? null,
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -82,7 +82,7 @@ export function useThreadVote({
       upVoteCount: initialUpCount ?? 0,
       downVoteCount: initialDownCount ?? 0,
       netVoteCount: initialNetCount ?? 0,
-      userVote: initialUserVote,
+      userVote: initialUserVote ?? null,
     })
   }, [isLoading, initialDownCount, initialNetCount, initialUpCount, initialUserVote, threadId])
 

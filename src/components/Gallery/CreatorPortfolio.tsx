@@ -52,15 +52,44 @@ export const CreatorPortfolio = ({
             ))}
           </>
         ) : (
-          creatorWorks.map(item => (
-            <button
-              key={item.contentId}
-              onClick={() => onItemClick(item)}
-              className="group"
-            >
-              <GalleryCard item={item} onClick={() => onItemClick(item)} />
-            </button>
-          ))
+          creatorWorks
+            .map(item => {
+              // Transform raw galleryContent doc to GalleryContentItem
+              const enrichedItem: GalleryContentItem = {
+                contentId: item.contentId,
+                type: item.type,
+                title: item.title,
+                description: item.description,
+                imageUrl: item.imageUrl,
+                thumbnailUrl: item.thumbnailUrl,
+                creatorId: item.creatorId,
+                requiredFanTier: item.requiredFanTier,
+                tags: item.tags,
+                likeCount: item.likeCount,
+                viewCount: item.viewCount,
+                pinned: item.pinned,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                creator: {
+                  _id: creator._id,
+                  displayName: creator.displayName,
+                  avatar: creator.avatar,
+                  username: creator.username,
+                  fanTier: creator.fanTier,
+                },
+                isLiked: false, // Will be set by useOptimisticLike
+                isLocked: false, // Will be calculated based on tier
+              }
+              return (
+                <button
+                  key={item.contentId}
+                  onClick={() => onItemClick(enrichedItem)}
+                  className="group"
+                >
+                  <GalleryCard item={enrichedItem} onClick={() => onItemClick(enrichedItem)} />
+                </button>
+              )
+            })
         )}
       </div>
 

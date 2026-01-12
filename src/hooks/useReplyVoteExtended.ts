@@ -19,9 +19,9 @@ interface UseReplyVoteExtendedResult {
 
 interface UseReplyVoteExtendedArgs {
   replyId: Id<'replies'>
-  initialUpCount: number
-  initialDownCount: number
-  initialUserVote: UserVote
+  initialUpCount?: number
+  initialDownCount?: number
+  initialUserVote?: UserVote
 }
 
 const applyOptimisticVote = (votes: VoteState, direction: VoteDirection): VoteState => {
@@ -58,9 +58,9 @@ export function useReplyVoteExtended({
   const castVote = useMutation(api.forum.castReplyVote)
 
   const [votes, setVotes] = useState<VoteState>({
-    upVoteCount: initialUpCount,
-    downVoteCount: initialDownCount,
-    userVote: initialUserVote,
+    upVoteCount: initialUpCount ?? 0,
+    downVoteCount: initialDownCount ?? 0,
+    userVote: initialUserVote ?? null,
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -70,9 +70,9 @@ export function useReplyVoteExtended({
     if (isLoading) return
 
     setVotes({
-      upVoteCount: initialUpCount,
-      downVoteCount: initialDownCount,
-      userVote: initialUserVote,
+      upVoteCount: initialUpCount ?? 0,
+      downVoteCount: initialDownCount ?? 0,
+      userVote: initialUserVote ?? null,
     })
   }, [initialDownCount, initialUpCount, initialUserVote, isLoading, replyId])
 

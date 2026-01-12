@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
 import { Gallery as GalleryPage } from '../pages/Gallery'
 import { MemoryRouter } from 'react-router-dom'
 import { useGalleryFilters } from '../hooks/useGalleryFilters'
 import { mockGalleryItems } from './mocks'
-import React from 'react'
 
 // Mock the hooks
 vi.mock('../hooks/useGalleryFilters')
 vi.mock('../hooks/useOptimisticLike', () => ({
-  useOptimisticLike: (id: string, type: string, count: number, liked: boolean) => ({
+  useOptimisticLike: (_id: string, _type: string, count: number, liked: boolean) => ({
     likeCount: liked ? count : count,
     isLiked: liked,
     isPending: false,
