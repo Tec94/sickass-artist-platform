@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import { api } from "./_generated/api";
 
 /**
  * Temporary mutation to promote a user to admin.
@@ -88,6 +89,103 @@ export const initializeStreakMilestones = mutation({
         }
 
         return { success: true, created, skipped, total: milestones.length };
+    },
+});
+
+/**
+ * Initialize default quests
+ * Run once: npx convex run dev:initializeDefaultQuests "{adminId: 'YOUR_ADMIN_ID'}"
+ */
+export const initializeDefaultQuests = mutation({
+    args: { adminId: v.id('users') },
+    handler: async (ctx, args) => {
+        const baseQuests = [
+            // Daily quests
+            {
+                questId: 'daily_login_001',
+                type: 'daily' as const,
+                name: 'Daily Check-in',
+                description: 'Log in to the community',
+                icon: '📱',
+                rewardPoints: 10,
+                targetValue: 1,
+                progressType: 'single' as const,
+                category: 'social' as const,
+                priority: 1,
+            },
+            {
+                questId: 'daily_chat_001',
+                type: 'daily' as const,
+                name: 'Community Chat',
+                description: 'Send a message in chat',
+                icon: '💬',
+                rewardPoints: 15,
+                targetValue: 1,
+                progressType: 'single' as const,
+                category: 'social' as const,
+                priority: 2,
+            },
+            {
+                questId: 'daily_engage_001',
+                type: 'daily' as const,
+                name: 'Engage 5 Times',
+                description: 'Like or vote on 5 posts',
+                icon: '👍',
+                rewardPoints: 20,
+                targetValue: 5,
+                progressType: 'cumulative' as const,
+                category: 'engagement' as const,
+                priority: 3,
+            },
+            // Weekly quests
+            {
+                questId: 'weekly_forum_001',
+                type: 'weekly' as const,
+                name: 'Forum Contributor',
+                description: 'Create a forum thread',
+                icon: '📝',
+                rewardPoints: 50,
+                targetValue: 1,
+                progressType: 'single' as const,
+                category: 'creation' as const,
+                priority: 1,
+            },
+            {
+                questId: 'weekly_replies_001',
+                type: 'weekly' as const,
+                name: 'Helpful Replies',
+                description: 'Reply to 3 forum posts',
+                icon: '💡',
+                rewardPoints: 75,
+                targetValue: 3,
+                progressType: 'cumulative' as const,
+                category: 'creation' as const,
+                priority: 2,
+            },
+        ]
+
+        let created = 0
+
+        for (const questData of baseQuests) {
+            const now = Date.now()
+            const startsAt = now
+            const endsAt = now + 365 * 24 * 60 * 60 * 1000 // 1 year from now
+
+            try {
+                await ctx.runMutation(api.quests.createQuest, {
+                    ...questData,
+                    isActive: true,
+                    startsAt,
+                    endsAt,
+                    adminId: args.adminId,
+                })
+                created++
+            } catch (error) {
+                console.error(`Failed to create quest ${questData.questId}:`, error)
+            }
+        }
+
+        return { created, total: baseQuests.length }
     },
 });
 
