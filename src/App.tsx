@@ -94,6 +94,8 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
   )
 })))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const RewardShop = lazy(() => import('./pages/RewardShop').then(m => ({ default: m.RewardShop })))
+const AdminRedemptions = lazy(() => import('./pages/AdminRedemptions').then(m => ({ default: m.AdminRedemptions })))
 
 function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
@@ -145,6 +147,11 @@ function AppContent() {
                   <Route path="chat" element={
                     <ProtectedRoute>
                       <Chat />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="rewards" element={
+                    <ProtectedRoute>
+                      <RewardShop />
                     </ProtectedRoute>
                   } />
                   <Route index element={<Navigate to="/dashboard" replace />} />
@@ -216,9 +223,19 @@ function AppContent() {
                     </Suspense>
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/events" element={
+                  <ProtectedRoute>
+                    <AdminEvents />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin/events/new" element={
                   <ProtectedRoute>
                     <AdminEventForm />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/redemptions" element={
+                  <ProtectedRoute>
+                    <AdminRedemptions />
                   </ProtectedRoute>
                 } />
                 <Route path="/test-errors" element={<TestErrorPage />} />

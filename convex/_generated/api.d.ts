@@ -28,6 +28,7 @@ import type * as orders from "../orders.js";
 import type * as points from "../points.js";
 import type * as quests from "../quests.js";
 import type * as recommendations from "../recommendations.js";
+import type * as rewards from "../rewards.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
 import type * as streaks from "../streaks.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   points: typeof points;
   quests: typeof quests;
   recommendations: typeof recommendations;
+  rewards: typeof rewards;
   scheduler: typeof scheduler;
   search: typeof search;
   streaks: typeof streaks;
