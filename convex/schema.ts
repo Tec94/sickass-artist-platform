@@ -1006,4 +1006,67 @@ export default defineSchema({
     .index('by_rewardId', ['rewardId'])
     .index('by_status', ['status']) // Admin view all pending
     .index('by_idempotency', ['userId', 'idempotencyKey']),
+
+  // ==================== SONG LEADERBOARD SYSTEM ====================
+
+  // Song leaderboard entries - Aggregated rankings per period
+  songLeaderboard: defineTable({
+    leaderboardId: v.string(), // Format: "2025-01" (monthly), "2025-Q1" (quarterly), "all-time"
+    period: v.union(
+      v.literal('allTime'),
+      v.literal('monthly'),
+      v.literal('quarterly'),
+      v.literal('yearly')
+    ),
+    spotifyTrackId: v.string(), // Spotify track ID
+    songTitle: v.string(), // Song title (for display)
+    songArtist: v.string(), // Artist name (for display)
+    albumCover: v.string(), // Album cover URL
+    totalScore: v.number(), // Computed weighted score
+    uniqueVoters: v.number(), // Number of unique users who ranked this song
+    updatedAt: v.number(), // Last score computation timestamp
+    expiresAt: v.optional(v.number()), // When this leaderboard period ends (optional)
+  })
+    .index('by_leaderboardId_score', ['leaderboardId', 'totalScore']) // Main query: get top songs
+    .index('by_period', ['period']), // Filter by period type
+
+  // User song submissions - User-submitted rankings
+  songSubmissions: defineTable({
+    userId: v.id('users'), // Submitter
+    leaderboardId: v.string(), // Period ID (e.g., "2025-01")
+    submissionType: v.union(
+      v.literal('top5'),
+      v.literal('top10'),
+      v.literal('top15'),
+      v.literal('top25')
+    ),
+    rankedSongs: v.array(v.object({
+      spotifyTrackId: v.string(),
+      title: v.string(),
+      artist: v.string(),
+      rank: v.number(), // 1-based rank
+      albumCover: v.string(),
+    })),
+    upvoteCount: v.number(), // Current upvote count
+    upvoters: v.optional(v.array(v.id('users'))), // List of users who upvoted
+    isHighQuality: v.boolean(), // Admin-flagged quality submissions (bonus multiplier)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId_leaderboard', ['userId', 'leaderboardId']) // User's submissions per period
+    .index('by_leaderboardId_upvotes', ['leaderboardId', 'upvoteCount']) // Trending submissions
+    .index('by_leaderboardId_createdAt', ['leaderboardId', 'createdAt']), // Recent submissions
+
+  // Submission votes - Track who voted on which submission
+  submissionVotes: defineTable({
+    userId: v.id('users'), // Voter
+    submissionId: v.id('songSubmissions'), // Submission being voted on
+    voteType: v.union(
+      v.literal('upvote'),
+      v.literal('downvote')
+    ),
+    createdAt: v.number(),
+  })
+    .index('by_submissionId_userId', ['submissionId', 'userId']) // Check if user voted
+    .index('by_submissionId', ['submissionId']), // Get all votes for submission
 })

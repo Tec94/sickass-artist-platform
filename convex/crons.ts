@@ -43,4 +43,11 @@ crons.interval(
   internal.quests.cleanupExpiredQuests
 )
 
+// Leaderboard computation cron
+crons.interval(
+  'hourly-leaderboard-computation',
+  { hours: 1 }, // Every hour
+  internal.leaderboard.hourlyLeaderboardComputation
+)
+
 export default crons;
