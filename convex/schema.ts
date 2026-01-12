@@ -773,4 +773,237 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_product', ['productId'])
     .index('by_user_product', ['userId', 'productId']),
+
+  // ==================== GAMIFICATION SYSTEM ====================
+
+  // User rewards summary (cached, updated hourly)
+  userRewards: defineTable({
+    userId: v.id('users'),
+    totalPoints: v.number(),        // Total lifetime points earned
+    availablePoints: v.number(),    // Points available to spend
+    redeemedPoints: v.number(),     // Total points spent on rewards
+    currentStreak: v.number(),      // Days in current login streak
+    maxStreak: v.number(),          // Longest streak achieved ever
+    lastInteractionDate: v.number(), // Last action timestamp (milliseconds)
+    lastLoginDate: v.string(),      // ISO date string (YYYY-MM-DD) of last login
+    unseenMilestones: v.array(v.string()), // Badge IDs earned but not shown
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_totalPoints', ['totalPoints']) // Leaderboard ranking
+    .index('by_currentStreak', ['currentStreak']), // Streak leaderboard
+
+  // Immutable transaction log (use for auditing & analytics)
+  pointTransactions: defineTable({
+    userId: v.id('users'),
+    amount: v.number(),              // +/- points (can be negative for spending)
+    type: v.union(
+      v.literal('thread_post'),      // Forum thread creation
+      v.literal('forum_reply'),      // Forum reply
+      v.literal('chat_message'),     // Chat message sent
+      v.literal('gallery_like'),     // Liked gallery content
+      v.literal('ugc_like'),         // Liked UGC content
+      v.literal('event_checkin'),    // Checked into IRL event
+      v.literal('ticket_purchase'),  // Bought ticket
+      v.literal('livestream_join'),  // Joined online livestream event
+      v.literal('quest_complete'),   // Completed a quest
+      v.literal('daily_bonus'),      // Daily login bonus
+      v.literal('streak_bonus'),     // Streak milestone bonus
+      v.literal('redemption'),       // Points spent on reward (negative)
+      v.literal('admin_adjust'),     // Admin manual adjustment
+      v.literal('refund')            // Points refunded
+    ),
+    description: v.string(),         // "Earned +10 for forum reply"
+    relatedContentId: v.optional(v.string()), // Link to thread, event, etc
+    metadata: v.optional(v.object({
+      streakMultiplier: v.optional(v.number()), // 1.1, 1.2, etc
+      questId: v.optional(v.id('quests')),
+      eventId: v.optional(v.id('events')),
+      ticketPrice: v.optional(v.number()),
+      requirementsMet: v.optional(v.boolean()), // Did user meet all conditions?
+    })),
+    idempotencyKey: v.string(),     // Prevent duplicate transactions
+    createdAt: v.number(),
+  })
+    .index('by_userId_createdAt', ['userId', 'createdAt']) // Audit trail
+    .index('by_type', ['type', 'createdAt']) // Analytics queries
+    .index('by_idempotency', ['userId', 'idempotencyKey']), // Deduplication
+
+  // Quest catalog (created & managed by admins)
+  quests: defineTable({
+    questId: v.string(),             // Unique identifier (daily_login_001, weekly_forum_02)
+    type: v.union(
+      v.literal('daily'),            // Resets at midnight UTC
+      v.literal('weekly'),           // Resets Sunday midnight UTC
+      v.literal('milestone'),        // One-time only, never resets
+      v.literal('seasonal'),         // Limited-time event
+      v.literal('challenge')         // Community-wide goal
+    ),
+    name: v.string(),                // "Morning Ritual" (max 50 chars)
+    description: v.string(),         // "Post in the forum before 9 AM" (max 200 chars)
+    icon: v.string(),                // URL or emoji string
+    rewardPoints: v.number(),        // Points for completing
+    targetValue: v.number(),         // Goal: post 1 thread, react 10 times, etc
+    progressType: v.union(
+      v.literal('single'),           // One-time task (post 1 thread = complete)
+      v.literal('cumulative')        // Repeating task (react 10 times total)
+    ),
+    category: v.union(
+      v.literal('social'),           // Forum, chat, reactions
+      v.literal('creation'),         // Gallery, UGC, threads
+      v.literal('commerce'),         // Tickets, merch
+      v.literal('events'),           // Event attendance
+      v.literal('engagement'),       // Likes, votes, follows
+      v.literal('streak')            // Login streaks
+    ),
+    requirements: v.optional(v.object({
+      minFanTier: v.optional(v.union(
+        v.literal('bronze'),
+        v.literal('silver'),
+        v.literal('gold'),
+        v.literal('platinum')
+      )),
+      excludeRoles: v.optional(v.array(v.string())), // ['artist', 'admin']
+      minAccountAgeDays: v.optional(v.number()), // Must have account >14 days
+    })),
+    isActive: v.boolean(),           // Can new users start this quest?
+    startsAt: v.number(),            // Quest availability (milliseconds)
+    endsAt: v.number(),              // Quest expires (milliseconds)
+    priority: v.number(),            // Display order (1=top)
+    createdAt: v.number(),
+  })
+    .index('by_type_active', ['type', 'isActive', 'priority'])
+    .index('by_category', ['category'])
+    .index('by_endsAt', ['endsAt']), // Find expiring quests
+
+  // User's progress on individual quests
+  questProgress: defineTable({
+    userId: v.id('users'),
+    questId: v.id('quests'),
+    currentProgress: v.number(),     // 0/1, 5/10, 0/5 etc
+    isCompleted: v.boolean(),        // Has user finished quest?
+    completedAt: v.optional(v.number()),
+    pointsClaimed: v.boolean(),      // Have points been awarded?
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),           // When user was assigned this quest
+    expiresAt: v.number(),           // Quest reset time (daily midnight, weekly Sunday, etc)
+  })
+    .index('by_userId_active', ['userId', 'isCompleted', 'expiresAt'])
+    .index('by_questId_active', ['questId', 'isCompleted']),
+
+  // Streak tracking & milestones
+  streakBonus: defineTable({
+    userId: v.id('users'),
+    currentStreak: v.number(),       // Days 0-999
+    maxStreak: v.number(),           // Best ever achieved
+    lastInteractionDate: v.string(), // ISO date (YYYY-MM-DD) in user's timezone
+    streakStartDate: v.string(),     // ISO date when current streak began
+    lastBreakDate: v.optional(v.string()), // ISO date of last streak break
+    breakReason: v.optional(v.union(
+      v.literal('missed_day'),
+      v.literal('manual_reset'),
+      v.literal('admin_reset'),
+      v.literal('seasonal_reset')
+    )),
+    hasStreakFreeze: v.boolean(),    // Can user use streak freeze power-up? (earned at 7-day)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_currentStreak', ['currentStreak']) // Streak leaderboard
+    .index('by_maxStreak', ['maxStreak']), // "All-time streaks"
+
+  // Milestone rewards for streaks (1-time per user)
+  streakMilestones: defineTable({
+    day: v.number(),                 // 7, 14, 30, 60, 90, 180, 365, 730
+    rewardPoints: v.number(),        // 50, 100, 200, 400, 500, 1000, 2000, 5000
+    rewardBadgeId: v.optional(v.string()), // Badge to unlock
+    description: v.string(),         // "7-day streak champion"
+  })
+    .index('by_day', ['day']),
+
+  userStreakMilestones: defineTable({
+    userId: v.id('users'),
+    day: v.number(),
+    pointsAwarded: v.number(),
+    badgeId: v.optional(v.string()),
+    awardedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_userId_day', ['userId', 'day']), // Prevent double-award
+
+  // Redeemable rewards catalog (admin-managed)
+  rewards: defineTable({
+    rewardId: v.string(),
+    name: v.string(), // "10% Off Merch" (max 100 chars)
+    description: v.string(), // Full description (max 500 chars)
+    category: v.union(
+      v.literal('discount'), // Coupons
+      v.literal('physical'), // Merch, signed items
+      v.literal('digital'), // Exclusive content, NFTs
+      v.literal('experience'), // Meet & greet, VIP access
+      v.literal('feature') // Ad removal, profile unlock
+    ),
+    pointCost: v.number(),
+    stock: v.optional(v.number()), // null = unlimited stock
+    stockUsed: v.optional(v.number()), // Track what's been redeemed
+    expiresAt: v.optional(v.number()), // When reward expires (milliseconds)
+    redeemCode: v.optional(v.string()), // Template: MERCH2025-{{random}}
+    metadata: v.optional(v.object({
+      discountPercent: v.optional(v.number()), // 10, 20, 50
+      discountAmount: v.optional(v.number()), // In cents
+      merchantUrl: v.optional(v.string()),
+      shippingRequired: v.optional(v.boolean()),
+      estimatedDeliveryDays: v.optional(v.number()),
+    })),
+    imageUrl: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_category_active', ['category', 'isActive'])
+    .index('by_pointCost', ['pointCost']), // "Sort by price"
+
+  // User redemption history & fulfillment
+  userRedemptions: defineTable({
+    userId: v.id('users'),
+    rewardId: v.id('rewards'),
+    pointsSpent: v.number(),
+    redeemCode: v.optional(v.string()), // Unique code issued to user
+    status: v.union(
+      v.literal('pending'), // Awaiting admin review
+      v.literal('approved'), // Admin confirmed
+      v.literal('completed'), // Reward sent/delivered
+      v.literal('expired'), // Time limit passed
+      v.literal('refunded'), // Points returned
+      v.literal('failed') // Out of stock, couldn't fulfill
+    ),
+    failureReason: v.optional(v.union(
+      v.literal('out_of_stock'),
+      v.literal('reward_expired'),
+      v.literal('user_cancelled'),
+      v.literal('inventory_error')
+    )),
+    deliveryAddress: v.optional(v.object({
+      name: v.string(),
+      address: v.string(),
+      city: v.string(),
+      state: v.string(),
+      zip: v.string(),
+      country: v.string(),
+    })),
+    shipmentTrackingId: v.optional(v.string()),
+    shipmentUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()), // Time limit to claim reward
+    notes: v.optional(v.string()), // Admin notes
+    idempotencyKey: v.string(), // Prevent duplicate redemptions
+    createdAt: v.number(),
+    approvedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_userId_status', ['userId', 'status', 'createdAt'])
+    .index('by_rewardId', ['rewardId'])
+    .index('by_status', ['status']) // Admin view all pending
+    .index('by_idempotency', ['userId', 'idempotencyKey']),
 })
