@@ -50,4 +50,11 @@ crons.interval(
   internal.leaderboard.hourlyLeaderboardComputation
 )
 
+// Instagram sync cron - Every 4 hours
+crons.interval(
+  'instagram-sync',
+  { hours: 4 }, // Every 4 hours
+  internal.instagram.syncInstagramPostsInternal
+)
+
 export default crons;
