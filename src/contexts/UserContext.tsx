@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, ReactNode, useEffect, useState, useContext } from 'react'
+import { createContext, ReactNode, useEffect, useRef, useState, useContext } from 'react'
 import { useUser as useClerkUser, useClerk } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -31,9 +31,11 @@ export function UserProvider({ children }: UserProviderProps) {
   const { signOut: clerkSignOut } = useClerk()
   const [userProfile, setUserProfile] = useState<Doc<'users'> | null>(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
+  const hasRecordedLoginRef = useRef(false)
   
   // Convex mutations & queries
   const createUserMutation = useMutation(api.users.create)
+  const recordLoginMutation = useMutation(api.users.recordLogin)
   const getUserQuery = useQuery(
     api.users.getByClerkId,
     isSignedIn && user?.id ? { clerkId: user.id } : 'skip'
@@ -68,12 +70,22 @@ export function UserProvider({ children }: UserProviderProps) {
     initializeUser()
   }, [isSignedIn, user, isLoaded, createUserMutation, getUserQuery])
   
-  // Set userProfile from query
+  // Set userProfile from query and record login (once per session)
   useEffect(() => {
-    if (getUserQuery !== undefined) {
+    if (getUserQuery !== undefined && getUserQuery !== null) {
       setUserProfile(getUserQuery)
+
+      if (!hasRecordedLoginRef.current) {
+        hasRecordedLoginRef.current = true
+        recordLoginMutation({ userId: getUserQuery._id }).catch((err) =>
+          console.error('Failed to record login:', err)
+        )
+      }
+    } else if (getUserQuery === null) {
+      setUserProfile(null)
+      hasRecordedLoginRef.current = false
     }
-  }, [getUserQuery])
+  }, [getUserQuery, recordLoginMutation])
   
   const signOut = async () => {
     await clerkSignOut()

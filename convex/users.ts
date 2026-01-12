@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import { api } from "./_generated/api";
 
 const VALID_ROLES = ["artist", "admin", "mod", "crew", "fan"] as const;
 const VALID_FAN_TIERS = ["bronze", "silver", "gold", "platinum"] as const;
@@ -336,5 +337,30 @@ export const addBadge = mutation({
     });
 
     return updated;
+  },
+});
+
+export const recordLogin = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      lastSignIn: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    try {
+      await ctx.runMutation(api.streaks.updateStreak, {
+        userId: args.userId,
+      });
+    } catch (error) {
+      console.error("Failed to update streak:", error);
+    }
+
+    return { success: true };
   },
 });

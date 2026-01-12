@@ -48,3 +48,46 @@ export const promoteToAdmin = mutation({
     },
 });
 
+/**
+ * Initialize streak milestones
+ * Run once: npx convex run dev:initializeStreakMilestones
+ */
+export const initializeStreakMilestones = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const milestones = [
+            { day: 7, points: 50, description: "7-day streak achievement!" },
+            { day: 14, points: 100, description: "14-day streak achievement!" },
+            { day: 30, points: 200, description: "30-day streak achievement!" },
+            { day: 60, points: 400, description: "60-day streak achievement!" },
+            { day: 90, points: 500, description: "90-day streak achievement!" },
+            { day: 180, points: 1000, description: "180-day streak achievement!" },
+            { day: 365, points: 2000, description: "365-day streak achievement!" },
+            { day: 730, points: 5000, description: "730-day streak achievement!" },
+        ];
+
+        let created = 0;
+        let skipped = 0;
+
+        for (const milestone of milestones) {
+            const existing = await ctx.db
+                .query("streakMilestones")
+                .withIndex("by_day", (q) => q.eq("day", milestone.day))
+                .first();
+
+            if (!existing) {
+                await ctx.db.insert("streakMilestones", {
+                    day: milestone.day,
+                    rewardPoints: milestone.points,
+                    description: milestone.description,
+                });
+                created++;
+            } else {
+                skipped++;
+            }
+        }
+
+        return { success: true, created, skipped, total: milestones.length };
+    },
+});
+
