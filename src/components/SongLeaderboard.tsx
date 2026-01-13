@@ -2,6 +2,9 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import type { Doc } from '../../convex/_generated/dataModel'
+
+type LeaderboardEntry = Doc<'songLeaderboard'> & { rank: number }
 
 export const SongLeaderboard = ({
   period = 'monthly',
@@ -59,7 +62,7 @@ export const SongLeaderboard = ({
             </p>
           </div>
         ) : (
-          leaderboard.map((entry, index) => (
+          leaderboard.map((entry: LeaderboardEntry, index: number) => (
             <motion.div
               key={entry._id}
               className="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition flex items-center gap-4"

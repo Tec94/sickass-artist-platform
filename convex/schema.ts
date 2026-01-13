@@ -1069,4 +1069,32 @@ export default defineSchema({
   })
     .index('by_submissionId_userId', ['submissionId', 'userId']) // Check if user voted
     .index('by_submissionId', ['submissionId']), // Get all votes for submission
+
+  // ==================== INSTAGRAM INTEGRATION ====================
+
+  // Instagram posts - Synced from Instagram Business Account
+  instagramPosts: defineTable({
+    igPostId: v.string(), // Instagram post ID (unique)
+    igAccountId: v.string(), // Instagram Business Account ID
+    mediaUrl: v.string(), // Full-size media URL
+    thumbnailUrl: v.string(), // Thumbnail URL (for grid display)
+    caption: v.string(), // Post caption/description
+    mediaType: v.string(), // "image", "video", or "carousel"
+    likeCount: v.number(), // Like count at sync time
+    commentCount: v.number(), // Comment count at sync time
+    viewCount: v.optional(v.number()), // View count (for videos)
+    igLink: v.string(), // Link to Instagram post
+    syncedAt: v.number(), // Last sync timestamp
+    igSourceCreatedAt: v.number(), // When post was created on Instagram
+    cacheExpiresAt: v.number(), // When cache expires (24h default)
+    isFeatured: v.boolean(), // Admin-curated featured posts
+    displayOrder: v.optional(v.number()), // Order for featured posts (lower = higher priority)
+    isActive: v.boolean(), // Soft delete flag
+    createdAt: v.number(), // When added to DB
+    updatedAt: v.optional(v.number()), // Last update timestamp
+  })
+    .index('by_igPostId', ['igPostId']) // Lookup by Instagram ID
+    .index('by_featured', ['isFeatured', 'displayOrder']) // Get featured posts in order
+    .index('by_syncedAt', ['syncedAt']) // Get recently synced posts
+    .index('by_igSourceCreatedAt', ['igSourceCreatedAt']), // Get posts by Instagram creation date
 })

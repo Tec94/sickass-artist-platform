@@ -8,6 +8,7 @@ import {
   AdminForum, 
   AdminQueues, 
   AdminUsers, 
+  AdminInstagram,
   AdminSystem 
 } from '../components/Admin'
 import type { AdminTab } from '../components/Admin/AdminOverview'
@@ -20,6 +21,7 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
   { id: 'queues', label: 'Queues', icon: 'solar:clock-circle-linear' },
   { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
+  { id: 'instagram', label: 'Instagram', icon: 'solar:camera-linear' },
   { id: 'system', label: 'System', icon: 'solar:settings-linear' },
 ]
 
@@ -63,6 +65,8 @@ export function AdminDashboard() {
         return <AdminQueues />
       case 'users':
         return <AdminUsers />
+      case 'instagram':
+        return <AdminInstagram />
       case 'system':
         return <AdminSystem />
       default:
