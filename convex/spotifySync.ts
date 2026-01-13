@@ -4,6 +4,9 @@ import { internalAction } from './_generated/server'
 import { internal } from './_generated/api'
 
 declare const process: { env: Record<string, string | undefined> }
+declare const Buffer: {
+  from(data: string, encoding?: string): { toString(encoding: string): string }
+}
 
 type SyncResult = {
   success?: boolean

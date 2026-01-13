@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import type { Doc } from '../../../convex/_generated/dataModel'
 import { useState } from 'react'
 
 export const AdminSpotify = () => {
@@ -80,7 +81,7 @@ export const AdminSpotify = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {tracks.map((track) => (
+            {tracks.map((track: Doc<'spotifySongs'>) => (
               <div
                 key={track._id}
                 className="flex items-center gap-4 p-3 bg-gray-900 rounded-lg"
