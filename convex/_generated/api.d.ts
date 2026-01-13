@@ -20,6 +20,8 @@ import type * as forum from "../forum.js";
 import type * as gallery from "../gallery.js";
 import type * as helpers from "../helpers.js";
 import type * as httpActions from "../httpActions.js";
+import type * as instagram from "../instagram.js";
+import type * as instagramSync from "../instagramSync.js";
 import type * as inventoryRepair from "../inventoryRepair.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as merch from "../merch.js";
@@ -58,6 +60,8 @@ declare const fullApi: ApiFromModules<{
   gallery: typeof gallery;
   helpers: typeof helpers;
   httpActions: typeof httpActions;
+  instagram: typeof instagram;
+  instagramSync: typeof instagramSync;
   inventoryRepair: typeof inventoryRepair;
   leaderboard: typeof leaderboard;
   merch: typeof merch;

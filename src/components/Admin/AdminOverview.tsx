@@ -2,7 +2,7 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
-export type AdminTab = 'overview' | 'merch' | 'events' | 'chat' | 'forum' | 'queues' | 'users' | 'system'
+export type AdminTab = 'overview' | 'merch' | 'events' | 'chat' | 'forum' | 'queues' | 'users' | 'instagram' | 'system'
 
 interface AdminOverviewProps {
   onNavigate: (tab: AdminTab) => void
