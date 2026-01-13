@@ -9,6 +9,7 @@ import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
 import { Gallery } from './pages/Gallery'
+import { SocialGalleryPage } from './pages/SocialGalleryPage'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { Chat } from './pages/Chat'
@@ -138,6 +139,7 @@ function AppContent() {
                   <Route path="store" element={<Merch />} />
                   <Route path="music" element={<ErrorBoundary level="section"><Music /></ErrorBoundary>} />
                   <Route path="gallery" element={<ErrorBoundary level="section"><Gallery /></ErrorBoundary>} />
+                  <Route path="social" element={<ErrorBoundary level="section"><SocialGalleryPage /></ErrorBoundary>} />
                   <Route path="forum" element={
                     <ProtectedRoute>
                       <Forum />
