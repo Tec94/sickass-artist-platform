@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Grid, List } from 'lucide-react'
 import { EventCard } from '../components/events/EventCard'
 import { EventFilters } from '../components/events/EventFilters'
 import { EventSearch } from '../components/events/EventSearch'
@@ -52,52 +53,46 @@ export function Events() {
   return (
     <div className="events-layout h-full flex flex-col">
       {/* Header */}
-      <header ref={animate} data-animate className="events-header mb-6">
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="header-meta">
-            <h1 className="h1-title">Events</h1>
-            <p className="sub-text">Discover upcoming shows and experiences</p>
-          </div>
-
-          {/* Search Bar */}
-          <EventSearch placeholder="Search events by title, venue, or city..." />
-        </div>
-
-        {/* View Toggle */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">{total} events</span>
-            {filters.city && (
-              <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">
-                in {filters.city}
-              </span>
-            )}
+      {/* Header */}
+      <header ref={animate} data-animate className="events-header mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide">Tour & Events</h1>
+             <p className="text-zinc-400 mt-2">Catch ROA WOLVES live in a city near you.</p>
           </div>
           
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-red-500/20 text-red-500'
-                  : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
-              aria-label="Grid view"
-            >
-              <iconify-icon icon="solar:gallery-bold"></iconify-icon>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-red-500/20 text-red-500'
-                  : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
-              aria-label="List view"
-            >
-              <iconify-icon icon="solar:list-bold"></iconify-icon>
-            </button>
+          <div className="flex items-center gap-4">
+             {/* View Toggle */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-1 flex">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-sm transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                <Grid size={20} />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-sm transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                <List size={20} />
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Search Bar - Moved below title */}
+        <div className="max-w-xl">
+           <EventSearch placeholder="Search events by title, venue, or city..." />
+        </div>
+        
+        {/* Active Filters Summary */}
+        <div className="flex items-center gap-2 mt-4">
+           <span className="text-sm text-gray-400">{total} events</span>
+           {filters.city && (
+             <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">
+               in {filters.city}
+             </span>
+           )}
         </div>
       </header>
 

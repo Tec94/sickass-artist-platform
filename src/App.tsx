@@ -3,19 +3,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { CartProvider } from './contexts/CartContext'
-import { GearPage } from './pages/GearPage'
-import { Explore } from './pages/Explore'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
 import { Gallery } from './pages/Gallery'
-import { SocialGalleryPage } from './pages/SocialGalleryPage'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { Chat } from './pages/Chat'
-import { Music } from './pages/Music'
 import { ParallaxBackground } from './components/ParallaxBackground'
-import { NavbarFallback } from './components/NavbarFallback'
+import Header from './components/Header'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
 import { FlashlightEffect } from './components/Effects/FlashlightEffect'
 import { EventDetailSkeleton, PurchaseLoadingState } from './components/events/Skeletons'
@@ -96,10 +92,13 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
   )
 })))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
-const RewardShop = lazy(() => import('./pages/RewardShop').then(m => ({ default: m.RewardShop })))
-const AdminRedemptions = lazy(() => import('./pages/AdminRedemptions').then(m => ({ default: m.AdminRedemptions })))
-const AdminRewards = lazy(() => import('./pages/AdminRewards').then(m => ({ default: m.AdminRewards })))
-const AdminPoints = lazy(() => import('./pages/AdminPoints').then(m => ({ default: m.AdminPoints })))
+const AdminRedemptions = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRedemptions })))
+const AdminRewards = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRewards })))
+const AdminPoints = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminPoints })))
+
+const Ranking = lazy(() => import('./pages/Ranking').then(m => ({ default: m.Ranking })))
+
+import Footer from './components/Footer'
 
 function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
@@ -108,61 +107,107 @@ function AppContent() {
     <>
       <FlashlightEffect className="app-root">
         <ParallaxBackground />
-        <NavbarFallback />
+        <Header />
                 <style>{`
                   .app-root {
                     height: 100vh;
                     width: 100vw;
                     display: flex;
                     flex-direction: column;
-                    overflow: hidden;
+                    overflow: auto; /* Changed from hidden to auto to allow scrolling with footer */
                   }
                 `}</style>
+                <div className="flex-1 flex flex-col min-h-screen">
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
-                <Route path="/" element={<GearPage />}>
-                  <Route path="R" element={
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="text-white p-8 text-center">Loading Admin...</div>}>
                         <AdminDashboard />
                       </Suspense>
                     </ProtectedRoute>
-                  } />
-                  <Route path="dashboard" element={
-                    <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
-                      <ErrorBoundary level="section">
-                        <Dashboard />
-                      </ErrorBoundary>
+                  } 
+                />
+                
+                {/* Main Dashboard */}
+                <Route path="/dashboard" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading Dashboard...</div>}>
+                    <ErrorBoundary level="section">
+                      <Dashboard />
+                    </ErrorBoundary>
+                  </Suspense>
+                } />
+
+                {/* Store Routes */}
+                <Route path="/store" element={<Merch />} />
+                <Route path="/store/product/:id" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
+                    <MerchDetail />
+                  </Suspense>
+                } />
+                <Route path="/store/cart" element={<ShoppingCart />} />
+                <Route path="/store/checkout" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <Checkout />
+                  </Suspense>
+                } />
+                <Route path="/store/confirmation" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderConfirmation />
+                  </Suspense>
+                } />
+                <Route path="/store/orders" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderHistory />
+                  </Suspense>
+                } />
+                <Route path="/store/orders/:orderNumber" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
+                    <OrderDetail />
+                  </Suspense>
+                } />
+                <Route path="/store/drops" element={<DropsPage />} />
+
+                {/* Events Routes */}
+                <Route path="/events" element={<ErrorBoundary level="section"><Events /></ErrorBoundary>} />
+                <Route path="/events/:eventId" element={
+                  <Suspense fallback={<EventDetailSkeleton />}>
+                    <EventDetail />
+                  </Suspense>
+                } />
+                <Route path="/events/confirmation" element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<PurchaseLoadingState />}>
+                      <ConfirmationPage />
                     </Suspense>
-                  } />
-                  <Route path="events" element={<ErrorBoundary level="section"><Events /></ErrorBoundary>} />
-                  <Route path="store" element={<Merch />} />
-                  <Route path="music" element={<ErrorBoundary level="section"><Music /></ErrorBoundary>} />
-                  <Route path="gallery" element={<ErrorBoundary level="section"><Gallery /></ErrorBoundary>} />
-                  <Route path="social" element={<ErrorBoundary level="section"><SocialGalleryPage /></ErrorBoundary>} />
-                  <Route path="forum" element={
-                    <ProtectedRoute>
-                      <Forum />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="forum/thread/:threadId" element={
-                    <ProtectedRoute>
-                      <ForumThreadDetail />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="chat" element={
-                    <ProtectedRoute>
-                      <Chat />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="rewards" element={
-                    <ProtectedRoute>
-                      <RewardShop />
-                    </ProtectedRoute>
-                  } />
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                </Route>
-                <Route path="/explore" element={<Explore />} />
+                  </ProtectedRoute>
+                } />
+
+                {/* Other Main Sections */}
+                <Route path="/gallery" element={<ErrorBoundary level="section"><Gallery /></ErrorBoundary>} />
+                <Route path="/forum" element={
+                  <ProtectedRoute>
+                    <Forum />
+                  </ProtectedRoute>
+                } />
+                <Route path="/forum/thread/:threadId" element={
+                  <ProtectedRoute>
+                    <ForumThreadDetail />
+                  </ProtectedRoute>
+                } />
+                <Route path="/chat" element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                } />
+                <Route path="/ranking" element={
+                   <Ranking />
+                } />
+
+                {/* Profile Routes */}
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
@@ -178,58 +223,8 @@ function AppContent() {
                     <ProfileUser />
                   </ProtectedRoute>
                 } />
-                <Route path="/forum" element={
-                  <ProtectedRoute>
-                    <Forum />
-                  </ProtectedRoute>
-                } />
-                <Route path="/forum/thread/:threadId" element={
-                  <ProtectedRoute>
-                    <ForumThreadDetail />
-                  </ProtectedRoute>
-                } />
-                <Route path="/events" element={<Events />} />
-                <Route path="/music" element={<Music />} />
-                <Route path="/merch" element={<Merch />} />
-                <Route path="/merch/drops" element={<DropsPage />} />
-                <Route path="/merch/orders" element={
-                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
-                    <OrderHistory />
-                  </Suspense>
-                } />
-                <Route path="/merch/orders/:orderNumber" element={
-                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
-                    <OrderDetail />
-                  </Suspense>
-                } />
-                <Route path="/merch/cart" element={<ShoppingCart />} />
-                <Route path="/merch/checkout" element={
-                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
-                    <Checkout />
-                  </Suspense>
-                } />
-                <Route path="/merch/confirmation" element={
-                  <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
-                    <OrderConfirmation />
-                  </Suspense>
-                } />
-                <Route path="/merch/:productId" element={
-                  <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
-                    <MerchDetail />
-                  </Suspense>
-                } />
-                <Route path="/events/:eventId" element={
-                  <Suspense fallback={<EventDetailSkeleton />}>
-                    <EventDetail />
-                  </Suspense>
-                } />
-                <Route path="/events/confirmation" element={
-                  <ProtectedRoute>
-                    <Suspense fallback={<PurchaseLoadingState />}>
-                      <ConfirmationPage />
-                    </Suspense>
-                  </ProtectedRoute>
-                } />
+
+                {/* Admin Sub-routes */}
                 <Route path="/admin/events" element={
                   <ProtectedRoute>
                     <AdminEvents />
@@ -255,9 +250,15 @@ function AppContent() {
                     <AdminPoints />
                   </ProtectedRoute>
                 } />
+
                 <Route path="/test-errors" element={<TestErrorPage />} />
+                
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Suspense>
+            <Footer />
+            </div>
           </FlashlightEffect>
 
         {/* Offline Indicator */}

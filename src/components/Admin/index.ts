@@ -7,3 +7,8 @@ export { AdminQueues } from './AdminQueues'
 export { AdminUsers } from './AdminUsers'
 export { AdminSystem } from './AdminSystem'
 export { AdminInstagram } from './AdminInstagram'
+export { AdminPoints } from '../../pages/AdminPoints'
+export { AdminRewards } from '../../pages/AdminRewards'
+export { AdminRedemptions } from '../../pages/AdminRedemptions'
+export { AdminQuests } from './AdminQuests'
+

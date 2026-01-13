@@ -1,9 +1,9 @@
 import { useCallback, useState, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 // Components
-import { MerchNavbar } from '../components/Merch/MerchNavbar'
 import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { MerchCartDrawer } from '../components/Merch/MerchCartDrawer'
@@ -13,6 +13,7 @@ import { showToast } from '../lib/toast'
 
 export function Merch() {
   const cart = useQuery(api.cart.getCart)
+  const [searchParams] = useSearchParams()
   
   // State
   const [activeCategory, setActiveCategory] = useState('')
@@ -20,16 +21,16 @@ export function Merch() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   
-  // Fetch all products (for client-side filtering to match reference behavior exactly)
-  // In a real app with many products, this would be server-side filtered
+  // Search query from URL
+  const searchQuery = searchParams.get('search') || ''
+  
+  // Fetch all products
   const productsQuery = useQuery(api.merch.getProducts, { 
     page: 0, 
-    pageSize: 100, // Fetch more to filter locally
+    pageSize: 100,
     sortBy: 'newest' as const
   })
   
-  const cartCount = cart?.itemCount || 0
-
   const handleCollectionToggle = useCallback((collection: string) => {
     setSelectedCollections(prev => 
       prev.includes(collection)
@@ -38,15 +39,23 @@ export function Merch() {
     )
   }, [])
 
-  // Filter Logic - mimicking the client-side logic from reference App.tsx
+  // Filter Logic
   const filteredProducts = useMemo(() => {
     if (!productsQuery?.items) return []
     
     let filtered = productsQuery.items
 
+    // Search Filtering
+    if (searchQuery) {
+        filtered = filtered.filter(p => 
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            p.description.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    }
+
     // Category Filtering
     if (activeCategory === 'new arrivals') {
-        // Just show all for now if special category
+        // Show all
     } else if (activeCategory) {
       filtered = filtered.filter(p => p.category === activeCategory)
     }
@@ -62,21 +71,17 @@ export function Merch() {
     filtered = filtered.filter(p => (p.price / 100) <= maxPrice)
 
     return filtered
-  }, [productsQuery, activeCategory, maxPrice, selectedCollections])
+  }, [productsQuery, activeCategory, maxPrice, selectedCollections, searchQuery])
 
   return (
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
-      <MerchNavbar 
-        cartCount={cartCount} 
-        onOpenCart={() => setIsCartOpen(true)}
-        onGoHome={() => setActiveCategory('')}
-      />
+      {/* Note: Header contains the Navbar now, so MerchNavbar is removed */}
       
-      <main className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row pb-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-fade-in">
+          <div className="flex flex-col md:flex-row gap-8">
             
             {/* Sidebar */}
-            <div className="hidden md:block w-64 flex-shrink-0 pr-8 pt-8 sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto">
+            <div className="hidden md:block w-64 flex-shrink-0 sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar">
                 <MerchSidebar 
                     activeCategory={activeCategory} 
                     onCategoryChange={setActiveCategory} 
@@ -88,11 +93,22 @@ export function Merch() {
             </div>
             
             {/* Main Content */}
-            <div className="flex-1 pt-8">
+            <div className="flex-1">
+              {/* Virtual Queue Banner (from roa-wolves) */}
+              <div className="bg-gradient-to-r from-red-900/20 to-zinc-900 border border-red-900/30 p-4 mb-8 flex items-center justify-between">
+                <div>
+                  <h3 className="text-red-500 font-display font-bold uppercase tracking-wider text-sm">Upcoming Drop</h3>
+                  <p className="text-zinc-400 text-xs mt-1">Virtual queue opens in 2 days. Get ready.</p>
+                </div>
+                <button className="bg-zinc-800 text-white text-xs font-bold uppercase px-4 py-2 hover:bg-red-700 transition-colors">
+                  Set Reminder
+                </button>
+              </div>
+
               <div className="mb-8">
                 <div className="flex items-baseline justify-between mb-2">
                   <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-white">
-                    {activeCategory || 'All Products'}
+                    {searchQuery ? `Search: "${searchQuery}"` : (activeCategory || 'All Products')}
                   </h2>
                   <span className="text-sm text-gray-500">{filteredProducts.length} items</span>
                 </div>
@@ -136,6 +152,13 @@ export function Merch() {
                   </button>
                 </div>
               )}
+              
+              {/* Pagination / Load More (Visual only for now matching roa-wolves style) */}
+              <div className="mt-16 flex justify-center">
+                 <button className="text-zinc-500 hover:text-white uppercase text-xs tracking-[0.2em] border-b border-transparent hover:border-red-600 transition-all pb-1">
+                   Load More Products
+                 </button>
+              </div>
             </div>
           </div>
       </main>

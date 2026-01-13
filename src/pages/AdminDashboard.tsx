@@ -9,7 +9,11 @@ import {
   AdminQueues, 
   AdminUsers, 
   AdminInstagram,
-  AdminSystem 
+  AdminSystem,
+  AdminPoints,
+  AdminRewards,
+  AdminRedemptions,
+  AdminQuests
 } from '../components/Admin'
 import type { AdminTab } from '../components/Admin/AdminOverview'
 
@@ -19,8 +23,12 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'events', label: 'Events', icon: 'solar:calendar-linear' },
   { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
   { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
-  { id: 'queues', label: 'Queues', icon: 'solar:clock-circle-linear' },
+  { id: 'queues', label: 'Waitlist', icon: 'solar:clock-circle-linear' },
+  { id: 'quests', label: 'Quests', icon: 'solar:shield-star-linear' },
   { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
+  { id: 'points', label: 'Points & XP', icon: 'solar:star-linear' },
+  { id: 'rewards', label: 'Rewards', icon: 'solar:gift-linear' },
+  { id: 'redemptions', label: 'Redemptions', icon: 'solar:ticket-linear' },
   { id: 'instagram', label: 'Instagram', icon: 'solar:camera-linear' },
   { id: 'system', label: 'System', icon: 'solar:settings-linear' },
 ]
@@ -63,8 +71,16 @@ export function AdminDashboard() {
         return <AdminForum />
       case 'queues':
         return <AdminQueues />
+      case 'quests':
+        return <AdminQuests />
       case 'users':
         return <AdminUsers />
+      case 'points':
+        return <AdminPoints />
+      case 'rewards':
+        return <AdminRewards />
+      case 'redemptions':
+        return <AdminRedemptions />
       case 'instagram':
         return <AdminInstagram />
       case 'system':

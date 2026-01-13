@@ -29,14 +29,12 @@ export function Chat() {
   }
 
   return (
-    <div className="flex h-full w-full bg-[#0a0a0a] text-[#e0e0e0] font-sans selection:bg-[#3d1818]/50">
-
-
+    <div className="flex h-full w-full bg-zinc-900 text-zinc-200 font-sans selection:bg-red-900/30 animate-fade-in">
       {/* Channel Sidebar */}
-      <aside className="w-60 flex flex-col bg-[#0f0f0f] overflow-hidden border-r border-[#1a1a1a]">
-        <header className="h-12 px-4 flex items-center border-b border-[#1a1a1a] shadow-sm cursor-pointer hover:bg-[#1a1a1a] transition-colors">
-          <h1 className="font-bold text-white truncate text-[15px]">THE HUB CHAT</h1>
-          <iconify-icon icon="solar:alt-arrow-down-linear" className="ml-auto text-[#808080]"></iconify-icon>
+      <aside className="w-64 flex flex-col bg-zinc-950 overflow-hidden border-r border-zinc-800">
+        <header className="h-16 px-4 flex items-center border-b border-zinc-800 shadow-sm cursor-pointer hover:bg-zinc-900 transition-colors">
+          <h2 className="text-white font-bold font-display tracking-wide">ROA WOLVES Server</h2>
+          {/* <iconify-icon icon="solar:alt-arrow-down-linear" className="ml-auto text-zinc-500"></iconify-icon> */}
         </header>
 
         <div className="flex-1 overflow-y-auto no-scrollbar py-3">
@@ -49,42 +47,39 @@ export function Chat() {
         </div>
 
         {/* User Profile Bar */}
-        <section className="h-[52px] px-2 bg-[#0a0a0a] flex items-center gap-2 border-t border-[#1a1a1a]">
-          <div className="relative group cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-[#8b0000] flex items-center justify-center text-white text-xs font-bold">
-              {user.displayName?.[0] || 'U'}
-            </div>
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-[3px] border-[#0a0a0a] rounded-full"></div>
-          </div>
-          <div className="flex-1 min-width-0 leading-[1.2]">
-            <div className="text-white text-[13px] font-semibold truncate">{user.displayName}</div>
-            <div className="text-[11px] text-[#808080] truncate">Online</div>
-          </div>
-          <div className="flex items-center gap-0.5 text-[#808080]">
-            <button className="p-1.5 hover:bg-[#1a1a1a] rounded-md transition-colors"><iconify-icon icon="solar:microphone-bold" style={{ fontSize: '18px' }}></iconify-icon></button>
-            <button className="p-1.5 hover:bg-[#1a1a1a] rounded-md transition-colors"><iconify-icon icon="solar:headphones-round-bold" style={{ fontSize: '18px' }}></iconify-icon></button>
-            <button className="p-1.5 hover:bg-[#1a1a1a] rounded-md transition-colors"><iconify-icon icon="solar:settings-bold" style={{ fontSize: '18px' }}></iconify-icon></button>
-          </div>
+        <section className="p-3 bg-zinc-950/50 border-t border-zinc-800 flex items-center gap-2">
+           <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0">
+             {/* Use avatar if available */}
+             <div className="w-full h-full bg-zinc-700 flex items-center justify-center text-zinc-400 text-xs font-bold">
+               {user.displayName?.[0] || 'U'}
+             </div>
+           </div>
+           <div className="flex-1 min-w-0">
+             <div className="text-white text-xs font-bold truncate">{user.displayName}</div>
+             <div className="text-zinc-500 text-[10px]">Online</div>
+           </div>
+           <div className="flex gap-1 text-zinc-400">
+             <button className="hover:text-white p-1"><iconify-icon icon="solar:microphone-bold" style={{ fontSize: '14px' }}></iconify-icon></button>
+             <button className="hover:text-white p-1"><iconify-icon icon="solar:headphones-round-bold" style={{ fontSize: '14px' }}></iconify-icon></button>
+             <button className="hover:text-white p-1"><iconify-icon icon="solar:settings-bold" style={{ fontSize: '14px' }}></iconify-icon></button>
+           </div>
         </section>
       </aside>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col bg-[#111] min-w-0">
+      <main className="flex-1 flex flex-col bg-zinc-900 min-w-0">
         {selectedChannelId ? (
           <ChannelView channelId={selectedChannelId} />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-[#808080] p-8 text-center">
-             <div className="w-20 h-20 rounded-full bg-[#1a1a1a] flex items-center justify-center mb-4 text-[#8b0000]">
-               <iconify-icon icon="solar:chat-round-line-bold" style={{ fontSize: '40px', opacity: 0.5 }}></iconify-icon>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
+             <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center mb-4 text-zinc-600">
+               <iconify-icon icon="solar:chat-round-line-bold" style={{ fontSize: '40px' }}></iconify-icon>
              </div>
-             <h3 className="text-white text-lg font-bold">Welcome to the Hub</h3>
-             <p className="max-w-xs mt-1">Select a channel from the sidebar to join the conversation.</p>
+             <h3 className="text-white text-lg font-bold mb-1">Welcome to ROA WOLVES</h3>
+             <p className="max-w-xs text-sm">Select a channel from the sidebar to join the conversation.</p>
           </div>
         )}
       </main>
-
-      <style>{`
-      `}</style>
     </div>
   )
 }

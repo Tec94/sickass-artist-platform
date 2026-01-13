@@ -1,27 +1,21 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { ErrorBoundary, WidgetErrorBoundary } from '../components/ErrorBoundary'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
-import { 
-  TopMerchWidget,
-  TrendingForumWidget,
-  AnnouncementsWidget,
-  TrendingGalleryWidget,
-  ArtistMomentsWidget,
-  UpcomingEventsWidget
-} from '../components/Dashboard/DashboardWidgets'
+import { Ticket, Flame, MessageSquare, ArrowRight } from 'lucide-react'
 import { useAnalytics } from '../hooks/useAnalytics'
-import '../components/Dashboard/dashboard.css'
 
 export const Dashboard = () => {
   useAnalytics() // Track page views
-  const [isLoaded, setIsLoaded] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isLoaded, setIsLoaded] = useState(false)
 
   // Use the optimized dashboard data query
   const dashboardData = useQuery(api.dashboard.getDashboardData)
 
-  // Progressive rendering - delay secondary widgets
+  // Progressive rendering
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true)
@@ -29,98 +23,117 @@ export const Dashboard = () => {
     return () => clearTimeout(timer)
   }, [])
 
+  // Safely access data
+  const nextEvent = dashboardData?.upcomingEvents?.[0]
+  const topProduct = dashboardData?.topMerch?.[0]
+  // Trending forum posts might be in trendingForum array
+  const forumPosts = dashboardData?.trendingForum || []
+
   return (
-    <div className="dashboard-container">
+    <div className="animate-fade-in pb-20">
       {/* Hero Section - Always renders first */}
       <ErrorBoundary level="section" componentName="HeroSection">
         <HeroSection />
       </ErrorBoundary>
 
-      {/* Dashboard Grid */}
-      <div className="dashboard-grid">
-        {/* Top Row - Key Widgets */}
-        <WidgetErrorBoundary componentName="UpcomingEventsWidget">
-          <UpcomingEventsWidget data={dashboardData?.upcomingEvents} />
-        </WidgetErrorBoundary>
-
-        <WidgetErrorBoundary componentName="TrendingGalleryWidget">
-          <TrendingGalleryWidget data={dashboardData?.trendingGallery} />
-        </WidgetErrorBoundary>
-
-        <WidgetErrorBoundary componentName="TopMerchWidget">
-          <TopMerchWidget data={dashboardData?.topMerch} />
-        </WidgetErrorBoundary>
-
-        {/* Second Row - Deferred */}
-        {isLoaded && (
-          <>
-            <WidgetErrorBoundary componentName="TrendingForumWidget">
-              <TrendingForumWidget data={dashboardData?.trendingForum} />
-            </WidgetErrorBoundary>
-
-            <WidgetErrorBoundary componentName="AnnouncementsWidget">
-              <AnnouncementsWidget data={dashboardData?.recentAnnouncements} />
-            </WidgetErrorBoundary>
-
-            <WidgetErrorBoundary componentName="ArtistMomentsWidget">
-              <ArtistMomentsWidget data={dashboardData?.artistMoments} />
-            </WidgetErrorBoundary>
-          </>
-        )}
-      </div>
-
-      <style>{`
-        .dashboard-container {
-          height: 100%;
-          overflow-y: auto;
-          background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a0000 100%);
-          padding: 0;
-          margin: 0;
-          width: 100%;
-          scrollbar-width: thin;
-          scrollbar-color: var(--color-primary) transparent;
-        }
-
-        .dashboard-container::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .dashboard-container::-webkit-scrollbar-thumb {
-          background: var(--color-primary);
-          border-radius: 3px;
-        }
-
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-          padding: 24px;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        /* Tablet: 2 columns */
-        @media (min-width: 768px) and (max-width: 1199px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 20px;
-          }
-        }
-
-        /* Mobile: 1 column */
-        @media (max-width: 767px) {
-          .dashboard-container {
-            padding: 0;
-          }
+      {/* Widgets Grid - New Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-            padding: 16px;
-            gap: 16px;
-          }
-        }
-      `}</style>
+          {/* Next Event Widget */}
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
+                <Ticket className="text-red-600" /> Next Event
+              </h3>
+              <Link to="/events" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">View All</Link>
+            </div>
+            
+            {nextEvent ? (
+              <>
+                <div className="relative aspect-video bg-zinc-800 mb-4 overflow-hidden group">
+                   {nextEvent.imageUrl ? (
+                     <img src={nextEvent.imageUrl} alt="Event" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                   ) : (
+                     <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-600">No Image</div>
+                   )}
+                   <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1">
+                     Upcoming
+                   </div>
+                </div>
+                <h4 className="text-white font-bold text-lg mb-1">{nextEvent.title}</h4>
+                <p className="text-zinc-400 text-sm mb-4">{new Date(nextEvent.startAtUtc).toLocaleDateString()} • {nextEvent.city}</p>
+                <Link to={`/events/${nextEvent._id}`} className="mt-auto w-full border border-zinc-700 text-zinc-300 py-2 text-center text-sm font-bold uppercase hover:bg-white hover:text-black transition-colors">
+                  Details
+                </Link>
+              </>
+            ) : (
+              <div className="text-zinc-500 text-sm py-10 text-center">No upcoming events found.</div>
+            )}
+          </div>
+
+          {/* Trending Merch Widget */}
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
+                <Flame className="text-red-600" /> Hot Drop
+              </h3>
+              <Link to="/store" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">Shop All</Link>
+            </div>
+            
+            {topProduct ? (
+              <div className="flex gap-4 items-center">
+                <div className="w-24 h-32 bg-zinc-800 shrink-0 overflow-hidden">
+                  {topProduct.image ? (
+                    <img src={topProduct.image} alt="Product" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-zinc-800"></div>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-white font-bold mb-1">{topProduct.name}</h4>
+                  <p className="text-red-500 font-bold mb-2">${(topProduct.price / 100).toFixed(2)}</p>
+                  <div className="text-xs text-zinc-500 mb-3">Limited Stock Remaining</div>
+                  <Link to={`/store/product/${topProduct._id}`} className="text-xs font-bold uppercase text-white border-b border-red-600 pb-1 hover:text-red-500 transition-colors">
+                    Buy Now
+                  </Link>
+                </div>
+              </div>
+            ) : (
+               <div className="text-zinc-500 text-sm py-10 text-center">No trending merch found.</div>
+            )}
+          </div>
+
+          {/* Community Buzz Widget */}
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
+                <MessageSquare className="text-red-600" /> Wolfpack Chatter
+              </h3>
+              <Link to="/forum" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">Join Discussion</Link>
+            </div>
+            <div className="space-y-4">
+              {forumPosts.slice(0, 3).map(post => (
+                <Link key={post._id} to={`/forum/thread/${post._id}`} className="block group">
+                  <div className="text-sm font-bold text-zinc-200 group-hover:text-red-500 transition-colors line-clamp-1">{post.title}</div>
+                  <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                    <span>{post.replyCount || 0} replies</span>
+                    <span>•</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </Link>
+              ))}
+              {forumPosts.length === 0 && (
+                 <div className="text-zinc-500 text-sm text-center">No active discussions.</div>
+              )}
+            </div>
+            <Link to="/forum" className="mt-auto flex items-center gap-2 text-sm text-zinc-400 hover:text-white pt-4">
+              View all threads <ArrowRight size={14} />
+            </Link>
+          </div>
+
+        </div>
+      </div>
     </div>
   )
 }

@@ -32,7 +32,7 @@ export function Profile() {
         <h1 className="page-title">Identity</h1>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/merch/orders')}
+            onClick={() => navigate('/store/orders')}
             className="edit-profile-btn"
           >
             <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>

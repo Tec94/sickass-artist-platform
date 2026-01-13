@@ -8,13 +8,13 @@ import { useForumThreads } from '../hooks/useForumThreads'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateReply } from '../hooks/useCreateReply'
 import { useAnalytics } from '../hooks/useAnalytics'
-import { CategoryList, ThreadDetail, ThreadForm, ThreadList } from '../components/Forum'
+import { ThreadDetail, ThreadForm } from '../components/Forum'
 
 export function Forum() {
   useAnalytics() // Track page views
   const { user } = useAuth()
 
-  const { categories, isLoading: isCategoriesLoading } = useForumCategories()
+  const { categories } = useForumCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(null)
   const [selectedThreadId, setSelectedThreadId] = useState<Id<'threads'> | null>(null)
   const [sortBy, setSortBy] = useState<ThreadSortBy>('newest')
@@ -22,7 +22,7 @@ export function Forum() {
   const [isThreadFormOpen, setIsThreadFormOpen] = useState(false)
   const [editingThread, setEditingThread] = useState<Thread | null>(null)
 
-  const selectedCategory = useMemo(() => {
+  const _selectedCategory = useMemo(() => {
     return categories.find((c) => c._id === selectedCategoryId) ?? null
   }, [categories, selectedCategoryId])
 
@@ -76,54 +76,67 @@ export function Forum() {
   }
 
   return (
-    <div className="forum-container h-full">
-      <aside className={`forum-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-        <CategoryList
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={handleSelectCategory}
-          isLoading={isCategoriesLoading}
-        />
-      </aside>
-
-      <main className="forum-main">
-        <header className="forum-main-header">
-           <div className="header-left">
-             <h2 className="selected-category-name">{selectedCategory?.name || 'Forum'}</h2>
-             <span className="thread-count">{threads.length} Threads</span>
-           </div>
-            <div className="header-actions">
-              <button 
-                type="button"
-                onClick={refresh} 
-                disabled={isThreadsLoading}
-                className="refresh-btn"
-                title="Refresh threads"
-              >
-                <iconify-icon 
-                  icon="solar:refresh-linear" 
-                  class={isThreadsLoading ? 'animate-spin' : ''}
-                ></iconify-icon>
-              </button>
-              <button 
-                type="button"
-                onClick={openCreateThread} 
-                disabled={isCategoriesLoading}
-                className="create-thread-btn border-beam"
-              >
-                <iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
-                <span>New Thread</span>
-              </button>
+    <>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
+      <div className="flex flex-col md:flex-row gap-8 h-full">
+        {/* Left Sidebar - Categories */}
+        <div className={`w-full md:w-64 shrink-0 space-y-8 ${isMobileSidebarOpen ? 'block fixed inset-0 z-50 bg-zinc-950 p-4' : 'hidden md:block'}`}>
+          <div className="md:hidden flex justify-end mb-4">
+            <button onClick={() => setIsMobileSidebarOpen(false)} className="text-zinc-400">Close</button>
+          </div>
+          <div>
+             <button 
+               onClick={openCreateThread}
+               className="w-full bg-red-700 text-white font-bold uppercase tracking-widest py-3 hover:bg-red-600 transition-colors"
+             >
+               New Thread
+             </button>
+          </div>
+          
+          <div>
+            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Categories</h3>
+            <div className="space-y-1">
+              {/* All Categories Option */}
+               <button 
+                  onClick={() => handleSelectCategory('' as any)} 
+                  className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${!selectedCategoryId ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+                >
+                  All
+                </button>
+              {categories.map((cat) => (
+                <button 
+                  key={cat._id} 
+                  onClick={() => handleSelectCategory(cat._id)}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${selectedCategoryId === cat._id ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
+                >
+                  {cat.name}
+                </button>
+              ))}
             </div>
-        </header>
+          </div>
+        </div>
 
-        <div className="forum-content">
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+           {/* Mobile Header */}
+           <div className="md:hidden mb-4 flex items-center justify-between">
+              <button 
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="text-white font-bold uppercase text-sm border border-zinc-700 px-3 py-1 bg-zinc-900"
+              >
+                Categories
+              </button>
+           </div>
+
           {selectedThreadId ? (
-            <div className="thread-detail-view">
-               <button className="back-btn" onClick={() => setSelectedThreadId(null)}>
-                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Back to Feed
+             <div className="bg-zinc-900 border border-zinc-800 p-6">
+               <button 
+                 className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 text-sm font-bold uppercase tracking-wider" 
+                 onClick={() => setSelectedThreadId(null)}
+               >
+                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Back to Threads
                </button>
-               {isThreadDetailLoading ? <div>Loading...</div> : !thread ? <div>Not Found</div> : (
+               {isThreadDetailLoading ? <div className="text-center py-8 text-zinc-500">Loading...</div> : !thread ? <div className="text-center py-8 text-zinc-500">Not Found</div> : (
                  <ThreadDetail
                    thread={thread}
                    replies={replies}
@@ -134,22 +147,84 @@ export function Forum() {
                    isModerator={isModerator}
                  />
                )}
-            </div>
+             </div>
           ) : (
-            <ThreadList
-              categoryId={selectedCategoryId}
-              threads={threads}
-              selectedThreadId={selectedThreadId}
-              isLoading={isThreadsLoading}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              onSelectThread={handleSelectThread}
-              hasMore={hasMore}
-              fetchMore={fetchMore}
-            />
+            <>
+              {/* Filters */}
+              <div className="flex items-center gap-6 border-b border-zinc-800 pb-4 mb-6">
+                <button 
+                  onClick={() => setSortBy('top')}
+                  className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'top' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
+                >
+                  <iconify-icon icon="solar:flame-bold" /> Trending
+                </button>
+                <button 
+                  onClick={() => setSortBy('newest')}
+                  className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'newest' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
+                >
+                  <iconify-icon icon="solar:clock-circle-bold" /> Newest
+                </button>
+                <div className="ml-auto">
+                    <button onClick={refresh} className="text-zinc-500 hover:text-white p-2">
+                        <iconify-icon icon="solar:refresh-linear" class={isThreadsLoading ? 'animate-spin' : ''} />
+                    </button>
+                </div>
+              </div>
+
+              {/* Threads List */}
+              <div className="space-y-4">
+                {threads.map(post => (
+                  <div key={post._id} onClick={() => handleSelectThread(post._id)} className="bg-zinc-900 border border-zinc-800 p-6 hover:border-red-900/30 transition-all cursor-pointer group">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0 mt-1">
+                          {/* Use author avatar if available, else placeholder */}
+                          <div className="w-full h-full bg-zinc-700 flex items-center justify-center text-zinc-500 font-bold">
+                            {post.authorDisplayName?.[0] || 'U'}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-white font-bold text-lg group-hover:text-red-500 transition-colors mb-1">{post.title}</h3>
+                          <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                            <span className="hidden sm:inline">•</span>
+                            <span>Posted by <span className="text-zinc-300">{post.authorDisplayName || 'Unknown'}</span></span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-1 text-zinc-500 text-xs shrink-0">
+                         <div className="flex items-center gap-1">
+                           <iconify-icon icon="solar:chat-line-linear" /> {post.replyCount || 0}
+                         </div>
+                         <div>{post.viewCount || 0} views</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {threads.length === 0 && !isThreadsLoading && (
+                    <div className="text-center py-12 text-zinc-500">
+                        No threads found in this category.
+                    </div>
+                )}
+                
+                {hasMore && (
+                    <button 
+                        onClick={fetchMore} 
+                        disabled={isThreadsLoading}
+                        className="w-full py-4 text-center text-zinc-500 hover:text-white text-sm font-bold uppercase tracking-widest"
+                    >
+                        {isThreadsLoading ? 'Loading...' : 'Load More'}
+                    </button>
+                )}
+              </div>
+            </>
           )}
         </div>
-      </main>
+      </div>
+    </div>
 
       {isThreadFormOpen && (
         <ThreadForm
@@ -310,6 +385,6 @@ export function Forum() {
           .forum-sidebar.mobile-open { display: block; position: fixed; inset: 0; z-index: 1000; }
         }
       `}</style>
-    </div>
+    </>
   )
 }

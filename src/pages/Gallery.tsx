@@ -129,56 +129,60 @@ export const Gallery = () => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header ref={animate} data-animate className="gallery-header-v2">
-          <div className="header-meta">
-            <h1 className="h1-title">Visual Feed</h1>
-            <p className="sub-text">Captured moments and exclusive insights</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <nav className="gallery-tabs">
-              {TABS.map(tab => (
+        <header ref={animate} data-animate className="gallery-header-v2 bg-transparent border-none pb-0 pt-8 px-8">
+           <div className="w-full text-center mb-12">
+             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide mb-6">The Gallery</h1>
+             
+             <nav className="inline-flex bg-zinc-900 p-1 rounded-sm border border-zinc-800">
+               {TABS.map(tab => (
+                 <button
+                   key={tab.id}
+                   className={`px-6 py-2 text-sm font-bold uppercase tracking-wider rounded-sm transition-all ${
+                     filters.types.includes(tab.id as any) 
+                     ? 'bg-red-700 text-white' 
+                     : 'text-zinc-500 hover:text-white'
+                   }`}
+                   onClick={() => handleTabChange(tab.id)}
+                 >
+                   {/* <iconify-icon icon={tab.icon} class="mr-2"></iconify-icon> */}
+                   {tab.label}
+                 </button>
+               ))}
+             </nav>
+           </div>
+           
+           {/* Secondary Controls Row (Filters, Perf) */}
+           <div className="w-full flex justify-end gap-2 mb-4 px-4">
+              {/* Performance dashboard button (dev only) */}
+              {import.meta.env.DEV && (
                 <button
-                  key={tab.id}
-                  className={`gallery-tab-btn ${filters.types.includes(tab.id as 'show' | 'bts' | 'edit' | 'wip' | 'exclusive') ? 'active' : ''}`}
-                  onClick={() => handleTabChange(tab.id)}
+                  onClick={() => setShowPerfDashboard(!showPerfDashboard)}
+                  className="filter-toggle-btn"
+                  title="Performance Dashboard"
                 >
-                  <iconify-icon icon={tab.icon}></iconify-icon>
-                  <span>{tab.label}</span>
+                  <iconify-icon icon="solar:chart-square-linear" width="20" height="20"></iconify-icon>
                 </button>
-              ))}
-            </nav>
-
-            {/* Performance dashboard button (dev only) */}
-            {import.meta.env.DEV && (
-              <button
-                onClick={() => setShowPerfDashboard(!showPerfDashboard)}
-                className="filter-toggle-btn"
-                title="Performance Dashboard"
-              >
-                <iconify-icon icon="solar:chart-square-linear" width="20" height="20"></iconify-icon>
-              </button>
-            )}
-
-            {/* Filter toggle button */}
-            <button
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  setShowMobileFilters(true);
-                } else {
-                  setShowFilters(!showFilters);
-                }
-              }}
-              className={`filter-toggle-btn ${isActive ? 'has-filters' : ''}`}
-              title="Toggle filters"
-              aria-label="Toggle filters"
-            >
-              <iconify-icon icon="solar:filter-linear" width="20" height="20"></iconify-icon>
-              {appliedCount > 0 && (
-                <span className="filter-badge">{appliedCount}</span>
               )}
-            </button>
-          </div>
+
+              {/* Filter toggle button */}
+              <button
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    setShowMobileFilters(true);
+                  } else {
+                    setShowFilters(!showFilters);
+                  }
+                }}
+                className={`filter-toggle-btn ${isActive ? 'has-filters' : ''}`}
+                title="Toggle filters"
+                aria-label="Toggle filters"
+              >
+                <iconify-icon icon="solar:filter-linear" width="20" height="20"></iconify-icon>
+                {appliedCount > 0 && (
+                  <span className="filter-badge">{appliedCount}</span>
+                )}
+              </button>
+           </div>
         </header>
 
         {/* Active filter chips */}
