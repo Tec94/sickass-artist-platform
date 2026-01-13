@@ -1097,4 +1097,27 @@ export default defineSchema({
     .index('by_featured', ['isFeatured', 'displayOrder']) // Get featured posts in order
     .index('by_syncedAt', ['syncedAt']) // Get recently synced posts
     .index('by_igSourceCreatedAt', ['igSourceCreatedAt']), // Get posts by Instagram creation date
+
+  // ==================== SPOTIFY INTEGRATION ====================
+
+  // Spotify songs - Cached track metadata from Spotify API
+  spotifySongs: defineTable({
+    spotifyTrackId: v.string(), // Spotify track ID (unique)
+    title: v.string(), // Track title
+    artist: v.string(), // Artist name
+    albumTitle: v.string(), // Album name
+    albumCover: v.string(), // Album cover image URL
+    previewUrl: v.optional(v.string()), // 30-second preview URL (may be null)
+    duration: v.number(), // Track duration in milliseconds
+    releaseDate: v.string(), // Release date (YYYY-MM-DD or YYYY)
+    externalUrl: v.string(), // Spotify external link
+    isrc: v.string(), // International Standard Recording Code
+    popularity: v.number(), // Spotify popularity score (0-100)
+    isArtistRelease: v.boolean(), // True if from artist's official releases
+    syncedAt: v.number(), // Last sync timestamp
+    createdAt: v.number(), // When added to DB
+  })
+    .index('by_spotifyTrackId', ['spotifyTrackId']) // Lookup by Spotify ID
+    .index('by_artist', ['isArtistRelease', 'releaseDate']) // Get artist releases sorted by date
+    .index('by_syncedAt', ['syncedAt']), // Get recently synced tracks
 })

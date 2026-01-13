@@ -57,4 +57,11 @@ crons.interval(
   internal.instagramSync.syncInstagramPostsInternal
 )
 
+// Spotify sync cron - Daily at 2 AM UTC
+crons.daily(
+  'spotify-sync',
+  { hourUTC: 2, minuteUTC: 0 }, // 2 AM UTC daily
+  internal.spotifySync.syncSpotifyTracksInternal
+)
+
 export default crons;

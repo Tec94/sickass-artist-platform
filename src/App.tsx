@@ -12,6 +12,7 @@ import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { Chat } from './pages/Chat'
+import { Music } from './pages/Music'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import { NavbarFallback } from './components/NavbarFallback'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -135,6 +136,7 @@ function AppContent() {
                   } />
                   <Route path="events" element={<ErrorBoundary level="section"><Events /></ErrorBoundary>} />
                   <Route path="store" element={<Merch />} />
+                  <Route path="music" element={<ErrorBoundary level="section"><Music /></ErrorBoundary>} />
                   <Route path="gallery" element={<ErrorBoundary level="section"><Gallery /></ErrorBoundary>} />
                   <Route path="forum" element={
                     <ProtectedRoute>
@@ -185,6 +187,7 @@ function AppContent() {
                   </ProtectedRoute>
                 } />
                 <Route path="/events" element={<Events />} />
+                <Route path="/music" element={<Music />} />
                 <Route path="/merch" element={<Merch />} />
                 <Route path="/merch/drops" element={<DropsPage />} />
                 <Route path="/merch/orders" element={
