@@ -6,20 +6,14 @@ import { api } from '../../convex/_generated/api'
 // Components
 import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
-import CartDrawer from '../../roa-wolves/components/CartDrawer'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 
-// Utils
-import { showToast } from '../lib/toast'
-
 export function Merch() {
-  const cart = useQuery(api.cart.getCart)
   const [searchParams] = useSearchParams()
   
   // State
   const [activeCategory, setActiveCategory] = useState('')
   const [maxPrice, setMaxPrice] = useState(200)
-  const [isCartOpen, setIsCartOpen] = useState(false)
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'alpha'>('newest')
   const [stockFilter, setStockFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all')
@@ -227,29 +221,7 @@ export function Merch() {
           </div>
       </main>
 
-      <CartDrawer 
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        title="Shopping Cart"
-        type="cart"
-        items={cart?.items?.map(item => ({
-          id: item.variantId as any,
-          name: (item as any).product?.name || 'Product',
-          price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
-          quantity: item.quantity,
-          image: "/src/public/assets/test-image.jpg",
-          selectedSize: (item as any).variant?.size || '',
-          selectedColor: (item as any).variant?.color || '',
-          // Satisfy strict types
-          category: (item as any).product?.category || '',
-          colors: [],
-          sizes: [],
-          description: ''
-        })) || []}
-        onRemoveItem={() => {
-           showToast('Remove from cart coming soon', { type: 'info' })
-        }}
-      />
+
 
       <style>{`
         .merch-page {

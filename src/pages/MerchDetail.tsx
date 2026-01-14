@@ -8,7 +8,6 @@ import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
-import CartDrawer from '../../roa-wolves/components/CartDrawer'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -27,7 +26,6 @@ export function MerchDetail() {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [isCartOpen, setIsCartOpen] = useState(false)
 
   // Auto-select first available variant
   const selectedVariant = useMemo(() => {
@@ -237,27 +235,6 @@ export function MerchDetail() {
             </div>
           </div>
         </div>
-
-        <CartDrawer 
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          title="Shopping Cart"
-          type="cart"
-          items={cart?.items?.map(item => ({
-            id: item.variantId as any,
-            name: (item as any).product?.name || 'Product',
-            price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
-            quantity: item.quantity,
-            image: "/src/public/assets/test-image.jpg",
-            selectedSize: (item as any).variant?.size || '',
-            selectedColor: (item as any).variant?.color || '',
-            category: (item as any).product?.category || '',
-            colors: [],
-            sizes: [],
-            description: ''
-          })) || []}
-          onRemoveItem={() => {}}
-        />
       </div>
     </MerchErrorBoundary>
   )

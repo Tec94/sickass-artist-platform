@@ -5,7 +5,6 @@ import { useCart } from '../contexts/CartContext';
 import { useUser } from '../contexts/UserContext';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import CartDrawer from '../../roa-wolves/components/CartDrawer';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -13,11 +12,8 @@ const Header: React.FC = () => {
   const { itemCount } = useCart();
   const { userProfile, isSignedIn } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip');
-  const cart = useQuery(api.cart.getCart);
   const wishlistCount = wishlist?.length || 0; 
 
   const navLinks = [
@@ -91,8 +87,8 @@ const Header: React.FC = () => {
             </button>
 
             {/* Wishlist */}
-            <button 
-              onClick={() => setIsWishlistOpen(true)}
+            <Link 
+              to="/store?tab=wishlist"
               className="relative text-zinc-400 hover:text-red-500 transition-colors"
             >
               <Heart size={20} />
@@ -101,11 +97,11 @@ const Header: React.FC = () => {
                   {wishlistCount}
                 </span>
               )}
-            </button>
+            </Link>
             
             {/* Cart */}
-            <button 
-              onClick={() => setIsCartOpen(true)}
+            <Link 
+              to="/store/cart"
               className="relative text-zinc-400 hover:text-red-500 transition-colors"
             >
               <ShoppingBag size={20} />
@@ -114,7 +110,7 @@ const Header: React.FC = () => {
                   {itemCount}
                 </span>
               )}
-            </button>
+            </Link>
 
             {/* Profile */}
             <Link to="/profile" className="flex items-center gap-2 pl-2 border-l border-zinc-800">
@@ -145,50 +141,7 @@ const Header: React.FC = () => {
         ))}
       </div>
     </header>
-    
-    <CartDrawer 
-      isOpen={isWishlistOpen}
-      onClose={() => setIsWishlistOpen(false)}
-      title="Wishlist"
-      type="wishlist"
-      items={wishlist?.map(item => ({
-        id: item._id as any,
-        name: item.name,
-        price: item.price / 100,
-        image: "/src/public/assets/test-image.jpg",
-        // Satisfy strict types
-        category: '',
-        colors: [],
-        sizes: [],
-        description: '',
-        selectedSize: '',
-        selectedColor: '',
-        quantity: 1
-      })) || []}
-      onRemoveItem={() => {}}
-    />
-    <CartDrawer 
-      isOpen={isCartOpen}
-      onClose={() => setIsCartOpen(false)}
-      title="Shopping Cart"
-      type="cart"
-      items={cart?.items?.map(item => ({
-        id: item.variantId as any,
-        name: (item as any).product?.name || 'Product',
-        price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
-        quantity: item.quantity,
-        image: "/src/public/assets/test-image.jpg",
-        selectedSize: (item as any).variant?.size || '',
-        selectedColor: (item as any).variant?.color || '',
-        // Satisfy strict types
-        category: (item as any).product?.category || '',
-        colors: [],
-        sizes: [],
-        description: ''
-      })) || []}
-      onRemoveItem={() => {}}
-    />
-  </>
+   </>
 );
 };
 
