@@ -5,11 +5,9 @@ import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Id } from '../../../convex/_generated/dataModel'
-import { useUser } from '../../contexts/UserContext'
 
 export const UserRankingsFeed = () => {
   const { user } = useAuth()
-  const { userProfile } = useUser()
   // Pass userId to get personalized hasUpvoted status
   const trendingSubmissions = useQuery(api.leaderboard.getTrendingSubmissions, { 
     limit: 6,
