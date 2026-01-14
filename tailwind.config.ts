@@ -4,6 +4,7 @@ const config: Config = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./roa-wolves/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -53,6 +54,11 @@ const config: Config = {
         'tablet': '768px',
         'desktop': '1024px',
       },
+      zIndex: {
+        '90': '90',
+        '95': '95',
+        '100': '100',
+      }
     },
   },
   plugins: [],

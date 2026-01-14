@@ -73,7 +73,7 @@ export function EventSearch({
           onChange={handleInputChange}
           onFocus={() => query.length >= 2 && hasSearched && setShowResults(true)}
           placeholder={placeholder}
-          className="w-full bg-gray-900/70 border border-gray-800 text-white rounded-lg pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+          className="w-full bg-gray-900/70 border border-gray-800 text-white rounded-lg pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-red-600 transition-colors"
         />
         
         {/* Search Icon */}
@@ -94,7 +94,7 @@ export function EventSearch({
         {/* Loading Indicator */}
         {loading && (
           <div className="absolute right-10 top-1/2 -translate-y-1/2">
-            <div className="animate-spin h-4 w-4 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
           </div>
         )}
       </div>
@@ -129,7 +129,7 @@ export function EventSearch({
                       </h4>
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
-                          <iconify-icon icon="solar:map-point-bold" class="text-cyan-400"></iconify-icon>
+                          <iconify-icon icon="solar:map-point-bold" class="text-red-500"></iconify-icon>
                           {event.city}
                         </span>
                         <span>•</span>

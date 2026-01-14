@@ -31,7 +31,7 @@ export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
         style={{ '--ring-color': ringColor } as React.CSSProperties}
       >
         <img
-          src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
+          src="/src/public/assets/test-image.jpg"
           alt={user.username}
           className={`${sizeClasses[size]} rounded-full object-cover avatar-img`}
         />

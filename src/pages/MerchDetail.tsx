@@ -1,50 +1,42 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState, useCallback, useMemo } from 'react'
-import { Doc } from '../../convex/_generated/dataModel'
+import { Doc, Id } from '../../convex/_generated/dataModel'
 import { MerchErrorBoundary } from '../components/Merch/ErrorBoundary'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
-import { MerchNavbar } from '../components/Merch/MerchNavbar'
-import { MerchCartDrawer } from '../components/Merch/MerchCartDrawer'
-
-// Sample tracklist data for vinyl/music products
-const SAMPLE_TRACKLIST = [
-  { id: '01', title: 'Static Dawn' },
-  { id: '02', title: 'Neon Veins' },
-  { id: '03', title: 'Midnight Frequency' },
-  { id: '04', title: 'Analog Heart' },
-]
+import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
+import CartDrawer from '../../roa-wolves/components/CartDrawer'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
+  
   const product = useQuery(api.merch.getProductDetail,
     productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
   )
   const cart = useQuery(api.cart.getCart)
+  const wishlist = useQuery(api.merch.getWishlist)
   
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)
+  const toggleWishlistMutation = useMutation(api.merch.toggleWishlist)
 
-  const [selectedImage, setSelectedImage] = useState(0)
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  // Auto-select first available variant if not set
+  // Auto-select first available variant
   const selectedVariant = useMemo(() => {
     if (!product) return null
     if (selectedVariantId) return product.variants.find(v => v._id === selectedVariantId) || null
     return product.variants.find(v => v.stock > 0) || product.variants[0] || null
   }, [product, selectedVariantId])
 
-  const handleQuantityChange = useCallback((delta: number) => {
-    setQuantity(prev => Math.max(1, Math.min(99, prev + delta)))
-  }, [])
+  const isInWishlist = wishlist?.some(item => item._id === productId)
 
   const handleAddToCart = useCallback(async () => {
     if (!selectedVariant) {
@@ -64,593 +56,209 @@ export function MerchDetail() {
       setIsCartOpen(true)
     } catch (err) {
       const parsed = parseConvexError(err)
-      logError(parsed, {
-        component: 'MerchDetail',
-        action: 'add_to_cart',
-        metadata: { productId },
-      })
+      logError(parsed, { component: 'MerchDetail', action: 'add_to_cart', metadata: { productId } })
       showToast(parsed.userMessage, { type: 'error' })
     } finally {
       setIsLoading(false)
     }
   }, [selectedVariant, quantity, addToCartMutation, retryWithBackoff, productId])
 
+  const handleToggleWishlist = async () => {
+    if (!productId) return
+    try {
+      await toggleWishlistMutation({ productId: productId as Id<'merchProducts'> })
+      showToast(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist', { type: 'success' })
+    } catch {
+      showToast('Login to wishlist items', { type: 'error' })
+    }
+  }
+
   if (product === null) {
     return (
-      <div className="merch-detail-page">
-        <div className="error-container">
-          <h1>PRODUCT NOT FOUND</h1>
-          <button onClick={() => navigate('/merch')} className="back-btn">
-            BACK TO SHOP
-          </button>
-        </div>
-        <style>{styles}</style>
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white">
+        <h1 className="text-2xl font-bold uppercase tracking-widest mb-4">Product Not Found</h1>
+        <button onClick={() => navigate('/store')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-sm font-bold uppercase tracking-widest transition-colors">
+          Back to Shop
+        </button>
       </div>
     )
   }
 
   if (product === undefined) {
     return (
-      <div className="merch-detail-page">
-        <div className="loading-container">
-          <iconify-icon icon="solar:spinner-linear" width="32" height="32" class="spinner"></iconify-icon>
-          <p>Loading...</p>
-        </div>
-        <style>{styles}</style>
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white">
+        <iconify-icon icon="solar:spinner-linear" width="32" height="32" class="animate-spin text-red-500"></iconify-icon>
+        <p className="mt-4 text-zinc-400">Loading...</p>
       </div>
     )
   }
 
-  // Build images array with fallbacks
-  const images = product.imageUrls && product.imageUrls.length > 0 
-    ? product.imageUrls 
-    : (product.thumbnailUrl ? [product.thumbnailUrl] : ['/placeholder.png'])
-  
-  const isMusic = product.category === 'vinyl' || product.category === 'limited' || 
-    product.name.toLowerCase().includes('lp') || product.name.toLowerCase().includes('cd')
+  const imageUrl = "/src/public/assets/test-image.jpg"
+  const description = product.description || product.longDescription || 'Premium quality merchandise from ROA WOLVES.'
 
-  const description = product.description || product.longDescription || 
-    'Premium quality merchandise from ROA WOLVES. Designed with attention to detail and made to last.'
+  // Extract unique sizes and colors from variants
+  const sizes = [...new Set(product.variants.map(v => v.size).filter(Boolean))]
+  const colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))]
+  const selectedSize = selectedVariant?.size || sizes[0] || ''
+  const selectedColor = selectedVariant?.color || colors[0] || ''
 
   return (
     <MerchErrorBoundary>
-      <div className="merch-detail-page">
-        <MerchNavbar 
-          cartCount={cart?.itemCount || 0} 
-          onOpenCart={() => setIsCartOpen(true)}
-          onGoHome={() => navigate('/merch')}
-        />
+      <div className="min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
+        <FreeShippingBanner />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
+          <Link to="/store" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white mb-8 transition-colors">
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
+            Back to Shop
+          </Link>
 
-        <main className="detail-main">
-          {/* Back Button */}
-          <button onClick={() => navigate('/merch')} className="back-link">
-            <iconify-icon icon="solar:alt-arrow-left-linear" width="12" height="12"></iconify-icon>
-            BACK TO SHOP
-          </button>
-
-          <div className="product-grid">
-            {/* Left Column: Images */}
-            <div className="image-section">
-              <div className="main-image-container">
-                {/* NEW Badge */}
-                <span className="new-badge">NEW</span>
-                <img 
-                  src={images[selectedImage] || '/placeholder.png'} 
-                  alt={product.name}
-                  className="main-image"
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png' }}
-                />
-              </div>
-              
-              {/* Thumbnail Gallery - Always show if multiple images */}
-              {images.length > 1 && (
-                <div className="thumbnail-row">
-                  {images.map((img, idx) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setSelectedImage(idx)}
-                      className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
-                    >
-                      <img 
-                        src={img} 
-                        alt={`${product.name} ${idx + 1}`}
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png' }}
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+          <div className="flex flex-col md:flex-row gap-12">
+            {/* Left Side - Image */}
+            <div className="w-full md:w-3/5 bg-zinc-900 border border-zinc-800 relative flex items-center justify-center p-8 min-h-[500px]">
+              <img 
+                src={imageUrl} 
+                alt={product.name} 
+                className="max-h-[500px] w-auto object-contain shadow-2xl"
+              />
             </div>
 
-            {/* Right Column: Details */}
-            <div className="details-section">
-              <h1 className="product-title">{product.name}</h1>
-              <p className="product-price">${(product.price / 100).toFixed(2)}</p>
+            {/* Right Side - Details */}
+            <div className="w-full md:w-2/5 flex flex-col">
+              
+              <div className="flex justify-between items-start mb-4">
+                <h1 className="text-3xl md:text-5xl font-display font-bold text-white uppercase tracking-wider leading-tight">
+                  {product.name}
+                </h1>
+              </div>
 
-              {/* Format/Variant Selection */}
-              {product.variants.length > 0 && (
-                <div className="option-group">
-                  <label className="option-label">SELECT FORMAT</label>
-                  <div className="variant-buttons">
-                    {product.variants.map(variant => (
+              {/* Rating */}
+              <div className="flex items-center gap-2 mb-6">
+                <div className="flex text-yellow-500">
+                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" class="opacity-50"></iconify-icon>
+                </div>
+                <span className="text-sm text-zinc-400 font-medium">4.5 (500 Reviews)</span>
+              </div>
+
+              <div className="flex items-baseline gap-4 mb-8">
+                <span className="text-3xl text-red-500 font-display font-bold">${(product.price / 100).toFixed(2)}</span>
+                {product.originalPrice && (
+                  <span className="text-lg text-zinc-600 line-through">${(product.originalPrice / 100).toFixed(2)}</span>
+                )}
+              </div>
+
+              <p className="text-zinc-400 text-sm leading-relaxed mb-8 border-b border-zinc-800 pb-8">
+                {description}
+              </p>
+
+              {/* Color Selection */}
+              {colors.length > 0 && (
+                <div className="mb-6">
+                  <span className="text-xs text-zinc-500 uppercase tracking-widest block mb-3 font-bold">
+                    Color: <span className="text-white">{selectedColor}</span>
+                  </span>
+                  <div className="flex gap-3">
+                    {colors.map(color => (
                       <button
-                        key={variant._id}
+                        key={color}
                         onClick={() => {
-                          setSelectedVariantId(variant._id)
-                          setQuantity(1)
+                          const variant = product.variants.find(v => v.color === color)
+                          if (variant) setSelectedVariantId(variant._id)
                         }}
-                        disabled={variant.stock === 0}
-                        className={`variant-btn ${selectedVariant?._id === variant._id ? 'selected' : ''} ${variant.stock === 0 ? 'sold-out' : ''}`}
+                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color ? 'border-red-600' : 'border-zinc-800 hover:border-zinc-500'}`}
                       >
-                        {variant.size || variant.color || variant.style || 'Default'}
+                        <div className={`w-9 h-9 rounded-full ${color === 'Black' ? 'bg-black' : color === 'White' ? 'bg-white' : color === 'Scarlet' || color === 'Red' ? 'bg-red-600' : 'bg-zinc-400'}`}></div>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Quantity */}
-              <div className="option-group">
-                <label className="option-label">QUANTITY</label>
-                <div className="quantity-picker">
-                  <button 
-                    onClick={() => handleQuantityChange(-1)}
-                    className="qty-btn"
-                    disabled={quantity <= 1}
-                  >
-                    −
-                  </button>
-                  <span className="qty-value">{quantity}</span>
-                  <button 
-                    onClick={() => handleQuantityChange(1)}
-                    className="qty-btn"
-                    disabled={quantity >= 99}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="action-row">
-                <button 
-                  onClick={handleAddToCart}
-                  disabled={isLoading || !selectedVariant || selectedVariant.stock === 0}
-                  className={`add-to-cart-btn ${isLoading ? 'loading' : ''}`}
-                >
-                  {isLoading ? 'ADDING...' : (selectedVariant?.stock === 0 ? 'SOLD OUT' : 'ADD TO CART')}
-                </button>
-                <button className="wishlist-btn">
-                  <iconify-icon icon="solar:heart-linear" width="18" height="18"></iconify-icon>
-                </button>
-              </div>
-
-              {/* Tracklist (for music products) */}
-              {isMusic && (
-                <div className="tracklist-section">
-                  <div className="section-header">
-                    <iconify-icon icon="solar:music-note-linear" width="16" height="16" class="section-icon"></iconify-icon>
-                    <span>TRACKLIST</span>
+              {/* Size Selection */}
+              {sizes.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex justify-between mb-3">
+                    <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Select Size</span>
+                    <button className="text-xs text-zinc-500 underline hover:text-white">Size Guide</button>
                   </div>
-                  <div className="track-list">
-                    {SAMPLE_TRACKLIST.map(track => (
-                      <div key={track.id} className="track-item">
-                        <span className="track-num">{track.id}</span>
-                        <span className="track-title">{track.title}</span>
-                      </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {sizes.map(size => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          const variant = product.variants.find(v => v.size === size)
+                          if (variant) setSelectedVariantId(variant._id)
+                        }}
+                        className={`py-3 text-sm font-bold border transition-all ${selectedSize === size ? 'bg-white text-black border-white' : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'}`}
+                      >
+                        {size}
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Description */}
-              <div className="description-section">
-                <label className="option-label">DESCRIPTION</label>
-                <p className="description-text">{description}</p>
+              {/* Quantity & Actions */}
+              <div className="flex gap-4 mb-8">
+                <div className="flex items-center w-32 border border-zinc-800 bg-zinc-950">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-12 flex items-center justify-center text-zinc-400 hover:text-white"
+                  >
+                    <iconify-icon icon="solar:minus-circle-linear" width="16" height="16"></iconify-icon>
+                  </button>
+                  <div className="flex-1 text-center text-white text-sm font-bold">{quantity}</div>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-12 flex items-center justify-center text-zinc-400 hover:text-white"
+                  >
+                    <iconify-icon icon="solar:add-circle-linear" width="16" height="16"></iconify-icon>
+                  </button>
+                </div>
+                <button 
+                  onClick={handleAddToCart}
+                  disabled={isLoading || !selectedVariant || selectedVariant.stock === 0}
+                  className="flex-1 bg-red-700 hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-bold uppercase tracking-widest transition-all"
+                >
+                  {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                </button>
+                <button 
+                  onClick={handleToggleWishlist}
+                  className={`w-14 border border-zinc-800 flex items-center justify-center transition-colors ${isInWishlist ? 'text-red-600 border-red-900 bg-red-900/10' : 'text-zinc-400 hover:text-white hover:border-zinc-600'}`}
+                >
+                  <iconify-icon icon={isInWishlist ? "solar:heart-bold" : "solar:heart-linear"} width="24" height="24"></iconify-icon>
+                </button>
               </div>
+
             </div>
           </div>
-        </main>
+        </div>
 
-        <MerchCartDrawer
+        <CartDrawer 
           isOpen={isCartOpen}
           onClose={() => setIsCartOpen(false)}
+          title="Shopping Cart"
+          type="cart"
           items={cart?.items?.map(item => ({
-            _id: item.variantId,
+            id: item.variantId as any,
             name: (item as any).product?.name || 'Product',
-            price: (item as any).currentPrice || item.priceAtAddTime || 0,
+            price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
             quantity: item.quantity,
-            images: (item as any).product?.imageUrls || [(item as any).product?.thumbnailUrl] || [],
-            selectedSize: (item as any).variant?.size,
-            selectedVariant: (item as any).variant?.color
+            image: "/src/public/assets/test-image.jpg",
+            selectedSize: (item as any).variant?.size || '',
+            selectedColor: (item as any).variant?.color || '',
+            category: (item as any).product?.category || '',
+            colors: [],
+            sizes: [],
+            description: ''
           })) || []}
-          onRemove={() => {
-            showToast('Remove from cart coming soon', { type: 'info' })
-          }}
+          onRemoveItem={() => {}}
         />
       </div>
-      <style>{styles}</style>
     </MerchErrorBoundary>
   )
 }
-
-const styles = `
-  .merch-detail-page {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    background: #050505;
-    color: #e5e5e5;
-    font-family: var(--font-store, ui-monospace, SFMono-Regular, monospace);
-  }
-
-  .error-container,
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 16px;
-  }
-
-  .error-container h1 {
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-  }
-
-  .back-btn {
-    padding: 12px 24px;
-    background: #dc2626;
-    border: none;
-    color: white;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .spinner {
-    animation: spin 1s linear infinite;
-    color: #dc2626;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .detail-main {
-    max-width: 1400px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 32px 40px;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #525252;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 32px;
-    padding: 0;
-    font-family: inherit;
-    transition: color 0.2s;
-  }
-
-  .back-link:hover {
-    color: #a3a3a3;
-  }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 48px;
-  }
-
-  @media (min-width: 768px) {
-    .product-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-    }
-  }
-
-  .image-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .main-image-container {
-    position: relative;
-    aspect-ratio: 1;
-    background: #0a0a0a;
-    overflow: hidden;
-  }
-
-  .new-badge {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 10;
-    background: #dc2626;
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 6px 12px;
-    letter-spacing: 0.1em;
-  }
-
-  .main-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .thumbnail-row {
-    display: flex;
-    gap: 12px;
-  }
-
-  .thumbnail {
-    width: 80px;
-    height: 80px;
-    background: #0a0a0a;
-    border: 2px solid transparent;
-    padding: 0;
-    cursor: pointer;
-    opacity: 0.5;
-    transition: all 0.2s;
-    overflow: hidden;
-  }
-
-  .thumbnail:hover {
-    opacity: 0.8;
-  }
-
-  .thumbnail.active {
-    border-color: #dc2626;
-    opacity: 1;
-  }
-
-  .thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .details-section {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .product-title {
-    font-size: 32px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-    margin: 0;
-    color: #dc2626;
-    line-height: 1;
-  }
-
-  @media (min-width: 768px) {
-    .product-title {
-      font-size: 42px;
-    }
-  }
-
-  .product-price {
-    font-size: 20px;
-    font-weight: 600;
-    color: #dc2626;
-    margin: 0;
-  }
-
-  .option-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .option-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    color: #525252;
-  }
-
-  .variant-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .variant-btn {
-    padding: 12px 24px;
-    background: transparent;
-    border: 1px solid #262626;
-    color: #a3a3a3;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-
-  .variant-btn:hover:not(.sold-out) {
-    border-color: #525252;
-    color: white;
-  }
-
-  .variant-btn.selected {
-    background: #dc2626;
-    border-color: #dc2626;
-    color: white;
-  }
-
-  .variant-btn.sold-out {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  .quantity-picker {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid #262626;
-    background: #0a0a0a;
-    width: auto;
-  }
-
-  .qty-btn {
-    width: 36px;
-    height: 36px;
-    background: transparent;
-    border: none;
-    color: #a3a3a3;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .qty-btn:hover:not(:disabled) {
-    color: white;
-    background: #171717;
-  }
-
-  .qty-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  .qty-value {
-    width: 40px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: white;
-  }
-
-  .action-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-  }
-
-  .add-to-cart-btn {
-    flex: 1;
-    padding: 14px 24px;
-    background: #dc2626;
-    border: none;
-    color: white;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-
-  .add-to-cart-btn:hover:not(:disabled) {
-    background: #ef4444;
-  }
-
-  .add-to-cart-btn:disabled {
-    background: #171717;
-    color: #525252;
-    cursor: not-allowed;
-  }
-
-  .add-to-cart-btn.loading {
-    opacity: 0.7;
-  }
-
-  .wishlist-btn {
-    width: 48px;
-    height: 48px;
-    background: transparent;
-    border: 1px solid #262626;
-    color: #737373;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .wishlist-btn:hover {
-    border-color: #dc2626;
-    color: #dc2626;
-  }
-
-  .tracklist-section {
-    padding-top: 24px;
-    border-top: 1px solid #171717;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    color: white;
-  }
-
-  .section-icon {
-    color: #dc2626;
-  }
-
-  .track-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .track-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .track-num {
-    font-size: 10px;
-    color: #525252;
-    min-width: 20px;
-  }
-
-  .track-title {
-    font-size: 13px;
-    color: #a3a3a3;
-  }
-
-  .description-section {
-    padding-top: 24px;
-    border-top: 1px solid #171717;
-  }
-
-  .description-text {
-    font-size: 13px;
-    line-height: 1.6;
-    color: #737373;
-    margin: 0;
-  }
-`

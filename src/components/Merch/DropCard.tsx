@@ -49,7 +49,7 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
       {drop.imageUrl && (
         <div className="absolute inset-0 z-0 opacity-30">
           <img
-            src={drop.imageUrl}
+            src="/src/public/assets/test-image.jpg"
             alt={drop.name}
             className="w-full h-full object-cover"
           />

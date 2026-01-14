@@ -79,13 +79,13 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
     >
       <div className="card-image-container">
         <img 
-          src={product.thumbnailUrl || product.imageUrls[0] || '/placeholder.png'} 
+          src="/src/public/assets/test-image.jpg" 
           alt={product.name}
           className={`card-image primary ${isHovered && product.imageUrls[1] ? 'hidden' : ''}`}
         />
         {product.imageUrls[1] && (
           <img 
-            src={product.imageUrls[1]} 
+            src="/src/public/assets/test-image.jpg" 
             alt={product.name}
             className={`card-image secondary ${isHovered ? 'visible' : ''}`}
           />

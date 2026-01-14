@@ -7,6 +7,7 @@ import { api } from '../../convex/_generated/api'
 import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import CartDrawer from '../../roa-wolves/components/CartDrawer'
+import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 
 // Utils
 import { showToast } from '../lib/toast'
@@ -75,8 +76,9 @@ export function Merch() {
 
   return (
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
-      {/* Note: Header contains the Navbar now, so MerchNavbar is removed */}
-      
+      {/* Free Shipping Banner */}
+      <FreeShippingBanner />
+
       <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-fade-in">
           <div className="flex flex-col md:flex-row gap-8">
             
@@ -173,7 +175,7 @@ export function Merch() {
           name: (item as any).product?.name || 'Product',
           price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
           quantity: item.quantity,
-          image: (item as any).product?.imageUrls?.[0] || (item as any).product?.thumbnailUrl || '/placeholder.png',
+          image: "/src/public/assets/test-image.jpg",
           selectedSize: (item as any).variant?.size || '',
           selectedColor: (item as any).variant?.color || '',
           // Satisfy strict types

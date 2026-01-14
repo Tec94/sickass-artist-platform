@@ -276,7 +276,7 @@ export function EventDetail() {
         }
 
         .header-action-btn:hover {
-          background: rgba(6, 182, 212, 0.1);
+          background: rgba(220, 38, 38, 0.1);
           border-color: var(--color-primary);
         }
 
@@ -410,8 +410,8 @@ export function EventDetail() {
         }
 
         .tickets-status-card {
-          background: rgba(6, 182, 212, 0.05);
-          border: 1px solid rgba(6, 182, 212, 0.1);
+          background: rgba(220, 38, 38, 0.05);
+          border: 1px solid rgba(220, 38, 38, 0.2);
           border-radius: 12px;
           padding: 20px;
           text-align: center;

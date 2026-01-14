@@ -16,7 +16,7 @@ export function ProductCard({ product, onAddToCart, loading }: ProductCardProps)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const imageUrl = imageError ? '/images/placeholder.jpg' : product.thumbnailUrl
+  const imageUrl = "/src/public/assets/test-image.jpg"
 
   const handleAddToCart = async () => {
     setError(null)

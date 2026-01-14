@@ -14,8 +14,10 @@ const Header: React.FC = () => {
   const { userProfile, isSignedIn } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   const wishlist = useQuery(api.merch.getWishlist);
+  const cart = useQuery(api.cart.getCart);
   const wishlistCount = wishlist?.length || 0; 
 
   const navLinks = [
@@ -36,14 +38,21 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
+    <>
+      <header 
+        onClick={() => {
+          if (isWishlistOpen) setIsWishlistOpen(false);
+          if (isCartOpen) setIsCartOpen(false);
+        }}
+        className="sticky top-0 z-95 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800"
+      >
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
           {/* Logo Section */}
           <Link to="/dashboard" className="flex items-center gap-3 group">
             <div className="hidden sm:block">
-              <h1 className="text-xl font-display font-bold tracking-wider text-white">ROA OLVES</h1>
+              <h1 className="text-xl font-display font-bold tracking-wider text-white">ROA WOLVES</h1>
             </div>
             <div className="sm:hidden text-xl font-display font-bold tracking-wider text-white">ROA</div>
           </Link>
@@ -95,22 +104,25 @@ const Header: React.FC = () => {
             </button>
             
             {/* Cart */}
-            <Link to="/store/cart" className="relative text-zinc-400 hover:text-red-500 transition-colors">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative text-zinc-400 hover:text-red-500 transition-colors"
+            >
               <ShoppingBag size={20} />
               {itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* Profile */}
             <Link to="/profile" className="flex items-center gap-2 pl-2 border-l border-zinc-800">
               <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700 hover:border-red-500 transition-colors">
                  {userProfile?.avatar ? (
-                   <img src={userProfile.avatar} alt="Profile" className="w-full h-full object-cover" />
+                   <img src="/src/public/assets/test-image.jpg" alt="Profile" className="w-full h-full object-cover" />
                  ) : (
-                   <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-500 text-xs">
+                   <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-500 text-xs text-bold">
                      {isSignedIn ? (userProfile?.username?.charAt(0).toUpperCase() || 'U') : '?'}
                    </div>
                  )}
@@ -132,29 +144,52 @@ const Header: React.FC = () => {
           </Link>
         ))}
       </div>
-      <CartDrawer 
-        isOpen={isWishlistOpen}
-        onClose={() => setIsWishlistOpen(false)}
-        title="Wishlist"
-        type="wishlist"
-        items={wishlist?.map(item => ({
-          id: item._id as any,
-          name: item.name,
-          price: item.price / 100,
-          image: item.thumbnailUrl || (item.imageUrls && item.imageUrls[0]) || '/placeholder.png',
-          // Satisfy strict types
-          category: '',
-          colors: [],
-          sizes: [],
-          description: '',
-          selectedSize: '',
-          selectedColor: '',
-          quantity: 1
-        })) || []}
-        onRemoveItem={() => {}}
-      />
     </header>
-  );
+    
+    <CartDrawer 
+      isOpen={isWishlistOpen}
+      onClose={() => setIsWishlistOpen(false)}
+      title="Wishlist"
+      type="wishlist"
+      items={wishlist?.map(item => ({
+        id: item._id as any,
+        name: item.name,
+        price: item.price / 100,
+        image: "/src/public/assets/test-image.jpg",
+        // Satisfy strict types
+        category: '',
+        colors: [],
+        sizes: [],
+        description: '',
+        selectedSize: '',
+        selectedColor: '',
+        quantity: 1
+      })) || []}
+      onRemoveItem={() => {}}
+    />
+    <CartDrawer 
+      isOpen={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      title="Shopping Cart"
+      type="cart"
+      items={cart?.items?.map(item => ({
+        id: item.variantId as any,
+        name: (item as any).product?.name || 'Product',
+        price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
+        quantity: item.quantity,
+        image: "/src/public/assets/test-image.jpg",
+        selectedSize: (item as any).variant?.size || '',
+        selectedColor: (item as any).variant?.color || '',
+        // Satisfy strict types
+        category: (item as any).product?.category || '',
+        colors: [],
+        sizes: [],
+        description: ''
+      })) || []}
+      onRemoveItem={() => {}}
+    />
+  </>
+);
 };
 
 export default Header;

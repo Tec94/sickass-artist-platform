@@ -21,6 +21,7 @@ export function ProfileEdit() {
       instagram: user?.socials?.instagram || '',
       tiktok: user?.socials?.tiktok || '',
     },
+    language: 'English',
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -131,6 +132,23 @@ export function ProfileEdit() {
                 maxLength={50}
                 placeholder="Where are you from?"
               />
+            </div>
+          </div>
+
+          <div className="field-group">
+            <label className="field-label">Communication Protocol (Language)</label>
+            <div className="language-selector">
+              {['English', 'Spanish'].map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => handleChange('language', lang)}
+                  className={`lang-btn ${formData.language === lang ? 'active' : ''}`}
+                >
+                  <iconify-icon icon={lang === 'English' ? 'twemoji:flag-united-states' : 'twemoji:flag-spain'}></iconify-icon>
+                  <span>{lang}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -249,6 +267,53 @@ export function ProfileEdit() {
         }
 
         textarea { height: 120px; resize: none; }
+
+        .language-selector {
+          display: flex;
+          gap: 12px;
+          margin-top: 4px;
+        }
+
+        .lang-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-card-border);
+          border-radius: 12px;
+          padding: 12px;
+          color: var(--color-text-dim);
+          font-size: 13px;
+          font-weight: 700;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+        }
+
+        .lang-btn iconify-icon {
+          font-size: 18px;
+          filter: grayscale(1);
+          transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+
+        .lang-btn.active {
+          background: rgba(255, 0, 0, 0.1);
+          border-color: var(--color-primary);
+          color: white;
+          box-shadow: 0 0 20px rgba(255, 0, 0, 0.1);
+        }
+
+        .lang-btn.active iconify-icon {
+          filter: grayscale(0);
+          transform: scale(1.1);
+        }
 
         .socials-meta { margin-top: 16px; }
 

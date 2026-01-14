@@ -37,7 +37,7 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ eventId, onAdmitted 
         <button
           onClick={() => joinQueue(eventId)}
           disabled={isJoining}
-          className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           {isJoining ? (
             <>
@@ -62,7 +62,7 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ eventId, onAdmitted 
           <h3 className="text-xl font-bold text-white mb-1">You're in Queue</h3>
           <div className="flex items-center gap-2">
             <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
-              status === 'admitted' ? 'bg-green-500 text-green-950' : 'bg-cyan-500 text-cyan-950'
+              status === 'admitted' ? 'bg-green-500 text-green-950' : 'bg-red-500 text-white'
             }`}>
               {status === 'admitted' ? 'Ready to Checkout' : 'Waiting'}
             </span>

@@ -1,4 +1,6 @@
 
+import { FreeShippingBanner } from './FreeShippingBanner'
+
 interface MerchNavbarProps {
   cartCount: number
   onOpenCart: () => void
@@ -8,12 +10,8 @@ interface MerchNavbarProps {
 export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProps) => {
   return (
     <nav className="merch-navbar">
-      {/* Top Banner - Redesigned to match reference */}
-      <div className="merch-banner">
-        <div className="banner-container">
-          FREE SHIPPING ON ORDERS OVER $50
-        </div>
-      </div>
+      {/* Top Banner */}
+      <FreeShippingBanner />
       
       <div className="navbar-container">
         <div className="navbar-content">
@@ -37,7 +35,7 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
 
           {/* Center: Logo */}
           <div className="navbar-center" onClick={onGoHome}>
-            <h1 className="logo-text">ROA OLVES</h1>
+            <h1 className="logo-text">ROA WOLVES</h1>
           </div>
 
           {/* Right: Icons */}
@@ -83,7 +81,7 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
           text-transform: uppercase;
           font-weight: 500;
           font-family: var(--font-store, ui-monospace, monospace);
-          height: 34px;
+          height: 60px;
           display: flex;
           align-items: center;
           width: 100%;

@@ -44,12 +44,12 @@ export const MerchCartDrawer = ({ isOpen, onClose, items, onRemove }: MerchCartD
     <>
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-md z-90 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
       
       {/* Drawer */}
-      <div className={`fixed top-0 right-0 bottom-0 w-full max-w-md bg-zinc-950 border-l border-zinc-900 z-[101] shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 bottom-0 w-full max-w-md bg-zinc-950 border-l border-zinc-900 z-100 shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
@@ -79,10 +79,10 @@ export const MerchCartDrawer = ({ isOpen, onClose, items, onRemove }: MerchCartD
               <div key={`${item._id}-${idx}`} className="flex gap-4 group">
                 <div className="w-24 h-32 bg-zinc-900 shrink-0 overflow-hidden relative border border-zinc-900 group-hover:border-zinc-800 transition-colors">
                   <img 
-                    src={item.images[0] || '/placeholder.png'} 
+                    src="/src/public/assets/test-image.jpg" 
                     alt={item.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png' }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/src/public/assets/test-image.jpg' }}
                   />
                 </div>
                 <div className="flex-1 flex flex-col">
