@@ -55,7 +55,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <iconify-icon icon="solar:chart-square-linear" width="20" height="20" class="text-cyan-500"></iconify-icon>
+            <iconify-icon icon="solar:chart-square-linear" width="20" height="20" class="text-red-500"></iconify-icon>
             <h2 className="text-lg font-bold text-white">Performance</h2>
           </div>
           <button
@@ -154,7 +154,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
           {report.metrics.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <iconify-icon icon="solar:bolt-linear" width="16" height="16" class="text-cyan-500"></iconify-icon>
+                <iconify-icon icon="solar:bolt-linear" width="16" height="16" class="text-red-500"></iconify-icon>
                 <span className="text-sm font-semibold text-white">Recent Activity</span>
               </div>
               <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -180,7 +180,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOp
           </button>
           <button
             onClick={handleExportMetrics}
-            className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition flex items-center justify-center gap-2"
           >
             <iconify-icon icon="solar:chart-square-linear" width="16" height="16"></iconify-icon>
             Export Report

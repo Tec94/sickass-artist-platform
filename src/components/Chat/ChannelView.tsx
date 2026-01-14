@@ -108,11 +108,11 @@ export function ChannelView({ channelId }: ChannelViewProps) {
             />
           </div>
         )}
-        <div ref={messagesEndRef} className="h-4 flex-shrink-0" />
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Footer */}
-      <footer className="px-4 pb-6 flex-shrink-0">
+      <footer className="px-4 pb-4 flex-shrink-0 bg-[#111]">
         {!isTypingLoading && typingUsers.length > 0 && (
           <div className="h-5 mb-1 px-1">
             <TypingIndicator typingUsers={typingUsers} />

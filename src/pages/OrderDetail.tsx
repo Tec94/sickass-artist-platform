@@ -22,7 +22,7 @@ export function OrderDetail() {
         <h1 className="text-2xl font-bold text-white mb-4">Order not found</h1>
         <button
           onClick={() => navigate('/merch/orders')}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Orders
         </button>
@@ -34,7 +34,7 @@ export function OrderDetail() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
+          <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-red-500 mx-auto mb-4"></iconify-icon>
           <p className="text-gray-400">Loading order...</p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export function OrderDetail() {
         <h1 className="text-2xl font-bold text-white mb-4">Order not found</h1>
         <button
           onClick={() => navigate('/merch/orders')}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Orders
         </button>
@@ -119,7 +119,7 @@ export function OrderDetail() {
                 </div>
                 <div>
                   <p className="text-gray-500 mb-1">Status</p>
-                  <p className="text-cyan-400 font-semibold capitalize">
+                  <p className="text-red-400 font-semibold capitalize">
                     {order.status}
                   </p>
                 </div>
@@ -145,7 +145,7 @@ export function OrderDetail() {
                         {item.variantName} × {item.quantity}
                       </p>
                     </div>
-                    <p className="text-cyan-400 font-semibold">
+                    <p className="text-red-400 font-semibold">
                       ${(item.totalPrice / 100).toFixed(2)}
                     </p>
                   </div>
@@ -194,7 +194,7 @@ export function OrderDetail() {
 
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-white">Total</span>
-                <span className="text-2xl font-bold text-cyan-400">
+                <span className="text-2xl font-bold text-red-400">
                   ${(order.total / 100).toFixed(2)}
                 </span>
               </div>

@@ -26,6 +26,7 @@ export const Gallery = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showPerfDashboard, setShowPerfDashboard] = useState(false);
+  const [activeTab, setActiveTab] = useState<'artist' | 'community'>('artist');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const animate = useScrollAnimation();
 
@@ -131,24 +132,45 @@ export const Gallery = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <header ref={animate} data-animate className="gallery-header-v2 bg-transparent border-none pb-0 pt-8 px-8">
            <div className="w-full text-center mb-12">
-             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide mb-6">The Gallery</h1>
+             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter mb-8">The Gallery</h1>
              
-             <nav className="inline-flex bg-zinc-900 p-1 rounded-sm border border-zinc-800">
-               {TABS.map(tab => (
-                 <button
-                   key={tab.id}
-                   className={`px-6 py-2 text-sm font-bold uppercase tracking-wider rounded-sm transition-all ${
-                     filters.types.includes(tab.id as any) 
-                     ? 'bg-red-700 text-white' 
-                     : 'text-zinc-500 hover:text-white'
-                   }`}
-                   onClick={() => handleTabChange(tab.id)}
-                 >
-                   {/* <iconify-icon icon={tab.icon} class="mr-2"></iconify-icon> */}
-                   {tab.label}
-                 </button>
-               ))}
-             </nav>
+             {/* Main Tabs (Artist vs Community) */}
+             <div className="inline-flex bg-zinc-900/50 p-1 rounded-sm border border-zinc-800 mb-8">
+               <button 
+                 onClick={() => setActiveTab('artist')}
+                 className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'artist' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+               >
+                 Artist Exclusive
+               </button>
+               <button 
+                 onClick={() => setActiveTab('community')}
+                 className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'community' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+               >
+                 Wolfpack Community
+               </button>
+             </div>
+
+             {/* Artist Sub Tabs */}
+             {activeTab === 'artist' && (
+               <div className="flex flex-wrap justify-center gap-3">
+                 {TABS.map((tab) => (
+                   <button
+                     key={tab.id}
+                     onClick={() => {
+                        handleTabChange(tab.id);
+                     }}
+                     className={`flex items-center gap-2 px-5 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                       filters.types.includes(tab.id as any)
+                         ? 'bg-red-600/10 border-red-600 text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)]'
+                         : 'bg-zinc-900/30 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                     }`}
+                   >
+                     <iconify-icon icon={tab.icon} />
+                     {tab.label}
+                   </button>
+                 ))}
+               </div>
+             )}
            </div>
            
            {/* Secondary Controls Row (Filters, Perf) */}
@@ -222,7 +244,7 @@ export const Gallery = () => {
                   clearFilter('fanTier');
                   clearFilter('tags');
                 }}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
               >
                 Clear all filters
               </button>
@@ -352,20 +374,20 @@ export const Gallery = () => {
         .filter-toggle-btn:hover {
           color: white;
           background: rgba(255, 255, 255, 0.05);
-          border-color: cyan;
+          border-color: #dc2626;
         }
 
         .filter-toggle-btn.has-filters {
-          border-color: cyan;
-          color: cyan;
+          border-color: #dc2626;
+          color: #dc2626;
         }
 
         .filter-badge {
           position: absolute;
           top: -8px;
           right: -8px;
-          background: cyan;
-          color: black;
+          background: #dc2626;
+          color: white;
           border-radius: 50%;
           width: 20px;
           height: 20px;

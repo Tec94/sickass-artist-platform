@@ -32,7 +32,7 @@ export const FilterChips = ({ filters, onRemove }: FilterChipsProps) => {
         <button
           key={chip.key}
           onClick={() => onRemove(chip.key)}
-          className="flex items-center gap-2 px-3 py-1 bg-cyan-600/20 border border-cyan-600/50 text-cyan-300 rounded-full text-sm hover:bg-cyan-600/30 transition"
+          className="flex items-center gap-2 px-3 py-1 bg-red-600/20 border border-red-600/50 text-red-500 rounded-full text-sm hover:bg-red-600/30 transition"
         >
           {chip.label}
           <iconify-icon icon="solar:close-circle-linear" width="12" height="12"></iconify-icon>

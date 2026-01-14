@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Heart, ShoppingBag, Bell } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useUser } from '../contexts/UserContext';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import CartDrawer from '../../roa-wolves/components/CartDrawer';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -10,10 +13,10 @@ const Header: React.FC = () => {
   const { itemCount } = useCart();
   const { userProfile, isSignedIn } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   
-  // Wishlist context or local state could go here. 
-  // For now, hardcoding wishlist count to 0 or implementing if simple.
-  const wishlistCount = 0; 
+  const wishlist = useQuery(api.merch.getWishlist);
+  const wishlistCount = wishlist?.length || 0; 
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard' },
@@ -34,19 +37,15 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           
           {/* Logo Section */}
-          <Link to="/dashboard" className="flex items-center gap-4 group">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-red-700 flex items-center justify-center rounded-sm transition-transform group-hover:scale-105">
-                <span className="text-white font-display font-bold text-xl">W</span>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-2xl font-display font-bold tracking-wider text-white">ROA WOLVES</h1>
-              </div>
+          <Link to="/dashboard" className="flex items-center gap-3 group">
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-display font-bold tracking-wider text-white">ROA OLVES</h1>
             </div>
+            <div className="sm:hidden text-xl font-display font-bold tracking-wider text-white">ROA</div>
           </Link>
 
           {/* Navigation */}
@@ -55,7 +54,7 @@ const Header: React.FC = () => {
               <Link 
                 key={link.name} 
                 to={link.path} 
-                className={`text-sm font-display uppercase tracking-wider transition-colors hover:text-red-500 ${location.pathname.startsWith(link.path) ? 'text-white border-b-2 border-red-600' : 'text-zinc-400'}`}
+                className={`text-xs font-display uppercase tracking-wider transition-colors hover:text-red-500 ${location.pathname.startsWith(link.path) ? 'text-white border-b-2 border-red-600' : 'text-zinc-400'}`}
               >
                 {link.name}
               </Link>
@@ -82,8 +81,11 @@ const Header: React.FC = () => {
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full"></span>
             </button>
 
-            {/* Wishlist - Placeholder functionality */}
-            <button className="relative text-zinc-400 hover:text-red-500 transition-colors">
+            {/* Wishlist */}
+            <button 
+              onClick={() => setIsWishlistOpen(true)}
+              className="relative text-zinc-400 hover:text-red-500 transition-colors"
+            >
               <Heart size={20} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -130,6 +132,27 @@ const Header: React.FC = () => {
           </Link>
         ))}
       </div>
+      <CartDrawer 
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        title="Wishlist"
+        type="wishlist"
+        items={wishlist?.map(item => ({
+          id: item._id as any,
+          name: item.name,
+          price: item.price / 100,
+          image: item.thumbnailUrl || (item.imageUrls && item.imageUrls[0]) || '/placeholder.png',
+          // Satisfy strict types
+          category: '',
+          colors: [],
+          sizes: [],
+          description: '',
+          selectedSize: '',
+          selectedColor: '',
+          quantity: 1
+        })) || []}
+        onRemoveItem={() => {}}
+      />
     </header>
   );
 };

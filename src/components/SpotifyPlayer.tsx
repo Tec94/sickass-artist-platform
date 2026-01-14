@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import type { Doc } from '../../convex/_generated/dataModel'
 
 interface SpotifyPlayerProps {
   previewUrl?: string | null
@@ -116,17 +115,72 @@ export const SpotifyPlayer = ({
 /**
  * Grid of Spotify songs with players
  */
-export const SpotifyPlaylist = ({ tracks }: { tracks: Doc<'spotifySongs'>[] }) => {
+const HARDCODED_TRACKS = [
+  {
+    spotifyTrackId: '7nrd0eIftH3NQLfgk20Qp9',
+    title: 'YOGURCITO REMIX',
+    artist: 'Kris R., ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02a12acd5e9f8c12c2fc6a1e44',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/7nrd0eIftH3NQLfgk20Qp9'
+  },
+  {
+    spotifyTrackId: '4Hkp1TiYqGYhknFwtUsbqd',
+    title: 'ME GUSTAS CC',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02b2c0e9901d01c15c4cf8fed6',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/4Hkp1TiYqGYhknFwtUsbqd'
+  },
+  {
+    spotifyTrackId: '3YrTrs2hJbLklaBdhr4TrH',
+    title: 'ETA - RMX',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02b2c0e9901d01c15c4cf8fed6',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/3YrTrs2hJbLklaBdhr4TrH'
+  },
+  {
+    spotifyTrackId: '5hWpXZOs7vpz0JD3CIylsb',
+    title: 'FANTASÍA',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e0232be66e296d4b19ec9513506',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/5hWpXZOs7vpz0JD3CIylsb'
+  },
+  {
+    spotifyTrackId: '30ga1gIdpg6M6ZshWo7YgC',
+    title: 'PPC',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e0285d36426f1aae4f2f3ae66bc',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/30ga1gIdpg6M6ZshWo7YgC'
+  },
+  {
+    spotifyTrackId: '1agNeynGrAgsS1XbsJUM5w',
+    title: 'Pieza Exhibición',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02392ba661e02dc5cc9ceed533',
+    previewUrl: null,
+    externalUrl: 'https://open.spotify.com/track/1agNeynGrAgsS1XbsJUM5w'
+  }
+];
+
+interface SpotifyPlaylistProps {
+  tracks?: any[]
+}
+
+export const SpotifyPlaylist = ({ tracks = HARDCODED_TRACKS }: SpotifyPlaylistProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {tracks.map((track) => (
         <SpotifyPlayer
-          key={track.spotifyTrackId}
+          key={track.spotifyTrackId || track._id}
           previewUrl={track.previewUrl}
           title={track.title}
           artist={track.artist}
           albumCover={track.albumCover}
-          spotifyUrl={track.externalUrl}
+          spotifyUrl={track.externalUrl || track.spotifyUrl}
         />
       ))}
     </div>

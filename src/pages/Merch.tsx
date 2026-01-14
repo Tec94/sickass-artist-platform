@@ -6,7 +6,7 @@ import { api } from '../../convex/_generated/api'
 // Components
 import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
-import { MerchCartDrawer } from '../components/Merch/MerchCartDrawer'
+import CartDrawer from '../../roa-wolves/components/CartDrawer'
 
 // Utils
 import { showToast } from '../lib/toast'
@@ -77,7 +77,7 @@ export function Merch() {
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
       {/* Note: Header contains the Navbar now, so MerchNavbar is removed */}
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-fade-in">
+      <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-fade-in">
           <div className="flex flex-col md:flex-row gap-8">
             
             {/* Sidebar */}
@@ -163,19 +163,26 @@ export function Merch() {
           </div>
       </main>
 
-      <MerchCartDrawer 
+      <CartDrawer 
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
+        title="Shopping Cart"
+        type="cart"
         items={cart?.items?.map(item => ({
-          _id: item.variantId,
+          id: item.variantId as any,
           name: (item as any).product?.name || 'Product',
-          price: (item as any).currentPrice || item.priceAtAddTime || 0,
+          price: ((item as any).currentPrice || item.priceAtAddTime || 0) / 100,
           quantity: item.quantity,
-          images: (item as any).product?.imageUrls || [(item as any).product?.thumbnailUrl] || [],
-          selectedSize: (item as any).variant?.size,
-          selectedVariant: (item as any).variant?.color
+          image: (item as any).product?.imageUrls?.[0] || (item as any).product?.thumbnailUrl || '/placeholder.png',
+          selectedSize: (item as any).variant?.size || '',
+          selectedColor: (item as any).variant?.color || '',
+          // Satisfy strict types
+          category: (item as any).product?.category || '',
+          colors: [],
+          sizes: [],
+          description: ''
         })) || []}
-        onRemove={() => {
+        onRemoveItem={() => {
            showToast('Remove from cart coming soon', { type: 'info' })
         }}
       />

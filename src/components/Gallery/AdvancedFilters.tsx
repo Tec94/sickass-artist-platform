@@ -120,7 +120,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
         type="checkbox"
         checked={checked}
         onChange={e => onChange(e.target.checked)}
-        className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
+        className="w-4 h-4 accent-red-600 rounded cursor-pointer"
       />
       <span className="text-sm text-gray-300 group-hover:text-white transition">{label}</span>
     </label>
@@ -150,7 +150,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
           <div>
             <h2 className="font-bold text-white">Filters</h2>
             {appliedCount > 0 && (
-              <p className="text-xs text-cyan-400 mt-1">{appliedCount} active</p>
+              <p className="text-xs text-red-500 mt-1">{appliedCount} active</p>
             )}
           </div>
           {isModal && (
@@ -169,7 +169,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
             <FilterChips filters={filters} onRemove={clearFilter} />
             <button
               onClick={clearAll}
-              className="mt-2 text-xs text-cyan-400 hover:text-cyan-300 transition"
+              className="mt-2 text-xs text-red-500 hover:text-red-400 transition"
             >
               Clear all filters
             </button>
@@ -225,7 +225,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
             <select
               value={filters.creatorId || ''}
               onChange={e => setFilter('creatorId', e.target.value || null)}
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded text-sm focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded text-sm focus:outline-none focus:border-red-600"
             >
               <option value="">All creators</option>
               {creators.map(creator => (
@@ -257,7 +257,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
               placeholder="Search tags..."
               value={tagInput}
               onChange={e => setTagInput(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded text-sm focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded text-sm focus:outline-none focus:border-red-600"
             />
             <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
               {availableTags.map(tag => (
@@ -266,7 +266,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
                   onClick={() => handleTagToggle(tag)}
                   className={`px-2 py-1 rounded text-xs font-medium transition ${
                     filters.tags.includes(tag)
-                      ? 'bg-cyan-600 text-white'
+                      ? 'bg-red-600 text-white'
                       : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
@@ -298,7 +298,7 @@ export const AdvancedFilters = ({ onClose, isModal = false }: AdvancedFiltersPro
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition font-medium"
+            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition font-medium"
           >
             Apply
           </button>

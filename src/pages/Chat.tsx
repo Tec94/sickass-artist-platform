@@ -29,7 +29,7 @@ export function Chat() {
   }
 
   return (
-    <div className="flex h-full w-full bg-zinc-900 text-zinc-200 font-sans selection:bg-red-900/30 animate-fade-in">
+    <div className="flex h-[calc(100vh-theme(spacing.16))] w-full bg-zinc-950 text-zinc-200 font-sans selection:bg-red-900/30 overflow-hidden">
       {/* Channel Sidebar */}
       <aside className="w-64 flex flex-col bg-zinc-950 overflow-hidden border-r border-zinc-800">
         <header className="h-16 px-4 flex items-center border-b border-zinc-800 shadow-sm cursor-pointer hover:bg-zinc-900 transition-colors">

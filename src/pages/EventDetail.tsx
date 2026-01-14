@@ -45,7 +45,7 @@ export function EventDetail() {
   if (!eventDetail) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-12 w-12 border-4 border-red-600 border-t-transparent rounded-full"></div>
       </div>
     )
   }

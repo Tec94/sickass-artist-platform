@@ -5,7 +5,6 @@ import { EventCard } from '../components/events/EventCard'
 import { EventFilters } from '../components/events/EventFilters'
 import { EventSearch } from '../components/events/EventSearch'
 import { useEventList } from '../hooks/useEventList'
-import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { useAnalytics } from '../hooks/useAnalytics'
 import type { EventFilters as EventFiltersType } from '../types/events'
 
@@ -13,7 +12,6 @@ export function Events() {
   useAnalytics() // Track page views
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const animate = useScrollAnimation()
 
   // Parse filters from URL
   const [filters, setFilters] = useState<EventFiltersType>(() => {
@@ -51,175 +49,99 @@ export function Events() {
   const availableCities = Array.from(new Set(events.map(e => e.city))).sort()
 
   return (
-    <div className="events-layout h-full flex flex-col">
-      {/* Header */}
-      {/* Header */}
-      <header ref={animate} data-animate className="events-header mb-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-          <div>
-             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide">Tour & Events</h1>
-             <p className="text-zinc-400 mt-2">Catch ROA WOLVES live in a city near you.</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-             {/* View Toggle */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-1 flex">
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-sm transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                <Grid size={20} />
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-sm transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                <List size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Bar - Moved below title */}
-        <div className="max-w-xl">
-           <EventSearch placeholder="Search events by title, venue, or city..." />
-        </div>
+    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 animate-fade-in pb-10">
+      <div className="flex flex-col lg:flex-row gap-10">
         
-        {/* Active Filters Summary */}
-        <div className="flex items-center gap-2 mt-4">
-           <span className="text-sm text-gray-400">{total} events</span>
-           {filters.city && (
-             <span className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">
-               in {filters.city}
-             </span>
-           )}
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="events-content flex-1 flex gap-6">
-        {/* Sidebar Filters */}
-        <aside className="events-sidebar hidden lg:block w-64 flex-shrink-0">
-          <EventFilters
-            filters={filters}
-            onChange={setFilters}
-            availableCities={availableCities}
-            eventCount={total}
-          />
+        {/* Sidebar Filters - Preserved */}
+        <aside className="lg:w-72 shrink-0">
+          <div className="sticky top-24">
+            <EventFilters
+              filters={filters}
+              onChange={setFilters}
+              availableCities={availableCities}
+              eventCount={total}
+            />
+          </div>
         </aside>
 
-        {/* Events Grid/List */}
-        <main className="events-main flex-1">
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+            <div>
+               <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter">Tour & Events</h1>
+               <p className="text-zinc-500 mt-2 font-medium">Catch ROA WOLVES live in a city near you.</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-sm p-1 flex">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                >
+                  <Grid size={18} />
+                </button>
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-sm transition-all ${viewMode === 'list' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-10 max-w-2xl">
+             <EventSearch placeholder="Explore tours, cities, or venues..." />
+          </div>
+
           {loading && events.length === 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-gray-900/70 border border-gray-800 rounded-lg overflow-hidden animate-pulse">
-                  <div className="aspect-video bg-gray-950"></div>
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 bg-gray-800 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-800 rounded w-1/2"></div>
-                    <div className="h-3 bg-gray-800 rounded w-2/3"></div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 bg-zinc-900/50 border border-zinc-800 animate-pulse rounded-sm" />
               ))}
             </div>
           ) : events.length > 0 ? (
-            <>
-              <div
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
-                    : 'space-y-4'
-                }
-              >
-                {events.map((event) => (
-                  <EventCard
-                    key={event._id}
-                    event={event}
-                    compact={viewMode === 'list'}
-                    showQuickAction={true}
-                  />
-                ))}
-              </div>
-
-              {/* Load More */}
-              {hasMore && (
-                <div className="flex justify-center mt-8">
-                  <button
-                    onClick={loadMore}
-                    disabled={loading}
-                    className="bg-red-500/20 text-red-500 px-8 py-3 rounded-full font-bold hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
-                        Loading...
-                      </span>
-                    ) : (
-                      'Load More'
-                    )}
-                  </button>
-                </div>
-              )}
-            </>
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-col gap-6"}>
+              {events.map((event) => (
+                <EventCard
+                  key={event._id}
+                  event={event}
+                  compact={viewMode === 'list'}
+                  showQuickAction={true}
+                />
+              ))}
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <iconify-icon icon="solar:calendar-minimalistic-bold" class="text-6xl text-gray-700 mb-4"></iconify-icon>
-              <h3 className="text-white font-bold text-xl mb-2">No events found</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Try adjusting your filters or check back later
+            <div className="py-20 text-center border border-dashed border-zinc-800 rounded-lg">
+              <iconify-icon icon="solar:calendar-broken" class="text-6xl text-zinc-700 mb-4"></iconify-icon>
+              <h3 className="text-white font-bold text-xl mb-2">No results found</h3>
+              <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+                No events match your current filters. Try adjusting your search or clearing filters.
               </p>
               <button
                 onClick={() => setFilters({ sortBy: 'asc' })}
-                className="bg-red-500/20 text-red-500 px-6 py-2 rounded-full font-bold hover:bg-red-500/30 transition-colors"
+                className="mt-6 text-red-500 font-bold uppercase text-xs tracking-widest hover:text-red-400 transition-colors"
               >
                 Reset Filters
               </button>
             </div>
           )}
-        </main>
+
+          {/* Load More */}
+          {hasMore && (
+            <div className="flex justify-center mt-12 pt-12 border-t border-zinc-900">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="text-zinc-500 hover:text-white uppercase text-xs tracking-[0.3em] font-bold border-b border-transparent hover:border-red-600 transition-all pb-1 disabled:opacity-50"
+              >
+                {loading ? 'Synchronizing...' : 'Load More Experiences'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-
-      <style>{`
-        .events-layout {
-          width: 100%;
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 0 20px;
-        }
-
-        .h1-title {
-          font-size: 32px;
-          font-weight: 800;
-          color: white;
-          text-transform: uppercase;
-          letter-spacing: 2px;
-          margin: 0;
-        }
-
-        .sub-text {
-          font-size: 14px;
-          color: var(--color-text-dim);
-          font-weight: 600;
-          margin: 4px 0 0 0;
-        }
-
-        @media (max-width: 1024px) {
-          .events-sidebar {
-            display: none;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .h1-title {
-            font-size: 24px;
-          }
-          
-          .events-header {
-            margin-bottom: 24px;
-          }
-        }
-      `}</style>
     </div>
   )
 }

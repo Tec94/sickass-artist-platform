@@ -110,7 +110,7 @@ export function VariantSelector({
                   disabled={!hasAvailable}
                   className={`py-2 px-3 rounded border text-sm font-semibold transition-colors ${
                     selectedVariant?.size === size
-                      ? 'bg-cyan-600 border-cyan-500 text-white'
+                      ? 'bg-red-600 border-red-500 text-white'
                       : hasAvailable
                         ? 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
                         : 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
@@ -145,7 +145,7 @@ export function VariantSelector({
                     disabled={!available}
                     className={`py-2 px-3 rounded border text-sm font-semibold transition-colors ${
                       selectedVariantId === variant?._id
-                        ? 'bg-cyan-600 border-cyan-500 text-white'
+                        ? 'bg-red-600 border-red-500 text-white'
                         : available
                           ? 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
                           : 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
@@ -223,7 +223,7 @@ export function VariantSelector({
               onClick={() => onSelectVariant(variant._id)}
               className={`w-full py-2 px-3 rounded border text-left transition-colors ${
                 selectedVariantId === variant._id
-                  ? 'bg-cyan-600 border-cyan-500 text-white'
+                  ? 'bg-red-600 border-red-500 text-white'
                   : variant.stock > 0
                     ? 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
                     : 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'

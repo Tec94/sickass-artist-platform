@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { CartProvider } from './contexts/CartContext'
@@ -96,12 +96,14 @@ const AdminRedemptions = lazy(() => import('./components/Admin').then(m => ({ de
 const AdminRewards = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRewards })))
 const AdminPoints = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminPoints })))
 
-const Ranking = lazy(() => import('./pages/Ranking').then(m => ({ default: m.Ranking })))
+const Ranking = lazy(() => import('./pages/Ranking.tsx').then(m => ({ default: m.Ranking })))
 
 import Footer from './components/Footer'
 
 function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
+  const location = useLocation()
+  const showFooter = location.pathname === '/dashboard'
 
   return (
     <>
@@ -114,10 +116,10 @@ function AppContent() {
                     width: 100vw;
                     display: flex;
                     flex-direction: column;
-                    overflow: auto; /* Changed from hidden to auto to allow scrolling with footer */
+                    overflow: hidden;
                   }
                 `}</style>
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className={`flex-1 flex flex-col ${showFooter ? 'overflow-auto' : 'overflow-hidden'}`}>
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -143,7 +145,7 @@ function AppContent() {
 
                 {/* Store Routes */}
                 <Route path="/store" element={<Merch />} />
-                <Route path="/store/product/:id" element={
+                <Route path="/store/product/:productId" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
                     <MerchDetail />
                   </Suspense>
@@ -257,7 +259,7 @@ function AppContent() {
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Suspense>
-            <Footer />
+            {showFooter && <Footer />}
             </div>
           </FlashlightEffect>
 

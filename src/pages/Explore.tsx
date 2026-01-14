@@ -172,10 +172,10 @@ export const Explore: React.FC = () => {
 
           {isLoading && displayedItems.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <iconify-icon icon="solar:spinner-linear" class="h-8 w-8 animate-spin text-cyan-400"></iconify-icon>
+              <iconify-icon icon="solar:spinner-linear" class="h-8 w-8 animate-spin text-red-400"></iconify-icon>
             </div>
           ) : displayedItems.length === 0 && !isLoading ? (
-            <div className="rounded-lg border border-cyan-500/20 bg-slate-900/50 p-8 text-center">
+            <div className="rounded-lg border border-red-500/20 bg-slate-900/50 p-8 text-center">
               <p className="text-gray-400">No trending content found</p>
               <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
             </div>
@@ -188,7 +188,7 @@ export const Explore: React.FC = () => {
                 <div className="mt-8">
                   {(isLoadingMore || isLoading) && (
                     <div className="flex items-center justify-center py-8">
-                      <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-cyan-400"></iconify-icon>
+                      <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-red-400"></iconify-icon>
                     </div>
                   )}
                   {/* Sentinel element for intersection observer */}

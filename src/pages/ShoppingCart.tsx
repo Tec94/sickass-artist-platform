@@ -59,7 +59,7 @@ export function ShoppingCart() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="text-center py-12">
-            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
+            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-red-500 mx-auto mb-4"></iconify-icon>
             <p className="text-gray-400">Loading cart...</p>
           </div>
         ) : isEmpty ? (
@@ -67,7 +67,7 @@ export function ShoppingCart() {
             <p className="text-gray-400 text-lg mb-4">Your cart is empty</p>
             <button
               onClick={() => navigate('/merch')}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded"
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
             >
               Start Shopping
             </button>
@@ -90,7 +90,7 @@ export function ShoppingCart() {
               <div className="flex gap-4">
                 <button
                   onClick={() => navigate('/merch/orders')}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="text-sm text-red-400 hover:text-red-300 transition-colors"
                 >
                   View Order History
                 </button>

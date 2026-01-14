@@ -32,7 +32,7 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
   const isWishlisted = wishlist?.some(item => item._id === product._id)
 
   const handleClick = () => {
-    navigate(`/merch/${product._id}`)
+    navigate(`/store/product/${product._id}`)
   }
 
   const handleWishlist = async (e: React.MouseEvent) => {
@@ -51,14 +51,14 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
 
     // If product has variants, we should probably navigate to detail to let them choose
     if (product.variants && product.variants.length > 1) {
-      navigate(`/merch/${product._id}`)
+      navigate(`/store/product/${product._id}`)
       return
     }
 
     // Default to first variant if available
     const variantId = product.variants?.[0]?._id
     if (!variantId) {
-      navigate(`/merch/${product._id}`)
+      navigate(`/store/product/${product._id}`)
       return
     }
 

@@ -60,7 +60,7 @@ export function OrderHistory() {
               placeholder="Search by order number or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:border-red-500 focus:outline-none"
             />
           </div>
 
@@ -71,7 +71,7 @@ export function OrderHistory() {
                 onClick={() => setFilterStatus(status.value)}
                 className={`px-4 py-2 rounded transition-colors ${
                   filterStatus === status.value
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-red-600 text-white'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
@@ -83,7 +83,7 @@ export function OrderHistory() {
 
         {!orders ? (
           <div className="text-center py-12">
-            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-cyan-500 mx-auto mb-4"></iconify-icon>
+            <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-red-500 mx-auto mb-4"></iconify-icon>
             <p className="text-gray-400">Loading orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -93,7 +93,7 @@ export function OrderHistory() {
             </p>
             <button
               onClick={() => navigate('/merch')}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
             >
               Start Shopping
             </button>

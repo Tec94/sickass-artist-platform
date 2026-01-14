@@ -106,11 +106,11 @@ export const Dashboard = () => {
 
           {/* Community Buzz Widget */}
           <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
-                <MessageSquare className="text-red-600" /> Wolfpack Chatter
+            <div className="flex items-center justify-between mb-4 gap-4">
+              <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2 truncate">
+                <MessageSquare className="text-red-600 shrink-0" /> <span className="truncate">Wolfpack Chatter</span>
               </h3>
-              <Link to="/forum" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">Join Discussion</Link>
+              <Link to="/forum" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider whitespace-nowrap shrink-0">Join Discussion</Link>
             </div>
             <div className="space-y-4">
               {forumPosts.slice(0, 3).map(post => (

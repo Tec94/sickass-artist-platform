@@ -95,7 +95,7 @@ export const QueueSpinner = memo(({ size = 'md', className = '' }: { size?: 'sm'
   return (
     <div className={`inline-flex items-center justify-center ${className}`}>
       <div
-        className={`${sizeClasses[size]} border-2 border-gray-700 border-t-cyan-500 rounded-full animate-spin`}
+        className={`${sizeClasses[size]} border-2 border-gray-700 border-t-red-500 rounded-full animate-spin`}
         role="status"
         aria-label="Loading"
       >

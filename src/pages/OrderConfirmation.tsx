@@ -14,7 +14,7 @@ export function OrderConfirmation() {
         <h1 className="text-2xl font-bold text-white mb-4">No order found</h1>
         <button
           onClick={() => navigate('/merch')}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Shop
         </button>
@@ -50,7 +50,7 @@ export function OrderConfirmation() {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="fixed inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5 pointer-events-none" />
 
       <div className="relative max-w-2xl mx-auto px-4 py-16 flex flex-col items-center">
         <div className="mb-8">
@@ -84,7 +84,7 @@ export function OrderConfirmation() {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-gray-500 text-sm mb-1">Order Total</p>
-              <p className="text-2xl font-bold text-cyan-400">
+              <p className="text-2xl font-bold text-red-400">
                 ${((total || 0) / 100).toFixed(2)}
               </p>
             </div>
@@ -143,7 +143,7 @@ export function OrderConfirmation() {
         <div className="w-full flex flex-col gap-3 sm:flex-row">
           <button
             onClick={() => navigate('/merch/orders')}
-            className="flex-1 py-3 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors"
+            className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
           >
             View Order Details
           </button>
@@ -160,11 +160,11 @@ export function OrderConfirmation() {
             Have questions? Check out our FAQ or contact support
           </p>
           <div className="flex gap-4 justify-center">
-            <button className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors">
+            <button className="text-red-400 hover:text-red-300 text-sm transition-colors">
               FAQ
             </button>
             <span className="text-gray-600">•</span>
-            <button className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors">
+            <button className="text-red-400 hover:text-red-300 text-sm transition-colors">
               Contact Support
             </button>
           </div>

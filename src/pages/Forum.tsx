@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id, Thread, ThreadSortBy } from '../types/forum'
@@ -22,9 +22,7 @@ export function Forum() {
   const [isThreadFormOpen, setIsThreadFormOpen] = useState(false)
   const [editingThread, setEditingThread] = useState<Thread | null>(null)
 
-  const _selectedCategory = useMemo(() => {
-    return categories.find((c) => c._id === selectedCategoryId) ?? null
-  }, [categories, selectedCategoryId])
+
 
   useEffect(() => {
     if (categories.length > 0 && !selectedCategoryId) {
@@ -77,7 +75,7 @@ export function Forum() {
 
   return (
     <>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
+    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
       <div className="flex flex-col md:flex-row gap-8 h-full">
         {/* Left Sidebar - Categories */}
         <div className={`w-full md:w-64 shrink-0 space-y-8 ${isMobileSidebarOpen ? 'block fixed inset-0 z-50 bg-zinc-950 p-4' : 'hidden md:block'}`}>

@@ -35,7 +35,7 @@ export function Checkout() {
         <h1 className="text-2xl font-bold text-white mb-4">Your cart is empty</h1>
         <button
           onClick={() => navigate('/merch')}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Shop
         </button>
@@ -107,31 +107,31 @@ export function Checkout() {
         <div className="bg-gray-900/30 border-b border-gray-800">
           <div className="max-w-2xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between text-sm">
-              <div className={`flex items-center gap-2 ${checkout.step >= 1 ? 'text-cyan-400' : 'text-gray-500'}`}>
+              <div className={`flex items-center gap-2 ${checkout.step >= 1 ? 'text-red-400' : 'text-gray-500'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  checkout.step >= 1 ? 'bg-cyan-600' : 'bg-gray-800'
+                  checkout.step >= 1 ? 'bg-red-600' : 'bg-gray-800'
                 }`}>
                   1
                 </div>
                 <span className="hidden sm:inline">Cart Review</span>
               </div>
 
-              <div className={`h-1 flex-1 mx-2 ${checkout.step >= 2 ? 'bg-cyan-600' : 'bg-gray-800'}`} />
+              <div className={`h-1 flex-1 mx-2 ${checkout.step >= 2 ? 'bg-red-600' : 'bg-gray-800'}`} />
 
-              <div className={`flex items-center gap-2 ${checkout.step >= 2 ? 'text-cyan-400' : 'text-gray-500'}`}>
+              <div className={`flex items-center gap-2 ${checkout.step >= 2 ? 'text-red-400' : 'text-gray-500'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  checkout.step >= 2 ? 'bg-cyan-600' : 'bg-gray-800'
+                  checkout.step >= 2 ? 'bg-red-600' : 'bg-gray-800'
                 }`}>
                   2
                 </div>
                 <span className="hidden sm:inline">Shipping</span>
               </div>
 
-              <div className={`h-1 flex-1 mx-2 ${checkout.step >= 3 ? 'bg-cyan-600' : 'bg-gray-800'}`} />
+              <div className={`h-1 flex-1 mx-2 ${checkout.step >= 3 ? 'bg-red-600' : 'bg-gray-800'}`} />
 
-              <div className={`flex items-center gap-2 ${checkout.step >= 3 ? 'text-cyan-400' : 'text-gray-500'}`}>
+              <div className={`flex items-center gap-2 ${checkout.step >= 3 ? 'text-red-400' : 'text-gray-500'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  checkout.step >= 3 ? 'bg-cyan-600' : 'bg-gray-800'
+                  checkout.step >= 3 ? 'bg-red-600' : 'bg-gray-800'
                 }`}>
                   3
                 </div>
@@ -194,7 +194,7 @@ function CartReviewStep({ onNext }: { onNext: () => void }) {
             <p className="text-white font-semibold">{item.productName}</p>
             <p className="text-gray-400 text-sm">{item.variantName} × {item.quantity}</p>
           </div>
-          <p className="text-cyan-400 font-semibold">
+          <p className="text-red-400 font-semibold">
             ${((item.currentPrice * item.quantity) / 100).toFixed(2)}
           </p>
         </div>
@@ -202,14 +202,14 @@ function CartReviewStep({ onNext }: { onNext: () => void }) {
 
       <div className="pt-4 mt-4 border-t border-gray-800 flex justify-between items-center">
         <span className="text-gray-300">Total</span>
-        <span className="text-2xl font-bold text-cyan-400">
+        <span className="text-2xl font-bold text-red-400">
           ${(total / 100).toFixed(2)}
         </span>
       </div>
 
       <button
         onClick={onNext}
-        className="w-full mt-6 py-3 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
+        className="w-full mt-6 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
       >
         Continue to Shipping
         <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>

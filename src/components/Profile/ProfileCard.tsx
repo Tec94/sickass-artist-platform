@@ -11,7 +11,7 @@ export function ProfileCard({ user, onClick }: ProfileCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/20 transition cursor-pointer"
+      className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20 transition cursor-pointer"
     >
       <div className="flex items-start gap-4 mb-4">
         <ProfileAvatar user={user} size="md" />

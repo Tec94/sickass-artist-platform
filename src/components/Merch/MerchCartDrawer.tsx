@@ -31,363 +31,133 @@ export const MerchCartDrawer = ({ isOpen, onClose, items, onRemove }: MerchCartD
     try {
       await removeFromCart({ variantId: variantId as Id<'merchVariants'> })
     } catch {
-      onRemove(variantId) // Fallback to parent handler
+      onRemove(variantId)
     }
   }
 
   const handleCheckout = () => {
     onClose()
-    navigate('/merch/checkout')
+    navigate('/store/checkout')
   }
 
   return (
     <>
       {/* Backdrop */}
       <div 
-        className={`cart-backdrop ${isOpen ? 'visible' : ''}`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
       
       {/* Drawer */}
-      <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
-        <div className="drawer-header">
-          <h2>
-            <span className="pulse-dot"></span>
-            SHOPPING BAG ({itemCount})
+      <div className={`fixed top-0 right-0 bottom-0 w-full max-w-md bg-zinc-950 border-l border-zinc-900 z-[101] shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        
+        {/* Header */}
+        <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
+          <h2 className="text-xl font-display font-bold text-white uppercase tracking-wide flex items-center gap-3">
+            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            Shopping Bag ({itemCount})
           </h2>
-          <button onClick={onClose} className="close-btn">
-            <iconify-icon icon="solar:close-linear" width="18" height="18"></iconify-icon>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:close-circle-bold" width="24" height="24"></iconify-icon>
           </button>
         </div>
 
-        <div className="drawer-content">
+        {/* Items List */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {items.length === 0 ? (
-            <div className="empty-state">
-              <p>Your bag is empty.</p>
-              <button onClick={onClose} className="start-shopping">
-                Start Shopping
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+              <div className="w-20 h-20 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-800">
+                <iconify-icon icon="solar:bag-heart-bold" width="48" height="48"></iconify-icon>
+              </div>
+              <p className="text-zinc-500 font-medium">Your bag is currently empty.</p>
+              <button onClick={onClose} className="text-red-500 hover:text-red-400 font-bold uppercase text-xs tracking-widest underline underline-offset-4">
+                Continue Shopping
               </button>
             </div>
           ) : (
             items.map((item, idx) => (
-              <div key={`${item._id}-${idx}`} className="cart-item">
-                <div className="item-image">
+              <div key={`${item._id}-${idx}`} className="flex gap-4 group">
+                <div className="w-24 h-32 bg-zinc-900 shrink-0 overflow-hidden relative border border-zinc-900 group-hover:border-zinc-800 transition-colors">
                   <img 
                     src={item.images[0] || '/placeholder.png'} 
                     alt={item.name}
+                    className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png' }}
                   />
                 </div>
-                <div className="item-info">
-                  <div className="item-row">
-                    <h3 className="item-name">{item.name}</h3>
-                    <button 
-                      onClick={() => handleRemove(item._id)}
-                      className="remove-btn"
-                    >
-                      <iconify-icon icon="solar:trash-bin-2-linear" width="14" height="14"></iconify-icon>
-                    </button>
+                <div className="flex-1 flex flex-col">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="text-white font-bold uppercase text-xs leading-tight tracking-wide">{item.name}</h3>
+                    <span className="text-zinc-100 font-bold text-sm shrink-0">${(item.price / 100).toFixed(2)}</span>
                   </div>
-                  <p className="item-price">${(item.price / 100).toFixed(2)}</p>
-                  <div className="item-meta">
+                  
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {item.selectedVariant && (
-                      <span className="meta-tag">{item.selectedVariant.toUpperCase()}</span>
+                      <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">{item.selectedVariant}</span>
                     )}
                     {item.selectedSize && (
-                      <span className="meta-tag">{item.selectedSize}</span>
+                      <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">{item.selectedSize}</span>
                     )}
-                    <span className="meta-tag">QTY: {item.quantity}</span>
+                    <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">QTY: {item.quantity}</span>
                   </div>
+
+                  <button 
+                    onClick={() => handleRemove(item._id)}
+                    className="mt-auto self-start flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-red-600 transition-colors"
+                  >
+                    <iconify-icon icon="solar:trash-bin-trash-bold" width="14" height="14"></iconify-icon>
+                    Remove
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
 
+        {/* Footer */}
         {items.length > 0 && (
-          <div className="drawer-footer">
-            <div className="subtotal-row">
-              <span className="subtotal-label">SUBTOTAL</span>
-              <span className="subtotal-value">${(subtotal / 100).toFixed(2)}</span>
+          <div className="p-6 border-t border-zinc-900 bg-zinc-950">
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-zinc-500 font-bold uppercase text-xs tracking-[0.2em]">Subtotal</span>
+              <span className="text-white font-bold text-2xl">${(subtotal / 100).toFixed(2)}</span>
             </div>
-            <p className="shipping-note">SHIPPING & TAXES CALCULATED AT CHECKOUT</p>
-            <button onClick={handleCheckout} className="checkout-btn">
-              PROCEED TO CHECKOUT
-            </button>
-            <button onClick={onClose} className="continue-btn">
-              CONTINUE SHOPPING
-            </button>
+            
+            <p className="text-[10px] text-red-600 font-bold uppercase tracking-widest text-center mb-6">
+              Shipping & Taxes calculated at checkout
+            </p>
+
+            <div className="space-y-3">
+              <button 
+                onClick={handleCheckout}
+                className="w-full bg-white hover:bg-zinc-100 text-black py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Proceed to Checkout
+              </button>
+              
+              <button 
+                onClick={onClose}
+                className="w-full text-zinc-500 hover:text-white text-[10px] font-bold uppercase tracking-widest py-2 transition-colors"
+              >
+                Or Continue Shopping
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       <style>{`
-        .cart-backdrop {
-          position: fixed;
-          top: 64px;
-          inset: 64px 0 0 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 1001;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.3s;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
         }
-
-        .cart-backdrop.visible {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-        .cart-drawer {
-          position: fixed;
-          top: 64px;
-          right: 0;
-          height: calc(100vh - 64px);
-          width: 100%;
-          max-width: 400px;
-          background: #0a0a0a;
-          border-left: 1px solid #1a1a1a;
-          z-index: 1002;
-          display: flex;
-          flex-direction: column;
-          transform: translateX(100%);
-          transition: transform 0.3s ease-out;
-          font-family: var(--font-store, ui-monospace, monospace);
-        }
-
-        .cart-drawer.open {
-          transform: translateX(0);
-        }
-
-        .drawer-header {
-          padding: 20px 24px;
-          border-bottom: 1px solid #1a1a1a;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .drawer-header h2 {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: white;
-          margin: 0;
-        }
-
-        .pulse-dot {
-          width: 8px;
-          height: 8px;
-          background: #dc2626;
-          border-radius: 50%;
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-
-        .close-btn {
-          padding: 8px;
+        .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
-          border: none;
-          color: #525252;
-          cursor: pointer;
-          transition: color 0.2s;
         }
-
-        .close-btn:hover {
-          color: white;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #18181b;
+          border-radius: 10px;
         }
-
-        .drawer-content {
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
-        }
-
-        .empty-state {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 16px;
-          color: #525252;
-        }
-
-        .empty-state p {
-          font-size: 13px;
-        }
-
-        .start-shopping {
-          background: transparent;
-          border: none;
-          color: #dc2626;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          cursor: pointer;
-          text-decoration: underline;
-          font-family: inherit;
-        }
-
-        .cart-item {
-          display: flex;
-          gap: 16px;
-          padding: 16px 0;
-          border-bottom: 1px solid #171717;
-        }
-
-        .cart-item:first-child {
-          padding-top: 0;
-        }
-
-        .item-image {
-          width: 72px;
-          height: 90px;
-          background: #111;
-          flex-shrink: 0;
-          overflow: hidden;
-        }
-
-        .item-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .item-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .item-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 8px;
-        }
-
-        .item-name {
-          font-size: 12px;
-          font-weight: 600;
-          color: white;
-          margin: 0;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .remove-btn {
-          background: transparent;
-          border: none;
-          color: #404040;
-          cursor: pointer;
-          padding: 0;
-          transition: color 0.2s;
-        }
-
-        .remove-btn:hover {
-          color: #dc2626;
-        }
-
-        .item-price {
-          font-size: 13px;
-          color: #dc2626;
-          margin: 4px 0 0 0;
-          font-weight: 600;
-        }
-
-        .item-meta {
-          margin-top: auto;
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
-          padding-top: 8px;
-        }
-
-        .meta-tag {
-          font-size: 9px;
-          color: #737373;
-          padding: 4px 8px;
-          background: #111;
-          border: 1px solid #1a1a1a;
-          font-weight: 500;
-        }
-
-        .drawer-footer {
-          padding: 24px;
-          border-top: 1px solid #1a1a1a;
-          background: #080808;
-        }
-
-        .subtotal-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .subtotal-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          color: #737373;
-        }
-
-        .subtotal-value {
-          font-size: 18px;
-          font-weight: 700;
-          color: white;
-        }
-
-        .shipping-note {
-          font-size: 9px;
-          letter-spacing: 0.1em;
-          color: #dc2626;
-          text-align: center;
-          margin: 0 0 20px 0;
-        }
-
-        .checkout-btn {
-          width: 100%;
-          padding: 14px;
-          background: #dc2626;
-          border: none;
-          color: white;
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          cursor: pointer;
-          transition: background 0.2s;
-          font-family: inherit;
-        }
-
-        .checkout-btn:hover {
-          background: #ef4444;
-        }
-
-        .continue-btn {
-          width: 100%;
-          margin-top: 16px;
-          background: transparent;
-          border: none;
-          color: #525252;
-          font-size: 10px;
-          letter-spacing: 0.15em;
-          cursor: pointer;
-          font-family: inherit;
-          transition: color 0.2s;
-        }
-
-        .continue-btn:hover {
-          color: white;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #27272a;
         }
       `}</style>
     </>

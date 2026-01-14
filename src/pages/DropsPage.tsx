@@ -62,13 +62,13 @@ export function DropsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 px-2 font-semibold transition-colors border-b-2 ${
                 activeTab === tab.id
-                  ? 'text-cyan-400 border-cyan-500'
+                  ? 'text-red-400 border-red-500'
                   : 'text-gray-400 border-transparent hover:text-white'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-2 text-xs bg-cyan-600/20 text-cyan-400 px-2 py-1 rounded-full">
+                <span className="ml-2 text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded-full">
                   {tab.count}
                 </span>
               )}

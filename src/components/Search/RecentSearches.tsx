@@ -32,7 +32,7 @@ export const RecentSearches: React.FC<RecentSearchesProps> = ({
           <button
             key={`${search}-${index}`}
             onClick={() => onSelect(search)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 text-sm text-gray-300 hover:bg-cyan-500/20 hover:text-cyan-300 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 text-sm text-gray-300 hover:bg-red-500/20 hover:text-red-300 transition-colors"
           >
             <iconify-icon icon="solar:magnifer-linear" width="12" height="12"></iconify-icon>
             <span className="truncate max-w-[150px]">{search}</span>
