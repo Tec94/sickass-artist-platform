@@ -4,8 +4,10 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
-import { Ticket, Flame, MessageSquare, ArrowRight } from 'lucide-react'
 import { useAnalytics } from '../hooks/useAnalytics'
+import { LiveLeaderboard } from '../components/Leaderboard/LiveLeaderboard'
+import { SongRankingWidget } from '../components/Leaderboard/SongRankingWidget'
+import { UserRankingsFeed } from '../components/Leaderboard/UserRankingsFeed'
 
 export const Dashboard = () => {
   useAnalytics() // Track page views
@@ -44,7 +46,7 @@ export const Dashboard = () => {
           <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
-                <Ticket className="text-red-600" /> Next Event
+                <iconify-icon icon="solar:ticket-bold-duotone" width="24" height="24" class="text-red-600"></iconify-icon> Next Event
               </h3>
               <Link to="/events" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">View All</Link>
             </div>
@@ -76,7 +78,7 @@ export const Dashboard = () => {
           <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
-                <Flame className="text-red-600" /> Hot Drop
+                <iconify-icon icon="solar:fire-bold-duotone" width="24" height="24" class="text-red-600"></iconify-icon> Hot Drop
               </h3>
               <Link to="/store" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">Shop All</Link>
             </div>
@@ -108,7 +110,7 @@ export const Dashboard = () => {
           <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4 gap-4">
               <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2 truncate">
-                <MessageSquare className="text-red-600 shrink-0" /> <span className="truncate">Wolfpack Chatter</span>
+                <iconify-icon icon="solar:chat-line-bold-duotone" width="24" height="24" class="text-red-600 shrink-0"></iconify-icon> <span className="truncate">Wolfpack Chatter</span>
               </h3>
               <Link to="/forum" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider whitespace-nowrap shrink-0">Join Discussion</Link>
             </div>
@@ -128,10 +130,33 @@ export const Dashboard = () => {
               )}
             </div>
             <Link to="/forum" className="mt-auto flex items-center gap-2 text-sm text-zinc-400 hover:text-white pt-4">
-              View all threads <ArrowRight size={14} />
+              View all threads <iconify-icon icon="solar:alt-arrow-right-linear" width="14" height="14" class="ml-1"></iconify-icon>
             </Link>
           </div>
 
+        </div>
+
+        {/* Music Leaderboard Section */}
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-display font-bold text-white uppercase">Song Leaderboard</h2>
+            <div className="h-px bg-zinc-800 flex-1 ml-8"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Community Feed (Left - 2 Cols) */}
+            <div className="lg:col-span-2 space-y-8">
+              <UserRankingsFeed />
+            </div>
+
+            {/* Live Rankings & Actions (Right - 1 Col) */}
+            <div className="space-y-8">
+              <SongRankingWidget />
+              <div className="h-[600px]">
+                <LiveLeaderboard />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

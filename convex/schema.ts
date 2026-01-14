@@ -1014,6 +1014,7 @@ export default defineSchema({
     leaderboardId: v.string(), // Format: "2025-01" (monthly), "2025-Q1" (quarterly), "all-time"
     period: v.union(
       v.literal('allTime'),
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('quarterly'),
       v.literal('yearly')
@@ -1035,6 +1036,7 @@ export default defineSchema({
     userId: v.id('users'), // Submitter
     leaderboardId: v.string(), // Period ID (e.g., "2025-01")
     submissionType: v.union(
+      v.literal('top3'),
       v.literal('top5'),
       v.literal('top10'),
       v.literal('top15'),

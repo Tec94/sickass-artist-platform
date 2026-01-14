@@ -38,10 +38,19 @@ export const CompanyLogos: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: transform 0.3s ease;
+        }
+
+        .logo-item:hover {
+          transform: scale(1.1);
         }
 
         .logo-item iconify-icon {
-          font-size: 32px; /* Roughly fits the 36px height */
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
       `}</style>
     </div>

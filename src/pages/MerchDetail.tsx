@@ -8,6 +8,7 @@ import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
+import { useUser } from '../contexts/UserContext'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -16,7 +17,8 @@ export function MerchDetail() {
   const product = useQuery(api.merch.getProductDetail,
     productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
   )
-  const wishlist = useQuery(api.merch.getWishlist)
+  const { isSignedIn } = useUser()
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip')
   
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)

@@ -1,6 +1,7 @@
 import type { Doc } from '../../../convex/_generated/dataModel'
+import { useState } from 'react'
 
-type ProfileAvatarUser = Pick<Doc<'users'>, 'username' | 'avatar' | 'fanTier'>
+type ProfileAvatarUser = Pick<Doc<'users'>, 'username' | 'avatar' | 'fanTier' | 'displayName'>
 
 interface ProfileAvatarProps {
   user: ProfileAvatarUser
@@ -14,6 +15,13 @@ const sizeClasses = {
   xl: 'w-32 h-32',
 }
 
+const fontSizeClasses = {
+  sm: 'text-xs',
+  md: 'text-lg',
+  lg: 'text-2xl',
+  xl: 'text-3xl',
+}
+
 const tierRingColors = {
   bronze: '#CD7F32',
   silver: '#C0C0C0',
@@ -21,8 +29,50 @@ const tierRingColors = {
   platinum: '#FF0000',
 }
 
+// Generate initials from display name or username
+function getInitials(displayName?: string, username?: string): string {
+  const name = displayName || username || '?'
+  const parts = name.split(' ').filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.slice(0, 2).toUpperCase()
+}
+
+// Generate a consistent color based on username for fallback avatar
+function getAvatarColor(username: string): string {
+  const colors = [
+    '#e11d48', // scarlet
+    '#dc2626', // red
+    '#ea580c', // orange
+    '#d97706', // amber
+    '#ca8a04', // yellow
+    '#65a30d', // lime
+    '#16a34a', // green
+    '#0d9488', // teal
+    '#0891b2', // cyan
+    '#0284c7', // sky
+    '#2563eb', // blue
+    '#7c3aed', // violet
+    '#9333ea', // purple
+    '#c026d3', // fuchsia
+    '#db2777', // pink
+  ]
+  let hash = 0
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return colors[Math.abs(hash) % colors.length]
+}
+
 export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
   const ringColor = tierRingColors[user.fanTier]
+  const [imageError, setImageError] = useState(false)
+  
+  // Use OAuth avatar (Google profile picture) if available, otherwise show initials
+  const hasValidAvatar = user.avatar && user.avatar.length > 0 && !imageError
+  const initials = getInitials(user.displayName, user.username)
+  const bgColor = getAvatarColor(user.username)
 
   return (
     <div className="relative inline-block profile-avatar-wrapper">
@@ -30,11 +80,21 @@ export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
         className="avatar-ring" 
         style={{ '--ring-color': ringColor } as React.CSSProperties}
       >
-        <img
-          src="/src/public/assets/test-image.jpg"
-          alt={user.username}
-          className={`${sizeClasses[size]} rounded-full object-cover avatar-img`}
-        />
+        {hasValidAvatar ? (
+          <img
+            src={user.avatar}
+            alt={user.username}
+            className={`${sizeClasses[size]} rounded-full object-cover avatar-img`}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div 
+            className={`${sizeClasses[size]} rounded-full avatar-img flex items-center justify-center ${fontSizeClasses[size]} font-bold text-white`}
+            style={{ backgroundColor: bgColor }}
+          >
+            {initials}
+          </div>
+        )}
       </div>
 
       <style>{`

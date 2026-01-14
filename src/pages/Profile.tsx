@@ -44,11 +44,17 @@ export const Profile = () => {
           <div className="bg-zinc-950 border border-zinc-900 rounded-sm p-8 flex flex-col items-center text-center sticky top-24">
             <div className="relative mb-6">
               <div className="w-40 h-40 rounded-full border-2 border-red-600 p-1 flex items-center justify-center overflow-hidden">
-                <img 
-                  src="/src/public/assets/test-image.jpg" 
-                  alt={user.displayName || 'User'} 
-                  className="w-full h-full rounded-full object-cover"
-                />
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.displayName || 'User'} 
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-4xl font-bold text-zinc-700">
+                    {(user.displayName || (user as any).username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
               <div className="absolute -bottom-2 -right-2 bg-red-600 text-white p-2 rounded-full shadow-lg">
                 <iconify-icon icon="solar:medal-star-bold" width="24" height="24"></iconify-icon>

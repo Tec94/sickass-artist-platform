@@ -4,6 +4,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
+import { useUser } from '../../contexts/UserContext'
 
 interface MerchProductCardProps {
   product: {
@@ -27,7 +28,8 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
 
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
   const addToCart = useMutation(api.cart.addToCart)
-  const wishlist = useQuery(api.merch.getWishlist)
+  const { isSignedIn } = useUser()
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip')
   
   const isWishlisted = wishlist?.some(item => item._id === product._id)
 

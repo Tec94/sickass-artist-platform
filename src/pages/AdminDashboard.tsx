@@ -96,7 +96,9 @@ export function AdminDashboard() {
       <aside className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">⚡</span>
+            <span className="logo-icon">
+              <iconify-icon icon="solar:bolt-bold-duotone" width="24" height="24" class="text-white"></iconify-icon>
+            </span>
             {!sidebarCollapsed && <span className="logo-text">Admin Panel</span>}
           </div>
           <button 

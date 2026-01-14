@@ -12,7 +12,7 @@ interface UserTierMultiplier {
   platinum: number
 }
 
-type SongLeaderboardPeriod = 'allTime' | 'monthly' | 'quarterly' | 'yearly'
+type SongLeaderboardPeriod = 'allTime' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
 
 // ============ UTILITIES ============
 
@@ -20,11 +20,19 @@ type SongLeaderboardPeriod = 'allTime' | 'monthly' | 'quarterly' | 'yearly'
  * Get current active leaderboard ID (e.g., "2025-01" for January 2025)
  * Format: YYYY-MM for monthly leaderboards
  */
-function getCurrentLeaderboardId(period: 'monthly' | 'quarterly' | 'allTime'): string {
+function getCurrentLeaderboardId(period: 'weekly' | 'monthly' | 'quarterly' | 'allTime'): string {
   const now = new Date()
 
   if (period === 'allTime') {
     return 'all-time'
+  }
+
+  if (period === 'weekly') {
+    // Get ISO week number (1-52)
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
+    const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7)
+    return `${now.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`
   }
 
   if (period === 'monthly') {
@@ -40,8 +48,14 @@ function getCurrentLeaderboardId(period: 'monthly' | 'quarterly' | 'allTime'): s
 }
 
 /**
- * Calculate score for a single submission's song
- * Formula: (baseRankScore * upvoteWeight * recencyMultiplier * tierBonus)
+ * Calculate score for a single submission's song using HYBRID WEIGHTED algorithm
+ * 
+ * The hybrid approach ensures:
+ * - Position is PRIMARY (rank 1 always scores higher than rank 10)
+ * - Upvotes provide a LOGARITHMIC bonus (diminishing returns prevents dominance)
+ * - Quality submissions get meaningful but not overwhelming boost
+ * 
+ * Formula: positionPoints × (1 + log10(upvotes + 1) × 0.5) × tierBonus × recencyBonus × qualityBonus
  */
 function calculateSongScoreFromSubmission(
   songRank: number,
@@ -50,29 +64,31 @@ function calculateSongScoreFromSubmission(
   userTier: string,
   isHighQuality: boolean
 ): number {
-  // 1. Base rank score: inverse of rank (rank 1 = 10 points, rank 5 = 8 points)
-  const baseRankScore = Math.max(1, 10 - (songRank - 1) * 1.5)
+  // 1. Position points (PRIMARY factor): higher rank = more points
+  // Rank 1 = 10pts, Rank 3 = 7pts, Rank 5 = 4pts, Rank 10 = 1pt
+  const positionPoints = Math.max(1, 10 - (songRank - 1) * 1.0)
 
-  // 2. Upvote weight: 0.5x (heavily downvoted) to 2.0x (highly upvoted)
-  const upvoteWeight = Math.min(2.0, 0.5 + submissionUpvotes / 100)
+  // 2. Upvote bonus (LOGARITHMIC): prevents highly upvoted low-ranks from dominating
+  // 0 upvotes = 1.0x, 9 upvotes = 1.5x, 99 upvotes = 2.0x, 999 upvotes = 2.5x
+  const upvoteBonus = 1 + Math.log10(submissionUpvotes + 1) * 0.5
 
-  // 3. Recency bonus: submissions in last 7 days get 1.2x
-  const daysOld = submissionAgeMs / (1000 * 60 * 60 * 24)
-  const recencyMultiplier = daysOld < 7 ? 1.2 : 1.0
-
-  // 4. Tier bonus: higher tier = more authoritative
+  // 3. Tier bonus: higher tier fans have slightly more authority
   const tierBonus: UserTierMultiplier = {
     bronze: 1.0,
-    silver: 1.1,
-    gold: 1.2,
-    platinum: 1.3,
+    silver: 1.05,
+    gold: 1.1,
+    platinum: 1.15,
   }
   const tierValue = (tierBonus[userTier as keyof UserTierMultiplier] || 1.0)
 
-  // 5. High quality bonus: admin-flagged submissions get 1.5x
-  const qualityMultiplier = isHighQuality ? 1.5 : 1.0
+  // 4. Recency bonus: newer submissions get slight boost
+  const daysOld = submissionAgeMs / (1000 * 60 * 60 * 24)
+  const recencyMultiplier = daysOld < 7 ? 1.1 : (daysOld < 30 ? 1.0 : 0.9)
 
-  return baseRankScore * upvoteWeight * recencyMultiplier * tierValue * qualityMultiplier
+  // 5. Quality bonus: admin-flagged submissions (reduced from 1.5x to 1.25x)
+  const qualityMultiplier = isHighQuality ? 1.25 : 1.0
+
+  return positionPoints * upvoteBonus * tierValue * recencyMultiplier * qualityMultiplier
 }
 
 /**
@@ -180,21 +196,21 @@ async function computeLeaderboardScoresImpl(
 export const hourlyLeaderboardComputation = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const periods = ['monthly', 'quarterly', 'allTime'] as const
+    const periods = ['weekly', 'monthly', 'quarterly', 'allTime'] as const
 
     type LeaderboardComputationPeriod = (typeof periods)[number]
     type LeaderboardComputationResult =
       | {
-          period: LeaderboardComputationPeriod
-          status: 'success'
-          processed: number
-          submissions: number
-        }
+        period: LeaderboardComputationPeriod
+        status: 'success'
+        processed: number
+        submissions: number
+      }
       | {
-          period: LeaderboardComputationPeriod
-          status: 'failed'
-          error: string
-        }
+        period: LeaderboardComputationPeriod
+        status: 'failed'
+        error: string
+      }
 
     const results: LeaderboardComputationResult[] = []
 
@@ -222,6 +238,7 @@ export const computeLeaderboardScores = internalMutation({
     leaderboardId: v.string(),
     period: v.union(
       v.literal('allTime'),
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('quarterly'),
       v.literal('yearly')
@@ -241,7 +258,7 @@ export const submitSongRanking = mutation({
   args: {
     userId: v.id('users'),
     leaderboardId: v.string(), // e.g., "2025-01"
-    submissionType: v.union(v.literal('top5'), v.literal('top10'), v.literal('top15'), v.literal('top25')),
+    submissionType: v.union(v.literal('top3'), v.literal('top5'), v.literal('top10'), v.literal('top15'), v.literal('top25')),
     rankedSongs: v.array(v.object({
       spotifyTrackId: v.string(),
       title: v.string(),
@@ -259,6 +276,7 @@ export const submitSongRanking = mutation({
 
     // Validate submission size matches type
     const expectedCounts = {
+      top3: 3,
       top5: 5,
       top10: 10,
       top15: 15,
@@ -288,7 +306,7 @@ export const submitSongRanking = mutation({
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
     const recentSubmissions = await ctx.db
       .query('songSubmissions')
-      .withIndex('by_userId_leaderboard', (q) => 
+      .withIndex('by_userId_leaderboard', (q) =>
         q.eq('userId', args.userId).eq('leaderboardId', args.leaderboardId)
       )
       .filter((q) => q.gt(q.field('createdAt'), weekAgo))
@@ -345,7 +363,7 @@ export const voteOnSubmission = mutation({
     // Check if already voted
     const existingVote = await ctx.db
       .query('submissionVotes')
-      .withIndex('by_submissionId_userId', (q) => 
+      .withIndex('by_submissionId_userId', (q) =>
         q.eq('submissionId', args.submissionId).eq('userId', args.userId)
       )
       .first()
@@ -427,6 +445,7 @@ export const adminMarkHighQuality = mutation({
 export const getLeaderboard = query({
   args: {
     period: v.union(
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('quarterly'),
       v.literal('allTime')
@@ -439,7 +458,7 @@ export const getLeaderboard = query({
 
     const entries = await ctx.db
       .query('songLeaderboard')
-      .withIndex('by_leaderboardId_score', (q) => 
+      .withIndex('by_leaderboardId_score', (q) =>
         q.eq('leaderboardId', leaderboardId)
       )
       .order('desc')
@@ -459,6 +478,7 @@ export const getUserSubmissions = query({
   args: {
     userId: v.id('users'),
     period: v.optional(v.union(
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('quarterly'),
       v.literal('allTime')
@@ -470,7 +490,7 @@ export const getUserSubmissions = query({
     if (leaderboardId) {
       const submissions = await ctx.db
         .query('songSubmissions')
-        .withIndex('by_userId_leaderboard', (q) => 
+        .withIndex('by_userId_leaderboard', (q) =>
           q.eq('userId', args.userId).eq('leaderboardId', leaderboardId)
         )
         .order('desc')
@@ -523,33 +543,114 @@ export const getTrendingSubmissions = query({
   args: {
     limit: v.optional(v.number()),
     leaderboardId: v.optional(v.string()),
+    userId: v.optional(v.id('users')), // Helper to check if current user upvoted (forced update)
   },
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit || 10, 50)
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
 
     const baseQuery = ctx.db.query('songSubmissions')
+    let submissions
 
     if (args.leaderboardId) {
       const leaderboardId = args.leaderboardId
-      const submissions = await baseQuery
-        .withIndex('by_leaderboardId_upvotes', (q) => 
+      submissions = await baseQuery
+        .withIndex('by_leaderboardId_upvotes', (q) =>
           q.eq('leaderboardId', leaderboardId)
         )
         .filter((q) => q.gt(q.field('createdAt'), weekAgo))
         .order('desc')
         .take(limit)
+    } else {
+      // Get all recent submissions
+      const recent = await baseQuery
+        .filter((q) => q.gt(q.field('createdAt'), weekAgo))
+        .collect()
 
-      return submissions
+      // Sort in memory (for now, until we need a dedicated index)
+      submissions = recent.sort((a, b) => b.upvoteCount - a.upvoteCount).slice(0, limit)
     }
 
-    // Get all recent submissions sorted by upvotes
-    const submissions = await baseQuery
-      .filter((q) => q.gt(q.field('createdAt'), weekAgo))
-      .collect()
+    // Join with user data
+    const submissionsWithData = await Promise.all(
+      submissions.map(async (s) => {
+        const user = await ctx.db.get(s.userId)
 
-    return submissions.sort((a, b) => b.upvoteCount - a.upvoteCount).slice(0, limit)
+        // Check upvote status if userId provided
+        let hasUpvoted = false
+        if (args.userId) {
+          const vote = await ctx.db
+            .query('submissionVotes')
+            .withIndex('by_submissionId_userId', q =>
+              q.eq('submissionId', s._id).eq('userId', args.userId!)
+            )
+            .first()
+          hasUpvoted = !!vote
+        }
+
+        return {
+          ...s,
+          user: user ? {
+            username: user.username,
+            displayName: user.displayName,
+            avatar: user.avatar,
+            fanTier: user.fanTier,
+          } : null,
+          hasUpvoted
+        }
+      })
+    )
+
+    return submissionsWithData
   },
+})
+
+// Seed function for leaderboard testing
+export const seedLeaderboard = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // 1. Ensure we have a user
+    let user = await ctx.db.query('users').first()
+    if (!user) {
+      // Create a dummy user if none exists (shouldn't happen in dev usually)
+      return "No users found. Please login first."
+    }
+
+    const songs = [
+      { spotifyId: '1', title: 'Neon Nights', artist: 'Cyber Punk', albumCover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop' },
+      { spotifyId: '2', title: 'Digital Dreams', artist: 'Synth Wave', albumCover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop' },
+      { spotifyId: '3', title: 'Bass Drop', artist: 'Dub Stepper', albumCover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop' },
+      { spotifyId: '4', title: 'Code Flow', artist: 'The Hackers', albumCover: 'https://images.unsplash.com/photo-1514525253440-b393452e2729?w=300&h=300&fit=crop' },
+      { spotifyId: '5', title: 'Algorithm', artist: 'Data Science', albumCover: 'https://images.unsplash.com/photo-1459749411177-287ce35e8b0f?w=300&h=300&fit=crop' },
+    ]
+
+    // Create 3 random submissions
+    for (let i = 0; i < 3; i++) {
+      const shuffledSongs = [...songs].sort(() => 0.5 - Math.random()).slice(0, 3)
+      const rankedSongs = shuffledSongs.map((song, index) => ({
+        spotifyTrackId: song.spotifyId,
+        title: song.title,
+        artist: song.artist,
+        albumCover: song.albumCover,
+        rank: index + 1,
+      }))
+
+      // Create submission with random upvotes
+      await ctx.db.insert('songSubmissions', {
+        userId: user._id,
+        leaderboardId: '2026-W02',
+        submissionType: 'top3',
+        rankedSongs,
+        upvoteCount: Math.floor(Math.random() * 50),
+        upvoters: [],
+        isHighQuality: false,
+        createdAt: Date.now() - Math.floor(Math.random() * 48 * 60 * 60 * 1000),
+        updatedAt: Date.now(),
+      })
+    }
+
+    return `Seeded 3 submissions for ${user.username}`
+  }
 })
 
 /**

@@ -1,6 +1,5 @@
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, MapPin } from 'lucide-react'
 import type { EventItem } from '../../types/events'
 import {
   formatEventDate,
@@ -87,7 +86,7 @@ export const EventCard = memo(function EventCard({
         </h3>
 
         <div className="flex items-center gap-2 text-zinc-500 text-xs mb-6">
-          <MapPin size={14} className="text-red-600" />
+          <iconify-icon icon="solar:map-point-linear" width="14" height="14" class="text-red-600"></iconify-icon>
           <span className="font-medium">{event.city}</span>
         </div>
 
@@ -96,7 +95,7 @@ export const EventCard = memo(function EventCard({
             {event.saleStatus === 'on_sale' ? 'Get Tickets' : 'Details'}
           </button>
           <button className="px-4 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-700 transition-colors">
-            <Calendar size={18} />
+            <iconify-icon icon="solar:calendar-linear" width="18" height="18"></iconify-icon>
           </button>
         </div>
       </div>

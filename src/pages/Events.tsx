@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Grid, List } from 'lucide-react'
 import { EventCard } from '../components/events/EventCard'
 import { EventFilters } from '../components/events/EventFilters'
 import { EventSearch } from '../components/events/EventSearch'
@@ -78,13 +77,13 @@ export function Events() {
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                  <Grid size={18} />
+                  <iconify-icon icon="solar:widget-2-linear" width="18" height="18"></iconify-icon>
                 </button>
                 <button 
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-sm transition-all ${viewMode === 'list' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                  <List size={18} />
+                  <iconify-icon icon="solar:list-linear" width="18" height="18"></iconify-icon>
                 </button>
               </div>
             </div>
