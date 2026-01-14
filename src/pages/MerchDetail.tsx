@@ -16,7 +16,6 @@ export function MerchDetail() {
   const product = useQuery(api.merch.getProductDetail,
     productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
   )
-  const cart = useQuery(api.cart.getCart)
   const wishlist = useQuery(api.merch.getWishlist)
   
   const { retryWithBackoff } = useAutoRetry()
@@ -51,7 +50,6 @@ export function MerchDetail() {
         })
       )
       showToast('Added to cart!', { type: 'success' })
-      setIsCartOpen(true)
     } catch (err) {
       const parsed = parseConvexError(err)
       logError(parsed, { component: 'MerchDetail', action: 'add_to_cart', metadata: { productId } })

@@ -36,10 +36,6 @@ const Header: React.FC = () => {
   return (
     <>
       <header 
-        onClick={() => {
-          if (isWishlistOpen) setIsWishlistOpen(false);
-          if (isCartOpen) setIsCartOpen(false);
-        }}
         className="sticky top-0 z-95 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800"
       >
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
