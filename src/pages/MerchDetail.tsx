@@ -146,9 +146,6 @@ export function MerchDetail() {
 
               <div className="flex items-baseline gap-4 mb-8">
                 <span className="text-3xl text-red-500 font-display font-bold">${(product.price / 100).toFixed(2)}</span>
-                {product.originalPrice && (
-                  <span className="text-lg text-zinc-600 line-through">${(product.originalPrice / 100).toFixed(2)}</span>
-                )}
               </div>
 
               <p className="text-zinc-400 text-sm leading-relaxed mb-8 border-b border-zinc-800 pb-8">
@@ -203,34 +200,37 @@ export function MerchDetail() {
               )}
 
               {/* Quantity & Actions */}
-              <div className="flex gap-4 mb-8">
-                <div className="flex items-center w-32 border border-zinc-800 bg-zinc-950">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-12 flex items-center justify-center text-zinc-400 hover:text-white"
-                  >
-                    <iconify-icon icon="solar:minus-circle-linear" width="16" height="16"></iconify-icon>
-                  </button>
-                  <div className="flex-1 text-center text-white text-sm font-bold">{quantity}</div>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-12 flex items-center justify-center text-zinc-400 hover:text-white"
-                  >
-                    <iconify-icon icon="solar:add-circle-linear" width="16" height="16"></iconify-icon>
-                  </button>
+              <div className="flex items-end gap-4 mb-8">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Quantity</label>
+                  <div className="flex items-center border border-zinc-800 bg-zinc-950">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors text-lg font-light"
+                    >
+                      −
+                    </button>
+                    <div className="w-12 h-12 flex items-center justify-center text-white text-base font-medium border-x border-zinc-800">{quantity}</div>
+                    <button 
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors text-lg font-light"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <button 
                   onClick={handleAddToCart}
-                  disabled={isLoading || !selectedVariant || selectedVariant.stock === 0}
-                  className="flex-1 bg-red-700 hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-bold uppercase tracking-widest transition-all"
+                  disabled={isLoading || selectedVariant?.stock === 0}
+                  className="flex-1 h-12 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-800 text-white text-xs font-bold uppercase tracking-[0.2em] transition-all"
                 >
                   {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
                 </button>
                 <button 
                   onClick={handleToggleWishlist}
-                  className={`w-14 border border-zinc-800 flex items-center justify-center transition-colors ${isInWishlist ? 'text-red-600 border-red-900 bg-red-900/10' : 'text-zinc-400 hover:text-white hover:border-zinc-600'}`}
+                  className={`w-12 h-12 border flex items-center justify-center transition-colors ${isInWishlist ? 'text-red-600 border-red-900 bg-red-900/10' : 'border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600'}`}
                 >
-                  <iconify-icon icon={isInWishlist ? "solar:heart-bold" : "solar:heart-linear"} width="24" height="24"></iconify-icon>
+                  <iconify-icon icon={isInWishlist ? "solar:heart-bold" : "solar:heart-linear"} width="20" height="20"></iconify-icon>
                 </button>
               </div>
 

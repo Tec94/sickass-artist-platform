@@ -184,9 +184,9 @@ export function ProfileEdit() {
 
       <style>{`
         .profile-edit-layout {
-          max-width: 600px;
+          max-width: 900px;
           margin: 0 auto;
-          padding: 40px 0;
+          padding: 40px 20px;
         }
 
         .profile-edit-container {

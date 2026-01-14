@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
-  const wishlist = useQuery(api.merch.getWishlist);
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip');
   const cart = useQuery(api.cart.getCart);
   const wishlistCount = wishlist?.length || 0; 
 

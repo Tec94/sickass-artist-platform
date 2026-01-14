@@ -21,6 +21,8 @@ export function Merch() {
   const [maxPrice, setMaxPrice] = useState(200)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'alpha'>('newest')
+  const [stockFilter, setStockFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all')
   
   // Search query from URL
   const searchQuery = searchParams.get('search') || ''
@@ -71,8 +73,30 @@ export function Merch() {
     // Price Filtering
     filtered = filtered.filter(p => (p.price / 100) <= maxPrice)
 
+    // Stock Status Filtering
+    if (stockFilter === 'in-stock') {
+      filtered = filtered.filter(p => p.variants?.some(v => v.stock > 0) ?? true)
+    } else if (stockFilter === 'out-of-stock') {
+      filtered = filtered.filter(p => p.variants?.every(v => v.stock === 0) ?? false)
+    }
+
+    // Sorting
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc':
+          return a.price - b.price
+        case 'price-desc':
+          return b.price - a.price
+        case 'alpha':
+          return a.name.localeCompare(b.name)
+        case 'newest':
+        default:
+          return (b._creationTime || 0) - (a._creationTime || 0)
+      }
+    })
+
     return filtered
-  }, [productsQuery, activeCategory, maxPrice, selectedCollections, searchQuery])
+  }, [productsQuery, activeCategory, maxPrice, selectedCollections, searchQuery, sortBy, stockFilter])
 
   return (
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
@@ -107,14 +131,52 @@ export function Merch() {
                 </button>
               </div>
 
+              {/* Filters & Sort Bar */}
+              <div className="flex flex-wrap items-center gap-6 mb-8 py-4 border-b border-neutral-800">
+                {/* Sort Dropdown */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Sort By</label>
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                      className="appearance-none bg-zinc-950 border border-zinc-700 text-white text-xs font-medium pl-3 pr-8 py-2.5 focus:outline-none focus:border-red-600 hover:border-zinc-500 cursor-pointer transition-colors min-w-[160px]"
+                    >
+                      <option value="newest">Newest Arrivals</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                      <option value="alpha">Alphabetical</option>
+                    </select>
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" width="14" height="14"></iconify-icon>
+                  </div>
+                </div>
+
+                {/* Stock Status Filter */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Availability</label>
+                  <div className="relative">
+                    <select
+                      value={stockFilter}
+                      onChange={(e) => setStockFilter(e.target.value as typeof stockFilter)}
+                      className="appearance-none bg-zinc-950 border border-zinc-700 text-white text-xs font-medium pl-3 pr-8 py-2.5 focus:outline-none focus:border-red-600 hover:border-zinc-500 cursor-pointer transition-colors min-w-[130px]"
+                    >
+                      <option value="all">All Items</option>
+                      <option value="in-stock">In Stock</option>
+                      <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" width="14" height="14"></iconify-icon>
+                  </div>
+                </div>
+
+                <div className="ml-auto text-xs text-zinc-500 font-medium">{filteredProducts.length} items</div>
+              </div>
+
               <div className="mb-8">
                 <div className="flex items-baseline justify-between mb-2">
                   <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-white">
                     {searchQuery ? `Search: "${searchQuery}"` : (activeCategory || 'All Products')}
                   </h2>
-                  <span className="text-sm text-gray-500">{filteredProducts.length} items</span>
                 </div>
-                <div className="w-full h-px bg-neutral-800"></div>
                 
                 {/* Mobile Filter Tabs */}
                 <div className="md:hidden flex overflow-x-auto gap-4 py-4 scrollbar-hide">

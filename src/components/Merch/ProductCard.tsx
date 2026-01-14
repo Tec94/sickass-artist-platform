@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart, loading }: ProductCardProps) {
-  const [imageError, setImageError] = useState(false)
+  const [_imageError, setImageError] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

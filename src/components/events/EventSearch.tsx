@@ -73,7 +73,7 @@ export function EventSearch({
           onChange={handleInputChange}
           onFocus={() => query.length >= 2 && hasSearched && setShowResults(true)}
           placeholder={placeholder}
-          className="w-full bg-gray-900/70 border border-gray-800 text-white rounded-lg pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-red-600 transition-colors"
+          className="w-full bg-black border border-red-900/60 text-white rounded-lg pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-red-500 transition-colors placeholder:text-zinc-500"
         />
         
         {/* Search Icon */}
