@@ -14,10 +14,10 @@ interface WishlistDrawerProps {
 
 export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
   const navigate = useNavigate()
-  const { isSignedIn } = useUser()
+  const { isSignedIn, userProfile } = useUser()
   const { addItem } = useCart()
   
-  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip')
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
 
   const handleRemove = async (productId: Id<'merchProducts'>) => {

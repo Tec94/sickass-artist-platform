@@ -17,8 +17,8 @@ export function MerchDetail() {
   const product = useQuery(api.merch.getProductDetail,
     productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
   )
-  const { isSignedIn } = useUser()
-  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip')
+  const { isSignedIn, userProfile } = useUser()
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
   
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)

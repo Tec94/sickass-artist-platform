@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   
-  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip');
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip');
   const wishlistCount = wishlist?.length || 0; 
 
   const navLinks = [

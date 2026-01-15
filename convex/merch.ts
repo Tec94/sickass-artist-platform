@@ -271,7 +271,15 @@ export const toggleWishlist = mutation({
 export const getWishlist = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
+    // Check auth first - return empty for unauthenticated
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    // Get user - return empty if not found (new signup case)
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', q => q.eq('clerkId', identity.subject))
+      .first()
     if (!user) return []
 
     const wishlistItems = await ctx.db

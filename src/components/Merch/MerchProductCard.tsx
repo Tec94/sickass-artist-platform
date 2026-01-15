@@ -28,8 +28,8 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
 
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
   const addToCart = useMutation(api.cart.addToCart)
-  const { isSignedIn } = useUser()
-  const wishlist = useQuery(api.merch.getWishlist, isSignedIn ? {} : 'skip')
+  const { isSignedIn, userProfile } = useUser()
+  const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
   
   const isWishlisted = wishlist?.some(item => item._id === product._id)
 
