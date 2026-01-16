@@ -3,6 +3,11 @@ import { SignInButton, SignUpButton } from '@clerk/clerk-react'
 
 export function SignInPrompt() {
   const navigate = useNavigate()
+  
+  // Get the current origin for absolute redirect URL
+  const redirectUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/dashboard` 
+    : '/dashboard'
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-950 p-4">
@@ -15,12 +20,12 @@ export function SignInPrompt() {
         </p>
 
         <div className="flex gap-4 flex-col">
-          <SignInButton mode="modal">
+          <SignInButton mode="modal" forceRedirectUrl={redirectUrl}>
             <button className="w-full px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg transition">
               Sign In
             </button>
           </SignInButton>
-          <SignUpButton mode="modal">
+          <SignUpButton mode="modal" forceRedirectUrl={redirectUrl}>
             <button className="w-full px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition">
               Create Account
             </button>
