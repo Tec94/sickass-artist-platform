@@ -10,6 +10,8 @@ import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
 import { Chat } from './pages/Chat'
+import { SignInPage } from './pages/SignInPage'
+import { SignUpPage } from './pages/SignUpPage'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import Header from './components/Header'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -123,6 +125,10 @@ function AppContent() {
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* Auth Routes */}
+                <Route path="/sign-in/*" element={<SignInPage />} />
+                <Route path="/sign-up/*" element={<SignUpPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={

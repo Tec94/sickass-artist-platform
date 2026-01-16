@@ -1,0 +1,21 @@
+import { SignIn } from '@clerk/clerk-react'
+
+export function SignInPage() {
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-950 p-4">
+      <SignIn 
+        routing="path" 
+        path="/sign-in"
+        signUpUrl="/sign-up"
+        forceRedirectUrl="/dashboard"
+        appearance={{
+          elements: {
+            rootBox: 'mx-auto',
+            card: 'bg-gray-900 border border-gray-800',
+          }
+        }}
+      />
+    </div>
+  )
+}
