@@ -2,6 +2,8 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+// Removed SpotifyPlayer import as we implementing custom lightbox player UI
+// import { SpotifyPlayer } from './SpotifyPlayer' 
 
 interface InstagramMetadata {
   caption: string
@@ -61,57 +63,93 @@ export const SocialGallery = () => {
 
   const items = searchQuery ? searchResults : galleryItems?.items
 
+  // Spotify Embed URL (General Profile)
+  const SPOTIFY_EMBED_URL = "https://open.spotify.com/embed/artist/4cYbf45YbZptNISnhay0xH?utm_source=generator&theme=0"
+
   if (!items) {
-    return <div className="animate-pulse">Loading gallery...</div>
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+         <div className="animate-pulse flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-2 border-red-600 border-t-transparent animate-spin"></div>
+            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">Loading Territory...</p>
+         </div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Gallery</h1>
-        <p className="text-gray-400">Explore posts and music from the artist</p>
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-12">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <h1 className="text-5xl md:text-7xl font-display font-black text-white uppercase tracking-tighter">
+          The <span className="text-red-600">Connect</span>
+        </h1>
+        <p className="text-zinc-400 font-medium max-w-2xl mx-auto">
+          Exclusive feed from the Wolfpack. Instagram posts, Spotify releases, and more.
+        </p>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Search posts, songs, artists..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-        />
+      {/* Spotify Featured Section */}
+      <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden backdrop-blur-sm p-1">
+        <iframe 
+          style={{ borderRadius: '12px' }} 
+          src={SPOTIFY_EMBED_URL} 
+          width="100%" 
+          height="352" 
+          frameBorder="0" 
+          allowFullScreen 
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+          loading="lazy"
+          className="bg-zinc-950"
+        ></iframe>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="mb-6 flex gap-2 flex-wrap">
-        {(['all', 'instagram', 'spotify'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => {
-              setSource(tab)
-              setSearchQuery('')
-            }}
-            className={`px-6 py-2 rounded-lg font-semibold transition capitalize ${
-              source === tab
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            {tab === 'instagram' && '📷'}
-            {tab === 'spotify' && '🎵'}
-            {tab === 'all' && '✨'}
-            <span className="ml-2">{tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
-          </button>
-        ))}
+      {/* Controls */}
+      <div className="sticky top-4 z-40 bg-black/90 backdrop-blur-md p-4 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl">
+        {/* Search */}
+        <div className="relative w-full md:w-96">
+          <iconify-icon icon="solar:magnifer-linear" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></iconify-icon>
+          <input
+            type="text"
+            placeholder="SEARCH THE GALLERIES..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 text-white border border-zinc-700 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 outline-none transition font-medium text-sm placeholder:text-zinc-600 uppercase tracking-wide"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-zinc-700">
+          {(['all', 'instagram', 'spotify'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                setSource(tab)
+                setSearchQuery('')
+              }}
+              className={`px-6 py-2.5 rounded-md font-bold text-xs uppercase tracking-widest transition-all ${
+                source === tab
+                  ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                  : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                 {tab === 'instagram' && <iconify-icon icon="mdi:instagram" width="16"></iconify-icon>}
+                 {tab === 'spotify' && <iconify-icon icon="mdi:spotify" width="16"></iconify-icon>}
+                 {tab === 'all' && <iconify-icon icon="solar:layers-minimalistic-bold" width="16"></iconify-icon>}
+                 <span>{tab}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {items.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-400">
-            <p>No items found. Try a different search or filter.</p>
+          <div className="col-span-full text-center py-24 text-zinc-500 border border-dashed border-zinc-800 rounded-2xl">
+            <iconify-icon icon="solar:sad-square-linear" width="48" class="mb-4 opacity-50"></iconify-icon>
+            <p className="uppercase tracking-widest font-bold">No items found</p>
           </div>
         ) : (
           items.map((item: GalleryItem) => (
@@ -146,54 +184,59 @@ const GalleryItemCard = ({ item, onSelect }: GalleryItemCardProps) => {
   return (
     <motion.div
       onClick={() => onSelect(item)}
-      className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-800 border border-gray-700 hover:border-purple-500 transition"
-      whileHover={{ scale: 1.05 }}
+      className="relative group cursor-pointer overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-600/50 transition-all duration-300 shadow-lg hover:shadow-red-900/10"
+      whileHover={{ y: -5 }}
       layout
     >
-      {/* Image */}
-      <img
-        src={item.thumbnail}
-        alt={item.title}
-        className="w-full h-full object-cover group-hover:brightness-75 transition"
-        loading="lazy"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement
-          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23374151" width="400" height="400"/%3E%3Ctext fill="%239CA3AF" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3EImage Unavailable%3C/text%3E%3C/svg%3E'
-        }}
-      />
+      {/* Aspect Ratio Container */}
+      <div className="aspect-[4/5] overflow-hidden relative">
+        <img
+          src={item.thumbnail}
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            target.src = 'https://placehold.co/600x600/18181b/3f3f46?text=No+Signal'
+          }}
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-      {/* Type Badge */}
-      <div className="absolute top-2 right-2">
-        <span
-          className={`px-2 py-1 rounded text-xs font-bold text-white ${
-            item.type === 'instagram'
-              ? 'bg-pink-600'
-              : 'bg-green-600'
-          }`}
-        >
-          {item.type === 'instagram' ? '📷' : '🎵'} {item.type.toUpperCase()}
-        </span>
-      </div>
-
-      {/* Title Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3 opacity-0 group-hover:opacity-100 transition">
-        <p className="text-white font-semibold line-clamp-2 text-sm">{item.title}</p>
-      </div>
-
-      {/* Stats (Instagram only) */}
-      {item.type === 'instagram' && (
-        <div className="absolute bottom-2 left-2 flex gap-3 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition">
-          <span>❤️ {item.metadata.likeCount}</span>
-          <span>💬 {item.metadata.commentCount}</span>
+        {/* Type Badge */}
+        <div className="absolute top-3 right-3 z-10">
+          <span
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 ${
+              item.type === 'instagram'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600'
+                : 'bg-[#1DB954]'
+            }`}
+          >
+            <iconify-icon icon={item.type === 'instagram' ? 'mdi:instagram' : 'mdi:spotify'} width="12"></iconify-icon>
+            {item.type}
+          </span>
         </div>
-      )}
 
-      {/* Popularity (Spotify only) */}
-      {item.type === 'spotify' && (
-        <div className="absolute bottom-2 left-2 text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">
-          <span>⭐ {item.metadata.popularity}/100</span>
+        {/* Hover Content */}
+        <div className="absolute inset-0 flex flex-col justify-end p-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+          <h3 className="text-white font-bold text-lg leading-tight line-clamp-2 mb-2 drop-shadow-lg">{item.title}</h3>
+          
+          {item.type === 'instagram' && (
+            <div className="flex items-center gap-4 text-xs font-bold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+               <span className="flex items-center gap-1"><iconify-icon icon="solar:heart-bold" class="text-red-500"></iconify-icon> {item.metadata.likeCount.toLocaleString()}</span>
+               <span className="flex items-center gap-1"><iconify-icon icon="solar:chat-round-dots-bold" class="text-white"></iconify-icon> {item.metadata.commentCount.toLocaleString()}</span>
+            </div>
+          )}
+          
+          {item.type === 'spotify' && (
+             <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                <span className="text-[#1DB954]">●</span>
+                <span>{item.metadata.artist}</span>
+             </div>
+          )}
         </div>
-      )}
+      </div>
     </motion.div>
   )
 }
@@ -206,32 +249,33 @@ interface GalleryLightboxProps {
 const GalleryLightbox = ({ item, onClose }: GalleryLightboxProps) => {
   return (
     <motion.div
-      className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-xl"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={onClose}
     >
       <motion.div
-        className="bg-gray-900 rounded-lg overflow-hidden max-w-3xl w-full border border-gray-700 relative"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
+        className="bg-black border border-zinc-800 w-full max-w-5xl h-[85vh] rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
         onClick={e => e.stopPropagation()}
       >
-        {item.type === 'instagram' ? (
-          <InstagramLightboxContent item={item} />
-        ) : (
-          <SpotifyLightboxContent item={item} />
-        )}
-
-        {/* Close button */}
+        {/* Close Button */}
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white text-xl z-10"
+           onClick={onClose}
+           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition border border-white/10"
         >
-          ✕
+          <iconify-icon icon="solar:close-circle-bold" width="24"></iconify-icon>
         </button>
+
+        {/* Content Split */}
+        {item.type === 'instagram' ? (
+           <InstagramLightboxContent item={item} />
+        ) : (
+           <SpotifyLightboxContent item={item} />
+        )}
       </motion.div>
     </motion.div>
   )
@@ -239,101 +283,183 @@ const GalleryLightbox = ({ item, onClose }: GalleryLightboxProps) => {
 
 const InstagramLightboxContent = ({ item }: { item: InstagramGalleryItem }) => {
   return (
-    <div className="max-h-[90vh] overflow-y-auto">
-      {/* Image */}
-      <img
-        src={item.metadata.mediaUrl || item.thumbnail}
-        alt={item.title}
-        className="w-full max-h-96 object-cover"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement
-          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect fill="%23374151" width="800" height="400"/%3E%3Ctext fill="%239CA3AF" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3EImage Unavailable%3C/text%3E%3C/svg%3E'
-        }}
-      />
-
-      {/* Content */}
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">{item.title}</h2>
-
-        {item.metadata.caption && (
-          <p className="text-gray-300 mb-4 whitespace-pre-wrap">{item.metadata.caption}</p>
-        )}
-
-        {/* Stats */}
-        <div className="flex gap-6 mb-6">
-          <div>
-            <p className="text-3xl font-bold text-pink-500">❤️</p>
-            <p className="text-sm text-gray-400">{item.metadata.likeCount} likes</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-blue-500">💬</p>
-            <p className="text-sm text-gray-400">{item.metadata.commentCount} comments</p>
-          </div>
-        </div>
-
-        {/* Open on Instagram */}
-        <a
-          href={item.metadata.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full block text-center py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-pink-500/50"
-        >
-          View on Instagram ↗
-        </a>
+    <>
+      {/* Visual Side */}
+      <div className="w-full md:w-2/3 bg-zinc-900 flex items-center justify-center relative overflow-hidden group">
+         <img
+          src={item.metadata.mediaUrl || item.thumbnail}
+          alt={item.title}
+          className="w-full h-full object-contain"
+         />
+         {/* Navigation hints could go here for carousel */}
+         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition">
+            Scroll to zoom • Drag to pan
+         </div>
       </div>
-    </div>
+      
+      {/* Meta Side */}
+      <div className="w-full md:w-1/3 border-l border-zinc-800 bg-zinc-950 flex flex-col">
+         {/* Header */}
+         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px]">
+               <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                  <img src="https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c" className="w-full h-full object-cover" alt="roawolf" />
+               </div>
+            </div>
+            <div>
+               <h4 className="font-bold text-white text-sm">roawolf</h4>
+               <p className="text-zinc-500 text-xs">Instagram</p>
+            </div>
+            <a 
+              href={item.metadata.url} 
+              target="_blank" 
+              className="ml-auto text-blue-500 text-xs font-bold hover:text-blue-400"
+            >
+               Follow
+            </a>
+         </div>
+
+         {/* Comments/Caption Area */}
+         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="mb-6">
+               <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                  <span className="font-bold text-white mr-2">roawolf</span>
+                  {item.metadata.caption}
+               </p>
+               <p className="text-xs text-zinc-500 mt-2">
+                  {new Date(item.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
+               </p>
+            </div>
+
+            {/* Mock Comments */}
+            <div className="space-y-4 pt-4 border-t border-zinc-900">
+               {['Fire 🔥', 'The goat 🐐', 'Waiting for the album!!', 'Legendary'].map((comment, i) => (
+                  <div key={i} className="flex gap-3">
+                     <div className="w-8 h-8 rounded-full bg-zinc-800 flex-shrink-0" />
+                     <div>
+                        <p className="text-xs font-bold text-zinc-400">user_{i + 420}</p>
+                        <p className="text-xs text-zinc-300">{comment}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+
+         {/* Actions Footer */}
+         <div className="p-4 border-t border-zinc-800 space-y-4 bg-black">
+            <div className="flex items-center justify-between text-2xl px-2">
+               <div className="flex gap-4 text-white">
+                  <button className="hover:text-red-500 transition"><iconify-icon icon="solar:heart-linear"></iconify-icon></button>
+                  <button className="hover:text-zinc-300 transition"><iconify-icon icon="solar:chat-round-linear"></iconify-icon></button>
+                  <button className="hover:text-zinc-300 transition"><iconify-icon icon="solar:plain-3-linear"></iconify-icon></button>
+               </div>
+               <button className="text-white hover:text-zinc-300 transition"><iconify-icon icon="solar:bookmark-linear"></iconify-icon></button>
+            </div>
+            <div className="px-2">
+               <p className="font-bold text-sm text-white">{item.metadata.likeCount.toLocaleString()} likes</p>
+            </div>
+         </div>
+      </div>
+    </>
   )
 }
 
 const SpotifyLightboxContent = ({ item }: { item: SpotifyGalleryItem }) => {
-  return (
-    <div className="p-6 space-y-6">
-      {/* Album Cover */}
-      <div className="flex justify-center">
-        <img
-          src={item.thumbnail}
-          alt={item.title}
-          className="w-48 h-48 rounded-lg shadow-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement
-            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23374151" width="400" height="400"/%3E%3Ctext fill="%239CA3AF" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3EImage Unavailable%3C/text%3E%3C/svg%3E'
-          }}
-        />
+   // Convert Spotify Album URL to Embed URL
+   // Example: https://open.spotify.com/album/7F1YcZQm1HvLwPFNEpdRpR -> https://open.spotify.com/embed/album/7F1YcZQm1HvLwPFNEpdRpR
+   const embedUrl = item.metadata.url.replace('/album/', '/embed/album/') + '?utm_source=generator&theme=0'
+
+   return (
+      <div className="w-full h-full bg-black flex flex-col md:flex-row relative overflow-hidden">
+         {/* Background Blur Art */}
+         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+            <img src={item.thumbnail} className="w-full h-full object-cover blur-[120px] scale-150" alt="" />
+         </div>
+
+         {/* Left Side: Large Album Art (Desktop) */}
+         <div className="hidden md:flex w-2/5 items-center justify-center p-12 z-10">
+            <motion.div 
+               className="relative aspect-square w-full max-w-md rounded-2xl shadow-2xl shadow-black/80 overflow-hidden border border-white/10"
+               initial={{ x: -20, opacity: 0 }}
+               animate={{ x: 0, opacity: 1 }}
+               transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+               <img src={item.thumbnail} className="w-full h-full object-cover" alt={item.title} />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+               <div className="absolute bottom-6 left-6 right-6">
+                  <h2 className="text-3xl font-black text-white leading-none uppercase tracking-tighter mb-2">{item.title}</h2>
+                  <p className="text-lg text-zinc-300 font-bold">{item.metadata.artist}</p>
+               </div>
+            </motion.div>
+         </div>
+
+         {/* Right Side / Mobile Main: Spotify Embed */}
+         <div className="flex-1 flex flex-col z-10 h-full">
+            {/* Header for Mobile */}
+            <div className="md:hidden p-6 pb-0">
+                <h2 className="text-2xl font-black text-white leading-none uppercase tracking-tighter mb-1">{item.title}</h2>
+                <p className="text-sm text-zinc-400 font-bold">{item.metadata.artist}</p>
+            </div>
+
+            <div className="flex-1 p-4 md:p-8 flex flex-col">
+               <motion.div 
+                  className="flex-1 bg-zinc-950/80 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl flex flex-col"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+               >
+                  {/* Custom Embed Layout */}
+                  <div className="flex-1 w-full h-full relative group">
+                     <iframe
+                        title={`Spotify: ${item.title}`}
+                        src={embedUrl}
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        className="w-full h-full"
+                     ></iframe>
+                     
+                     {/* Custom Overlay for extra polish if needed, but Spotify iframe is pretty clean */}
+                  </div>
+               </motion.div>
+
+               {/* Footer Actions */}
+               <motion.div 
+                  className="mt-6 flex items-center justify-between gap-4"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+               >
+                  <div className="flex gap-4">
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Source</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1DB954]/10 border border-[#1DB954]/20 rounded-full">
+                           <iconify-icon icon="mdi:spotify" class="text-[#1DB954] text-sm"></iconify-icon>
+                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">Spotify Official</span>
+                        </div>
+                     </div>
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Rank</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-600/10 border border-red-600/20 rounded-full">
+                           <iconify-icon icon="solar:fire-bold" class="text-red-600 text-sm"></iconify-icon>
+                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">Trending Alpha</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                     <button className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-90">
+                        <iconify-icon icon="solar:share-linear" width="20"></iconify-icon>
+                     </button>
+                     <button className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-90">
+                        <iconify-icon icon="solar:heart-linear" width="20"></iconify-icon>
+                     </button>
+                  </div>
+               </motion.div>
+            </div>
+         </div>
       </div>
-
-      {/* Track Info */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">{item.title}</h2>
-        <p className="text-gray-300 mb-1">{item.metadata.artist}</p>
-        <p className="text-sm text-gray-400">{item.metadata.album}</p>
-        <p className="text-sm text-yellow-400 mt-2">⭐ {item.metadata.popularity}/100 Popularity</p>
-      </div>
-
-      {/* Player */}
-      {item.metadata.hasPreview && item.metadata.previewUrl ? (
-        <div>
-          <audio
-            controls
-            src={item.metadata.previewUrl}
-            className="w-full h-10 rounded-lg"
-          />
-          <p className="text-xs text-gray-400 text-center mt-2">30-second preview</p>
-        </div>
-      ) : (
-        <div className="text-center text-gray-400 text-sm">
-          Preview not available for this track
-        </div>
-      )}
-
-      {/* Open on Spotify */}
-      <a
-        href={item.metadata.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full block text-center py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700"
-      >
-        Open in Spotify ↗
-      </a>
-    </div>
-  )
+   )
 }

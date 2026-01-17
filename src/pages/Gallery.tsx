@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import type { GalleryContentItem } from '../types/gallery';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useGalleryFilters } from '../hooks/useGalleryFilters';
@@ -11,6 +13,7 @@ import { FilterChips } from '../components/Gallery/FilterChips';
 import { GalleryFYP } from '../components/Gallery/GalleryFYP';
 import { LightboxContainer } from '../components/Gallery/LightboxContainer';
 import { PerformanceDashboard } from '../components/Performance/PerformanceDashboard';
+import { SocialGallery } from '../components/SocialGallery';
 
 const TABS = [
   { id: 'show', label: 'Show', icon: 'solar:play-circle-linear' },
@@ -28,7 +31,11 @@ export const Gallery = () => {
   const [showPerfDashboard, setShowPerfDashboard] = useState(false);
   const [activeTab, setActiveTab] = useState<'artist' | 'community'>('artist');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
   const animate = useScrollAnimation();
+  
+  // Seed mutation for populating gallery
+  const seedDirect = useMutation(api.socialGallery.seedDirect);
 
   // Track Web Vitals
   usePerformanceMetrics();
@@ -137,7 +144,10 @@ export const Gallery = () => {
              {/* Main Tabs (Artist vs Community) */}
              <div className="inline-flex bg-zinc-900/50 p-1 rounded-sm border border-zinc-800 mb-8">
                <button 
-                 onClick={() => setActiveTab('artist')}
+                 onClick={() => {
+                   setActiveTab('artist');
+                   // Optional: reset filters or keep strictly separate
+                 }}
                  className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'artist' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
                  Artist Exclusive
@@ -146,8 +156,24 @@ export const Gallery = () => {
                  onClick={() => setActiveTab('community')}
                  className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'community' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
-                 Wolfpack Community
+                 Community
                </button>
+               {activeTab === 'community' && (
+                 <button 
+                   onClick={async () => {
+                     setSeedResult('Seeding...');
+                     try {
+                       const result = await seedDirect();
+                       setSeedResult(`Seeded! IG: ${result.igInserted}, Spotify: ${result.spotifyInserted}`);
+                     } catch (e) {
+                       setSeedResult(`Error: ${e}`);
+                     }
+                   }}
+                   className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-green-600 text-white rounded-sm hover:bg-green-500 transition-all"
+                 >
+                   {seedResult || 'Seed Data'}
+                 </button>
+               )}
              </div>
 
              {/* Artist Sub Tabs */}
@@ -173,49 +199,51 @@ export const Gallery = () => {
              )}
            </div>
            
-           {/* Secondary Controls Row (Filters, Perf) */}
-           <div className="w-full flex justify-end gap-2 mb-4 px-4">
-              {/* Performance dashboard button (dev only) */}
-              {import.meta.env.DEV && (
-                <button
-                  onClick={() => setShowPerfDashboard(!showPerfDashboard)}
-                  className="filter-toggle-btn"
-                  title="Performance Dashboard"
-                >
-                  <iconify-icon icon="solar:chart-square-linear" width="20" height="20"></iconify-icon>
-                </button>
-              )}
-
-              {/* Filter toggle button */}
-              <button
-                onClick={() => {
-                  if (window.innerWidth < 768) {
-                    setShowMobileFilters(true);
-                  } else {
-                    setShowFilters(!showFilters);
-                  }
-                }}
-                className={`filter-toggle-btn ${isActive ? 'has-filters' : ''}`}
-                title="Toggle filters"
-                aria-label="Toggle filters"
-              >
-                <iconify-icon icon="solar:filter-linear" width="20" height="20"></iconify-icon>
-                {appliedCount > 0 && (
-                  <span className="filter-badge">{appliedCount}</span>
+           {/* Secondary Controls Row (Filters, Perf) - Hide if community tab ?? Actually SocialGallery has its own filters. Let's hide this row if community */}
+           {activeTab === 'artist' && (
+             <div className="w-full flex justify-end gap-2 mb-4 px-4">
+                {/* Performance dashboard button (dev only) */}
+                {import.meta.env.DEV && (
+                  <button
+                    onClick={() => setShowPerfDashboard(!showPerfDashboard)}
+                    className="filter-toggle-btn"
+                    title="Performance Dashboard"
+                  >
+                    <iconify-icon icon="solar:chart-square-linear" width="20" height="20"></iconify-icon>
+                  </button>
                 )}
-              </button>
-           </div>
+
+                {/* Filter toggle button */}
+                <button
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      setShowMobileFilters(true);
+                    } else {
+                      setShowFilters(!showFilters);
+                    }
+                  }}
+                  className={`filter-toggle-btn ${isActive ? 'has-filters' : ''}`}
+                  title="Toggle filters"
+                  aria-label="Toggle filters"
+                >
+                  <iconify-icon icon="solar:filter-linear" width="20" height="20"></iconify-icon>
+                  {appliedCount > 0 && (
+                    <span className="filter-badge">{appliedCount}</span>
+                  )}
+                </button>
+             </div>
+           )}
         </header>
 
-        {/* Active filter chips */}
-        {isActive && (
+        {/* Active filter chips - Only for Artist */}
+        {activeTab === 'artist' && isActive && (
           <div className="px-4 py-3 border-b border-gray-800">
             <FilterChips filters={filters} onRemove={clearFilter} />
           </div>
         )}
 
-        {/* Results count */}
-        {data && (
+        {/* Results count - Only for Artist */}
+        {activeTab === 'artist' && data && (
           <div className="px-4 py-2 text-sm text-gray-400">
             {(data.items?.length ?? 0) === 0 ? (
               <span>No results found</span>
@@ -228,44 +256,48 @@ export const Gallery = () => {
         )}
 
         <main className="gallery-viewport flex-1">
-          {(data?.items?.length ?? 0) === 0 && !isLoading ? (
-            <div className="empty-state">
-              <iconify-icon icon="solar:filter-linear" width="64" height="64" class="text-gray-600 mb-4"></iconify-icon>
-              <h3 className="text-xl font-bold text-white mb-2">No content found</h3>
-              <p className="text-gray-400 mb-4">
-                Try adjusting your filters to see more content
-              </p>
-              <button
-                onClick={() => {
-                  setAccumulatedItems([]);
-                  clearFilter('types');
-                  clearFilter('dateRange');
-                  clearFilter('creatorId');
-                  clearFilter('fanTier');
-                  clearFilter('tags');
-                }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
-              >
-                Clear all filters
-              </button>
-            </div>
+          {activeTab === 'community' ? (
+             <SocialGallery />
           ) : (
-            <>
-              <GalleryFYP
-                items={accumulatedItems}
-                isLoading={isLoading}
-                onItemClick={handleItemClick}
-              />
+            (data?.items?.length ?? 0) === 0 && !isLoading ? (
+              <div className="empty-state">
+                <iconify-icon icon="solar:filter-linear" width="64" height="64" class="text-gray-600 mb-4"></iconify-icon>
+                <h3 className="text-xl font-bold text-white mb-2">No content found</h3>
+                <p className="text-gray-400 mb-4">
+                  Try adjusting your filters to see more content
+                </p>
+                <button
+                  onClick={() => {
+                    setAccumulatedItems([]);
+                    clearFilter('types');
+                    clearFilter('dateRange');
+                    clearFilter('creatorId');
+                    clearFilter('fanTier');
+                    clearFilter('tags');
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <>
+                <GalleryFYP
+                  items={accumulatedItems}
+                  isLoading={isLoading}
+                  onItemClick={handleItemClick}
+                />
 
-              {data?.hasMore && !isLoading && (
-                <div className="gallery-footer-actions">
-                  <button onClick={handleLoadMore} className="load-more-btn border-beam">
-                    <span>Sync More</span>
-                    <iconify-icon icon="solar:round-alt-arrow-down-linear"></iconify-icon>
-                  </button>
-                </div>
-              )}
-            </>
+                {data?.hasMore && !isLoading && (
+                  <div className="gallery-footer-actions">
+                    <button onClick={handleLoadMore} className="load-more-btn border-beam">
+                      <span>Sync More</span>
+                      <iconify-icon icon="solar:round-alt-arrow-down-linear"></iconify-icon>
+                    </button>
+                  </div>
+                )}
+              </>
+            )
           )}
         </main>
       </div>

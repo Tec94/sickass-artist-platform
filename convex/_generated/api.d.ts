@@ -34,6 +34,7 @@ import type * as recommendations from "../recommendations.js";
 import type * as rewards from "../rewards.js";
 import type * as scheduler from "../scheduler.js";
 import type * as search from "../search.js";
+import type * as seedSocials from "../seedSocials.js";
 import type * as socialGallery from "../socialGallery.js";
 import type * as spotify from "../spotify.js";
 import type * as spotifySync from "../spotifySync.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   rewards: typeof rewards;
   scheduler: typeof scheduler;
   search: typeof search;
+  seedSocials: typeof seedSocials;
   socialGallery: typeof socialGallery;
   spotify: typeof spotify;
   spotifySync: typeof spotifySync;

@@ -1,3 +1,4 @@
+// Schema for Convex - Ensuring high-fidelity social data
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
