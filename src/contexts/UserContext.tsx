@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, ReactNode, useEffect, useRef, useState, useContext } from 'react'
-import { useUser as useClerkUser, useClerk } from '@clerk/clerk-react'
+import { useUser as useClerkUser, useClerk, useAuth } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { Doc } from '../../convex/_generated/dataModel'
+import { useTokenAuth } from '../components/ConvexAuthProvider'
 
 interface UserContextType {
   // Clerk auth state
@@ -27,48 +28,98 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { user, isSignedIn, isLoaded } = useClerkUser()
+  // Cookie-based auth (works on localhost, may fail on Vercel)
+  const { user: clerkUser, isSignedIn: cookieSignedIn, isLoaded: clerkLoaded } = useClerkUser()
   const { signOut: clerkSignOut } = useClerk()
+  const { userId: cookieUserId, getToken } = useAuth()
+  
+  // Token-based auth (works even when cookies are blocked)
+  const { hasValidToken, isTokenLoading, userId: tokenUserId, refreshAuth } = useTokenAuth()
+  
+  // Use token-based auth as primary, fall back to cookie-based
+  const isSignedIn = hasValidToken || (cookieSignedIn ?? false)
+  const isLoading = isTokenLoading || !clerkLoaded
+  const effectiveUserId = tokenUserId || cookieUserId
+  
   const [userProfile, setUserProfile] = useState<Doc<'users'> | null>(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
   const hasRecordedLoginRef = useRef(false)
+  const hasInitializedRef = useRef(false)
   
   // Convex mutations & queries
   const createUserMutation = useMutation(api.users.create)
   const recordLoginMutation = useMutation(api.users.recordLogin)
   const getUserQuery = useQuery(
     api.users.getByClerkId,
-    isSignedIn && user?.id ? { clerkId: user.id } : 'skip'
+    isSignedIn && effectiveUserId ? { clerkId: effectiveUserId } : 'skip'
   )
   
   // On sign-in, create user profile if doesn't exist
   useEffect(() => {
-    if (!isSignedIn || !user || !isLoaded || getUserQuery === undefined) return
+    if (!isSignedIn || !effectiveUserId || isLoading || getUserQuery === undefined) return
+    if (hasInitializedRef.current) return
     
     const initializeUser = async () => {
       try {
         // Check if user exists in Convex
         if (getUserQuery === null) {
+          hasInitializedRef.current = true
+          
+          // Try to get user info from Clerk user object or token
+          let email = ''
+          let username = ''
+          let displayName = ''
+          let avatar = ''
+          
+          if (clerkUser) {
+            // Cookie-based auth is working, use Clerk user object
+            email = clerkUser.emailAddresses[0]?.emailAddress || ''
+            username = clerkUser.username || email.split('@')[0]
+            displayName = clerkUser.firstName || ''
+            avatar = clerkUser.imageUrl || ''
+          } else {
+            // Cookies blocked - try to extract info from token
+            try {
+              const token = await getToken({ template: 'convex' })
+              if (token) {
+                // Decode JWT payload (second part)
+                const payload = JSON.parse(atob(token.split('.')[1]))
+                email = payload.email || ''
+                username = payload.nickname || payload.name?.replace(/\s+/g, '_').toLowerCase() || email.split('@')[0]
+                displayName = payload.given_name || payload.name?.split(' ')[0] || ''
+                avatar = payload.picture || ''
+                
+                console.log('[UserContext] Extracted user info from token:', { email, username, displayName })
+              }
+            } catch (e) {
+              console.error('[UserContext] Failed to extract user info from token:', e)
+              // Use fallback values
+              username = `user_${effectiveUserId.substring(0, 8)}`
+            }
+          }
+          
           // First sign-in: create user in Convex
-          const username = user.username || user.emailAddresses[0].emailAddress.split('@')[0]
           await createUserMutation({
-            clerkId: user.id,
-            email: user.emailAddresses[0].emailAddress,
+            clerkId: effectiveUserId,
+            email: email,
             username: username,
-            displayName: user.firstName || '',
-            avatar: user.imageUrl || '',
+            displayName: displayName,
+            avatar: avatar,
           })
+          
+          console.log('[UserContext] ✅ Created new user in Convex')
         }
         
         setIsProfileLoaded(true)
       } catch (error) {
-        console.error('Failed to initialize user:', error)
+        console.error('[UserContext] Failed to initialize user:', error)
         setIsProfileLoaded(true)
+        hasInitializedRef.current = false // Allow retry
       }
     }
     
     initializeUser()
-  }, [isSignedIn, user, isLoaded, createUserMutation, getUserQuery])
+  }, [isSignedIn, effectiveUserId, isLoading, createUserMutation, getUserQuery, clerkUser, getToken])
   
   // Set userProfile from query and record login (once per session)
   useEffect(() => {
@@ -78,7 +129,7 @@ export function UserProvider({ children }: UserProviderProps) {
       if (!hasRecordedLoginRef.current) {
         hasRecordedLoginRef.current = true
         recordLoginMutation({ userId: getUserQuery._id }).catch((err) =>
-          console.error('Failed to record login:', err)
+          console.error('[UserContext] Failed to record login:', err)
         )
       }
     } else if (getUserQuery === null) {
@@ -87,20 +138,33 @@ export function UserProvider({ children }: UserProviderProps) {
     }
   }, [getUserQuery, recordLoginMutation])
   
+  // Reset state on sign out
+  useEffect(() => {
+    if (!isSignedIn && !isLoading) {
+      setUserProfile(null)
+      setIsProfileLoaded(false)
+      hasRecordedLoginRef.current = false
+      hasInitializedRef.current = false
+    }
+  }, [isSignedIn, isLoading])
+  
   const signOut = async () => {
     await clerkSignOut()
     setUserProfile(null)
+    setIsProfileLoaded(false)
+    hasRecordedLoginRef.current = false
+    hasInitializedRef.current = false
   }
   
   const refreshUserProfile = () => {
-    // Trigger query refetch (Convex handles this)
     setIsProfileLoaded(false)
+    refreshAuth()
   }
   
   const value: UserContextType = {
-    clerkUser: user,
-    isSignedIn: isSignedIn ?? false,
-    isLoading: !isLoaded,
+    clerkUser: clerkUser,
+    isSignedIn, // Now uses token-based auth primarily
+    isLoading,
     userProfile,
     isProfileLoaded,
     signOut,
