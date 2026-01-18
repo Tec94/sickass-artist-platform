@@ -200,26 +200,31 @@ export function ProfileEdit() {
 
       <style>{`
         .profile-edit-layout {
-          max-width: 900px;
+          max-width: 750px;
           margin: 0 auto;
-          padding: 40px 20px;
+          padding: 24px 20px;
+          min-height: calc(100vh - 80px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .profile-edit-container {
           background: rgba(10, 10, 10, 0.4);
           backdrop-filter: blur(20px);
           border: 1px solid var(--color-card-border);
-          border-radius: 24px;
-          padding: 40px;
+          border-radius: 20px;
+          padding: 28px;
+          width: 100%;
         }
 
         .form-title {
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 2px;
           color: white;
-          margin: 0 0 32px 0;
+          margin: 0 0 20px 0;
         }
 
         .error-banner {
@@ -236,9 +241,9 @@ export function ProfileEdit() {
           font-weight: 700;
         }
 
-        .edit-form { display: flex; flex-direction: column; gap: 24px; }
+        .edit-form { display: flex; flex-direction: column; gap: 16px; }
 
-        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        .field-group { display: flex; flex-direction: column; gap: 6px; }
 
         .field-label {
           font-size: 11px;
@@ -265,10 +270,10 @@ export function ProfileEdit() {
           width: 100%;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid var(--color-card-border);
-          border-radius: 12px;
-          padding: 12px 16px;
+          border-radius: 10px;
+          padding: 10px 14px;
           color: white;
-          font-size: 14px;
+          font-size: 13px;
           font-family: inherit;
           transition: all 0.3s ease;
         }
@@ -282,11 +287,11 @@ export function ProfileEdit() {
           box-shadow: 0 0 20px rgba(255, 0, 0, 0.1);
         }
 
-        textarea { height: 120px; resize: none; }
+        textarea { height: 70px; resize: none; }
 
         .language-selector {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           margin-top: 4px;
         }
 
@@ -295,13 +300,13 @@ export function ProfileEdit() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 8px;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid var(--color-card-border);
-          border-radius: 12px;
-          padding: 12px;
+          border-radius: 10px;
+          padding: 10px;
           color: var(--color-text-dim);
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
@@ -331,18 +336,18 @@ export function ProfileEdit() {
           transform: scale(1.1);
         }
 
-        .socials-meta { margin-top: 16px; }
+        .socials-meta { margin-top: 10px; }
 
         .meta-title {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 1px;
           color: var(--color-text-dim);
-          margin-bottom: 16px;
+          margin-bottom: 10px;
         }
 
-        .social-inputs { display: flex; flex-direction: column; gap: 12px; }
+        .social-inputs { display: flex; flex-direction: column; gap: 8px; }
 
         .social-input-group {
           display: flex;
@@ -354,22 +359,22 @@ export function ProfileEdit() {
         }
 
         .platform-icon {
-          width: 48px;
-          height: 48px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: rgba(0, 0, 0, 0.2);
           color: var(--color-primary);
-          font-size: 18px;
+          font-size: 16px;
         }
 
         .social-input-group input { border: none; background: transparent; }
 
         .form-actions {
           display: flex;
-          gap: 16px;
-          margin-top: 24px;
+          gap: 12px;
+          margin-top: 16px;
         }
 
         .save-btn {
@@ -377,8 +382,9 @@ export function ProfileEdit() {
           background: var(--color-primary);
           color: white;
           border: none;
-          padding: 14px;
-          border-radius: 12px;
+          padding: 10px;
+          border-radius: 10px;
+          font-size: 11px;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 1px;
@@ -390,9 +396,12 @@ export function ProfileEdit() {
           background: transparent;
           border: 1px solid var(--color-card-border);
           color: var(--color-text-dim);
-          padding: 14px;
-          border-radius: 12px;
+          padding: 10px;
+          border-radius: 10px;
+          font-size: 11px;
           font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
           cursor: pointer;
         }
 
