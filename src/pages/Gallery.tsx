@@ -332,7 +332,7 @@ export const Gallery = () => {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          padding: 20px;
+          padding: 0 20px 20px 20px;
           gap: 20px;
           flex-wrap: wrap;
           border-bottom: 1px solid var(--color-card-border);

@@ -79,7 +79,8 @@ export const SocialGallery = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-12">
-      {/* Header Section */}
+      {/* Header Section - REMOVED to save space as requested */ }
+      {/* 
       <div className="text-center space-y-4">
         <h1 className="text-5xl md:text-7xl font-display font-black text-white uppercase tracking-tighter">
           The <span className="text-red-600">Connect</span>
@@ -87,7 +88,8 @@ export const SocialGallery = () => {
         <p className="text-zinc-400 font-medium max-w-2xl mx-auto">
           Exclusive feed from the Wolfpack. Instagram posts, Spotify releases, and more.
         </p>
-      </div>
+      </div> 
+      */}
 
       {/* Spotify Featured Section */}
       <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden backdrop-blur-sm p-1">
@@ -105,7 +107,7 @@ export const SocialGallery = () => {
       </div>
 
       {/* Controls */}
-      <div className="sticky top-4 z-40 bg-black/90 backdrop-blur-md p-4 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl">
+      <div className="w-full flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* Search */}
         <div className="relative w-full md:w-96">
           <iconify-icon icon="solar:magnifer-linear" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></iconify-icon>
@@ -265,7 +267,7 @@ const GalleryLightbox = ({ item, onClose }: GalleryLightboxProps) => {
         {/* Close Button */}
         <button
            onClick={onClose}
-           className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition border border-white/10"
+           className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition border border-white/10"
         >
           <iconify-icon icon="solar:close-circle-bold" width="24"></iconify-icon>
         </button>
@@ -365,9 +367,16 @@ const InstagramLightboxContent = ({ item }: { item: InstagramGalleryItem }) => {
 }
 
 const SpotifyLightboxContent = ({ item }: { item: SpotifyGalleryItem }) => {
+   const [copied, setCopied] = useState(false)
    // Convert Spotify Album URL to Embed URL
    // Example: https://open.spotify.com/album/7F1YcZQm1HvLwPFNEpdRpR -> https://open.spotify.com/embed/album/7F1YcZQm1HvLwPFNEpdRpR
    const embedUrl = item.metadata.url.replace('/album/', '/embed/album/') + '?utm_source=generator&theme=0'
+
+   const handleShare = () => {
+      navigator.clipboard.writeText(item.metadata.url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+   }
 
    return (
       <div className="w-full h-full bg-black flex flex-col md:flex-row relative overflow-hidden">
@@ -376,22 +385,80 @@ const SpotifyLightboxContent = ({ item }: { item: SpotifyGalleryItem }) => {
             <img src={item.thumbnail} className="w-full h-full object-cover blur-[120px] scale-150" alt="" />
          </div>
 
-         {/* Left Side: Large Album Art (Desktop) */}
-         <div className="hidden md:flex w-2/5 items-center justify-center p-12 z-10">
-            <motion.div 
-               className="relative aspect-square w-full max-w-md rounded-2xl shadow-2xl shadow-black/80 overflow-hidden border border-white/10"
-               initial={{ x: -20, opacity: 0 }}
-               animate={{ x: 0, opacity: 1 }}
-               transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-               <img src={item.thumbnail} className="w-full h-full object-cover" alt={item.title} />
-               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-               <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-3xl font-black text-white leading-none uppercase tracking-tighter mb-2">{item.title}</h2>
-                  <p className="text-lg text-zinc-300 font-bold">{item.metadata.artist}</p>
-               </div>
-            </motion.div>
-         </div>
+          {/* Left Side: Large Album Art (Desktop) */}
+          <div className="hidden md:flex w-2/5 flex-col items-center justify-start p-8 z-10 gap-6 pt-12">
+             <motion.div 
+                className="relative aspect-square w-full max-w-md rounded-2xl shadow-2xl shadow-black/80 overflow-hidden border border-white/10"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+             >
+                <img src={item.thumbnail} className="w-full h-full object-cover" alt={item.title} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                   <h2 className="text-3xl font-black text-white leading-none uppercase tracking-tighter mb-2">{item.title}</h2>
+                   <p className="text-lg text-zinc-300 font-bold">{item.metadata.artist}</p>
+                </div>
+             </motion.div>
+
+             {/* Metadata on Left (Desktop) - Vertical List */}
+             <div className="w-full max-w-md bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-6 backdrop-blur-sm space-y-5">
+                {/* Released */}
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3 text-zinc-500">
+                      <iconify-icon icon="solar:calendar-date-linear" width="16"></iconify-icon>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Released</span>
+                   </div>
+                   <span className="text-sm font-bold text-white">
+                      {new Date(item.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                   </span>
+                </div>
+
+                {/* Streams */}
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3 text-zinc-500">
+                      <iconify-icon icon="solar:play-circle-linear" width="16"></iconify-icon>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Total Streams</span>
+                   </div>
+                   <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-black text-white">{(item.metadata.popularity * 12450).toLocaleString()}</span>
+                      <span className="text-[9px] font-bold text-zinc-600 uppercase">Plays</span>
+                   </div>
+                </div>
+
+                {/* Popularity */}
+                <div className="flex items-center justify-between gap-8">
+                   <div className="flex items-center gap-3 text-zinc-500">
+                      <iconify-icon icon="solar:chart-square-linear" width="16"></iconify-icon>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Popularity</span>
+                   </div>
+                   <div className="flex-1 flex items-center gap-3 justify-end">
+                      <div className="w-24 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                         <div 
+                            className="h-full bg-red-600 rounded-full" 
+                            style={{ width: `${item.metadata.popularity}%` }}
+                         ></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-400">{item.metadata.popularity}%</span>
+                   </div>
+                </div>
+
+                {/* Rank */}
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3 text-zinc-500">
+                      <iconify-icon icon="solar:fire-linear" width="16"></iconify-icon>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">Connect Rank</span>
+                   </div>
+                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-600/10 border border-red-600/20 rounded-lg">
+                      <span className="relative flex h-1.5 w-1.5">
+                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-600"></span>
+                      </span>
+                      <span className="text-[9px] font-black text-white uppercase tracking-widest">Trending</span>
+                   </div>
+                </div>
+             </div>
+          </div>
 
          {/* Right Side / Mobile Main: Spotify Embed */}
          <div className="flex-1 flex flex-col z-10 h-full">
@@ -426,35 +493,51 @@ const SpotifyLightboxContent = ({ item }: { item: SpotifyGalleryItem }) => {
                </motion.div>
 
                {/* Footer Actions */}
-               <motion.div 
-                  className="mt-6 flex items-center justify-between gap-4"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-               >
-                  <div className="flex gap-4">
-                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Source</span>
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1DB954]/10 border border-[#1DB954]/20 rounded-full">
-                           <iconify-icon icon="mdi:spotify" class="text-[#1DB954] text-sm"></iconify-icon>
-                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">Spotify Official</span>
-                        </div>
-                     </div>
-                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Rank</span>
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-600/10 border border-red-600/20 rounded-full">
-                           <iconify-icon icon="solar:fire-bold" class="text-red-600 text-sm"></iconify-icon>
-                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">Trending Alpha</span>
-                        </div>
-                     </div>
-                  </div>
+                <motion.div 
+                   className="mt-6 flex items-center justify-between gap-4"
+                   initial={{ y: 10, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   transition={{ delay: 0.4 }}
+                >
+                   <div className="flex gap-4">
+                      <div className="flex flex-col">
+                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Source</span>
+                         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1DB954]/10 border border-[#1DB954]/20 rounded-full">
+                            <iconify-icon icon="mdi:spotify" class="text-[#1DB954] text-sm"></iconify-icon>
+                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Spotify Official</span>
+                         </div>
+                      </div>
+                   </div>
 
                   <div className="flex gap-3">
-                     <button className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-90">
-                        <iconify-icon icon="solar:share-linear" width="20"></iconify-icon>
+                     <button 
+                        onClick={handleShare}
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-all active:scale-90 relative ${
+                           copied 
+                           ? 'bg-[#1DB954]/20 border-[#1DB954] text-[#1DB954]' 
+                           : 'bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700'
+                        }`}
+                        title="Copy content link"
+                     >
+                        {copied ? (
+                           <iconify-icon icon="solar:check-read-linear" width="20" height="20"></iconify-icon>
+                        ) : (
+                           <iconify-icon icon="solar:share-linear" width="20" height="20"></iconify-icon>
+                        )}
+                        
+                        {/* Floating "Copied" text */}
+                        {copied && (
+                           <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: -40 }}
+                              className="absolute left-1/2 -translate-x-1/2 bg-[#1DB954] text-black text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest whitespace-nowrap pointer-events-none"
+                           >
+                              Link Copied
+                           </motion.div>
+                        )}
                      </button>
-                     <button className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-90">
-                        <iconify-icon icon="solar:heart-linear" width="20"></iconify-icon>
+                     <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-90">
+                        <iconify-icon icon="solar:heart-linear" width="20" height="20"></iconify-icon>
                      </button>
                   </div>
                </motion.div>
