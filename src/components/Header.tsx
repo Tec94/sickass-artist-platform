@@ -6,6 +6,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { CartDrawer } from './CartDrawer';
 import { WishlistDrawer } from './WishlistDrawer';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -15,18 +16,19 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const { t } = useTranslation();
   
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip');
   const wishlistCount = wishlist?.length || 0; 
 
   const navLinks = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Store', path: '/store' },
-    { name: 'Events', path: '/events' },
-    { name: 'Gallery', path: '/gallery' },
-    { name: 'Forum', path: '/forum' },
-    { name: 'Chat', path: '/chat' },
-    { name: 'Ranking', path: '/ranking' },
+    { name: t('nav.dashboard'), path: '/dashboard' },
+    { name: t('nav.store'), path: '/store' },
+    { name: t('nav.events'), path: '/events' },
+    { name: t('nav.gallery'), path: '/gallery' },
+    { name: t('nav.forum'), path: '/forum' },
+    { name: t('nav.chat'), path: '/chat' },
+    { name: t('nav.ranking'), path: '/ranking' },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -60,7 +62,7 @@ const Header: React.FC = () => {
           <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link 
-                key={link.name} 
+                key={link.path} 
                 to={link.path} 
                 className={`text-xs font-display uppercase tracking-wider transition-colors hover:text-red-500 ${location.pathname.startsWith(link.path) ? 'text-white border-b-2 border-red-600' : 'text-zinc-400'}`}
               >
@@ -74,7 +76,7 @@ const Header: React.FC = () => {
             <form onSubmit={handleSearch} className="hidden md:flex relative group">
               <input 
                 type="text" 
-                placeholder="Search"
+                placeholder={t('common.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-32 bg-zinc-900/50 border border-zinc-800 rounded-full text-zinc-200 py-1 pl-3 pr-8 text-sm focus:outline-none focus:border-red-600 focus:w-48 transition-all"
@@ -141,7 +143,7 @@ const Header: React.FC = () => {
       <div className="lg:hidden flex justify-between px-4 py-2 border-t border-zinc-800 overflow-x-auto bg-zinc-950 no-scrollbar relative z-[1020]">
         {navLinks.map((link) => (
           <Link 
-            key={link.name} 
+            key={link.path} 
             to={link.path} 
             className={`text-xs font-display uppercase tracking-wider px-3 py-1 whitespace-nowrap ${location.pathname.startsWith(link.path) ? 'text-white' : 'text-zinc-500'}`}
           >

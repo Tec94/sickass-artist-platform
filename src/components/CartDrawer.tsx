@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../contexts/CartContext'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -9,6 +10,7 @@ interface CartDrawerProps {
 export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   const navigate = useNavigate()
   const { items, subtotal, itemCount, removeItem } = useCart()
+  const { t } = useTranslation()
 
   const handleCheckout = () => {
     onClose()
@@ -32,7 +34,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
           <h2 className="text-xl font-display font-bold text-white uppercase tracking-wide flex items-center gap-3">
             <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-            Shopping Bag ({itemCount})
+            {t('cart.shoppingBag')} ({itemCount})
           </h2>
           <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
             <iconify-icon icon="solar:close-circle-bold" width="24" height="24"></iconify-icon>
@@ -46,9 +48,9 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               <div className="w-20 h-20 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-800">
                 <iconify-icon icon="solar:bag-heart-bold" width="48" height="48"></iconify-icon>
               </div>
-              <p className="text-zinc-500 font-medium">Your bag is currently empty.</p>
+              <p className="text-zinc-500 font-medium">{t('cart.emptyBag')}</p>
               <button onClick={onClose} className="text-red-500 hover:text-red-400 font-bold uppercase text-xs tracking-widest underline underline-offset-4">
-                Continue Shopping
+                {t('common.continueShopping')}
               </button>
             </div>
           ) : (
@@ -70,7 +72,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                   
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">{item.variantName}</span>
-                    <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">QTY: {item.quantity}</span>
+                    <span className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase">{t('common.qty')}: {item.quantity}</span>
                   </div>
 
                   <button 
@@ -78,7 +80,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                     className="mt-auto self-start flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-red-600 transition-colors"
                   >
                     <iconify-icon icon="solar:trash-bin-trash-bold" width="14" height="14"></iconify-icon>
-                    Remove
+                    {t('common.remove')}
                   </button>
                 </div>
               </div>
@@ -90,12 +92,12 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         {items.length > 0 && (
           <div className="p-6 border-t border-zinc-900 bg-zinc-950">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-zinc-500 font-bold uppercase text-xs tracking-[0.2em]">Subtotal</span>
+              <span className="text-zinc-500 font-bold uppercase text-xs tracking-[0.2em]">{t('cart.subtotal')}</span>
               <span className="text-white font-bold text-2xl">${(subtotal / 100).toFixed(2)}</span>
             </div>
             
             <p className="text-[10px] text-red-600 font-bold uppercase tracking-widest text-center mb-6">
-              Shipping & Taxes calculated at checkout
+              {t('cart.shippingNote')}
             </p>
 
             <div className="space-y-3">
@@ -103,14 +105,14 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                 onClick={handleCheckout}
                 className="w-full bg-white hover:bg-zinc-100 text-black py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Proceed to Checkout
+                {t('cart.proceedToCheckout')}
               </button>
               
               <button 
                 onClick={onClose}
                 className="w-full text-zinc-500 hover:text-white text-[10px] font-bold uppercase tracking-widest py-2 transition-colors"
               >
-                Or Continue Shopping
+                {t('cart.orContinueShopping')}
               </button>
             </div>
           </div>

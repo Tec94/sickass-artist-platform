@@ -14,14 +14,7 @@ import { GalleryFYP } from '../components/Gallery/GalleryFYP';
 import { LightboxContainer } from '../components/Gallery/LightboxContainer';
 import { PerformanceDashboard } from '../components/Performance/PerformanceDashboard';
 import { SocialGallery } from '../components/SocialGallery';
-
-const TABS = [
-  { id: 'show', label: 'Show', icon: 'solar:play-circle-linear' },
-  { id: 'bts', label: 'BTS', icon: 'solar:camera-linear' },
-  { id: 'edit', label: 'Edits', icon: 'solar:magic-stick-linear' },
-  { id: 'wip', label: 'WIPs', icon: 'solar:clining-square-linear' },
-  { id: 'exclusive', label: 'Exclusive', icon: 'solar:star-linear' },
-];
+import { useTranslation } from '../hooks/useTranslation';
 
 export const Gallery = () => {
   useAnalytics() // Track page views
@@ -33,6 +26,7 @@ export const Gallery = () => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [seedResult, setSeedResult] = useState<string | null>(null);
   const animate = useScrollAnimation();
+  const { t } = useTranslation();
   
   // Seed mutation for populating gallery
   const seedDirect = useMutation(api.socialGallery.seedDirect);
@@ -54,6 +48,14 @@ export const Gallery = () => {
 
   const isLoading = queryResult === undefined;
   const data = queryResult ?? null;
+
+  const TABS = [
+    { id: 'show', label: t('gallery.show'), icon: 'solar:play-circle-linear' },
+    { id: 'bts', label: t('gallery.bts'), icon: 'solar:camera-linear' },
+    { id: 'edit', label: t('gallery.edits'), icon: 'solar:magic-stick-linear' },
+    { id: 'wip', label: t('gallery.wips'), icon: 'solar:clining-square-linear' },
+    { id: 'exclusive', label: t('gallery.exclusive'), icon: 'solar:star-linear' },
+  ];
 
   // Accumulate items for infinite scroll
   useEffect(() => {
@@ -139,7 +141,7 @@ export const Gallery = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <header ref={animate} data-animate className="gallery-header-v2 bg-transparent border-none pb-0 pt-8 px-8">
            <div className="w-full text-center mb-12">
-             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter mb-8">The Gallery</h1>
+             <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter mb-8">{t('gallery.title')}</h1>
              
              {/* Main Tabs (Artist vs Community) */}
              <div className="inline-flex bg-zinc-900/50 p-1 rounded-sm border border-zinc-800 mb-8">
@@ -150,13 +152,13 @@ export const Gallery = () => {
                  }}
                  className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'artist' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
-                 Artist Exclusive
+                 {t('gallery.artistExclusive')}
                </button>
                <button 
                  onClick={() => setActiveTab('community')}
                  className={`px-8 py-2.5 text-xs font-bold uppercase tracking-[0.2em] rounded-sm transition-all ${activeTab === 'community' ? 'bg-red-700 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
                >
-                 Community
+                 {t('gallery.community')}
                </button>
                {activeTab === 'community' && (
                  <button 
@@ -171,7 +173,7 @@ export const Gallery = () => {
                    }}
                    className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-green-600 text-white rounded-sm hover:bg-green-500 transition-all"
                  >
-                   {seedResult || 'Seed Data'}
+                   {seedResult || t('gallery.seedData')}
                  </button>
                )}
              </div>
@@ -246,10 +248,10 @@ export const Gallery = () => {
         {activeTab === 'artist' && data && (
           <div className="px-4 py-2 text-sm text-gray-400">
             {(data.items?.length ?? 0) === 0 ? (
-              <span>No results found</span>
+              <span>{t('gallery.noResults')}</span>
             ) : (
               <span>
-                Showing {accumulatedItems.length} of {data.items?.length ?? 0} items
+                {t('gallery.showing')} {accumulatedItems.length} {t('gallery.of')} {data.items?.length ?? 0} {t('common.items')}
               </span>
             )}
           </div>
@@ -262,9 +264,9 @@ export const Gallery = () => {
             (data?.items?.length ?? 0) === 0 && !isLoading ? (
               <div className="empty-state">
                 <iconify-icon icon="solar:filter-linear" width="64" height="64" class="text-gray-600 mb-4"></iconify-icon>
-                <h3 className="text-xl font-bold text-white mb-2">No content found</h3>
+                <h3 className="text-xl font-bold text-white mb-2">{t('gallery.noContentFound')}</h3>
                 <p className="text-gray-400 mb-4">
-                  Try adjusting your filters to see more content
+                  {t('gallery.adjustFilters')}
                 </p>
                 <button
                   onClick={() => {
@@ -277,7 +279,7 @@ export const Gallery = () => {
                   }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
                 >
-                  Clear all filters
+                  {t('gallery.clearAllFilters')}
                 </button>
               </div>
             ) : (
@@ -291,7 +293,7 @@ export const Gallery = () => {
                 {data?.hasMore && !isLoading && (
                   <div className="gallery-footer-actions">
                     <button onClick={handleLoadMore} className="load-more-btn border-beam">
-                      <span>Sync More</span>
+                      <span>{t('gallery.syncMore')}</span>
                       <iconify-icon icon="solar:round-alt-arrow-down-linear"></iconify-icon>
                     </button>
                   </div>

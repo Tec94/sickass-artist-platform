@@ -3,9 +3,12 @@ import { SongSubmissionModal } from './SongSubmissionModal'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
 
+import { useTranslation } from '../../hooks/useTranslation'
+
 export const SongRankingWidget = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   return (
     <>
@@ -14,12 +17,12 @@ export const SongRankingWidget = () => {
           <iconify-icon icon="solar:music-library-2-bold-duotone" width="24" height="24"></iconify-icon>
         </div>
         
-        <h3 className="text-xl font-display font-bold text-white mb-2">
-          Rank Your Top Songs
+        <h3 className="text-[17px] font-display font-bold text-white mb-2 whitespace-nowrap overflow-hidden text-ellipsis w-full">
+          {t('ranking.rankYourTop')}
         </h3>
         
         <p className="text-zinc-400 text-sm mb-6 max-w-xs">
-          Submit your favorite tracks to influence the community leaderboard and earn points.
+          {t('ranking.submitInfluence')}
         </p>
 
         <motion.button
@@ -28,12 +31,12 @@ export const SongRankingWidget = () => {
           whileTap={{ scale: 0.95 }}
           className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-red-900/20"
         >
-          <iconify-icon icon="solar:add-circle-bold" width="18" height="18"></iconify-icon> Submit Ranking
+          <iconify-icon icon="solar:add-circle-bold" width="18" height="18"></iconify-icon> {t('ranking.submitRanking')}
         </motion.button>
 
         {!user && (
           <p className="text-xs text-zinc-500 mt-3">
-            Sign in to participate
+            {t('ranking.signInToParticipate')}
           </p>
         )}
       </div>

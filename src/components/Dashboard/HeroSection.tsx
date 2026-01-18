@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 import { trackCTA } from '../../utils/analytics'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export const HeroSection = () => {
   const navigate = useNavigate()
   const { isSignedIn, userProfile, isLoading } = useUser()
+  const { t } = useTranslation()
 
   const handleProfileClick = (): void => {
     trackCTA('sign_in', 'hero_section')
@@ -69,12 +71,12 @@ export const HeroSection = () => {
 
           <div className="user-info">
             <h1 className="user-name">
-              {isSignedIn ? `Welcome, ${displayName}` : 'Welcome to the Community'}
+              {isSignedIn ? t('dashboard.welcome').replace('{name}', displayName) : t('dashboard.welcomeGuest')}
             </h1>
             <p className="user-subtitle">
               {isSignedIn 
-                ? 'Explore the latest content, events, and connect with fellow fans'
-                : 'Sign in to discover exclusive content, events, and join the community'}
+                ? t('dashboard.exploreSubtitleSigned')
+                : t('dashboard.exploreSubtitleGuest')}
             </p>
           </div>
         </div>
@@ -90,7 +92,7 @@ export const HeroSection = () => {
               }}
             >
               <iconify-icon icon="solar:star-linear" width="16" height="16"></iconify-icon>
-              Explore Gallery
+              {t('dashboard.exploreGallery')}
             </button>
             <button 
               className="action-btn secondary"
@@ -100,12 +102,12 @@ export const HeroSection = () => {
               }}
             >
               <iconify-icon icon="solar:calendar-linear" width="16" height="16"></iconify-icon>
-              View Events
+              {t('dashboard.viewEvents')}
             </button>
             {!isSignedIn && !isLoading && (
               <button className="action-btn tertiary" onClick={handleProfileClick}>
                 <iconify-icon icon="solar:user-linear" width="16" height="16"></iconify-icon>
-                Sign In
+                {t('common.signIn')}
               </button>
             )}
           </div>
@@ -113,7 +115,7 @@ export const HeroSection = () => {
 
         {/* Social Links */}
         <div className="hero-social">
-          <span className="social-label">Follow us:</span>
+          <span className="social-label">{t('dashboard.followUs')}</span>
           <div className="social-links">
             <button 
               className="social-link"

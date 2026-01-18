@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 
 // Mock Data (will be replaced by backend later)
 const LEADERBOARD = [
@@ -41,6 +42,7 @@ const LEADERBOARD = [
 
 export const Ranking = () => {
   const [votedIds, setVotedIds] = useState<number[]>([]);
+  const { t } = useTranslation();
 
   const handleVote = (id: number) => {
     if (votedIds.includes(id)) {
@@ -53,10 +55,10 @@ export const Ranking = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide mb-4">Fan Favorites</h1>
-        <p className="text-zinc-400 max-w-lg mx-auto">Vote for your top 3 songs. Rankings are calculated based on weighted community submissions.</p>
+        <h1 className="text-4xl font-display font-bold text-white uppercase tracking-wide mb-4">{t('ranking.title')}</h1>
+        <p className="text-zinc-400 max-w-lg mx-auto">{t('ranking.subtitle')}</p>
         <button className="mt-8 bg-red-700 text-white px-8 py-3 font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
-          Submit Your Top 3
+          {t('ranking.submitTop3')}
         </button>
       </div>
 
@@ -78,7 +80,7 @@ export const Ranking = () => {
 
             <div className="flex items-center gap-8 mr-4">
                <div className="text-right hidden sm:block">
-                 <div className="text-sm font-bold text-zinc-300">Score</div>
+                 <div className="text-sm font-bold text-zinc-300">{t('ranking.score')}</div>
                  <div className="text-red-500 font-display font-bold text-lg">{song.score.toLocaleString()}</div>
                </div>
                
@@ -98,7 +100,7 @@ export const Ranking = () => {
       </div>
       
       <div className="mt-12 p-6 bg-zinc-900/50 border border-zinc-800 text-center text-sm text-zinc-500">
-        <p>Leaderboard updates every 24 hours.</p>
+        <p>{t('ranking.leaderboardUpdate')}</p>
       </div>
     </div>
   );

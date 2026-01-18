@@ -1,26 +1,27 @@
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
+import type { Language } from '../contexts/LanguageContext';
 
 export const Profile = () => {
   const { user, isSignedIn, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const { language, setLanguage, t } = useTranslation();
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading profile...</div>;
+    return <div className="p-8 text-center text-gray-500">{t('profile.loading')}</div>;
   }
 
   if (!isSignedIn || !user) {
     return (
       <div className="p-8 text-center bg-black/50 rounded-2xl border border-gray-800">
-        <p className="text-gray-400 mb-6">Please sign in to view your profile.</p>
+        <p className="text-gray-400 mb-6">{t('profile.signInPrompt')}</p>
         <button 
           onClick={() => navigate('/')}
           className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors"
         >
-          Back to Home
+          {t('profile.backToHome')}
         </button>
       </div>
     );
@@ -34,6 +35,12 @@ export const Profile = () => {
   };
 
   const socials = (user as any).socials || {};
+
+  // Map display names to language codes
+  const languageOptions: { display: string; code: Language }[] = [
+    { display: t('common.english'), code: 'en' },
+    { display: t('common.spanish'), code: 'es' },
+  ];
 
   return (
     <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in font-display">
@@ -63,7 +70,7 @@ export const Profile = () => {
 
             <h2 className="text-3xl font-bold text-white uppercase tracking-tighter mb-1">{user.displayName}</h2>
             <p className="text-red-500 font-bold text-sm mb-2">@{(user as any).username || 'user'}</p>
-            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.3em] mb-4">Wolfpack Elite Member</p>
+            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.3em] mb-4">{t('profile.wolfpackMember')}</p>
 
             {/* Bio */}
             {(user as any).bio && (
@@ -95,31 +102,31 @@ export const Profile = () => {
 
             <div className="w-full space-y-4 mb-8">
               <div className="bg-zinc-900/50 p-4 rounded-sm border border-zinc-800">
-                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Points</p>
+                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.totalPoints')}</p>
                  <p className="text-white text-2xl font-bold">{stats.totalPoints}</p>
               </div>
               <div className="bg-zinc-900/50 p-4 rounded-sm border border-zinc-800">
-                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Rank</p>
+                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.rank')}</p>
                  <p className="text-red-500 text-2xl font-bold">#{stats.rank}</p>
               </div>
             </div>
 
             {/* Language Switcher */}
             <div className="w-full mb-6">
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-3 text-left">Language</p>
+              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-3 text-left">{t('profile.language')}</p>
               <div className="flex gap-2">
-                {['English', 'Spanish'].map((lang) => (
+                {languageOptions.map((option) => (
                   <button
-                    key={lang}
-                    onClick={() => setSelectedLanguage(lang)}
+                    key={option.code}
+                    onClick={() => setLanguage(option.code)}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-sm border transition-all ${
-                      selectedLanguage === lang 
+                      language === option.code 
                         ? 'bg-red-600/10 border-red-600 text-white' 
                         : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'
                     }`}
                   >
-                    <iconify-icon icon={lang === 'English' ? 'twemoji:flag-united-states' : 'twemoji:flag-spain'} width="18" height="18" style={{ filter: selectedLanguage === lang ? 'none' : 'grayscale(1)' }}></iconify-icon>
-                    <span className="text-xs font-bold uppercase tracking-wider">{lang}</span>
+                    <iconify-icon icon={option.code === 'en' ? 'twemoji:flag-united-states' : 'twemoji:flag-spain'} width="18" height="18" style={{ filter: language === option.code ? 'none' : 'grayscale(1)' }}></iconify-icon>
+                    <span className="text-xs font-bold uppercase tracking-wider">{option.display}</span>
                   </button>
                 ))}
               </div>
@@ -130,7 +137,7 @@ export const Profile = () => {
                 onClick={() => navigate('/profile/edit')}
                 className="w-full bg-white hover:bg-zinc-200 text-black py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
               >
-                Edit Profile
+                {t('profile.editProfile')}
               </button>
             </div>
           </div>
@@ -142,12 +149,12 @@ export const Profile = () => {
           <section>
              <div className="flex justify-between items-end mb-4">
                 <div>
-                   <h3 className="text-white font-bold text-xl uppercase tracking-tighter">Current Level</h3>
-                   <p className="text-zinc-500 text-xs font-medium">Progress towards Next Level</p>
+                   <h3 className="text-white font-bold text-xl uppercase tracking-tighter">{t('profile.currentLevel')}</h3>
+                   <p className="text-zinc-500 text-xs font-medium">{t('profile.progressToNext')}</p>
                 </div>
                 <div className="text-right">
-                   <p className="text-white font-bold text-lg">LEVEL {stats.level}</p>
-                   <p className="text-red-500 text-[10px] font-bold tracking-widest uppercase">Elite Status</p>
+                   <p className="text-white font-bold text-lg">{t('profile.level')} {stats.level}</p>
+                   <p className="text-red-500 text-[10px] font-bold tracking-widest uppercase">{t('profile.eliteStatus')}</p>
                 </div>
              </div>
              <div className="h-4 bg-zinc-900/50 rounded-full border border-zinc-800 overflow-hidden p-0.5">
@@ -159,8 +166,8 @@ export const Profile = () => {
                 />
              </div>
              <div className="flex justify-between mt-2 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                <span>{stats.xp} XP</span>
-                <span>100 XP TO NEXT</span>
+                <span>{stats.xp} {t('profile.xp')}</span>
+                <span>100 {t('profile.xpToNext')}</span>
              </div>
           </section>
 
@@ -169,9 +176,9 @@ export const Profile = () => {
             <div className="flex items-center justify-between mb-8">
                <h3 className="text-xl font-bold text-white uppercase tracking-tighter flex items-center gap-3">
                   <span className="w-1.5 h-6 bg-red-600 rounded-sm"></span>
-                  Active Quests
+                  {t('profile.activeQuests')}
                </h3>
-               <button className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold tracking-widest">View All</button>
+               <button className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold tracking-widest">{t('profile.viewAll')}</button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,10 +188,10 @@ export const Profile = () => {
                        <div className="p-3 bg-zinc-900 border border-zinc-800 group-hover:bg-red-950/20 group-hover:border-red-900/50 transition-colors">
                           <iconify-icon icon="solar:fire-bold" class="text-red-600 text-xl"></iconify-icon>
                        </div>
-                       <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">In Progress</span>
+                       <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">{t('profile.inProgress')}</span>
                     </div>
-                    <h4 className="text-white font-bold uppercase text-xs tracking-wide mb-2">Wolfpack Recruit {i}</h4>
-                    <p className="text-zinc-500 text-xs mb-4">Complete 5 forum posts and get 10 likes to earn rewards.</p>
+                    <h4 className="text-white font-bold uppercase text-xs tracking-wide mb-2">{t('profile.questTitle')} {i}</h4>
+                    <p className="text-zinc-500 text-xs mb-4">{t('profile.questDescription')}</p>
                     <div className="h-1.5 bg-zinc-900 rounded-full">
                        <div className="h-full bg-zinc-800 w-1/3 rounded-full"></div>
                     </div>

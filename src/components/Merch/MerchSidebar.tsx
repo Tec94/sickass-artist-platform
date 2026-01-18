@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface MerchSidebarProps {
   activeCategory: string
@@ -17,6 +18,7 @@ export const MerchSidebar = ({
   selectedCollections,
   onCollectionToggle
 }: MerchSidebarProps) => {
+  const { t } = useTranslation()
   const [sections, setSections] = useState({
     categories: true,
     price: true,
@@ -27,8 +29,19 @@ export const MerchSidebar = ({
     setSections(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const categories = ['All Products', 'New Arrivals', 'Apparel', 'Accessories', 'Vinyl', 'Limited Edition']
-  const collections = ['Tour Collection', 'Signature Series', 'The Vault']
+  const categories = [
+    { label: t('store.allProducts'), value: '' },
+    { label: t('store.newArrivals'), value: 'new arrivals' },
+    { label: t('store.apparel'), value: 'apparel' },
+    { label: t('store.accessories'), value: 'accessories' },
+    { label: t('store.vinyl'), value: 'vinyl' },
+    { label: t('store.limitedEdition'), value: 'limited edition' }
+  ]
+  const collections = [
+    { label: t('store.tourCollection'), value: 'tour collection' },
+    { label: t('store.signatureSeries'), value: 'signature series' },
+    { label: t('store.theVault'), value: 'the vault' }
+  ]
 
   return (
     <div className="merch-sidebar">
@@ -38,7 +51,7 @@ export const MerchSidebar = ({
           className="section-header"
           onClick={() => toggleSection('categories')}
         >
-          <h3>Categories</h3>
+          <h3>{t('store.categories')}</h3>
           <iconify-icon 
             icon={sections.categories ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} 
             width="14" 
@@ -50,16 +63,16 @@ export const MerchSidebar = ({
           <div className="section-content">
             {categories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => onCategoryChange(cat === 'All Products' ? '' : cat.toLowerCase())}
+                key={cat.value}
+                onClick={() => onCategoryChange(cat.value)}
                 className={`category-item ${
-                  (cat === 'All Products' && !activeCategory) || 
-                  activeCategory === cat.toLowerCase() 
+                  (cat.value === '' && !activeCategory) || 
+                  activeCategory === cat.value 
                     ? 'active' 
                     : ''
                 }`}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -72,7 +85,7 @@ export const MerchSidebar = ({
           className="section-header"
           onClick={() => toggleSection('price')}
         >
-          <h3>Max Price</h3>
+          <h3>{t('store.maxPrice')}</h3>
           <iconify-icon 
             icon={sections.price ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} 
             width="14" 
@@ -105,7 +118,7 @@ export const MerchSidebar = ({
           className="section-header"
           onClick={() => toggleSection('collections')}
         >
-          <h3>Collections</h3>
+          <h3>{t('store.collections')}</h3>
           <iconify-icon 
             icon={sections.collections ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} 
             width="14" 
@@ -117,19 +130,19 @@ export const MerchSidebar = ({
           <div className="section-content">
             {collections.map((col) => (
               <label 
-                key={col} 
+                key={col.value} 
                 className="collection-item"
                 onClick={(e) => {
                   e.preventDefault();
-                  onCollectionToggle(col.toLowerCase());
+                  onCollectionToggle(col.value);
                 }}
               >
-                <div className={`checkbox ${selectedCollections.includes(col.toLowerCase()) ? 'checked' : ''}`}>
-                  {selectedCollections.includes(col.toLowerCase()) && (
+                <div className={`checkbox ${selectedCollections.includes(col.value) ? 'checked' : ''}`}>
+                  {selectedCollections.includes(col.value) && (
                     <iconify-icon icon="solar:check-read-linear" width="10" height="10"></iconify-icon>
                   )}
                 </div>
-                <span className={selectedCollections.includes(col.toLowerCase()) ? 'active' : ''}>{col}</span>
+                <span className={selectedCollections.includes(col.value) ? 'active' : ''}>{col.label}</span>
               </label>
             ))}
           </div>
@@ -172,6 +185,9 @@ export const MerchSidebar = ({
           text-transform: uppercase;
           letter-spacing: 0.25em;
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .section-content {

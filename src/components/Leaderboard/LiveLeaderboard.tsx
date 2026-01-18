@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { motion } from 'framer-motion'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export const LiveLeaderboard = () => {
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'allTime'>('weekly')
+  const { t } = useTranslation()
   
   const leaderboard = useQuery(api.leaderboard.getLeaderboard, { 
     period,
@@ -14,9 +16,9 @@ export const LiveLeaderboard = () => {
   // Helper to format period display
   const getPeriodLabel = () => {
     switch(period) {
-      case 'weekly': return 'This Week'
-      case 'monthly': return 'This Month'
-      case 'allTime': return 'All Time'
+      case 'weekly': return t('events.thisWeek')
+      case 'monthly': return t('events.thisMonth')
+      case 'allTime': return t('ranking.allTimeLabel')
     }
   }
 
@@ -24,28 +26,32 @@ export const LiveLeaderboard = () => {
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-zinc-800 bg-zinc-900/50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2">
-            <iconify-icon icon="solar:cup-star-bold" class="text-yellow-500" width="24" height="24"></iconify-icon> Live Rankings
-          </h3>
-          <div className="flex bg-zinc-800 rounded-lg p-1">
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2 whitespace-nowrap">
+              <iconify-icon icon="solar:cup-star-bold" class="text-yellow-500 flex-shrink-0" width="22" height="22"></iconify-icon> 
+              <span className="truncate">{t('ranking.liveRankings')}</span>
+            </h3>
+          </div>
+          
+          <div className="flex bg-zinc-800 rounded-lg p-1 w-full">
             {(['weekly', 'monthly', 'allTime'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 py-1 text-xs font-bold uppercase rounded-md transition ${
+                className={`flex-1 py-1.5 text-xs font-bold uppercase rounded-md transition whitespace-nowrap ${
                   period === p 
                     ? 'bg-zinc-700 text-white shadow-sm' 
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {p === 'allTime' ? 'All' : p}
+                {p === 'allTime' ? t('ranking.allTime') : t(`events.${p === 'weekly' ? 'thisWeek' : 'thisMonth'}`)}
               </button>
             ))}
           </div>
         </div>
         <p className="text-zinc-400 text-sm flex items-center gap-2">
-          <iconify-icon icon="solar:calendar-linear" width="14" height="14"></iconify-icon> Top songs for {getPeriodLabel()}
+          <iconify-icon icon="solar:calendar-linear" width="14" height="14"></iconify-icon> {t('ranking.topSongsFor')} {getPeriodLabel()}
         </p>
       </div>
 
@@ -62,8 +68,8 @@ export const LiveLeaderboard = () => {
           // Empty State
           <div className="flex flex-col items-center justify-center h-64 text-zinc-500 p-6 text-center">
             <iconify-icon icon="solar:music-library-2-bold-duotone" width="48" height="48" class="mb-4 opacity-20"></iconify-icon>
-            <p className="font-bold">No rankings yet</p>
-            <p className="text-sm mt-1">Be the first to submit your top songs!</p>
+            <p className="font-bold">{t('ranking.noRankingsYet')}</p>
+            <p className="text-sm mt-1">{t('ranking.beFirstToSubmit')}</p>
           </div>
         ) : (
           // List
@@ -118,7 +124,7 @@ export const LiveLeaderboard = () => {
                     {song.totalScore.toFixed(1)}
                   </div>
                   <div className="text-zinc-500 text-[10px] uppercase tracking-wider">
-                    Score
+                    {t('ranking.score')}
                   </div>
                 </div>
               </motion.div>
@@ -130,7 +136,7 @@ export const LiveLeaderboard = () => {
       {/* Footer */}
       <div className="p-4 border-t border-zinc-800 bg-zinc-900/80 text-center">
         <p className="text-xs text-zinc-500 flex items-center justify-center gap-2">
-          <iconify-icon icon="solar:chart-2-linear" width="12" height="12"></iconify-icon> Scores update hourly based on community votes
+          <iconify-icon icon="solar:chart-2-linear" width="12" height="12"></iconify-icon> {t('ranking.updateHourly')}
         </p>
       </div>
     </div>

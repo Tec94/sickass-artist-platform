@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { CartProvider } from './contexts/CartContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
@@ -289,13 +290,15 @@ function App() {
   return (
     <UserProvider>
       <CartProvider>
-        <ErrorBoundary level="page">
-          <BrowserRouter>
-            <GearProvider>
-              <AppContent />
-            </GearProvider>
-          </BrowserRouter>
-        </ErrorBoundary>
+        <LanguageProvider>
+          <ErrorBoundary level="page">
+            <BrowserRouter>
+              <GearProvider>
+                <AppContent />
+              </GearProvider>
+            </BrowserRouter>
+          </ErrorBoundary>
+        </LanguageProvider>
       </CartProvider>
     </UserProvider>
   )

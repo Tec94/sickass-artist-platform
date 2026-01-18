@@ -6,11 +6,13 @@ import { EventSearch } from '../components/events/EventSearch'
 import { useEventList } from '../hooks/useEventList'
 import { useAnalytics } from '../hooks/useAnalytics'
 import type { EventFilters as EventFiltersType } from '../types/events'
+import { useTranslation } from '../hooks/useTranslation'
 
 export function Events() {
   useAnalytics() // Track page views
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const { t } = useTranslation()
 
   // Parse filters from URL
   const [filters, setFilters] = useState<EventFiltersType>(() => {
@@ -67,8 +69,8 @@ export function Events() {
         <div className="flex-1">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
             <div>
-               <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter">Tour & Events</h1>
-               <p className="text-zinc-500 mt-2 font-medium">Catch ROA WOLVES live in a city near you.</p>
+               <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tighter">{t('events.title')}</h1>
+               <p className="text-zinc-500 mt-2 font-medium">{t('events.subtitle')}</p>
             </div>
             
             <div className="flex items-center gap-4">
@@ -91,7 +93,7 @@ export function Events() {
 
           {/* Search Bar */}
           <div className="mb-10 max-w-2xl">
-             <EventSearch placeholder="Explore tours, cities, or venues..." />
+             <EventSearch placeholder={t('events.searchPlaceholder')} />
           </div>
 
           {loading && events.length === 0 ? (
@@ -114,15 +116,15 @@ export function Events() {
           ) : (
             <div className="py-20 text-center border border-dashed border-zinc-800 rounded-lg">
               <iconify-icon icon="solar:calendar-broken" class="text-6xl text-zinc-700 mb-4"></iconify-icon>
-              <h3 className="text-white font-bold text-xl mb-2">No results found</h3>
+              <h3 className="text-white font-bold text-xl mb-2">{t('events.noResults')}</h3>
               <p className="text-zinc-500 text-sm max-w-xs mx-auto">
-                No events match your current filters. Try adjusting your search or clearing filters.
+                {t('events.noEventsMatch')}
               </p>
               <button
                 onClick={() => setFilters({ sortBy: 'asc' })}
                 className="mt-6 text-red-500 font-bold uppercase text-xs tracking-widest hover:text-red-400 transition-colors"
               >
-                Reset Filters
+                {t('common.resetFilters')}
               </button>
             </div>
           )}
@@ -135,7 +137,7 @@ export function Events() {
                 disabled={loading}
                 className="text-zinc-500 hover:text-white uppercase text-xs tracking-[0.3em] font-bold border-b border-transparent hover:border-red-600 transition-all pb-1 disabled:opacity-50"
               >
-                {loading ? 'Synchronizing...' : 'Load More Experiences'}
+                {loading ? t('events.synchronizing') : t('events.loadMoreExperiences')}
               </button>
             </div>
           )}

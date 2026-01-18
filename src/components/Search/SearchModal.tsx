@@ -5,6 +5,7 @@ import { useGlobalSearch } from '../../hooks/useGlobalSearch'
 import { SearchResults } from './SearchResults'
 import { RecentSearches } from './RecentSearches'
 import { SearchResultTabs } from './SearchResultTabs'
+import { useTranslation } from '../../hooks/useTranslation'
 
 type ResultFilter = 'all' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels' | 'merch' | 'events'
 
@@ -34,6 +35,7 @@ function getFlatResults(
 
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const {
     results,
     isLoading,
@@ -196,7 +198,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search users, threads, merch, events..."
+            placeholder={t('search.placeholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -238,7 +240,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                 onClick={() => setQuery(query)}
                 className="mt-2 text-red-400 hover:underline"
               >
-                Try again
+                {t('search.tryAgain')}
               </button>
             </div>
           )}
@@ -259,10 +261,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             hasSearched &&
             (!results || results.totalResults === 0) && (
               <div className="px-4 py-8 text-center">
-                <p className="text-gray-400">No results found</p>
+                <p className="text-gray-400">{t('search.noResults')}</p>
                 {query && (
                   <p className="mt-2 text-sm text-gray-500">
-                    Try a different search term or browse recently active content
+                    {t('search.tryDifferent')}
                   </p>
                 )}
               </div>
@@ -282,9 +284,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
 
         {/* Footer hint */}
         <div className="border-t border-red-500/20 px-4 py-2 text-xs text-gray-500">
-          <kbd className="rounded bg-slate-800 px-2 py-1">↑↓</kbd> Navigate
-          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">Enter</kbd> Select
-          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">ESC</kbd> Close
+          <kbd className="rounded bg-slate-800 px-2 py-1">↑↓</kbd> {t('search.navigate')}
+          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">Enter</kbd> {t('search.select')}
+          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">ESC</kbd> {t('search.close')}
         </div>
       </div>
     </>

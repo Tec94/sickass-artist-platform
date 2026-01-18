@@ -7,9 +7,11 @@ import { api } from '../../convex/_generated/api'
 import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
+import { useTranslation } from '../hooks/useTranslation'
 
 export function Merch() {
   const [searchParams] = useSearchParams()
+  const { t } = useTranslation()
   
   // State
   const [activeCategory, setActiveCategory] = useState('')
@@ -92,6 +94,14 @@ export function Merch() {
     return filtered
   }, [productsQuery, activeCategory, maxPrice, selectedCollections, searchQuery, sortBy, stockFilter])
 
+  // Category labels for mobile tabs
+  const categoryLabels: Record<string, string> = {
+    'All Products': t('store.allProducts'),
+    'apparel': t('store.apparel'),
+    'accessories': t('store.accessories'),
+    'music': t('store.music'),
+  }
+
   return (
     <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
       {/* Free Shipping Banner */}
@@ -117,11 +127,11 @@ export function Merch() {
               {/* Virtual Queue Banner (from roa-wolves) */}
               <div className="bg-gradient-to-r from-red-900/20 to-zinc-900 border border-red-900/30 p-4 mb-8 flex items-center justify-between">
                 <div>
-                  <h3 className="text-red-500 font-display font-bold uppercase tracking-wider text-sm">Upcoming Drop</h3>
-                  <p className="text-zinc-400 text-xs mt-1">Virtual queue opens in 2 days. Get ready.</p>
+                  <h3 className="text-red-500 font-display font-bold uppercase tracking-wider text-sm">{t('store.upcomingDrop')}</h3>
+                  <p className="text-zinc-400 text-xs mt-1">{t('store.virtualQueue')}</p>
                 </div>
                 <button className="bg-zinc-800 text-white text-xs font-bold uppercase px-4 py-2 hover:bg-red-700 transition-colors">
-                  Set Reminder
+                  {t('store.setReminder')}
                 </button>
               </div>
 
@@ -129,17 +139,17 @@ export function Merch() {
               <div className="flex flex-wrap items-center gap-6 mb-8 py-4 border-b border-neutral-800">
                 {/* Sort Dropdown */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Sort By</label>
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">{t('store.sortBy')}</label>
                   <div className="relative">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                       className="appearance-none bg-zinc-950 border border-zinc-700 text-white text-xs font-medium pl-3 pr-8 py-2.5 focus:outline-none focus:border-red-600 hover:border-zinc-500 cursor-pointer transition-colors min-w-[160px]"
                     >
-                      <option value="newest">Newest Arrivals</option>
-                      <option value="price-asc">Price: Low to High</option>
-                      <option value="price-desc">Price: High to Low</option>
-                      <option value="alpha">Alphabetical</option>
+                      <option value="newest">{t('store.newestArrivals')}</option>
+                      <option value="price-asc">{t('store.priceLowHigh')}</option>
+                      <option value="price-desc">{t('store.priceHighLow')}</option>
+                      <option value="alpha">{t('store.alphabetical')}</option>
                     </select>
                     <iconify-icon icon="solar:alt-arrow-down-linear" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" width="14" height="14"></iconify-icon>
                   </div>
@@ -147,28 +157,28 @@ export function Merch() {
 
                 {/* Stock Status Filter */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Availability</label>
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">{t('store.availability')}</label>
                   <div className="relative">
                     <select
                       value={stockFilter}
                       onChange={(e) => setStockFilter(e.target.value as typeof stockFilter)}
                       className="appearance-none bg-zinc-950 border border-zinc-700 text-white text-xs font-medium pl-3 pr-8 py-2.5 focus:outline-none focus:border-red-600 hover:border-zinc-500 cursor-pointer transition-colors min-w-[130px]"
                     >
-                      <option value="all">All Items</option>
-                      <option value="in-stock">In Stock</option>
-                      <option value="out-of-stock">Out of Stock</option>
+                      <option value="all">{t('store.allItems')}</option>
+                      <option value="in-stock">{t('store.inStock')}</option>
+                      <option value="out-of-stock">{t('store.outOfStock')}</option>
                     </select>
                     <iconify-icon icon="solar:alt-arrow-down-linear" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" width="14" height="14"></iconify-icon>
                   </div>
                 </div>
 
-                <div className="ml-auto text-xs text-zinc-500 font-medium">{filteredProducts.length} items</div>
+                <div className="ml-auto text-xs text-zinc-500 font-medium">{filteredProducts.length} {t('common.items')}</div>
               </div>
 
               <div className="mb-8">
                 <div className="flex items-baseline justify-between mb-2">
                   <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-white">
-                    {searchQuery ? `Search: "${searchQuery}"` : (activeCategory || 'All Products')}
+                    {searchQuery ? `${t('common.search')}: "${searchQuery}"` : (activeCategory || t('store.allProducts'))}
                   </h2>
                 </div>
                 
@@ -184,7 +194,7 @@ export function Merch() {
                         : 'bg-black text-gray-400 border-neutral-800'
                       }`}
                     >
-                      {cat}
+                      {categoryLabels[cat] || cat}
                     </button>
                   ))}
                 </div>
@@ -201,12 +211,12 @@ export function Merch() {
                 </div>
               ) : (
                 <div className="py-20 text-center border border-dashed border-neutral-800">
-                  <p className="text-gray-500 text-lg">No products found.</p>
+                  <p className="text-gray-500 text-lg">{t('store.noProductsFound')}</p>
                   <button 
                     onClick={() => { setMaxPrice(200); setActiveCategory(''); }} 
                     className="mt-4 text-sm text-red-500 hover:text-red-400 underline"
                   >
-                    Reset Filters
+                    {t('common.resetFilters')}
                   </button>
                 </div>
               )}
@@ -214,7 +224,7 @@ export function Merch() {
               {/* Pagination / Load More (Visual only for now matching roa-wolves style) */}
               <div className="mt-16 flex justify-center">
                  <button className="text-zinc-500 hover:text-white uppercase text-xs tracking-[0.2em] border-b border-transparent hover:border-red-600 transition-all pb-1">
-                   Load More Products
+                   {t('store.loadMoreProducts')}
                  </button>
               </div>
             </div>

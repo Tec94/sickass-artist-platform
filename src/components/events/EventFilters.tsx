@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import type { EventFilters as EventFiltersType } from '../../types/events'
+import { useTranslation } from '../../hooks/useTranslation'
+import { EventFilters as EventFiltersType } from '../../types/events'
 
 interface EventFiltersProps {
   filters: EventFiltersType
@@ -13,6 +14,7 @@ export function EventFilters({
   onChange,
   availableCities = [],
 }: EventFiltersProps) {
+  const { t } = useTranslation()
   const [sections, setSections] = useState({
     dates: true,
     location: true,
@@ -84,18 +86,23 @@ export function EventFilters({
       {/* Dates Section */}
       <div className="sidebar-section">
         <button className="section-header" onClick={() => toggleSection('dates')}>
-          <h3>Date Range</h3>
+          <h3>{t('events.dateRange')}</h3>
           <iconify-icon icon={sections.dates ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
         </button>
         {sections.dates && (
           <div className="section-content">
-            {['All Dates', 'Today', 'This Week', 'This Month'].map((range) => (
+            {[
+              { label: t('events.allDates'), value: 'all' },
+              { label: t('events.today'), value: 'today' },
+              { label: t('events.thisWeek'), value: 'week' },
+              { label: t('events.thisMonth'), value: 'month' }
+            ].map((range) => (
               <button
-                key={range}
-                onClick={() => handleDateRangeChange(range.toLowerCase().replace('this ', ''))}
-                className={`filter-item ${selectedDateRange === range.toLowerCase().replace('this ', '') ? 'active' : ''}`}
+                key={range.value}
+                onClick={() => handleDateRangeChange(range.value)}
+                className={`filter-item ${selectedDateRange === range.value ? 'active' : ''}`}
               >
-                {range}
+                {range.label}
               </button>
             ))}
           </div>
@@ -106,7 +113,7 @@ export function EventFilters({
       {availableCities.length > 0 && (
         <div className="sidebar-section">
           <button className="section-header" onClick={() => toggleSection('location')}>
-            <h3>Location</h3>
+            <h3>{t('events.location')}</h3>
             <iconify-icon icon={sections.location ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
           </button>
           {sections.location && (
@@ -115,7 +122,7 @@ export function EventFilters({
                 onClick={() => handleCityChange('all')}
                 className={`filter-item ${!filters.city ? 'active' : ''}`}
               >
-                All Cities
+                {t('events.allCities')}
               </button>
               {availableCities.map((city) => (
                 <button
@@ -134,15 +141,15 @@ export function EventFilters({
       {/* Status Section */}
       <div className="sidebar-section">
         <button className="section-header" onClick={() => toggleSection('status')}>
-          <h3>Sale Status</h3>
+          <h3>{t('events.saleStatus')}</h3>
           <iconify-icon icon={sections.status ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
         </button>
         {sections.status && (
           <div className="section-content">
             {[
-              { value: 'all', label: 'All Status' },
-              { value: 'on_sale', label: 'On Sale' },
-              { value: 'upcoming', label: 'Upcoming' },
+              { value: 'all', label: t('events.allStatus') },
+              { value: 'on_sale', label: t('events.onSale') },
+              { value: 'upcoming', label: t('events.upcoming') },
             ].map((status) => (
               <button
                 key={status.value}
@@ -159,7 +166,7 @@ export function EventFilters({
       {/* Sort Section */}
       <div className="sidebar-section">
         <button className="section-header" onClick={() => toggleSection('sort')}>
-          <h3>Sort By</h3>
+          <h3>{t('events.sortBy')}</h3>
           <iconify-icon icon={sections.sort ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} width="14" height="14"></iconify-icon>
         </button>
         {sections.sort && (
@@ -168,13 +175,13 @@ export function EventFilters({
               onClick={() => handleSortChange('asc')}
               className={`filter-item ${filters.sortBy === 'asc' ? 'active' : ''}`}
             >
-              Soonest First
+              {t('events.soonestFirst')}
             </button>
             <button
               onClick={() => handleSortChange('desc')}
               className={`filter-item ${filters.sortBy === 'desc' ? 'active' : ''}`}
             >
-              Latest First
+              {t('events.latestFirst')}
             </button>
           </div>
         )}
@@ -216,6 +223,9 @@ export function EventFilters({
           text-transform: uppercase;
           letter-spacing: 0.25em;
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .section-content {

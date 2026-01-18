@@ -9,6 +9,8 @@ interface MessageInputProps {
   onMessageSent?: (message: any) => void
 }
 
+import { useTranslation } from '../../hooks/useTranslation'
+
 export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
   const [messageContent, setMessageContent] = useState('')
   const [isSending, setIsSending] = useState(false)
@@ -16,6 +18,7 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { isOnline } = useOnlineStatus()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const { handleSendMessage, optimisticMessages } = useOptimisticMessage({ channelId })
 
   // Auto-focus on channel change
@@ -95,7 +98,7 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
           {/* Offline indicator */}
           {!isOnline && (
             <div className="absolute -top-10 left-0 bg-[#c41e3a]/80 text-white text-[10px] px-2 py-0.5 rounded z-10 whitespace-nowrap">
-              Offline - messages will sync when online
+              {t('chat.offlineMessage')}
             </div>
           )}
 
@@ -104,7 +107,7 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
             value={messageContent}
             onChange={(e) => setMessageContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isOnline ? `Message #general` : `Message #offline`}
+            placeholder={isOnline ? `${t('chat.messagePlaceholder')}general` : t('chat.offlinePlaceholder')}
             rows={1}
             className="w-full bg-transparent text-[#e0e0e0] text-sm resize-none focus:outline-none placeholder:text-[#505050] leading-[20px]"
           />
@@ -143,7 +146,7 @@ export function MessageInput({ channelId, onMessageSent }: MessageInputProps) {
             onClick={() => {/* Retry logic */}}
             className="text-[#c41e3a] hover:text-[#ff3355] text-[10px] font-bold uppercase tracking-tight self-start"
           >
-            Retry failed messages
+            {t('chat.retryFailed')}
           </button>
         )}
       </div>

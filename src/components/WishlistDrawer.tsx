@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext'
 import { parseConvexError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { Id } from '../../convex/_generated/dataModel'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface WishlistDrawerProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
   const navigate = useNavigate()
   const { isSignedIn, userProfile } = useUser()
   const { addItem } = useCart()
+  const { t } = useTranslation()
   
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
@@ -33,11 +35,11 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
       // Find first available variant
       const variant = product.variants?.find((v: any) => v.stock > 0)
       if (!variant) {
-        showToast('Item out of stock', { type: 'error' })
+        showToast(t('wishlist.outOfStock'), { type: 'error' })
         return
       }
       await addItem(variant._id, 1)
-      showToast('Added to cart!', { type: 'success' })
+      showToast(t('wishlist.addedToCart'), { type: 'success' })
     } catch (err) {
       showToast(parseConvexError(err).userMessage, { type: 'error' })
     }
@@ -60,7 +62,7 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
         <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
           <h2 className="text-xl font-display font-bold text-white uppercase tracking-wide flex items-center gap-3">
             <iconify-icon icon="solar:heart-bold" width="20" height="20" class="text-red-600"></iconify-icon>
-            Saved Items ({wishlist?.length || 0})
+            {t('wishlist.savedItems')} ({wishlist?.length || 0})
           </h2>
           <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
             <iconify-icon icon="solar:close-circle-bold" width="24" height="24"></iconify-icon>
@@ -71,9 +73,9 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {!isSignedIn ? (
              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-               <p className="text-zinc-500 font-medium">Please sign in to view your wishlist.</p>
+               <p className="text-zinc-500 font-medium">{t('wishlist.signInPrompt')}</p>
                <button onClick={() => navigate('/profile')} className="bg-white text-black px-6 py-2 text-xs font-bold uppercase tracking-widest">
-                 Sign In
+                 {t('common.signIn')}
                </button>
              </div>
           ) : wishlist?.length === 0 ? (
@@ -81,9 +83,9 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
               <div className="w-20 h-20 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-800">
                 <iconify-icon icon="solar:heart-broken-bold" width="48" height="48"></iconify-icon>
               </div>
-              <p className="text-zinc-500 font-medium">Your wishlist is empty.</p>
+              <p className="text-zinc-500 font-medium">{t('wishlist.emptyWishlist')}</p>
               <button onClick={onClose} className="text-red-500 hover:text-red-400 font-bold uppercase text-xs tracking-widest underline underline-offset-4">
-                Explore Store
+                {t('wishlist.exploreStore')}
               </button>
             </div>
           ) : (
@@ -108,7 +110,7 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
                       onClick={() => handleAddToCart(product)}
                       className="flex-1 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-white py-2 text-[10px] font-bold uppercase tracking-widest transition-colors"
                     >
-                      Add to Bag
+                      {t('wishlist.addToBag')}
                     </button>
                   </div>
 
@@ -117,7 +119,7 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
                     className="mt-4 self-start flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-red-600 transition-colors"
                   >
                     <iconify-icon icon="solar:trash-bin-trash-bold" width="14" height="14"></iconify-icon>
-                    Remove
+                    {t('common.remove')}
                   </button>
                 </div>
               </div>
@@ -132,7 +134,7 @@ export const WishlistDrawer = ({ isOpen, onClose }: WishlistDrawerProps) => {
               onClick={onClose}
               className="w-full bg-white hover:bg-zinc-100 text-black py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              Continue Shopping
+              {t('common.continueShopping')}
             </button>
           </div>
         )}

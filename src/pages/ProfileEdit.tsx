@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { useTranslation } from '../hooks/useTranslation'
 
 export function ProfileEdit() {
   const { user, isSignedIn, isLoading } = useAuth()
+  const { language, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const updateUserMutation = useMutation(api.users.update)
   const animate = useScrollAnimation()
@@ -21,26 +23,40 @@ export function ProfileEdit() {
       instagram: user?.socials?.instagram || '',
       tiktok: user?.socials?.tiktok || '',
     },
-    language: 'English',
+    language: language === 'en' ? 'English' : 'Spanish',
   })
+
+  // Sync formData language if global preference changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      language: language === 'en' ? 'English' : 'Spanish'
+    }))
+  }, [language])
 
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
   if (isLoading) {
-    return <div className="loading-container">Authenticating...</div>
+    return <div className="loading-container">{t('common.loading')}</div>
   }
 
   if (!isSignedIn || !user) {
     return (
       <div className="error-view">
-        <p>Restricted access: Auth required.</p>
-        <button onClick={() => navigate('/')} className="back-btn-v2">Return Home</button>
+        <p>{t('profile.edit.restricted')}</p>
+        <button onClick={() => navigate('/')} className="back-btn-v2">{t('profile.edit.returnHome')}</button>
       </div>
     )
   }
 
   const handleChange = (field: string, value: string) => {
+    if (field === 'language') {
+      setLanguage(value === 'English' ? 'en' : 'es')
+      // formData will be updated by useEffect
+      return
+    }
+
     if (field.startsWith('socials.')) {
       const socialKey = field.split('.')[1]
       setFormData(prev => ({
@@ -75,7 +91,7 @@ export function ProfileEdit() {
       })
       navigate('/profile')
     } catch (err) {
-      setError('Communication error: Failed to sync identity.')
+      setError(t('profile.edit.errorSync'))
       console.error(err)
     } finally {
       setIsSaving(false)
@@ -86,7 +102,7 @@ export function ProfileEdit() {
     <div className="profile-edit-layout">
       <div ref={animate} data-animate className="profile-edit-container">
         <header className="profile-edit-header">
-           <h1 className="form-title">Modify Identity</h1>
+           <h1 className="form-title">{t('profile.edit.modifyIdentity')}</h1>
         </header>
 
         {error && (
@@ -98,7 +114,7 @@ export function ProfileEdit() {
 
         <form onSubmit={handleSubmit} className="edit-form">
           <div className="field-group">
-            <label className="field-label">Display Name</label>
+            <label className="field-label">{t('profile.edit.displayName')}</label>
             <div className="input-wrapper">
               <iconify-icon icon="solar:user-id-linear"></iconify-icon>
               <input
@@ -106,23 +122,23 @@ export function ProfileEdit() {
                 value={formData.displayName}
                 onChange={e => handleChange('displayName', e.target.value)}
                 maxLength={50}
-                placeholder="Identity string..."
+                placeholder={t('profile.edit.identityPlaceholder')}
               />
             </div>
           </div>
 
           <div className="field-group">
-            <label className="field-label">Bio (The Pitch)</label>
+            <label className="field-label">{t('profile.edit.bioLabel')}</label>
             <textarea
               value={formData.bio}
               onChange={e => handleChange('bio', e.target.value)}
               maxLength={500}
-              placeholder="Tell your story..."
+              placeholder={t('profile.edit.bioPlaceholder')}
             />
           </div>
 
           <div className="field-group">
-            <label className="field-label">Territory</label>
+            <label className="field-label">{t('profile.edit.territory')}</label>
             <div className="input-wrapper">
               <iconify-icon icon="solar:map-point-linear"></iconify-icon>
               <input
@@ -130,13 +146,13 @@ export function ProfileEdit() {
                 value={formData.location}
                 onChange={e => handleChange('location', e.target.value)}
                 maxLength={50}
-                placeholder="Where are you from?"
+                placeholder={t('profile.edit.territoryPlaceholder')}
               />
             </div>
           </div>
 
           <div className="field-group">
-            <label className="field-label">Communication Protocol (Language)</label>
+            <label className="field-label">{t('profile.edit.protocol')}</label>
             <div className="language-selector">
               {['English', 'Spanish'].map((lang) => (
                 <button
@@ -146,14 +162,14 @@ export function ProfileEdit() {
                   className={`lang-btn ${formData.language === lang ? 'active' : ''}`}
                 >
                   <iconify-icon icon={lang === 'English' ? 'twemoji:flag-united-states' : 'twemoji:flag-spain'}></iconify-icon>
-                  <span>{lang}</span>
+                  <span>{lang === 'English' ? t('common.english') : t('common.spanish')}</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div className="socials-meta">
-            <h3 className="meta-title">Nexus Links</h3>
+            <h3 className="meta-title">{t('profile.edit.nexusLinks')}</h3>
             <div className="social-inputs">
               {(['twitter', 'instagram', 'tiktok'] as const).map(platform => (
                 <div key={platform} className="social-input-group">
@@ -173,10 +189,10 @@ export function ProfileEdit() {
 
           <div className="form-actions">
             <button type="submit" disabled={isSaving} className="save-btn border-beam">
-              <span>{isSaving ? 'Syncing...' : 'Confirm Sync'}</span>
+              <span>{isSaving ? t('profile.edit.syncing') : t('profile.edit.confirmSync')}</span>
             </button>
             <button type="button" onClick={() => navigate('/profile')} className="cancel-btn">
-              Cancel
+              {t('profile.edit.cancel')}
             </button>
           </div>
         </form>

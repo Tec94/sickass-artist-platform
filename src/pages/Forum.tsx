@@ -9,10 +9,12 @@ import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateReply } from '../hooks/useCreateReply'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { ThreadDetail, ThreadForm } from '../components/Forum'
+import { useTranslation } from '../hooks/useTranslation'
 
 export function Forum() {
   useAnalytics() // Track page views
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   const { categories } = useForumCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(null)
@@ -43,7 +45,7 @@ export function Forum() {
   const deleteThreadMutation = useMutation(api.forum.deleteThread)
 
   if (!user) {
-    return <div className="text-center py-8 text-gray-400">Please sign in to access the forum</div>
+    return <div className="text-center py-8 text-gray-400">{t('forum.signInToAccess')}</div>
   }
 
   const isModerator = user.role === 'mod' || user.role === 'admin'
@@ -80,26 +82,26 @@ export function Forum() {
         {/* Left Sidebar - Categories */}
         <div className={`w-full md:w-64 shrink-0 space-y-8 ${isMobileSidebarOpen ? 'block fixed inset-0 z-50 bg-zinc-950 p-4' : 'hidden md:block'}`}>
           <div className="md:hidden flex justify-end mb-4">
-            <button onClick={() => setIsMobileSidebarOpen(false)} className="text-zinc-400">Close</button>
+            <button onClick={() => setIsMobileSidebarOpen(false)} className="text-zinc-400">{t('common.close')}</button>
           </div>
           <div>
              <button 
                onClick={openCreateThread}
                className="w-full bg-red-700 text-white font-bold uppercase tracking-widest py-3 hover:bg-red-600 transition-colors"
              >
-               New Thread
+               {t('forum.newThread')}
              </button>
           </div>
           
           <div>
-            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Categories</h3>
+            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">{t('forum.categories')}</h3>
             <div className="space-y-1">
               {/* All Categories Option */}
                <button 
                   onClick={() => handleSelectCategory('' as any)} 
                   className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${!selectedCategoryId ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
                 >
-                  All
+                  {t('common.all')}
                 </button>
               {categories.map((cat) => (
                 <button 
@@ -122,7 +124,7 @@ export function Forum() {
                 onClick={() => setIsMobileSidebarOpen(true)}
                 className="text-white font-bold uppercase text-sm border border-zinc-700 px-3 py-1 bg-zinc-900"
               >
-                Categories
+                {t('forum.categories')}
               </button>
            </div>
 
@@ -132,9 +134,9 @@ export function Forum() {
                  className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 text-sm font-bold uppercase tracking-wider" 
                  onClick={() => setSelectedThreadId(null)}
                >
-                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Back to Threads
+                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> {t('forum.backToThreads')}
                </button>
-               {isThreadDetailLoading ? <div className="text-center py-8 text-zinc-500">Loading...</div> : !thread ? <div className="text-center py-8 text-zinc-500">Not Found</div> : (
+               {isThreadDetailLoading ? <div className="text-center py-8 text-zinc-500">{t('common.loading')}</div> : !thread ? <div className="text-center py-8 text-zinc-500">{t('common.notFound')}</div> : (
                  <ThreadDetail
                    thread={thread}
                    replies={replies}
@@ -154,13 +156,13 @@ export function Forum() {
                   onClick={() => setSortBy('top')}
                   className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'top' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
                 >
-                  <iconify-icon icon="solar:flame-bold" /> Trending
+                  <iconify-icon icon="solar:flame-bold" /> {t('forum.trending')}
                 </button>
                 <button 
                   onClick={() => setSortBy('newest')}
                   className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'newest' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
                 >
-                  <iconify-icon icon="solar:clock-circle-bold" /> Newest
+                  <iconify-icon icon="solar:clock-circle-bold" /> {t('forum.newest')}
                 </button>
                 <div className="ml-auto">
                     <button onClick={refresh} className="text-zinc-500 hover:text-white p-2">
@@ -185,7 +187,7 @@ export function Forum() {
                           <h3 className="text-white font-bold text-lg group-hover:text-red-500 transition-colors mb-1">{post.title}</h3>
                           <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
                             <span className="hidden sm:inline">•</span>
-                            <span>Posted by <span className="text-zinc-300">{post.authorDisplayName || 'Unknown'}</span></span>
+                            <span>{t('common.postedBy')} <span className="text-zinc-300">{post.authorDisplayName || 'Unknown'}</span></span>
                             <span className="hidden sm:inline">•</span>
                             <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                           </div>
@@ -196,7 +198,7 @@ export function Forum() {
                          <div className="flex items-center gap-1">
                            <iconify-icon icon="solar:chat-line-linear" /> {post.replyCount || 0}
                          </div>
-                         <div>{post.viewCount || 0} views</div>
+                         <div>{post.viewCount || 0} {t('common.views')}</div>
                       </div>
                     </div>
                   </div>
@@ -204,7 +206,7 @@ export function Forum() {
                 
                 {threads.length === 0 && !isThreadsLoading && (
                     <div className="text-center py-12 text-zinc-500">
-                        No threads found in this category.
+                        {t('forum.noThreadsFound')}
                     </div>
                 )}
                 
@@ -214,7 +216,7 @@ export function Forum() {
                         disabled={isThreadsLoading}
                         className="w-full py-4 text-center text-zinc-500 hover:text-white text-sm font-bold uppercase tracking-widest"
                     >
-                        {isThreadsLoading ? 'Loading...' : 'Load More'}
+                        {isThreadsLoading ? t('common.loading') : t('common.loadMore')}
                     </button>
                 )}
               </div>
