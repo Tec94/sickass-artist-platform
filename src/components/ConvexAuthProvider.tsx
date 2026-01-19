@@ -59,7 +59,7 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
         try {
           // Try to activate the first available session
           const firstSession = clerk.client.sessions[0]
-          await clerk.setActive({ session: firstSession })
+          await clerk.setActive({ session: firstSession.id })
           console.log('[TokenAuth] ✅ Successfully activated session')
         } catch (err) {
           console.error('[TokenAuth] ❌ Failed to activate session:', err)
