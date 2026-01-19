@@ -1,13 +1,11 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
-import { useAuth } from '@clerk/clerk-react'
+import { useAuth, useClerk } from '@clerk/clerk-react'
 import { useConvex } from 'convex/react'
 
 interface TokenAuthContextType {
-  // Token-based auth state (works even when cookies are blocked)
   hasValidToken: boolean
   isTokenLoading: boolean
   userId: string | null
-  // Force refresh auth state
   refreshAuth: () => void
 }
 
@@ -26,10 +24,10 @@ interface ConvexAuthProviderProps {
 }
 
 export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
-  const { getToken, isSignedIn, isLoaded, userId } = useAuth()
+  const { getToken, isLoaded, userId } = useAuth()
+  const clerk = useClerk()
   const convex = useConvex()
   
-  // Token-based auth state - works around third-party cookie blocking
   const [hasValidToken, setHasValidToken] = useState(false)
   const [isTokenLoading, setIsTokenLoading] = useState(true)
   const [tokenUserId, setTokenUserId] = useState<string | null>(null)
@@ -39,30 +37,46 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
     setRefreshCounter(c => c + 1)
   }, [])
 
-  // Check for valid token - this works even when cookies are blocked
-  // because Clerk stores session info in localStorage after OAuth
   useEffect(() => {
     if (!isLoaded) return
 
     let isMounted = true
     let retryCount = 0
-    const maxRetries = 5
-    const retryDelay = 1000 // 1 second
+    const maxRetries = 8 // Increased retries
+    const retryDelay = 1000
 
     const checkToken = async () => {
+      if (!isMounted) return
+
+      console.group('[Clerk Debug Session]')
+      console.log('isSignedIn:', clerk.session !== null)
+      console.log('userId:', clerk.user?.id)
+      console.log('client.sessions count:', clerk.client?.sessions?.length)
+      
+      // If not signed in, check if there's a session in the client that we can activate
+      if (!clerk.session && clerk.client?.sessions && clerk.client.sessions.length > 0) {
+        console.warn('[TokenAuth] Found sessions in client but none active. Attempting activation...')
+        try {
+          // Try to activate the first available session
+          const firstSession = clerk.client.sessions[0]
+          await clerk.setActive({ session: firstSession })
+          console.log('[TokenAuth] ✅ Successfully activated session')
+        } catch (err) {
+          console.error('[TokenAuth] ❌ Failed to activate session:', err)
+        }
+      }
+      console.groupEnd()
+
       try {
-        // Try to get a token - this will work if session exists in localStorage
         const token = await getToken({ template: 'convex' })
         
         if (!isMounted) return
 
         if (token) {
-          // Token is valid - user is authenticated!
           setHasValidToken(true)
-          setTokenUserId(userId || null)
+          setTokenUserId(userId || clerk.user?.id || null)
           setIsTokenLoading(false)
           
-          // Also set up Convex auth
           convex.setAuth(async () => {
             try {
               const t = await getToken({ template: 'convex' })
@@ -72,63 +86,41 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
             }
           })
           
-          console.log('[TokenAuth] ✅ Valid token found, user authenticated')
+          console.log('[TokenAuth] ✅ Valid token found')
         } else {
-          // No token - either not signed in or session hasn't propagated yet
           if (retryCount < maxRetries) {
             retryCount++
-            console.log(`[TokenAuth] No token yet, retrying (${retryCount}/${maxRetries})...`)
+            console.log(`[TokenAuth] No token, retrying (${retryCount}/${maxRetries})...`)
             setTimeout(checkToken, retryDelay)
           } else {
-            // Give up - user is not authenticated
             setHasValidToken(false)
             setTokenUserId(null)
             setIsTokenLoading(false)
             convex.clearAuth()
             console.log('[TokenAuth] ❌ No valid token after retries')
+            
+            // Final exhaustive check: is there ANY session?
+            if (clerk.client?.sessions && clerk.client.sessions.length > 0) {
+              console.error('[TokenAuth] CRITICAL: Sessions exist in client but getToken() returned null. This usually means the JWT template "convex" is missing or configured incorrectly in Clerk Dashboard.')
+            }
           }
         }
       } catch (error) {
-        console.error('[TokenAuth] Error checking token:', error)
-        if (!isMounted) return
-        
+        console.error('[TokenAuth] Error in checkToken:', error)
         if (retryCount < maxRetries) {
           retryCount++
           setTimeout(checkToken, retryDelay)
         } else {
-          setHasValidToken(false)
-          setTokenUserId(null)
           setIsTokenLoading(false)
-          convex.clearAuth()
         }
       }
     }
 
-    // Start checking for token
     setIsTokenLoading(true)
     checkToken()
 
-    return () => {
-      isMounted = false
-    }
-  }, [isLoaded, getToken, convex, userId, refreshCounter])
-
-  // Also handle the case where cookie-based auth works (local dev)
-  useEffect(() => {
-    if (isSignedIn && userId && !hasValidToken) {
-      // Cookie-based auth is working, sync token-based state
-      setHasValidToken(true)
-      setTokenUserId(userId)
-      setIsTokenLoading(false)
-    }
-  }, [isSignedIn, userId, hasValidToken])
-
-  // Handle sign out
-  useEffect(() => {
-    if (isLoaded && !isSignedIn && !hasValidToken) {
-      convex.clearAuth()
-    }
-  }, [isLoaded, isSignedIn, hasValidToken, convex])
+    return () => { isMounted = false }
+  }, [isLoaded, getToken, convex, userId, clerk, refreshCounter])
 
   const contextValue: TokenAuthContextType = {
     hasValidToken,
