@@ -4,8 +4,9 @@ import { v } from 'convex/values'
 
 export default defineSchema({
   users: defineTable({
-    clerkId: v.string(),           // Clerk user ID (unique)
-    email: v.string(),             // Email from Clerk
+    // Historical field name: this stores the auth provider subject (`sub`).
+    clerkId: v.string(),           // Auth0 subject (unique)
+    email: v.string(),             // Email from auth provider
     username: v.string(),          // Username (unique, editable)
     displayName: v.string(),       // Display name (editable)
     bio: v.string(),               // Bio/description (editable, max 500 chars)

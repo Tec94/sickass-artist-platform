@@ -330,7 +330,7 @@ export const recordOfflineMessage = mutation({
 });
 
 /**
- * Helper query: Get user by Clerk ID (for actions)
+ * Helper query: Get user by auth subject (`sub`) (for actions)
  */
 export const getUserByClerkId = query({
   args: { clerkId: v.string() },

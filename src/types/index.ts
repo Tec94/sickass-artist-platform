@@ -1,12 +1,12 @@
 // User roles
 export type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
 
-// Fan tiers (linked to Clerk Billing)
+// Fan tiers
 export type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
 
 // User profile data (stored in Convex)
 export interface UserProfile {
-  userId: string  // Clerk user ID
+  userId: string  // User ID
   username: string
   displayName: string
   bio: string
@@ -26,9 +26,9 @@ export interface UserProfile {
   updatedAt: number
 }
 
-// User data with Clerk integration
+// User data with auth integration
 export interface User {
-  clerkId: string
+  clerkId: string // Auth subject (`sub`) from Auth0 (historical field name)
   email: string
   profile: UserProfile
 }

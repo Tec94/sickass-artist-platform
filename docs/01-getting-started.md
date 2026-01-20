@@ -20,7 +20,7 @@ A premium fan engagement platform with:
 | **Frontend** | React, TypeScript, Vite |
 | **Styling** | Custom CSS with dark theme |
 | **Backend** | Convex (serverless functions + real-time DB) |
-| **Auth** | Clerk |
+| **Auth** | Auth0 |
 | **State** | React Context + Convex subscriptions |
 
 ---
@@ -35,8 +35,9 @@ npm install
 ### 2. Configure Environment
 Create `.env` with:
 ```env
-VITE_CONVEX_URL=<your-convex-deployment-url>
-VITE_CLERK_PUBLISHABLE_KEY=<your-clerk-key>
+VITE_CONVEX_DEPLOYMENT_URL=<your-convex-deployment-url>
+VITE_AUTH0_DOMAIN=<your-auth0-domain>
+VITE_AUTH0_CLIENT_ID=<your-auth0-client-id>
 ```
 
 ### 3. Start Development

@@ -21,13 +21,13 @@ npm run build
 - **Pro Chatroom**: Discord-like real-time messaging with message stacking, reactions, and mute/deafen settings.
 - **Theme**: High-performance dark aesthetic with scarlet/crimson red accents.
 - **Real-time Backend**: Powered by Convex for instant syncing and optimistic updates.
-- **Auth**: Secure user management with Clerk.
+- **Auth**: Secure user management with Auth0.
 
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS.
 - **Backend**: Convex.
-- **Auth**: Clerk.
+- **Auth**: Auth0.
 - **Icons**: Iconify (Solar set).
 
 ## Project Structure

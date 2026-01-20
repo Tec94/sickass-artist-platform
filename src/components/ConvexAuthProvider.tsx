@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
-import { useAuth, useClerk } from '@clerk/clerk-react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useConvex } from 'convex/react'
 
 interface TokenAuthContextType {
@@ -24,8 +24,7 @@ interface ConvexAuthProviderProps {
 }
 
 export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
-  const { getToken, isLoaded, userId } = useAuth()
-  const clerk = useClerk()
+  const { isAuthenticated, isLoading, user, getIdTokenClaims } = useAuth0()
   const convex = useConvex()
   
   const [hasValidToken, setHasValidToken] = useState(false)
@@ -38,7 +37,15 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
   }, [])
 
   useEffect(() => {
-    if (!isLoaded) return
+    if (isLoading) return
+
+    if (!isAuthenticated) {
+      setHasValidToken(false)
+      setTokenUserId(null)
+      setIsTokenLoading(false)
+      convex.clearAuth()
+      return
+    }
 
     let isMounted = true
     let retryCount = 0
@@ -48,39 +55,22 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
     const checkToken = async () => {
       if (!isMounted) return
 
-      console.group('[Clerk Debug Session]')
-      console.log('isSignedIn:', clerk.session !== null)
-      console.log('userId:', clerk.user?.id)
-      console.log('client.sessions count:', clerk.client?.sessions?.length)
-      
-      // If not signed in, check if there's a session in the client that we can activate
-      if (!clerk.session && clerk.client?.sessions && clerk.client.sessions.length > 0) {
-        console.warn('[TokenAuth] Found sessions in client but none active. Attempting activation...')
-        try {
-          // Try to activate the first available session
-          const firstSession = clerk.client.sessions[0]
-          await clerk.setActive({ session: firstSession.id })
-          console.log('[TokenAuth] ✅ Successfully activated session')
-        } catch (err) {
-          console.error('[TokenAuth] ❌ Failed to activate session:', err)
-        }
-      }
-      console.groupEnd()
-
       try {
-        const token = await getToken({ template: 'convex' })
+        // We use the Auth0 ID token (JWT). Convex will validate `iss` and `aud`.
+        const claims = await getIdTokenClaims()
+        const token = claims?.__raw ?? null
         
         if (!isMounted) return
 
         if (token) {
           setHasValidToken(true)
-          setTokenUserId(userId || clerk.user?.id || null)
+          setTokenUserId(user?.sub ?? null)
           setIsTokenLoading(false)
           
           convex.setAuth(async () => {
             try {
-              const t = await getToken({ template: 'convex' })
-              return t || null
+              const c = await getIdTokenClaims()
+              return c?.__raw ?? null
             } catch {
               return null
             }
@@ -98,11 +88,6 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
             setIsTokenLoading(false)
             convex.clearAuth()
             console.log('[TokenAuth] ❌ No valid token after retries')
-            
-            // Final exhaustive check: is there ANY session?
-            if (clerk.client?.sessions && clerk.client.sessions.length > 0) {
-              console.error('[TokenAuth] CRITICAL: Sessions exist in client but getToken() returned null. This usually means the JWT template "convex" is missing or configured incorrectly in Clerk Dashboard.')
-            }
           }
         }
       } catch (error) {
@@ -120,7 +105,7 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
     checkToken()
 
     return () => { isMounted = false }
-  }, [isLoaded, getToken, convex, userId, clerk, refreshCounter])
+  }, [isAuthenticated, isLoading, getIdTokenClaims, convex, user?.sub, refreshCounter])
 
   const contextValue: TokenAuthContextType = {
     hasValidToken,

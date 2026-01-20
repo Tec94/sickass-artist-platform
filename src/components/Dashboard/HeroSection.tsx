@@ -13,13 +13,7 @@ export const HeroSection = () => {
     if (isSignedIn) {
       navigate('/profile')
     } else {
-      // Trigger sign-in modal via Clerk
-      const signInBtn = document.querySelector('[data-clerk-sign-in]') as HTMLElement
-      if (signInBtn) {
-        signInBtn.click()
-      } else {
-        navigate('/profile')
-      }
+      navigate('/sign-in')
     }
   }
 

@@ -10,7 +10,6 @@ export function useAuth() {
   
   return {
     user: context.userProfile,
-    clerkUser: context.clerkUser,
     isSignedIn: context.isSignedIn,
     isLoading: context.isLoading || (context.isSignedIn && !context.isProfileLoaded),
     signOut: context.signOut,

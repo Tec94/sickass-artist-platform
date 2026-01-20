@@ -6,7 +6,7 @@ This schema supports both chat and forum features with proper indexing, access c
 ## Tables
 
 ### 1. users
-User profiles integrated with Clerk authentication.
+User profiles integrated with Auth0 authentication.
 - **Indexes**: by_clerkId, by_username, by_role, by_fanTier
 
 ### 2. channels

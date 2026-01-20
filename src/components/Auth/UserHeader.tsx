@@ -1,12 +1,13 @@
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { SignOutButton } from '@clerk/clerk-react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { FanStatusBadge } from '../Profile/FanStatusBadge'
 
 export function UserHeader() {
   const { user, isSignedIn } = useAuth()
   const navigate = useNavigate()
+  const { logout } = useAuth0()
 
   if (!isSignedIn || !user) {
     return null
@@ -35,11 +36,12 @@ export function UserHeader() {
         </div>
 
         {/* Sign Out Button */}
-        <SignOutButton>
-          <button className="sign-out-btn px-4 py-1.5 bg-red-600/20 hover:bg-red-600/40 border border-red-600/40 text-white text-xs font-bold rounded-full transition-all">
-            EXIT
-          </button>
-        </SignOutButton>
+        <button
+          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+          className="sign-out-btn px-4 py-1.5 bg-red-600/20 hover:bg-red-600/40 border border-red-600/40 text-white text-xs font-bold rounded-full transition-all"
+        >
+          EXIT
+        </button>
       </div>
 
       <style>{`

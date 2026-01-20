@@ -6,13 +6,13 @@ Complete Convex database schema documentation for the Sickass Artist Platform.
 
 ## Users & Authentication
 
-User profiles integrated with Clerk authentication.
+User profiles integrated with Auth0 authentication.
 
 ### users
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `clerkId` | string | Clerk authentication ID |
+| `clerkId` | string | Auth subject (`sub`) from Auth0 (historical field name) |
 | `username` | string | Unique username |
 | `email` | string | User email |
 | `displayName` | string | Display name |

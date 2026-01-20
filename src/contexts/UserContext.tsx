@@ -1,14 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, ReactNode, useEffect, useRef, useState, useContext } from 'react'
-import { useUser as useClerkUser, useClerk, useAuth } from '@clerk/clerk-react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { Doc } from '../../convex/_generated/dataModel'
 import { useTokenAuth } from '../components/ConvexAuthProvider'
 
 interface UserContextType {
-  // Clerk auth state
-  clerkUser: ReturnType<typeof useClerkUser>['user'] | null | undefined
+  // Auth0 auth state
+  authUser: Record<string, unknown> | null
   isSignedIn: boolean
   isLoading: boolean
   
@@ -28,18 +28,15 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  // Cookie-based auth (works on localhost, may fail on Vercel)
-  const { user: clerkUser, isSignedIn: cookieSignedIn, isLoaded: clerkLoaded } = useClerkUser()
-  const { signOut: clerkSignOut } = useClerk()
-  const { userId: cookieUserId, getToken } = useAuth()
+  const { user, isAuthenticated, isLoading: auth0Loading, logout, getIdTokenClaims } = useAuth0()
   
-  // Token-based auth (works even when cookies are blocked)
+  // Token-based auth (kept as the source of truth for Convex auth readiness)
   const { hasValidToken, isTokenLoading, userId: tokenUserId, refreshAuth } = useTokenAuth()
   
-  // Use token-based auth as primary, fall back to cookie-based
-  const isSignedIn = hasValidToken || (cookieSignedIn ?? false)
-  const isLoading = isTokenLoading || !clerkLoaded
-  const effectiveUserId = tokenUserId || cookieUserId
+  // Treat "signed in" as: Auth0 says authenticated OR we have a valid Convex token.
+  const isSignedIn = isAuthenticated || hasValidToken
+  const isLoading = auth0Loading || isTokenLoading
+  const effectiveUserId = tokenUserId || user?.sub || null
   
   const [userProfile, setUserProfile] = useState<Doc<'users'> | null>(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
@@ -65,31 +62,35 @@ export function UserProvider({ children }: UserProviderProps) {
         if (getUserQuery === null) {
           hasInitializedRef.current = true
           
-          // Try to get user info from Clerk user object or token
+          // Try to get user info from Auth0 user object or ID token claims
           let email = ''
           let username = ''
           let displayName = ''
           let avatar = ''
           
-          if (clerkUser) {
-            // Cookie-based auth is working, use Clerk user object
-            email = clerkUser.emailAddresses[0]?.emailAddress || ''
-            username = clerkUser.username || email.split('@')[0]
-            displayName = clerkUser.firstName || ''
-            avatar = clerkUser.imageUrl || ''
+          if (user) {
+            email = user.email || ''
+            username =
+              user.nickname ||
+              user.name?.replace(/\s+/g, '_').toLowerCase() ||
+              (email ? email.split('@')[0] : '') ||
+              `user_${effectiveUserId.substring(0, 8)}`
+            displayName = user.given_name || user.name || username
+            avatar = user.picture || ''
           } else {
-            // Cookies blocked - try to extract info from token
             try {
-              const token = await getToken({ template: 'convex' })
-              if (token) {
-                // Decode JWT payload (second part)
-                const payload = JSON.parse(atob(token.split('.')[1]))
-                email = payload.email || ''
-                username = payload.nickname || payload.name?.replace(/\s+/g, '_').toLowerCase() || email.split('@')[0]
-                displayName = payload.given_name || payload.name?.split(' ')[0] || ''
-                avatar = payload.picture || ''
+              const claims = await getIdTokenClaims()
+              if (claims) {
+                email = claims.email || ''
+                username =
+                  claims.nickname ||
+                  claims.name?.replace(/\s+/g, '_').toLowerCase() ||
+                  (email ? email.split('@')[0] : '') ||
+                  `user_${effectiveUserId.substring(0, 8)}`
+                displayName = claims.given_name || claims.name || username
+                avatar = claims.picture || ''
                 
-                console.log('[UserContext] Extracted user info from token:', { email, username, displayName })
+                console.log('[UserContext] Extracted user info from Auth0 ID token:', { email, username, displayName })
               }
             } catch (e) {
               console.error('[UserContext] Failed to extract user info from token:', e)
@@ -119,7 +120,7 @@ export function UserProvider({ children }: UserProviderProps) {
     }
     
     initializeUser()
-  }, [isSignedIn, effectiveUserId, isLoading, createUserMutation, getUserQuery, clerkUser, getToken])
+  }, [isSignedIn, effectiveUserId, isLoading, createUserMutation, getUserQuery, user, getIdTokenClaims])
   
   // Set userProfile from query and record login (once per session)
   useEffect(() => {
@@ -149,7 +150,7 @@ export function UserProvider({ children }: UserProviderProps) {
   }, [isSignedIn, isLoading])
   
   const signOut = async () => {
-    await clerkSignOut()
+    logout({ logoutParams: { returnTo: window.location.origin } })
     setUserProfile(null)
     setIsProfileLoaded(false)
     hasRecordedLoginRef.current = false
@@ -162,7 +163,7 @@ export function UserProvider({ children }: UserProviderProps) {
   }
   
   const value: UserContextType = {
-    clerkUser: clerkUser,
+    authUser: (user as unknown as Record<string, unknown>) ?? null,
     isSignedIn, // Now uses token-based auth primarily
     isLoading,
     userProfile,

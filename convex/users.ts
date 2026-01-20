@@ -46,7 +46,7 @@ export const getCurrentUser = query({
       return null;
     }
 
-    const clerkId = identity.subject;
+    const clerkId = identity.subject; // Auth provider subject (`sub`)
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
@@ -151,7 +151,7 @@ export const create = mutation({
       .first();
 
     if (existingUserByClerkId) {
-      throw new ConvexError("User already exists with this Clerk ID");
+      throw new ConvexError("User already exists with this auth subject");
     }
 
     const now = Date.now();

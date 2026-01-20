@@ -129,8 +129,8 @@ function AppContent() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 
                 {/* Auth Routes */}
-                <Route path="/sign-in/*" element={<SignInPage />} />
-                <Route path="/sign-up/*" element={<SignUpPage />} />
+                <Route path="/sign-in" element={<SignInPage />} />
+                <Route path="/sign-up" element={<SignUpPage />} />
                 <Route path="/sso-callback" element={<SSOCallback />} />
                 
                 {/* Admin Routes */}
