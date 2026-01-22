@@ -11,6 +11,7 @@ export default defineSchema({
     displayName: v.string(),       // Display name (editable)
     bio: v.string(),               // Bio/description (editable, max 500 chars)
     avatar: v.string(),            // Avatar URL (editable)
+    avatarStorageId: v.optional(v.id('_storage')), // Uploaded avatar file (Convex Storage)
 
     // Role & permissions
     role: v.union(

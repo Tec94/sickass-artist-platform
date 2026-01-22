@@ -1,4 +1,5 @@
-const CACHE_NAME = 'sickass-v1'
+// Bump this when changing app shell caching behavior.
+const CACHE_NAME = 'sickass-v2'
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -11,6 +12,21 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(URLS_TO_CACHE)
     })
+  )
+  // Activate updated service worker ASAP so we don't keep serving stale app code.
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      // Remove old caches.
+      caches.keys().then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      ),
+      // Take control of all clients immediately.
+      self.clients.claim(),
+    ])
   )
 })
 

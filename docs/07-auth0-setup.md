@@ -16,8 +16,10 @@ Set these URLs for local dev and production:
 - **Allowed Callback URLs**
   - `http://localhost:5173`
   - `http://localhost:5173/dashboard`
+  - `http://localhost:5173/sso-callback`
   - `https://<your-vercel-domain>`
   - `https://<your-vercel-domain>/dashboard`
+  - `https://<your-vercel-domain>/sso-callback`
 - **Allowed Logout URLs**
   - `http://localhost:5173`
   - `https://<your-vercel-domain>`
@@ -50,6 +52,9 @@ Set the Convex env vars:
 npx convex env set AUTH0_DOMAIN your-tenant.us.auth0.com
 npx convex env set AUTH0_CLIENT_ID your_auth0_client_id
 ```
+
+Note: Auth0 issues tokens with an issuer (`iss`) that includes a trailing slash (e.g. `https://your-tenant.us.auth0.com/`).
+This repo normalizes the domain in `convex/auth.config.js` to ensure the issuer matches exactly.
 
 Then restart/redeploy:
 

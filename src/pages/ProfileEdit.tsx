@@ -3,14 +3,17 @@ import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { useTranslation } from '../hooks/useTranslation'
 
 export function ProfileEdit() {
-  const { user, isSignedIn, isLoading } = useAuth()
+  const { user, isSignedIn, isLoading, signOut } = useAuth()
   const { language, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const updateUserMutation = useMutation(api.users.update)
+  const generateAvatarUploadUrl = useMutation(api.users.generateAvatarUploadUrl)
+  const setAvatarFromStorageId = useMutation(api.users.setAvatarFromStorageId)
   const animate = useScrollAnimation()
 
   const [formData, setFormData] = useState({
@@ -36,6 +39,8 @@ export function ProfileEdit() {
 
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
 
   if (isLoading) {
     return <div className="loading-container">{t('common.loading')}</div>
@@ -98,6 +103,47 @@ export function ProfileEdit() {
     }
   }
 
+  const handleAvatarFile = async (file: File | null) => {
+    setAvatarError('')
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please select an image file.')
+      return
+    }
+    // Keep it reasonable for uploads.
+    if (file.size > 6 * 1024 * 1024) {
+      setAvatarError('Image is too large (max 6MB).')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const uploadUrl = await generateAvatarUploadUrl({})
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
+      if (!res.ok) {
+        throw new Error(`Upload failed (${res.status})`)
+      }
+      const json = (await res.json()) as { storageId?: string }
+      if (!json.storageId) {
+        throw new Error('Upload did not return a storageId')
+      }
+
+      await setAvatarFromStorageId({ storageId: json.storageId as Id<'_storage'> })
+      // Navigate back to profile to see the updated avatar.
+      // (Convex will also update the reactive query, but this is a nice UX.)
+    } catch (e) {
+      console.error(e)
+      setAvatarError('Failed to upload avatar. Please try again.')
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
+
   return (
     <div className="profile-edit-layout">
       <div ref={animate} data-animate className="profile-edit-container">
@@ -113,6 +159,37 @@ export function ProfileEdit() {
         )}
 
         <form onSubmit={handleSubmit} className="edit-form">
+          {/* Avatar Upload */}
+          <div className="field-group">
+            <label className="field-label">Profile picture</label>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-zinc-500 font-bold">
+                    {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 flex items-center gap-3">
+                <label className="px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-xs font-bold text-white cursor-pointer hover:border-red-600/60 transition">
+                  {isUploadingAvatar ? 'Uploading…' : 'Upload image'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploadingAvatar}
+                    onChange={(e) => handleAvatarFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <span className="text-[11px] text-zinc-500">PNG/JPG/WebP up to 6MB</span>
+              </div>
+            </div>
+            {avatarError && <div className="text-red-400 text-xs mt-2 font-semibold">{avatarError}</div>}
+          </div>
+
           <div className="field-group">
             <label className="field-label">{t('profile.edit.displayName')}</label>
             <div className="input-wrapper">
@@ -193,6 +270,13 @@ export function ProfileEdit() {
             </button>
             <button type="button" onClick={() => navigate('/profile')} className="cancel-btn">
               {t('profile.edit.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="cancel-btn signout-btn"
+            >
+              {t('common.signOut') || 'Sign out'}
             </button>
           </div>
         </form>
@@ -406,6 +490,13 @@ export function ProfileEdit() {
         }
 
         .cancel-btn:hover { color: white; border-color: white; }
+        .signout-btn {
+          border-color: rgba(220, 38, 38, 0.5);
+          color: white;
+        }
+        .signout-btn:hover {
+          border-color: rgba(220, 38, 38, 0.9);
+        }
       `}</style>
     </div>
   )

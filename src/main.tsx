@@ -37,16 +37,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       domain={AUTH0_DOMAIN}
       clientId={AUTH0_CLIENT_ID}
       authorizationParams={{
-        redirect_uri: window.location.origin,
+        // IMPORTANT: use a dedicated callback route so React Router doesn't
+        // immediately redirect away and drop Auth0's `code`/`state` params.
+        redirect_uri: `${window.location.origin}/sso-callback`,
         scope: 'openid profile email',
       }}
       cacheLocation="localstorage"
       onRedirectCallback={(appState: unknown) => {
         const returnTo = (appState as { returnTo?: string } | undefined)?.returnTo
         const target = returnTo && returnTo.startsWith('/') ? returnTo : '/dashboard'
-        // Use history.replaceState to update URL without full page reload
-        // This preserves the Auth0 SDK's authentication state
+        // Update URL without full page reload and notify React Router.
         window.history.replaceState({}, document.title, target)
+        window.dispatchEvent(new PopStateEvent('popstate'))
       }}
     >
       <ConvexProvider client={convex}>

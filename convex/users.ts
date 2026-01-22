@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { api } from "./_generated/api";
+import { getOrCreateCurrentUser } from "./helpers";
 
 const VALID_ROLES = ["artist", "admin", "mod", "crew", "fan"] as const;
 const VALID_FAN_TIERS = ["bronze", "silver", "gold", "platinum"] as const;
@@ -162,6 +163,7 @@ export const create = mutation({
       displayName: args.displayName || args.username,
       bio: "",
       avatar: args.avatar || "",
+      avatarStorageId: undefined,
       role: "fan",
       fanTier: "bronze",
       socials: {},
@@ -177,6 +179,34 @@ export const create = mutation({
 
     const user = await ctx.db.get(userId);
     return { userId, user };
+  },
+});
+
+// ===== Avatar upload (Convex Storage) =====
+export const generateAvatarUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthorized");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const setAvatarFromStorageId = mutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const user = await getOrCreateCurrentUser(ctx);
+
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) throw new ConvexError("Upload not found");
+
+    await ctx.db.patch(user._id, {
+      avatarStorageId: args.storageId,
+      avatar: url,
+      updatedAt: Date.now(),
+    });
+
+    return { avatar: url };
   },
 });
 
@@ -348,9 +378,15 @@ export const recordLogin = mutation({
       throw new ConvexError("User not found");
     }
 
+    // Refresh signed avatar URL periodically for uploaded avatars.
+    const refreshedAvatarUrl = user.avatarStorageId
+      ? await ctx.storage.getUrl(user.avatarStorageId)
+      : null;
+
     await ctx.db.patch(args.userId, {
       lastSignIn: Date.now(),
       updatedAt: Date.now(),
+      ...(refreshedAvatarUrl ? { avatar: refreshedAvatarUrl } : {}),
     });
 
     try {

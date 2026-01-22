@@ -67,14 +67,29 @@ export function UserProvider({ children }: UserProviderProps) {
           let username = ''
           let displayName = ''
           let avatar = ''
+
+          const sanitizeUsername = (raw: string): string => {
+            const s = raw
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9_]/g, '_')
+              .replace(/_+/g, '_')
+              .replace(/^_+|_+$/g, '')
+              .slice(0, 20)
+            return s.length >= 3 ? s : ''
+          }
+
+          const fallbackUsername = `user_${effectiveUserId.substring(0, 8)}` // <= 13 chars, valid
           
           if (user) {
             email = user.email || ''
-            username =
-              user.nickname ||
-              user.name?.replace(/\s+/g, '_').toLowerCase() ||
-              (email ? email.split('@')[0] : '') ||
-              `user_${effectiveUserId.substring(0, 8)}`
+            const candidates = [
+              sanitizeUsername(user.nickname || ''),
+              sanitizeUsername(user.name || ''),
+              sanitizeUsername(email ? email.split('@')[0] : ''),
+              sanitizeUsername(fallbackUsername),
+            ].filter(Boolean)
+            username = candidates[0] || fallbackUsername
             displayName = user.given_name || user.name || username
             avatar = user.picture || ''
           } else {
@@ -82,12 +97,14 @@ export function UserProvider({ children }: UserProviderProps) {
               const claims = await getIdTokenClaims()
               if (claims) {
                 email = claims.email || ''
-                username =
-                  claims.nickname ||
-                  claims.name?.replace(/\s+/g, '_').toLowerCase() ||
-                  (email ? email.split('@')[0] : '') ||
-                  `user_${effectiveUserId.substring(0, 8)}`
-                displayName = claims.given_name || claims.name || username
+                const candidates = [
+                  sanitizeUsername((claims as unknown as { nickname?: string }).nickname || ''),
+                  sanitizeUsername(claims.name || ''),
+                  sanitizeUsername(email ? email.split('@')[0] : ''),
+                  sanitizeUsername(fallbackUsername),
+                ].filter(Boolean)
+                username = candidates[0] || fallbackUsername
+                displayName = (claims as unknown as { given_name?: string }).given_name || claims.name || username
                 avatar = claims.picture || ''
                 
                 console.log('[UserContext] Extracted user info from Auth0 ID token:', { email, username, displayName })
@@ -95,18 +112,43 @@ export function UserProvider({ children }: UserProviderProps) {
             } catch (e) {
               console.error('[UserContext] Failed to extract user info from token:', e)
               // Use fallback values
-              username = `user_${effectiveUserId.substring(0, 8)}`
+              username = fallbackUsername
             }
           }
           
           // First sign-in: create user in Convex
-          await createUserMutation({
-            clerkId: effectiveUserId,
-            email: email,
-            username: username,
-            displayName: displayName,
-            avatar: avatar,
-          })
+          // Retry with fallback usernames if we hit validation/uniqueness issues.
+          const candidateUsernames = [
+            sanitizeUsername(username),
+            sanitizeUsername(email ? email.split('@')[0] : ''),
+            sanitizeUsername(fallbackUsername),
+          ].filter(Boolean)
+
+          let lastError: unknown = null
+          let created = false
+          for (const candidate of candidateUsernames) {
+            try {
+              await createUserMutation({
+                clerkId: effectiveUserId,
+                email,
+                username: candidate,
+                displayName: displayName || candidate,
+                avatar,
+              })
+              created = true
+              break
+            } catch (err) {
+              lastError = err
+              const msg = (err as { message?: string } | null)?.message ?? String(err)
+              const retryable =
+                msg.includes('Username already taken') ||
+                msg.includes('Invalid username') ||
+                msg.includes('Invalid username:')
+              if (!retryable) throw err
+            }
+          }
+
+          if (!created) throw lastError
           
           console.log('[UserContext] ✅ Created new user in Convex')
         }

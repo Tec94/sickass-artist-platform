@@ -5,7 +5,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import type { Language } from '../contexts/LanguageContext';
 
 export const Profile = () => {
-  const { user, isSignedIn, isLoading } = useAuth();
+  const { user, isSignedIn, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useTranslation();
 
@@ -138,6 +138,15 @@ export const Profile = () => {
                 className="w-full bg-white hover:bg-zinc-200 text-black py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
               >
                 {t('profile.editProfile')}
+              </button>
+            </div>
+
+            <div className="w-full mt-3">
+              <button
+                onClick={() => signOut()}
+                className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-600/40 text-white py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
+              >
+                {t('common.signOut') || 'Sign out'}
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { query, mutation } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-import { getCurrentUser } from './helpers'
+import { getCurrentUserOrNull, getOrCreateCurrentUser } from './helpers'
 
 // Query: Get user's cart
 export const getCart = query({
@@ -22,7 +22,20 @@ export const getCart = query({
       }
     }
 
-    const user = await getCurrentUser(ctx)
+    // User row can lag behind auth (e.g. first login). Don't hard-fail the app shell.
+    const user = await getCurrentUserOrNull(ctx)
+    if (!user) {
+      return {
+        items: [],
+        total: 0,
+        itemCount: 0,
+        subtotal: 0,
+        tax: 0,
+        shipping: 0,
+        isEmpty: true,
+        timestamp: Date.now(),
+      }
+    }
 
     const cart = await ctx.db
       .query('merchCart')
@@ -97,7 +110,7 @@ export const addToCart = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getOrCreateCurrentUser(ctx)
 
     // Validate quantity
     if (args.quantity < 1 || args.quantity > 100 || !Number.isInteger(args.quantity)) {
@@ -200,7 +213,7 @@ export const updateCartQuantity = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getOrCreateCurrentUser(ctx)
 
     if (args.quantity < 0 || args.quantity > 100 || !Number.isInteger(args.quantity)) {
       throw new ConvexError('Invalid quantity')
@@ -245,7 +258,7 @@ export const updateCartQuantity = mutation({
 export const removeFromCart = mutation({
   args: { variantId: v.id('merchVariants') },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getOrCreateCurrentUser(ctx)
 
     const cart = await ctx.db
       .query('merchCart')
@@ -269,7 +282,7 @@ export const removeFromCart = mutation({
 export const clearCart = mutation({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getOrCreateCurrentUser(ctx)
 
     const cart = await ctx.db
       .query('merchCart')
