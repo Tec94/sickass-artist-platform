@@ -106,11 +106,10 @@ const Ranking = lazy(() => import('./pages/Ranking.tsx').then(m => ({ default: m
 import Footer from './components/Footer'
 
 function AppContent() {
+  const { t } = useTranslation()
   const { conflicts, resolveConflict } = useOfflineQueue()
   const location = useLocation()
   const showFooter = location.pathname === '/dashboard'
-  const isDashboard = location.pathname === '/dashboard'
-  const { t } = useTranslation()
 
   return (
     <>

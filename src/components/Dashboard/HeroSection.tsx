@@ -1,8 +1,6 @@
 import React from 'react';
-import { useTranslation } from '../../hooks/useTranslation';
 
 export const HeroSection = () => {
-  const { t } = useTranslation()
   const [currentSlide, setCurrentSlide] = React.useState(0)
 
   const slides = [
@@ -44,17 +42,17 @@ export const HeroSection = () => {
                 />
                 
                 {/* Foreground Container with Premium Styling */}
-                <div className="absolute inset-0 z-10 flex items-center justify-end pr-8 lg:pr-32 py-8 lg:py-12 pointer-events-none">
-                  <div className="relative h-full w-auto max-w-[65vw] group">
+                <div className="absolute inset-0 z-10 flex items-center justify-end pr-8 lg:pr-[215px] py-0 pointer-events-none">
+                  <div className="relative h-full w-auto max-w-none group flex items-center">
                     {/* Backlight Glow */}
-                    <div className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full scale-75 translate-y-4"></div>
+                    <div className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full scale-110 translate-y-4"></div>
                     
                     {/* Main Content with Blending Mask */}
                     <video
                       src={slide.src}
-                      className="relative h-full w-auto object-contain drop-shadow-2xl"
+                      className="relative h-full w-auto object-contain drop-shadow-2xl scale-[1.15] lg:scale-[1.25] origin-bottom-right translate-y-6 lg:translate-x-12"
                       style={{ 
-                        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
                         maskComposite: 'intersect',
                         WebkitMaskComposite: 'source-in' // For better browser support
                       }}
@@ -75,18 +73,18 @@ export const HeroSection = () => {
                 />
                 
                 {/* Foreground Container with Premium Styling */}
-                <div className="absolute inset-0 z-10 flex items-center justify-end pr-8 lg:pr-32 py-8 lg:py-12 pointer-events-none">
-                  <div className="relative h-full w-auto max-w-[65vw]">
+                <div className="absolute inset-0 z-10 flex items-center justify-end pr-8 lg:pr-[230px] py-0 pointer-events-none">
+                  <div className="relative h-full w-auto max-w-none flex items-center">
                      {/* Backlight Glow */}
-                    <div className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full scale-75 translate-y-4"></div>
+                    <div className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full scale-110 translate-y-4"></div>
 
                     {/* Main Content with Blending Mask */}
                     <img
                       src={slide.src}
                       alt="Hero Background"
-                      className="relative h-full w-auto object-contain drop-shadow-2xl"
+                      className="relative h-full w-auto object-contain drop-shadow-2xl scale-[1.05] lg:scale-[1.15] origin-bottom-right translate-y-6 lg:translate-x-12"
                       style={{ 
-                        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
                         maskComposite: 'intersect',
                         WebkitMaskComposite: 'source-in'
                       }}
