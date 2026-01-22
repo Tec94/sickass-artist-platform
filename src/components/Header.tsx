@@ -53,9 +53,9 @@ const Header: React.FC = () => {
           {/* Logo Section */}
           <Link to="/dashboard" className="flex items-center gap-3 group">
             <div className="hidden sm:block">
-              <h1 className="text-xl font-display font-bold tracking-wider text-white">ROA WOLVES</h1>
+              <h1 className="text-xl font-display font-bold tracking-wider text-white">ROA <span className="text-red-600">WOLVES</span></h1>
             </div>
-            <div className="sm:hidden text-xl font-display font-bold tracking-wider text-white">ROA</div>
+            <div className="sm:hidden text-xl font-display font-bold tracking-wider text-white">ROA <span className="text-red-600">.</span></div>
           </Link>
 
           {/* Navigation */}

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { CartProvider } from './contexts/CartContext'
@@ -14,6 +14,7 @@ import { Chat } from './pages/Chat'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { SSOCallback } from './pages/SSOCallback'
+import { useTranslation } from './hooks/useTranslation'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import Header from './components/Header'
 import { ProtectedRoute } from './components/Auth/ProtectedRoute'
@@ -108,6 +109,8 @@ function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
   const location = useLocation()
   const showFooter = location.pathname === '/dashboard'
+  const isDashboard = location.pathname === '/dashboard'
+  const { t } = useTranslation()
 
   return (
     <>
@@ -123,7 +126,7 @@ function AppContent() {
                     overflow: hidden;
                   }
                 `}</style>
-                <div className={`flex-1 flex flex-col ${showFooter ? 'overflow-auto' : 'overflow-hidden'}`}>
+                <div className="flex-1 flex flex-col overflow-auto">
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -271,6 +274,20 @@ function AppContent() {
             {showFooter && <Footer />}
             </div>
           </FlashlightEffect>
+ 
+        {/* Admin Quick Access Button */}
+        <Link 
+          to="/admin" 
+          className="fixed bottom-6 left-6 z-[100] group flex items-center gap-2 bg-black/80 hover:bg-zinc-900 border border-zinc-800 hover:border-red-900/50 p-2 rounded-lg transition-all duration-300 backdrop-blur-md"
+          title={t('store.adminManagement')}
+        >
+          <div className="w-8 h-8 flex items-center justify-center bg-zinc-900 group-hover:bg-red-950 rounded transition-colors">
+            <iconify-icon icon="solar:shield-user-linear" width="18" height="18" class="text-zinc-400 group-hover:text-red-500 transition-colors"></iconify-icon>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 group-hover:text-white pr-2 max-w-0 group-hover:max-w-[200px] overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out">
+            {t('store.adminManagement')}
+          </span>
+        </Link>
 
         {/* Offline Indicator */}
         <OfflineIndicator />

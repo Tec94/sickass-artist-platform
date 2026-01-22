@@ -244,6 +244,7 @@ export const en = {
         setReminder: 'Set Reminder',
         sortBy: 'Sort By',
         newestArrivals: 'Newest Arrivals',
+        newArrivals: 'New Arrivals',
         priceLowHigh: 'Price: Low to High',
         priceHighLow: 'Price: High to Low',
         alphabetical: 'Alphabetical',
@@ -263,6 +264,9 @@ export const en = {
         tourCollection: 'Tour Collection',
         signatureSeries: 'Signature Series',
         theVault: 'The Vault',
+        vinyl: 'Vinyl',
+        limitedEdition: 'Limited Edition',
+        adminManagement: 'Admin Management',
     },
 
     // Footer

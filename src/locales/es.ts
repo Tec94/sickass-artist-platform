@@ -244,6 +244,7 @@ export const es = {
         setReminder: 'Establecer Recordatorio',
         sortBy: 'Ordenar Por',
         newestArrivals: 'Más Recientes',
+        newArrivals: 'Novedades',
         priceLowHigh: 'Precio: Menor a Mayor',
         priceHighLow: 'Precio: Mayor a Menor',
         alphabetical: 'Alfabético',
@@ -263,6 +264,9 @@ export const es = {
         tourCollection: 'Colección de Gira',
         signatureSeries: 'Serie de Firma',
         theVault: 'La Bóveda',
+        vinyl: 'Vinilo',
+        limitedEdition: 'Edición Limitada',
+        adminManagement: 'Gestión de Admin',
     },
 
     // Footer

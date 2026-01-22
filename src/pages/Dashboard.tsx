@@ -45,10 +45,10 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* Next Event Widget */}
-          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col group hover:border-amber-500/30 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-display font-bold text-white uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
-                <iconify-icon icon="solar:ticket-bold-duotone" width="24" height="24" class="text-red-600 shrink-0"></iconify-icon> 
+                <iconify-icon icon="solar:ticket-bold-duotone" width="24" height="24" class="text-amber-500 shrink-0"></iconify-icon> 
                 <span className="truncate">{t('dashboard.nextEvent')}</span>
               </h3>
               <Link to="/events" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider">{t('common.viewAll')}</Link>
@@ -62,7 +62,7 @@ export const Dashboard = () => {
                    ) : (
                      <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-600">{t('common.noImage')}</div>
                    )}
-                   <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1">
+                   <div className="absolute top-2 right-2 bg-amber-500 text-black text-xs font-bold px-2 py-1">
                      {t('dashboard.upcoming')}
                    </div>
                 </div>
@@ -78,7 +78,7 @@ export const Dashboard = () => {
           </div>
 
           {/* Trending Merch Widget */}
-          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col group hover:border-red-600/30 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-display font-bold text-white uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
                 <iconify-icon icon="solar:fire-bold-duotone" width="24" height="24" class="text-red-600 shrink-0"></iconify-icon> 
@@ -111,10 +111,10 @@ export const Dashboard = () => {
           </div>
 
           {/* Community Buzz Widget */}
-          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col group hover:border-blue-500/30 transition-colors">
             <div className="flex items-center justify-between mb-4 gap-4">
               <h3 className="text-lg font-display font-bold text-white uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
-                <iconify-icon icon="solar:chat-line-bold-duotone" width="24" height="24" class="text-red-600 shrink-0"></iconify-icon> 
+                <iconify-icon icon="solar:chat-line-bold-duotone" width="24" height="24" class="text-blue-500 shrink-0"></iconify-icon> 
                 <span className="truncate">{t('dashboard.wolfpackChatter')}</span>
               </h3>
               <Link to="/forum" className="text-xs text-zinc-500 hover:text-white uppercase tracking-wider whitespace-nowrap shrink-0">{t('dashboard.joinDiscussion')}</Link>
@@ -122,7 +122,7 @@ export const Dashboard = () => {
             <div className="space-y-4">
               {forumPosts.slice(0, 3).map(post => (
                 <Link key={post._id} to={`/forum/thread/${post._id}`} className="block group">
-                  <div className="text-sm font-bold text-zinc-200 group-hover:text-red-500 transition-colors line-clamp-1">{post.title}</div>
+                  <div className="text-sm font-bold text-zinc-200 group-hover:text-blue-500 transition-colors line-clamp-1">{post.title}</div>
                   <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
                     <span>{post.replyCount || 0} {t('dashboard.replies')}</span>
                     <span>•</span>

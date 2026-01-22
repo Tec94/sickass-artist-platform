@@ -6,10 +6,10 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-zinc-900 border-t border-zinc-800 py-12 mt-auto z-10 relative">
       <div className="max-w-7xl mx-auto px-4 text-center">
-         <h2 className="text-2xl font-display font-bold text-white mb-4">ROA WOLVES</h2>
+         <h2 className="text-2xl font-display font-bold text-white mb-4 tracking-widest">ROA WOLF <span className="text-red-600">.</span></h2>
          <p className="text-zinc-500 text-sm mb-8">{t('footer.tagline')}</p>
          <div className="flex justify-center gap-8 text-zinc-500">
-            <a href="#" className="hover:text-red-500 transition-all hover:scale-110">
+            <a href="https://www.instagram.com/roawolf" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-all hover:scale-110">
               <iconify-icon icon="simple-icons:instagram" width="20" height="20"></iconify-icon>
             </a>
             <a href="#" className="hover:text-red-500 transition-all hover:scale-110">

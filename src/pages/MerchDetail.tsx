@@ -91,7 +91,7 @@ export function MerchDetail() {
     )
   }
 
-  const imageUrl = "/src/public/assets/test-image.jpg"
+  const imageUrl = product.thumbnailUrl || product.imageUrls[0] || "/images/placeholder.jpg"
   const description = product.description || product.longDescription || 'Premium quality merchandise from ROA WOLVES.'
 
   // Extract unique sizes and colors from variants

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MerchFilters as MerchFilterState } from '../../hooks/useMerchFilters'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface MerchFiltersProps {
   filters: MerchFilterState
@@ -8,22 +9,23 @@ interface MerchFiltersProps {
 }
 
 const CATEGORIES = [
-  { value: 'apparel', label: 'Apparel' },
-  { value: 'accessories', label: 'Accessories' },
-  { value: 'vinyl', label: 'Vinyl' },
-  { value: 'limited', label: 'Limited Edition' },
-  { value: 'other', label: 'Other' },
+  { value: 'apparel', label: 'store.apparel' },
+  { value: 'accessories', label: 'store.accessories' },
+  { value: 'vinyl', label: 'store.vinyl' },
+  { value: 'limited', label: 'store.limitedEdition' },
+  { value: 'other', label: 'store.other' },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest' },
-  { value: 'price_low', label: 'Price: Low to High' },
-  { value: 'price_high', label: 'Price: High to Low' },
-  { value: 'popular', label: 'Most Popular' },
-  { value: 'stock', label: 'In Stock' },
+  { value: 'newest', label: 'store.newestArrivals' },
+  { value: 'price_low', label: 'store.priceLowHigh' },
+  { value: 'price_high', label: 'store.priceHighLow' },
+  { value: 'popular', label: 'store.alphabetical' }, // Reusing alphabetical for popular if needed, or mapping correctly
+  { value: 'stock', label: 'store.availability' },
 ]
 
 export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [searchValue, setSearchValue] = useState(filters.search || '')
 
@@ -89,10 +91,11 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
             onChange={(e) => onFilterChange('category', e.target.value || null)}
             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:border-cyan-500 focus:outline-none"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('store.allProducts')}</option>
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
-                {cat.label}
+                {/* @ts-ignore - Dynamic key access */}
+                {t(cat.label)}
               </option>
             ))}
           </select>
@@ -142,7 +145,8 @@ export function MerchFilters({ filters, onFilterChange, onReset }: MerchFiltersP
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {/* @ts-ignore - Dynamic key access */}
+                {t(opt.label)}
               </option>
             ))}
           </select>
