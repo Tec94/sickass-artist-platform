@@ -1,124 +1,140 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
+import { List, type RowComponentProps } from 'react-window'
 import { api } from '../../convex/_generated/api'
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import type { Doc } from '../../convex/_generated/dataModel'
+import { useTranslation } from '../hooks/useTranslation'
+import type { LeaderboardPeriod } from '../utils/leaderboard'
 
-type LeaderboardEntry = Doc<'songLeaderboard'> & { rank: number }
+interface SongLeaderboardProps {
+  period: LeaderboardPeriod
+  limit?: number
+  height?: number
+}
 
-export const SongLeaderboard = ({
-  period = 'monthly',
-}: {
-  period?: 'monthly' | 'quarterly' | 'allTime'
-}) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'allTime'>(period)
-  const leaderboard = useQuery(api.leaderboard.getLeaderboard, {
-    period: selectedPeriod,
-    limit: 50,
-  })
+const ROW_HEIGHT = 96
 
-  if (!leaderboard) {
+export const SongLeaderboard = ({ period, limit: limitProp = 50, height }: SongLeaderboardProps) => {
+  const { t } = useTranslation()
+  const limit = Math.min(limitProp, 50)
+  const leaderboard = useQuery(api.leaderboard.getLeaderboard, { period, limit })
+  const [listHeight, setListHeight] = useState(height ?? 640)
+
+  useEffect(() => {
+    if (height) {
+      setListHeight(height)
+      return
+    }
+
+    const updateHeight = () => {
+      const computed = Math.min(760, window.innerHeight - 240)
+      setListHeight(Math.max(480, computed))
+    }
+
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [height])
+
+  const periodLabel = useMemo(() => {
+    switch (period) {
+      case 'weekly':
+        return t('events.thisWeek')
+      case 'monthly':
+        return t('events.thisMonth')
+      case 'allTime':
+        return t('ranking.allTimeLabel')
+      case 'quarterly':
+        return t('ranking.allTimeLabel')
+      default:
+        return t('ranking.allTimeLabel')
+    }
+  }, [period, t])
+
+  if (leaderboard === undefined) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="animate-pulse space-y-2">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="bg-gray-800 p-4 rounded-lg h-20" />
-          ))}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-3 animate-pulse">
+        <div className="h-6 bg-zinc-800 rounded w-48" />
+        {[...Array(8)].map((_, index) => (
+          <div key={index} className="h-20 bg-zinc-800/70 rounded-lg" />
+        ))}
+      </div>
+    )
+  }
+
+  if (leaderboard.length === 0) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-10 text-center text-zinc-500">
+        <iconify-icon icon="solar:music-library-2-bold-duotone" width="42" height="42"></iconify-icon>
+        <div className="mt-3 font-bold text-zinc-300">{t('ranking.noRankingsYet')}</div>
+        <div className="text-sm mt-1">{t('ranking.beFirstToSubmit')}</div>
+      </div>
+    )
+  }
+
+  type RowData = {
+    entries: typeof leaderboard
+    scoreLabel: string
+  }
+
+  const rowProps = useMemo<RowData>(
+    () => ({
+      entries: leaderboard,
+      scoreLabel: t('ranking.score'),
+    }),
+    [leaderboard, t]
+  )
+
+  const Row = ({ index, style, entries, scoreLabel }: RowComponentProps<RowData>) => {
+    const entry = entries[index]
+    if (!entry) {
+      return <div style={style} />
+    }
+    const rank = entry.rank
+    const rankColor =
+      rank === 1
+        ? 'text-amber-400'
+        : rank === 2
+          ? 'text-zinc-200'
+          : rank === 3
+            ? 'text-orange-400'
+            : 'text-zinc-600'
+
+    return (
+      <div style={style} className="px-4">
+        <div className="flex items-center gap-4 h-full border-b border-zinc-800/70">
+          <div className={`w-12 text-center font-display font-bold text-2xl ${rankColor}`}>#{rank}</div>
+          <img src={entry.albumCover} alt={entry.songTitle} className="w-16 h-16 rounded object-cover shadow-lg" />
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-bold text-lg truncate">{entry.songTitle}</div>
+            <div className="text-zinc-400 text-sm truncate">{entry.songArtist}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-white font-bold font-mono">{entry.totalScore.toFixed(1)}</div>
+            <div className="text-zinc-500 text-[11px] uppercase tracking-wider">{scoreLabel}</div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-4">
-          Community Song Rankings
-        </h1>
-
-        {/* Period Selector */}
-        <div className="flex gap-2">
-          {(['monthly', 'quarterly', 'allTime'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setSelectedPeriod(p)}
-              className={`px-4 py-2 rounded-lg font-semibold transition ${
-                selectedPeriod === p
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {p === 'allTime' ? 'All Time' : p.charAt(0).toUpperCase() + p.slice(1)}
-            </button>
-          ))}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/70 flex items-center justify-between gap-4">
+        <div>
+          <div className="text-sm uppercase tracking-[0.2em] text-zinc-500">Leaderboard</div>
+          <div className="text-xl font-display font-bold text-white">{periodLabel}</div>
         </div>
+        <div className="text-xs text-zinc-500">Updates hourly</div>
       </div>
-
-      <div className="space-y-2">
-        {leaderboard.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">
-              No rankings yet. Be the first to submit!
-            </p>
-          </div>
-        ) : (
-          leaderboard.map((entry: LeaderboardEntry, index: number) => (
-            <motion.div
-              key={entry._id}
-              className="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition flex items-center gap-4"
-              whileHover={{ x: 8 }}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              {/* Rank */}
-              <div className="text-right w-12">
-                <div
-                  className={`text-2xl font-bold ${
-                    index === 0
-                      ? 'text-yellow-400'
-                      : index === 1
-                      ? 'text-gray-400'
-                      : index === 2
-                      ? 'text-orange-400'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  #{entry.rank}
-                </div>
-              </div>
-
-              {/* Album Cover */}
-              {entry.albumCover && (
-                <img
-                  src={entry.albumCover}
-                  alt={entry.songTitle}
-                  className="w-16 h-16 rounded object-cover"
-                />
-              )}
-
-              {/* Song Info */}
-              <div className="flex-1">
-                <h3 className="font-bold text-white text-lg">{entry.songTitle}</h3>
-                <p className="text-sm text-gray-400">{entry.songArtist}</p>
-              </div>
-
-              {/* Stats */}
-              <div className="flex gap-6 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-purple-400">{entry.totalScore}</p>
-                  <p className="text-xs text-gray-400">Points</p>
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-blue-400">{entry.uniqueVoters}</p>
-                  <p className="text-xs text-gray-400">Voters</p>
-                </div>
-              </div>
-            </motion.div>
-          ))
-        )}
-      </div>
+      <List
+        defaultHeight={listHeight}
+        rowCount={leaderboard.length}
+        rowHeight={ROW_HEIGHT}
+        rowComponent={Row}
+        rowProps={rowProps}
+        overscanCount={6}
+        style={{ height: listHeight }}
+      />
     </div>
   )
 }

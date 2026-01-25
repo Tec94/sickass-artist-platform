@@ -3,22 +3,40 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { motion } from 'framer-motion'
 import { useTranslation } from '../../hooks/useTranslation'
+import type { LeaderboardPeriod } from '../../utils/leaderboard'
 
-export const LiveLeaderboard = () => {
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'allTime'>('weekly')
+interface LiveLeaderboardProps {
+  period?: LeaderboardPeriod
+  onPeriodChange?: (period: LeaderboardPeriod) => void
+  limit?: number
+  showTabs?: boolean
+}
+
+export const LiveLeaderboard = ({
+  period,
+  onPeriodChange,
+  limit: limitProp,
+  showTabs = true,
+}: LiveLeaderboardProps) => {
+  const [internalPeriod, setInternalPeriod] = useState<LeaderboardPeriod>('weekly')
+  const activePeriod = period ?? internalPeriod
+  const setPeriod = onPeriodChange ?? setInternalPeriod
   const { t } = useTranslation()
+  const limit = Math.min(limitProp ?? 10, 50)
+  const periodOptions: LeaderboardPeriod[] = ['weekly', 'monthly', 'allTime']
   
   const leaderboard = useQuery(api.leaderboard.getLeaderboard, { 
-    period,
-    limit: 10
+    period: activePeriod,
+    limit
   })
 
   // Helper to format period display
   const getPeriodLabel = () => {
-    switch(period) {
+    switch(activePeriod) {
       case 'weekly': return t('events.thisWeek')
       case 'monthly': return t('events.thisMonth')
       case 'allTime': return t('ranking.allTimeLabel')
+      case 'quarterly': return t('ranking.allTimeLabel')
     }
   }
 
@@ -34,21 +52,23 @@ export const LiveLeaderboard = () => {
             </h3>
           </div>
           
-          <div className="flex bg-zinc-800 rounded-lg p-1 w-full">
-            {(['weekly', 'monthly', 'allTime'] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`flex-1 py-1.5 text-xs font-bold uppercase rounded-md transition whitespace-nowrap ${
-                  period === p 
-                    ? 'bg-zinc-700 text-white shadow-sm' 
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {p === 'allTime' ? t('ranking.allTime') : t(`events.${p === 'weekly' ? 'thisWeek' : 'thisMonth'}`)}
-              </button>
-            ))}
-          </div>
+          {showTabs && (
+            <div className="flex bg-zinc-800 rounded-lg p-1 w-full">
+              {periodOptions.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`flex-1 py-1.5 text-xs font-bold uppercase rounded-md transition whitespace-nowrap ${
+                    activePeriod === p 
+                      ? 'bg-zinc-700 text-white shadow-sm' 
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {p === 'allTime' ? t('ranking.allTime') : t(`events.${p === 'weekly' ? 'thisWeek' : 'thisMonth'}`)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <p className="text-zinc-400 text-sm flex items-center gap-2">
           <iconify-icon icon="solar:calendar-linear" width="14" height="14"></iconify-icon> {t('ranking.topSongsFor')} {getPeriodLabel()}

@@ -1,7 +1,7 @@
-import { Doc } from '../../../convex/_generated/dataModel'
+import type { Doc } from '../../../convex/_generated/dataModel'
 
 interface FanStatusBadgeProps {
-  user: Doc<'users'>
+  user: Pick<Doc<'users'>, 'fanTier' | 'level' | 'xp'>
   size?: 'sm' | 'md' | 'lg'
 }
 

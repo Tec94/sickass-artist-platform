@@ -1,7 +1,32 @@
 import type { UserRole, FanTier } from './index'
-import type { Id } from '../../convex/_generated/dataModel'
+import type { Doc, Id } from '../../convex/_generated/dataModel'
 
 export { Id }
+
+export type ChatAttachment = {
+  type: 'image' | 'video'
+  storageId: Id<'_storage'>
+  url: string
+  thumbnailUrl?: string
+  width?: number
+  height?: number
+  durationMs?: number
+  sizeBytes: number
+  contentType: string
+}
+
+export type ChatServerSettings = Doc<'chatServerSettings'>
+export type ChatUserSettings = Doc<'userChatSettings'>
+export type ChatSticker = Doc<'chatStickers'>
+export type ChatStickerPack = Doc<'chatStickerPacks'> & { stickers: ChatSticker[] }
+export type ChatMessage = Doc<'messages'> & { status?: 'sending' | 'sent' | 'failed'; errorMessage?: string }
+
+export type OptimisticMessage = Omit<ChatMessage, '_id' | '_creationTime'> & {
+  _id: string
+  _creationTime?: number
+  idempotencyKey: string
+  status: 'sending' | 'sent' | 'failed'
+}
 
 export interface Channel {
   _id: Id<'channels'>
@@ -17,22 +42,6 @@ export interface Channel {
   createdAt: number
 }
 
-export interface Message {
-  _id: Id<'messages'>
-  channelId: Id<'channels'>
-  authorId: Id<'users'>
-  authorDisplayName: string
-  authorAvatar: string
-  authorTier: FanTier
-  content: string
-  isDeleted: boolean
-  createdAt: number
-  editedAt: number | null
-  isPinned: boolean
-  reactionEmojis: string[]
-  reactionCount: number
-}
-
 export interface Reaction {
   _id: Id<'reactions'>
   messageId: Id<'messages'>
@@ -46,14 +55,4 @@ export interface TypingUser {
   displayName: string
   expiresAt: number
   createdAt: number
-}
-
-export interface OptimisticMessage {
-  _id: string
-  content: string
-  authorDisplayName: string
-  authorAvatar: string
-  createdAt: number
-  status: 'sending' | 'sent' | 'failed'
-  idempotencyKey: string
 }

@@ -76,7 +76,7 @@ export function FullProfile({ user }: FullProfileProps) {
               </a>
             )}
             {user.socials.instagram && (
-              <a href={`https://instagram.com/${user.socials.instagram}`} target="_blank" rel="noopener noreferrer" className="social-btn">
+              <a href={`https://www.instagram.com/${user.socials.instagram}`} target="_blank" rel="noopener noreferrer" className="social-btn">
                 <iconify-icon icon="simple-icons:instagram"></iconify-icon>
               </a>
             )}

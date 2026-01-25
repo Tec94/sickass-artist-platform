@@ -6,6 +6,7 @@ import {
   AdminEvents,
   AdminChat, 
   AdminForum, 
+  AdminModerationHub,
   AdminQueues, 
   AdminUsers, 
   AdminInstagram,
@@ -23,6 +24,7 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'events', label: 'Events', icon: 'solar:calendar-linear' },
   { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
   { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
+  { id: 'moderation', label: 'Moderation', icon: 'solar:shield-warning-linear' },
   { id: 'queues', label: 'Waitlist', icon: 'solar:clock-circle-linear' },
   { id: 'quests', label: 'Quests', icon: 'solar:shield-star-linear' },
   { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
@@ -69,6 +71,8 @@ export function AdminDashboard() {
         return <AdminChat />
       case 'forum':
         return <AdminForum />
+      case 'moderation':
+        return <AdminModerationHub />
       case 'queues':
         return <AdminQueues />
       case 'quests':

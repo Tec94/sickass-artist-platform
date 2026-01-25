@@ -1,7 +1,9 @@
 import { mutation, query, internalMutation } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
+import type { Id } from './_generated/dataModel'
 import { v, ConvexError } from 'convex/values'
 import { api } from './_generated/api'
+import { getCurrentUser, getCurrentUserOrNull } from './helpers'
 
 // ============ TYPES ============
 
@@ -13,6 +15,26 @@ interface UserTierMultiplier {
 }
 
 type SongLeaderboardPeriod = 'allTime' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+type SubmissionType = 'top3' | 'top5' | 'top10' | 'top15' | 'top25'
+
+type RankedSong = {
+  spotifyTrackId: string
+  title: string
+  artist: string
+  rank: number
+  albumCover: string
+}
+
+// ============ CONSTANTS ============
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const ACCOUNT_MIN_AGE_MS = 7 * DAY_MS
+const RATE_LIMIT_WINDOW_MS = 7 * DAY_MS
+const RATE_LIMIT_MAX_SUBMISSIONS = 2
+const MAX_LEADERBOARD_LIMIT = 50
+const MAX_TRENDING_LIMIT = 50
+const MAX_SEARCH_LIMIT = 50
+const MAX_SUBMISSION_SCAN = 60
 
 // ============ UTILITIES ============
 
@@ -30,7 +52,7 @@ function getCurrentLeaderboardId(period: 'weekly' | 'monthly' | 'quarterly' | 'a
   if (period === 'weekly') {
     // Get ISO week number (1-52)
     const startOfYear = new Date(now.getFullYear(), 0, 1)
-    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / DAY_MS)
     const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7)
     return `${now.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`
   }
@@ -47,14 +69,133 @@ function getCurrentLeaderboardId(period: 'weekly' | 'monthly' | 'quarterly' | 'a
   return 'all-time'
 }
 
+function getSubmissionLimit(submissionType: SubmissionType): number {
+  const expectedCounts: Record<SubmissionType, number> = {
+    top3: 3,
+    top5: 5,
+    top10: 10,
+    top15: 15,
+    top25: 25,
+  }
+  return expectedCounts[submissionType]
+}
+
+function normalizeRankedSongs(rankedSongs: RankedSong[]): RankedSong[] {
+  return [...rankedSongs].sort((a, b) => a.rank - b.rank)
+}
+
+function buildSubmissionSearchText(leaderboardId: string, submissionType: SubmissionType, rankedSongs: RankedSong[]): string {
+  const parts: string[] = [leaderboardId, submissionType]
+  for (const song of rankedSongs) {
+    parts.push(song.title, song.artist, song.spotifyTrackId)
+  }
+  return parts.join(' ').toLowerCase()
+}
+
+function validateRankedSongs(submissionType: SubmissionType, rankedSongs: RankedSong[]): RankedSong[] {
+  const expectedCount = getSubmissionLimit(submissionType)
+  if (rankedSongs.length !== expectedCount) {
+    throw new ConvexError(`Expected ${expectedCount} songs for ${submissionType}, got ${rankedSongs.length}`)
+  }
+
+  const normalized = normalizeRankedSongs(rankedSongs)
+
+  for (let i = 0; i < normalized.length; i++) {
+    const song = normalized[i]
+    if (song.rank !== i + 1) {
+      throw new ConvexError('Song ranks must be sequential (1, 2, 3, ...)')
+    }
+    if (!song.spotifyTrackId.trim() || !song.title.trim() || !song.artist.trim()) {
+      throw new ConvexError('Songs must include a track id, title, and artist')
+    }
+  }
+
+  const trackIds = new Set(normalized.map((s) => s.spotifyTrackId))
+  if (trackIds.size !== normalized.length) {
+    throw new ConvexError('Cannot rank the same song twice')
+  }
+
+  return normalized
+}
+
+function findLatestSubmission<T extends { isActive?: boolean }>(submissions: T[]): T | null {
+  return submissions.find((submission) => submission.isActive !== false) ?? null
+}
+
+async function getUserTier(ctx: MutationCtx, userId: Id<'users'>, memo: Map<Id<'users'>, string>): Promise<string> {
+  const cached = memo.get(userId)
+  if (cached) return cached
+  const user = await ctx.db.get(userId)
+  const tier = user?.fanTier || 'bronze'
+  memo.set(userId, tier)
+  return tier
+}
+
+async function upsertLeaderboardCache(
+  ctx: MutationCtx,
+  leaderboardId: string,
+  period: SongLeaderboardPeriod,
+  entries: Array<{
+    spotifyTrackId: string
+    songTitle: string
+    songArtist: string
+    albumCover: string
+    totalScore: number
+    uniqueVoters: number
+  }>,
+  submissionCount: number,
+  now: number
+) {
+  const existing = await ctx.db
+    .query('leaderboardCache')
+    .withIndex('by_leaderboardId', (q) => q.eq('leaderboardId', leaderboardId))
+    .first()
+
+  const payload = {
+    leaderboardId,
+    period,
+    entries,
+    submissionCount,
+    computedAt: now,
+    updatedAt: now,
+  }
+
+  if (existing) {
+    await ctx.db.patch(existing._id, payload)
+  } else {
+    await ctx.db.insert('leaderboardCache', payload)
+  }
+}
+
+async function collectLatestActiveSubmissions(ctx: MutationCtx, leaderboardId: string) {
+  const submissions = await ctx.db
+    .query('songSubmissions')
+    .withIndex('by_leaderboardId_updatedAt', (q) => q.eq('leaderboardId', leaderboardId))
+    .order('desc')
+    .collect()
+
+  const seenUserIds = new Set<string>()
+  const latest: typeof submissions = []
+
+  for (const submission of submissions) {
+    if (submission.isActive === false) continue
+    const userKey = String(submission.userId)
+    if (seenUserIds.has(userKey)) continue
+    seenUserIds.add(userKey)
+    latest.push(submission)
+  }
+
+  return latest
+}
+
 /**
  * Calculate score for a single submission's song using HYBRID WEIGHTED algorithm
- * 
+ *
  * The hybrid approach ensures:
  * - Position is PRIMARY (rank 1 always scores higher than rank 10)
  * - Upvotes provide a LOGARITHMIC bonus (diminishing returns prevents dominance)
  * - Quality submissions get meaningful but not overwhelming boost
- * 
+ *
  * Formula: positionPoints × (1 + log10(upvotes + 1) × 0.5) × tierBonus × recencyBonus × qualityBonus
  */
 function calculateSongScoreFromSubmission(
@@ -79,11 +220,11 @@ function calculateSongScoreFromSubmission(
     gold: 1.1,
     platinum: 1.15,
   }
-  const tierValue = (tierBonus[userTier as keyof UserTierMultiplier] || 1.0)
+  const tierValue = tierBonus[userTier as keyof UserTierMultiplier] || 1.0
 
   // 4. Recency bonus: newer submissions get slight boost
-  const daysOld = submissionAgeMs / (1000 * 60 * 60 * 24)
-  const recencyMultiplier = daysOld < 7 ? 1.1 : (daysOld < 30 ? 1.0 : 0.9)
+  const daysOld = submissionAgeMs / DAY_MS
+  const recencyMultiplier = daysOld < 7 ? 1.1 : daysOld < 30 ? 1.0 : 0.9
 
   // 5. Quality bonus: admin-flagged submissions (reduced from 1.5x to 1.25x)
   const qualityMultiplier = isHighQuality ? 1.25 : 1.0
@@ -101,12 +242,8 @@ async function computeLeaderboardScoresImpl(
 ): Promise<{ processed: number; submissions: number }> {
   const now = Date.now()
 
-  const submissions = await ctx.db
-    .query('songSubmissions')
-    .withIndex('by_leaderboardId_createdAt', (q) =>
-      q.eq('leaderboardId', leaderboardId)
-    )
-    .collect()
+  const latestSubmissions = await collectLatestActiveSubmissions(ctx, leaderboardId)
+  const userTierMemo = new Map<Id<'users'>, string>()
 
   const trackScores = new Map<
     string,
@@ -115,22 +252,21 @@ async function computeLeaderboardScoresImpl(
       appearances: number
       topRankCount: number
       rankSum: number
-      uniqueVoters: Set<string>
+      uniqueVoters: Set<Id<'users'>>
       title: string
       artist: string
       albumCover: string
     }
   >()
 
-  for (const submission of submissions) {
+  for (const submission of latestSubmissions) {
     const upvotes = submission.upvoteCount || 0
+    const submissionTimestamp = submission.lastEditedAt ?? submission.updatedAt ?? submission.createdAt
+    const submissionAge = Math.max(0, now - submissionTimestamp)
+    const userTier = await getUserTier(ctx, submission.userId, userTierMemo)
+    const rankedSongs = normalizeRankedSongs(submission.rankedSongs as RankedSong[])
 
-    const user = await ctx.db.get(submission.userId)
-    const userTier = user?.fanTier || 'bronze'
-
-    const submissionAge = now - submission.createdAt
-
-    for (const song of submission.rankedSongs) {
+    for (const song of rankedSongs) {
       const songScore = calculateSongScoreFromSubmission(
         song.rank,
         upvotes,
@@ -144,7 +280,7 @@ async function computeLeaderboardScoresImpl(
         appearances: 0,
         topRankCount: 0,
         rankSum: 0,
-        uniqueVoters: new Set<string>(),
+        uniqueVoters: new Set<Id<'users'>>(),
         title: song.title,
         artist: song.artist,
         albumCover: song.albumCover,
@@ -154,7 +290,7 @@ async function computeLeaderboardScoresImpl(
       existing.appearances += 1
       if (song.rank <= 3) existing.topRankCount += 1
       existing.rankSum += song.rank
-      existing.uniqueVoters.add(String(submission.userId))
+      existing.uniqueVoters.add(submission.userId)
 
       trackScores.set(song.spotifyTrackId, existing)
     }
@@ -173,7 +309,17 @@ async function computeLeaderboardScoresImpl(
     .sort((a, b) => b[1].score - a[1].score)
     .slice(0, 100)
 
+  const cacheEntries: Array<{
+    spotifyTrackId: string
+    songTitle: string
+    songArtist: string
+    albumCover: string
+    totalScore: number
+    uniqueVoters: number
+  }> = []
+
   for (const [trackId, data] of entries) {
+    const totalScore = Math.round(data.score * 10) / 10
     await ctx.db.insert('songLeaderboard', {
       leaderboardId,
       period,
@@ -181,13 +327,24 @@ async function computeLeaderboardScoresImpl(
       songTitle: data.title,
       songArtist: data.artist,
       albumCover: data.albumCover,
-      totalScore: Math.round(data.score * 10) / 10,
+      totalScore,
       uniqueVoters: data.uniqueVoters.size,
       updatedAt: now,
     })
+
+    cacheEntries.push({
+      spotifyTrackId: trackId,
+      songTitle: data.title,
+      songArtist: data.artist,
+      albumCover: data.albumCover,
+      totalScore,
+      uniqueVoters: data.uniqueVoters.size,
+    })
   }
 
-  return { processed: entries.length, submissions: submissions.length }
+  await upsertLeaderboardCache(ctx, leaderboardId, period, cacheEntries, latestSubmissions.length, now)
+
+  return { processed: entries.length, submissions: latestSubmissions.length }
 }
 
 /**
@@ -201,16 +358,16 @@ export const hourlyLeaderboardComputation = internalMutation({
     type LeaderboardComputationPeriod = (typeof periods)[number]
     type LeaderboardComputationResult =
       | {
-        period: LeaderboardComputationPeriod
-        status: 'success'
-        processed: number
-        submissions: number
-      }
+          period: LeaderboardComputationPeriod
+          status: 'success'
+          processed: number
+          submissions: number
+        }
       | {
-        period: LeaderboardComputationPeriod
-        status: 'failed'
-        error: string
-      }
+          period: LeaderboardComputationPeriod
+          status: 'failed'
+          error: string
+        }
 
     const results: LeaderboardComputationResult[] = []
 
@@ -252,173 +409,250 @@ export const computeLeaderboardScores = internalMutation({
 // ============ MUTATIONS ============
 
 /**
- * Create song submission for leaderboard
+ * Create or update song submission for leaderboard
  */
 export const submitSongRanking = mutation({
   args: {
-    userId: v.id('users'),
     leaderboardId: v.string(), // e.g., "2025-01"
     submissionType: v.union(v.literal('top3'), v.literal('top5'), v.literal('top10'), v.literal('top15'), v.literal('top25')),
-    rankedSongs: v.array(v.object({
-      spotifyTrackId: v.string(),
-      title: v.string(),
-      artist: v.string(),
-      rank: v.number(),
-      albumCover: v.string(),
-    })),
+    rankedSongs: v.array(
+      v.object({
+        spotifyTrackId: v.string(),
+        title: v.string(),
+        artist: v.string(),
+        rank: v.number(),
+        albumCover: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
-    // ===== VALIDATION =====
-    const user = await ctx.db.get(args.userId)
-    if (!user) {
-      throw new ConvexError('User not found')
+    const currentUser = await getCurrentUser(ctx)
+    if (!currentUser) {
+      throw new ConvexError('You must be logged in to submit rankings')
     }
 
-    // Validate submission size matches type
-    const expectedCounts = {
-      top3: 3,
-      top5: 5,
-      top10: 10,
-      top15: 15,
-      top25: 25,
-    }
-    if (args.rankedSongs.length !== expectedCounts[args.submissionType]) {
-      throw new ConvexError(
-        `Expected ${expectedCounts[args.submissionType]} songs for ${args.submissionType}, got ${args.rankedSongs.length}`
-      )
-    }
-
-    // Validate ranks are sequential (1, 2, 3, ... N)
-    const ranks = args.rankedSongs.map(s => s.rank).sort((a, b) => a - b)
-    for (let i = 0; i < ranks.length; i++) {
-      if (ranks[i] !== i + 1) {
-        throw new ConvexError('Song ranks must be sequential (1, 2, 3, ...)')
-      }
-    }
-
-    // Validate no duplicate tracks
-    const trackIds = new Set(args.rankedSongs.map(s => s.spotifyTrackId))
-    if (trackIds.size !== args.rankedSongs.length) {
-      throw new ConvexError('Cannot rank the same song twice')
-    }
-
-    // Rate limit: max 2 submissions per user per leaderboard per week
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-    const recentSubmissions = await ctx.db
-      .query('songSubmissions')
-      .withIndex('by_userId_leaderboard', (q) =>
-        q.eq('userId', args.userId).eq('leaderboardId', args.leaderboardId)
-      )
-      .filter((q) => q.gt(q.field('createdAt'), weekAgo))
-      .collect()
-
-    if (recentSubmissions.length >= 2) {
-      throw new ConvexError('You can only submit 2 rankings per week')
-    }
-
-    // Check minimum account age (7 days)
-    const accountAge = Date.now() - user.createdAt
-    if (accountAge < 7 * 24 * 60 * 60 * 1000) {
+    const now = Date.now()
+    const accountAge = now - currentUser.createdAt
+    if (accountAge < ACCOUNT_MIN_AGE_MS) {
       throw new ConvexError('Your account must be at least 7 days old to submit rankings')
     }
 
-    // ===== CREATE SUBMISSION =====
+    const submissionType = args.submissionType as SubmissionType
+    const rankedSongs = validateRankedSongs(submissionType, args.rankedSongs as RankedSong[])
+
+    const recentSubmissions = await ctx.db
+      .query('songSubmissions')
+      .withIndex('by_userId_leaderboard', (q) => q.eq('userId', currentUser._id).eq('leaderboardId', args.leaderboardId))
+      .order('desc')
+      .take(MAX_SUBMISSION_SCAN)
+
+    const existingSubmission = findLatestSubmission(recentSubmissions)
+
+    if (!existingSubmission) {
+      const windowStart = now - RATE_LIMIT_WINDOW_MS
+      const recentCount = recentSubmissions.filter((submission) => submission.createdAt > windowStart).length
+      if (recentCount >= RATE_LIMIT_MAX_SUBMISSIONS) {
+        throw new ConvexError('You can only submit 2 rankings per week')
+      }
+    }
+
+    const searchText = buildSubmissionSearchText(args.leaderboardId, submissionType, rankedSongs)
+
+    if (existingSubmission) {
+      const nextRevision = (existingSubmission.revision ?? 1) + 1
+      await ctx.db.patch(existingSubmission._id, {
+        submissionType,
+        rankedSongs,
+        revision: nextRevision,
+        lastEditedAt: now,
+        updatedAt: now,
+        isActive: true,
+        searchText,
+      })
+
+      return {
+        submissionId: existingSubmission._id,
+        success: true,
+        wasUpdated: true,
+        revision: nextRevision,
+      }
+    }
+
     const submissionId = await ctx.db.insert('songSubmissions', {
-      userId: args.userId,
+      userId: currentUser._id,
       leaderboardId: args.leaderboardId,
-      submissionType: args.submissionType,
-      rankedSongs: args.rankedSongs,
+      submissionType,
+      rankedSongs,
+      revision: 1,
+      lastEditedAt: now,
+      isActive: true,
+      searchText,
       upvoteCount: 0,
       upvoters: [],
-      isHighQuality: false, // Set by admin later
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      isHighQuality: false,
+      createdAt: now,
+      updatedAt: now,
     })
 
-    // Award points for submission
-    const idempotencyKey = `submission-${submissionId}`
-    await ctx.runMutation(api.points.awardPoints, {
-      userId: args.userId,
-      type: 'quest_complete', // Reuse type
-      amount: 10,
-      description: 'Submitted song ranking',
-      idempotencyKey,
+    // Award points for brand-new submissions, but don't block submission success on points failures.
+    try {
+      const idempotencyKey = `submission-${submissionId}`
+      await ctx.runMutation(api.points.awardPoints, {
+        userId: currentUser._id,
+        type: 'quest_complete',
+        amount: 10,
+        description: 'Submitted song ranking',
+        idempotencyKey,
+      })
+    } catch (error) {
+      console.error('Failed to award submission points', error)
+    }
+
+    return { submissionId, success: true, wasUpdated: false, revision: 1 }
+  },
+})
+
+/**
+ * Update an existing submission without counting against submission limits
+ */
+export const updateSongSubmission = mutation({
+  args: {
+    submissionId: v.id('songSubmissions'),
+    submissionType: v.union(v.literal('top3'), v.literal('top5'), v.literal('top10'), v.literal('top15'), v.literal('top25')),
+    rankedSongs: v.array(
+      v.object({
+        spotifyTrackId: v.string(),
+        title: v.string(),
+        artist: v.string(),
+        rank: v.number(),
+        albumCover: v.string(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await getCurrentUser(ctx)
+    if (!currentUser) {
+      throw new ConvexError('You must be logged in to update rankings')
+    }
+
+    const submission = await ctx.db.get(args.submissionId)
+    if (!submission) {
+      throw new ConvexError('Submission not found')
+    }
+    if (submission.userId !== currentUser._id) {
+      throw new ConvexError('You can only edit your own submissions')
+    }
+    if (submission.isActive === false) {
+      throw new ConvexError('This submission is no longer active')
+    }
+
+    const now = Date.now()
+    const submissionType = args.submissionType as SubmissionType
+    const rankedSongs = validateRankedSongs(submissionType, args.rankedSongs as RankedSong[])
+    const searchText = buildSubmissionSearchText(submission.leaderboardId, submissionType, rankedSongs)
+    const nextRevision = (submission.revision ?? 1) + 1
+
+    await ctx.db.patch(submission._id, {
+      submissionType,
+      rankedSongs,
+      revision: nextRevision,
+      lastEditedAt: now,
+      updatedAt: now,
+      isActive: true,
+      searchText,
     })
 
-    return { submissionId, success: true }
+    return { success: true, submissionId: submission._id, revision: nextRevision }
   },
 })
 
 /**
  * Vote on a submission (upvote/downvote)
- * User can only vote once per submission
+ * User can toggle between votes but cannot vote on their own submission.
  */
 export const voteOnSubmission = mutation({
   args: {
-    userId: v.id('users'),
     submissionId: v.id('songSubmissions'),
     voteType: v.union(v.literal('upvote'), v.literal('downvote')),
   },
   handler: async (ctx, args) => {
-    // Check if already voted
-    const existingVote = await ctx.db
-      .query('submissionVotes')
-      .withIndex('by_submissionId_userId', (q) =>
-        q.eq('submissionId', args.submissionId).eq('userId', args.userId)
-      )
-      .first()
-
-    if (existingVote) {
-      throw new ConvexError('You already voted on this submission')
+    const currentUser = await getCurrentUser(ctx)
+    if (!currentUser) {
+      throw new ConvexError('You must be logged in to vote')
     }
 
-    // Create vote record
-    await ctx.db.insert('submissionVotes', {
-      userId: args.userId,
-      submissionId: args.submissionId,
-      voteType: args.voteType,
-      createdAt: Date.now(),
-    })
-
-    // Get submission
     const submission = await ctx.db.get(args.submissionId)
-    if (!submission) {
+    if (!submission || submission.isActive === false) {
       throw new ConvexError('Submission not found')
     }
-
-    // Update submission vote count
-    let newCount = submission.upvoteCount
-    const newVoters = submission.upvoters || []
-
-    if (args.voteType === 'upvote') {
-      newCount += 1
-      if (!newVoters.includes(args.userId)) {
-        newVoters.push(args.userId)
-      }
-    } else {
-      newCount = Math.max(0, newCount - 1)
+    if (submission.userId === currentUser._id) {
+      throw new ConvexError('You cannot vote on your own submission')
     }
 
+    const now = Date.now()
+    const upvoters = [...(submission.upvoters || [])]
+
+    const existingVote = await ctx.db
+      .query('submissionVotes')
+      .withIndex('by_submissionId_userId', (q) => q.eq('submissionId', args.submissionId).eq('userId', currentUser._id))
+      .first()
+
+    if (existingVote?.voteType === args.voteType) {
+      return { success: true, newVoteCount: submission.upvoteCount, unchanged: true }
+    }
+
+    let delta = 0
+
+    if (existingVote) {
+      if (existingVote.voteType === 'upvote') {
+        delta -= 1
+        const index = upvoters.findIndex((id) => id === currentUser._id)
+        if (index !== -1) upvoters.splice(index, 1)
+      } else {
+        delta += 1
+      }
+      await ctx.db.patch(existingVote._id, { voteType: args.voteType, createdAt: now })
+    } else {
+      await ctx.db.insert('submissionVotes', {
+        userId: currentUser._id,
+        submissionId: args.submissionId,
+        voteType: args.voteType,
+        createdAt: now,
+      })
+    }
+
+    if (args.voteType === 'upvote') {
+      delta += 1
+      if (!upvoters.some((id) => id === currentUser._id)) {
+        upvoters.push(currentUser._id)
+      }
+    } else {
+      delta -= 1
+      const index = upvoters.findIndex((id) => id === currentUser._id)
+      if (index !== -1) upvoters.splice(index, 1)
+    }
+
+    const newVoteCount = Math.max(0, submission.upvoteCount + delta)
+
     await ctx.db.patch(submission._id, {
-      upvoteCount: newCount,
-      upvoters: newVoters,
-      updatedAt: Date.now(),
+      upvoteCount: newVoteCount,
+      upvoters,
+      updatedAt: now,
     })
 
-    return { success: true, newVoteCount: newCount }
+    return { success: true, newVoteCount }
   },
 })
 
 /**
- * Admin: Mark submission as high quality (1.5x score multiplier)
+ * Admin: Mark submission as high quality (1.25x score multiplier)
  */
 export const adminMarkHighQuality = mutation({
   args: {
     submissionId: v.id('songSubmissions'),
-    adminId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    const admin = await ctx.db.get(args.adminId)
+    const admin = await getCurrentUser(ctx)
     if (!admin || admin.role !== 'admin') {
       throw new ConvexError('Only admins can mark quality')
     }
@@ -444,25 +678,64 @@ export const adminMarkHighQuality = mutation({
  */
 export const getLeaderboard = query({
   args: {
-    period: v.union(
-      v.literal('weekly'),
-      v.literal('monthly'),
-      v.literal('quarterly'),
-      v.literal('allTime')
-    ),
+    period: v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime')),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit || 50, 500)
+    const limit = Math.min(args.limit || MAX_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
     const leaderboardId = getCurrentLeaderboardId(args.period)
 
-    const entries = await ctx.db
-      .query('songLeaderboard')
-      .withIndex('by_leaderboardId_score', (q) =>
-        q.eq('leaderboardId', leaderboardId)
-      )
-      .order('desc')
-      .take(limit)
+    const cache = await ctx.db
+      .query('leaderboardCache')
+      .withIndex('by_leaderboardId', (q) => q.eq('leaderboardId', leaderboardId))
+      .first()
+
+    let entries: Array<{
+      _id: string
+      leaderboardId: string
+      period: SongLeaderboardPeriod
+      spotifyTrackId: string
+      songTitle: string
+      songArtist: string
+      albumCover: string
+      totalScore: number
+      uniqueVoters: number
+      updatedAt: number
+    }>
+
+    if (cache && cache.period === args.period) {
+      entries = cache.entries.slice(0, limit).map((entry) => ({
+        _id: `${leaderboardId}:${entry.spotifyTrackId}`,
+        leaderboardId,
+        period: cache.period,
+        spotifyTrackId: entry.spotifyTrackId,
+        songTitle: entry.songTitle,
+        songArtist: entry.songArtist,
+        albumCover: entry.albumCover,
+        totalScore: entry.totalScore,
+        uniqueVoters: entry.uniqueVoters,
+        updatedAt: cache.updatedAt,
+      }))
+    } else {
+      const rawEntries = await ctx.db
+        .query('songLeaderboard')
+        .withIndex('by_leaderboardId_score', (q) => q.eq('leaderboardId', leaderboardId))
+        .order('desc')
+        .take(limit)
+
+      entries = rawEntries.map((entry) => ({
+        _id: String(entry._id),
+        leaderboardId: entry.leaderboardId,
+        period: entry.period,
+        spotifyTrackId: entry.spotifyTrackId,
+        songTitle: entry.songTitle,
+        songArtist: entry.songArtist,
+        albumCover: entry.albumCover,
+        totalScore: entry.totalScore,
+        uniqueVoters: entry.uniqueVoters,
+        updatedAt: entry.updatedAt,
+      }))
+    }
 
     return entries.map((entry, index) => ({
       rank: index + 1,
@@ -476,37 +749,55 @@ export const getLeaderboard = query({
  */
 export const getUserSubmissions = query({
   args: {
-    userId: v.id('users'),
-    period: v.optional(v.union(
-      v.literal('weekly'),
-      v.literal('monthly'),
-      v.literal('quarterly'),
-      v.literal('allTime')
-    )),
+    period: v.optional(v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime'))),
   },
   handler: async (ctx, args) => {
+    const currentUser = await getCurrentUser(ctx)
+    if (!currentUser) {
+      throw new ConvexError('You must be logged in to view submissions')
+    }
+
     const leaderboardId = args.period ? getCurrentLeaderboardId(args.period) : undefined
 
     if (leaderboardId) {
       const submissions = await ctx.db
         .query('songSubmissions')
-        .withIndex('by_userId_leaderboard', (q) =>
-          q.eq('userId', args.userId).eq('leaderboardId', leaderboardId)
-        )
+        .withIndex('by_userId_leaderboard', (q) => q.eq('userId', currentUser._id).eq('leaderboardId', leaderboardId))
         .order('desc')
-        .collect()
+        .take(MAX_SUBMISSION_SCAN)
 
-      return submissions
+      return submissions.filter((submission) => submission.isActive !== false)
     }
 
-    // Get all submissions across all periods
     const allSubmissions = await ctx.db
       .query('songSubmissions')
-      .filter((q) => q.eq(q.field('userId'), args.userId))
+      .filter((q) => q.eq(q.field('userId'), currentUser._id))
       .order('desc')
-      .collect()
+      .take(MAX_SUBMISSION_SCAN)
 
-    return allSubmissions
+    return allSubmissions.filter((submission) => submission.isActive !== false)
+  },
+})
+
+/**
+ * Get the latest submission for the current user and period
+ */
+export const getUserSubmissionForPeriod = query({
+  args: {
+    period: v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime')),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await getCurrentUserOrNull(ctx)
+    if (!currentUser) return null
+
+    const leaderboardId = getCurrentLeaderboardId(args.period)
+    const submissions = await ctx.db
+      .query('songSubmissions')
+      .withIndex('by_userId_leaderboard', (q) => q.eq('userId', currentUser._id).eq('leaderboardId', leaderboardId))
+      .order('desc')
+      .take(MAX_SUBMISSION_SCAN)
+
+    return findLatestSubmission(submissions)
   },
 })
 
@@ -517,16 +808,15 @@ export const getSubmission = query({
   args: { submissionId: v.id('songSubmissions') },
   handler: async (ctx, args) => {
     const submission = await ctx.db.get(args.submissionId)
-    if (!submission) return null
+    if (!submission || submission.isActive === false) return null
 
-    // Get vote count
     const votes = await ctx.db
       .query('submissionVotes')
       .withIndex('by_submissionId', (q) => q.eq('submissionId', args.submissionId))
       .collect()
 
-    const upvotes = votes.filter(v => v.voteType === 'upvote').length
-    const downvotes = votes.filter(v => v.voteType === 'downvote').length
+    const upvotes = votes.filter((vote) => vote.voteType === 'upvote').length
+    const downvotes = votes.filter((vote) => vote.voteType === 'downvote').length
 
     return {
       ...submission,
@@ -543,60 +833,62 @@ export const getTrendingSubmissions = query({
   args: {
     limit: v.optional(v.number()),
     leaderboardId: v.optional(v.string()),
-    userId: v.optional(v.id('users')), // Helper to check if current user upvoted (forced update)
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit || 10, 50)
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    const currentUser = await getCurrentUserOrNull(ctx)
+    const limit = Math.min(args.limit || 10, MAX_TRENDING_LIMIT)
+    const candidateLimit = Math.min(limit * 4, 200)
+    const weekAgo = Date.now() - RATE_LIMIT_WINDOW_MS
+    const leaderboardId = args.leaderboardId ?? getCurrentLeaderboardId('weekly')
 
-    const baseQuery = ctx.db.query('songSubmissions')
-    let submissions
+    const candidates = await ctx.db
+      .query('songSubmissions')
+      .withIndex('by_leaderboardId_upvotes', (q) => q.eq('leaderboardId', leaderboardId))
+      .order('desc')
+      .take(candidateLimit)
 
-    if (args.leaderboardId) {
-      const leaderboardId = args.leaderboardId
-      submissions = await baseQuery
-        .withIndex('by_leaderboardId_upvotes', (q) =>
-          q.eq('leaderboardId', leaderboardId)
-        )
-        .filter((q) => q.gt(q.field('createdAt'), weekAgo))
+    const submissions = candidates
+      .filter((submission) => submission.isActive !== false && submission.createdAt > weekAgo)
+      .slice(0, limit)
+
+    const userMemo = new Map<string, { username?: string; displayName?: string; avatar?: string; fanTier?: string } | null>()
+
+    let voteLookup = new Map<string, string>()
+    if (currentUser) {
+      const recentVotes = await ctx.db
+        .query('submissionVotes')
+        .withIndex('by_userId', (q) => q.eq('userId', currentUser._id))
         .order('desc')
-        .take(limit)
-    } else {
-      // Get all recent submissions
-      const recent = await baseQuery
-        .filter((q) => q.gt(q.field('createdAt'), weekAgo))
-        .collect()
+        .take(500)
 
-      // Sort in memory (for now, until we need a dedicated index)
-      submissions = recent.sort((a, b) => b.upvoteCount - a.upvoteCount).slice(0, limit)
+      voteLookup = new Map(recentVotes.map((vote) => [String(vote.submissionId), vote.voteType]))
     }
 
-    // Join with user data
     const submissionsWithData = await Promise.all(
-      submissions.map(async (s) => {
-        const user = await ctx.db.get(s.userId)
-
-        // Check upvote status if userId provided
-        let hasUpvoted = false
-        if (args.userId) {
-          const vote = await ctx.db
-            .query('submissionVotes')
-            .withIndex('by_submissionId_userId', q =>
-              q.eq('submissionId', s._id).eq('userId', args.userId!)
-            )
-            .first()
-          hasUpvoted = !!vote
+      submissions.map(async (submission) => {
+        const userKey = String(submission.userId)
+        if (!userMemo.has(userKey)) {
+          const user = await ctx.db.get(submission.userId)
+          userMemo.set(
+            userKey,
+            user
+              ? {
+                  username: user.username,
+                  displayName: user.displayName,
+                  avatar: user.avatar,
+                  fanTier: user.fanTier,
+                }
+              : null
+          )
         }
 
+        const voteType = currentUser ? voteLookup.get(String(submission._id)) : undefined
+
         return {
-          ...s,
-          user: user ? {
-            username: user.username,
-            displayName: user.displayName,
-            avatar: user.avatar,
-            fanTier: user.fanTier,
-          } : null,
-          hasUpvoted
+          ...submission,
+          user: userMemo.get(userKey) ?? null,
+          hasUpvoted: voteType === 'upvote',
+          voteType: voteType ?? null,
         }
       })
     )
@@ -609,22 +901,46 @@ export const getTrendingSubmissions = query({
 export const seedLeaderboard = mutation({
   args: {},
   handler: async (ctx) => {
-    // 1. Ensure we have a user
-    let user = await ctx.db.query('users').first()
+    const user = await ctx.db.query('users').first()
     if (!user) {
-      // Create a dummy user if none exists (shouldn't happen in dev usually)
-      return "No users found. Please login first."
+      return 'No users found. Please login first.'
     }
 
     const songs = [
-      { spotifyId: '1', title: 'Neon Nights', artist: 'Cyber Punk', albumCover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop' },
-      { spotifyId: '2', title: 'Digital Dreams', artist: 'Synth Wave', albumCover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop' },
-      { spotifyId: '3', title: 'Bass Drop', artist: 'Dub Stepper', albumCover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop' },
-      { spotifyId: '4', title: 'Code Flow', artist: 'The Hackers', albumCover: 'https://images.unsplash.com/photo-1514525253440-b393452e2729?w=300&h=300&fit=crop' },
-      { spotifyId: '5', title: 'Algorithm', artist: 'Data Science', albumCover: 'https://images.unsplash.com/photo-1459749411177-287ce35e8b0f?w=300&h=300&fit=crop' },
+      {
+        spotifyId: '1',
+        title: 'Neon Nights',
+        artist: 'Cyber Punk',
+        albumCover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop',
+      },
+      {
+        spotifyId: '2',
+        title: 'Digital Dreams',
+        artist: 'Synth Wave',
+        albumCover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop',
+      },
+      {
+        spotifyId: '3',
+        title: 'Bass Drop',
+        artist: 'Dub Stepper',
+        albumCover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop',
+      },
+      {
+        spotifyId: '4',
+        title: 'Code Flow',
+        artist: 'The Hackers',
+        albumCover: 'https://images.unsplash.com/photo-1514525253440-b393452e2729?w=300&h=300&fit=crop',
+      },
+      {
+        spotifyId: '5',
+        title: 'Algorithm',
+        artist: 'Data Science',
+        albumCover: 'https://images.unsplash.com/photo-1459749411177-287ce35e8b0f?w=300&h=300&fit=crop',
+      },
     ]
 
-    // Create 3 random submissions
+    const now = Date.now()
+
     for (let i = 0; i < 3; i++) {
       const shuffledSongs = [...songs].sort(() => 0.5 - Math.random()).slice(0, 3)
       const rankedSongs = shuffledSongs.map((song, index) => ({
@@ -635,22 +951,28 @@ export const seedLeaderboard = mutation({
         rank: index + 1,
       }))
 
-      // Create submission with random upvotes
+      const createdAt = now - Math.floor(Math.random() * 48 * 60 * 60 * 1000)
+      const searchText = buildSubmissionSearchText('2026-W02', 'top3', rankedSongs)
+
       await ctx.db.insert('songSubmissions', {
         userId: user._id,
         leaderboardId: '2026-W02',
         submissionType: 'top3',
         rankedSongs,
+        revision: 1,
+        lastEditedAt: createdAt,
+        isActive: true,
+        searchText,
         upvoteCount: Math.floor(Math.random() * 50),
         upvoters: [],
         isHighQuality: false,
-        createdAt: Date.now() - Math.floor(Math.random() * 48 * 60 * 60 * 1000),
-        updatedAt: Date.now(),
+        createdAt,
+        updatedAt: createdAt,
       })
     }
 
     return `Seeded 3 submissions for ${user.username}`
-  }
+  },
 })
 
 /**
@@ -660,22 +982,20 @@ export const searchSubmissions = query({
   args: {
     query: v.string(),
     limit: v.optional(v.number()),
+    period: v.optional(v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime'))),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit || 20, 100)
+    const limit = Math.min(args.limit || 20, MAX_SEARCH_LIMIT)
+    const leaderboardId = getCurrentLeaderboardId(args.period ?? 'weekly')
+    const candidateLimit = Math.min(limit * 3, 150)
+    const searchQuery = args.query.trim()
+    if (!searchQuery) return []
 
-    // Get all submissions (client-side search is acceptable for small sets)
-    const submissions = await ctx.db.query('songSubmissions').collect()
+    const candidates = await ctx.db
+      .query('songSubmissions')
+      .withSearchIndex('search_songSubmissions', (q) => q.search('searchText', searchQuery).eq('leaderboardId', leaderboardId))
+      .take(candidateLimit)
 
-    const filtered = submissions
-      .filter(s =>
-        s.rankedSongs.some(song =>
-          song.title.toLowerCase().includes(args.query.toLowerCase()) ||
-          song.artist.toLowerCase().includes(args.query.toLowerCase())
-        )
-      )
-      .slice(0, limit)
-
-    return filtered
+    return candidates.filter((submission) => submission.isActive !== false).slice(0, limit)
   },
 })

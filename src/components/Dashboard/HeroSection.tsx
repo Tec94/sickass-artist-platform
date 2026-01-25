@@ -146,8 +146,8 @@ export const HeroSection = () => {
             LATEST UPDATES
           </div>
           <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-zinc-500 text-xs font-bold uppercase tracking-widest">
-            <a href="https://www.instagram.com/roawolf/" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
-              <iconify-icon icon="mdi:instagram" width="16" height="16"></iconify-icon> @ROAWOLF
+            <a href="https://www.instagram.com/roapr__/" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
+              <iconify-icon icon="mdi:instagram" width="16" height="16"></iconify-icon> @ROAPR__
             </a>
             <a href="https://roa.lnk.to/PSV4" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Roa</a>
             <a href="https://open.spotify.com/album/1XSQ56Y0zCG0Aht3EvSHj4?si=6e0a5XxuQR6ydZezyn3k8w" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Spotify</a>

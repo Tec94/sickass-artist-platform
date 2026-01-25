@@ -112,6 +112,26 @@ export default defineSchema({
       v.literal('platinum')
     ),
     content: v.string(),
+    messageType: v.optional(
+      v.union(
+        v.literal('text'),
+        v.literal('media'),
+        v.literal('sticker'),
+        v.literal('mixed')
+      )
+    ),
+    attachments: v.optional(v.array(v.object({
+      type: v.union(v.literal('image'), v.literal('video')),
+      storageId: v.id('_storage'),
+      url: v.string(),
+      thumbnailUrl: v.optional(v.string()),
+      width: v.optional(v.number()),
+      height: v.optional(v.number()),
+      durationMs: v.optional(v.number()),
+      sizeBytes: v.number(),
+      contentType: v.string(),
+    }))),
+    stickerId: v.optional(v.id('chatStickers')),
     editedAt: v.optional(v.number()),
     isPinned: v.boolean(),
     isDeleted: v.boolean(),
@@ -132,6 +152,8 @@ export default defineSchema({
   })
     .index('by_channel', ['channelId', 'createdAt'])
     .index('by_author', ['authorId', 'createdAt'])
+    .index('by_author_channel', ['authorId', 'channelId', 'createdAt'])
+    .index('by_createdAt', ['createdAt'])
     .index('by_idempotency', ['channelId', 'authorId', 'idempotencyKey']),
 
   // Message reactions
@@ -143,6 +165,17 @@ export default defineSchema({
   })
     .index('by_message_emoji', ['messageId', 'emoji'])
     .index('by_message_user', ['messageId', 'userId']),
+
+  // Message votes (separate table to avoid unbounded arrays)
+  messageVotes: defineTable({
+    messageId: v.id('messages'),
+    userId: v.id('users'),
+    voteType: v.union(v.literal('up'), v.literal('down')),
+    createdAt: v.number(),
+  })
+    .index('by_message_user', ['messageId', 'userId'])
+    .index('by_message', ['messageId'])
+    .index('by_user', ['userId']),
 
   // Forum threads
   threads: defineTable({
@@ -170,6 +203,15 @@ export default defineSchema({
     lastReplyById: v.optional(v.id('users')),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
+    moderationStatus: v.optional(
+      v.union(
+        v.literal('active'),
+        v.literal('removed')
+      )
+    ),
+    removedAt: v.optional(v.number()),
+    removedBy: v.optional(v.id('users')),
+    removalReason: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -198,10 +240,90 @@ export default defineSchema({
     downVoteCount: v.optional(v.number()),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
+    moderationStatus: v.optional(
+      v.union(
+        v.literal('active'),
+        v.literal('removed')
+      )
+    ),
+    removedAt: v.optional(v.number()),
+    removedBy: v.optional(v.id('users')),
+    removalReason: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index('by_thread', ['threadId', 'createdAt'])
     .index('by_author', ['authorId', 'createdAt']),
+
+  // Moderation reports for chat and forum content
+  moderationReports: defineTable({
+    contentType: v.union(
+      v.literal('chat_message'),
+      v.literal('forum_thread'),
+      v.literal('forum_reply')
+    ),
+    contentId: v.union(v.id('messages'), v.id('threads'), v.id('replies')),
+    reportedBy: v.id('users'),
+    reason: v.string(),
+    note: v.optional(v.string()),
+    status: v.union(
+      v.literal('open'),
+      v.literal('resolved')
+    ),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id('users')),
+  })
+    .index('by_status_createdAt', ['status', 'createdAt'])
+    .index('by_content', ['contentType', 'contentId']),
+
+  // Moderation actions log
+  moderationActions: defineTable({
+    actionType: v.union(
+      v.literal('dismiss'),
+      v.literal('warn'),
+      v.literal('remove'),
+      v.literal('timeout'),
+      v.literal('ban')
+    ),
+    targetUserId: v.id('users'),
+    contentId: v.optional(v.union(v.id('messages'), v.id('threads'), v.id('replies'))),
+    contentType: v.optional(v.union(
+      v.literal('chat_message'),
+      v.literal('forum_thread'),
+      v.literal('forum_reply')
+    )),
+    durationMs: v.optional(v.number()),
+    reason: v.optional(v.string()),
+    escalationLevel: v.optional(v.number()),
+    moderatorId: v.id('users'),
+    createdAt: v.number(),
+  })
+    .index('by_targetUser_createdAt', ['targetUserId', 'createdAt'])
+    .index('by_actionType_createdAt', ['actionType', 'createdAt'])
+    .index('by_content_createdAt', ['contentType', 'contentId', 'createdAt']),
+
+  // Moderation policy (single document used for thresholds and wordlists)
+  moderationPolicy: defineTable({
+    warningWindowDays: v.number(),
+    warningThreshold: v.number(),
+    timeoutDurationsMs: v.array(v.number()),
+    banThreshold: v.number(),
+    denylist: v.array(v.string()),
+    allowlist: v.array(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id('users')),
+  }),
+
+  // User moderation status
+  userModerationStatus: defineTable({
+    userId: v.id('users'),
+    isBanned: v.boolean(),
+    timeoutUntil: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_banned', ['isBanned']),
 
   // Forum categories
   categories: defineTable({
@@ -243,6 +365,50 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_channel', ['channelId', 'expiresAt']),
+
+  // Chat sticker packs (admin managed)
+  chatStickerPacks: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    createdBy: v.optional(v.id('users')),
+  })
+    .index('by_active', ['isActive', 'createdAt']),
+
+  // Chat stickers
+  chatStickers: defineTable({
+    packId: v.id('chatStickerPacks'),
+    name: v.string(),
+    imageUrl: v.string(),
+    storageId: v.optional(v.id('_storage')),
+    tags: v.array(v.string()),
+    createdAt: v.number(),
+    isActive: v.boolean(),
+  })
+    .index('by_pack', ['packId', 'isActive', 'createdAt']),
+
+  // Chat server settings (single row)
+  chatServerSettings: defineTable({
+    slowModeSeconds: v.number(),
+    maxImageMb: v.number(),
+    maxVideoMb: v.number(),
+    allowedMediaTypes: v.array(v.string()),
+    enabledStickerPackIds: v.array(v.id('chatStickerPacks')),
+    retentionDays: v.optional(v.number()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id('users')),
+  }),
+
+  // User chat settings
+  userChatSettings: defineTable({
+    userId: v.id('users'),
+    autoplayMedia: v.boolean(),
+    showStickers: v.boolean(),
+    compactMode: v.boolean(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId']),
 
   // Offline queue for sync
   offlineQueue: defineTable({
@@ -554,6 +720,14 @@ export default defineSchema({
     // Images
     imageUrls: v.array(v.string()),     // Gallery of images (max 10)
     thumbnailUrl: v.string(),           // Main thumbnail
+    model3dUrl: v.optional(v.string()),
+    modelPosterUrl: v.optional(v.string()),
+    modelConfig: v.optional(v.object({
+      autoRotate: v.optional(v.boolean()),
+      cameraOrbit: v.optional(v.string()),
+      minFov: v.optional(v.number()),
+      maxFov: v.optional(v.number()),
+    })),
 
     // Categorization
     category: v.union(
@@ -564,6 +738,7 @@ export default defineSchema({
       v.literal('other')
     ),
     tags: v.array(v.string()),          // For search/filtering (max 5)
+    searchText: v.optional(v.string()),
 
     // Status & visibility
     status: v.union(
@@ -587,8 +762,16 @@ export default defineSchema({
   })
     .index('by_status', ['status'])
     .index('by_category', ['category'])
+    .index('by_status_created', ['status', 'createdAt'])
+    .index('by_status_price', ['status', 'price'])
+    .index('by_category_status_created', ['category', 'status', 'createdAt'])
+    .index('by_category_status_price', ['category', 'status', 'price'])
     .index('by_created', ['createdAt'])
-    .index('by_drop', ['isDropProduct', 'dropStartsAt']),
+    .index('by_drop', ['isDropProduct', 'dropStartsAt'])
+    .searchIndex('search_merchProducts', {
+      searchField: 'searchText',
+      filterFields: ['status', 'category']
+    }),
 
   // Product variants - Size/color/style combinations
   merchVariants: defineTable({
@@ -766,6 +949,15 @@ export default defineSchema({
   })
     .index('by_user_channel', ['userId', 'channelId'])
     .index('by_user', ['userId']),
+
+  // Admin feature flags (for live testing toggles)
+  adminFeatureFlags: defineTable({
+    key: v.string(),
+    enabled: v.boolean(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id('users')),
+  })
+    .index('by_key', ['key']),
 
   // Merch wishlist - User's favorite products
   merchWishlist: defineTable({
@@ -1034,6 +1226,30 @@ export default defineSchema({
     .index('by_leaderboardId_score', ['leaderboardId', 'totalScore']) // Main query: get top songs
     .index('by_period', ['period']), // Filter by period type
 
+  // Leaderboard cache - Serve leaderboard without scanning entries table
+  leaderboardCache: defineTable({
+    leaderboardId: v.string(),
+    period: v.union(
+      v.literal('allTime'),
+      v.literal('weekly'),
+      v.literal('monthly'),
+      v.literal('quarterly'),
+      v.literal('yearly')
+    ),
+    entries: v.array(v.object({
+      spotifyTrackId: v.string(),
+      songTitle: v.string(),
+      songArtist: v.string(),
+      albumCover: v.string(),
+      totalScore: v.number(),
+      uniqueVoters: v.number(),
+    })),
+    submissionCount: v.number(),
+    computedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_leaderboardId', ['leaderboardId']),
+
   // User song submissions - User-submitted rankings
   songSubmissions: defineTable({
     userId: v.id('users'), // Submitter
@@ -1052,6 +1268,10 @@ export default defineSchema({
       rank: v.number(), // 1-based rank
       albumCover: v.string(),
     })),
+    revision: v.optional(v.number()),
+    lastEditedAt: v.optional(v.number()),
+    isActive: v.optional(v.boolean()),
+    searchText: v.optional(v.string()),
     upvoteCount: v.number(), // Current upvote count
     upvoters: v.optional(v.array(v.id('users'))), // List of users who upvoted
     isHighQuality: v.boolean(), // Admin-flagged quality submissions (bonus multiplier)
@@ -1059,8 +1279,14 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_userId_leaderboard', ['userId', 'leaderboardId']) // User's submissions per period
+    .index('by_userId_leaderboard_active', ['userId', 'leaderboardId', 'isActive'])
     .index('by_leaderboardId_upvotes', ['leaderboardId', 'upvoteCount']) // Trending submissions
-    .index('by_leaderboardId_createdAt', ['leaderboardId', 'createdAt']), // Recent submissions
+    .index('by_leaderboardId_createdAt', ['leaderboardId', 'createdAt'])
+    .index('by_leaderboardId_updatedAt', ['leaderboardId', 'updatedAt'])
+    .searchIndex('search_songSubmissions', {
+      searchField: 'searchText',
+      filterFields: ['leaderboardId', 'isActive']
+    }), // Recent submissions
 
   // Submission votes - Track who voted on which submission
   submissionVotes: defineTable({
@@ -1073,7 +1299,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_submissionId_userId', ['submissionId', 'userId']) // Check if user voted
-    .index('by_submissionId', ['submissionId']), // Get all votes for submission
+    .index('by_submissionId', ['submissionId']) // Get all votes for submission
+    .index('by_userId', ['userId', 'createdAt']),
 
   // ==================== INSTAGRAM INTEGRATION ====================
 

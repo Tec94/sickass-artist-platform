@@ -88,7 +88,7 @@ export const Profile = () => {
                   </a>
                 )}
                 {socials.instagram && (
-                  <a href={`https://instagram.com/${socials.instagram}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:border-red-600 transition-all">
+                  <a href={`https://www.instagram.com/${socials.instagram}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:border-red-600 transition-all">
                     <iconify-icon icon="simple-icons:instagram" width="18" height="18"></iconify-icon>
                   </a>
                 )}

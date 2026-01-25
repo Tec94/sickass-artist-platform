@@ -11,7 +11,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 15420,
     commentCount: 842,
-    igLink: 'https://www.instagram.com/roawolf/p/DTdtmCpEbNs/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTdtmCpEbNs/'
   },
   {
     _id: '2' as any,
@@ -22,7 +22,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 22100,
     commentCount: 1105,
-    igLink: 'https://www.instagram.com/roawolf/p/DTcEIobjQIQ/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTcEIobjQIQ/'
   },
   {
     _id: '3' as any,
@@ -33,7 +33,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 18900,
     commentCount: 450,
-    igLink: 'https://www.instagram.com/roawolf/p/DTWU9ndkY_2/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTWU9ndkY_2/'
   },
   {
     _id: '4' as any,
@@ -44,7 +44,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 12300,
     commentCount: 220,
-    igLink: 'https://www.instagram.com/roawolf/p/DTT2vIakd6c/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTT2vIakd6c/'
   },
   {
     _id: '5' as any,
@@ -55,7 +55,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 35000,
     commentCount: 2400,
-    igLink: 'https://www.instagram.com/roawolf/p/DTO0jYPEWYJ/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTO0jYPEWYJ/'
   },
   {
     _id: '6' as any,
@@ -66,7 +66,7 @@ const HARDCODED_POSTS = [
     mediaType: 'image',
     likeCount: 28400,
     commentCount: 950,
-    igLink: 'https://www.instagram.com/roawolf/p/DTOKEOukVTI/'
+    igLink: 'https://www.instagram.com/roapr__/p/DTOKEOukVTI/'
   }
 ];
 
@@ -81,12 +81,12 @@ export const InstagramGallery = () => {
            <span>Last updated: {new Date().toLocaleDateString()}</span>
         </div>
         <a
-          href="https://instagram.com/roawolf"
+          href="https://www.instagram.com/roapr__/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-red-500 hover:text-red-400 flex items-center gap-1 transition"
         >
-          <span>Follow @roawolf</span>
+          <span>Follow @roapr__</span>
           <span>↗</span>
         </a>
       </div>

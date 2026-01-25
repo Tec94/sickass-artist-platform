@@ -50,6 +50,13 @@ crons.interval(
   internal.leaderboard.hourlyLeaderboardComputation
 )
 
+crons.interval(
+  'chat-retention-prune',
+  { hours: 1 },
+  internal.chat.pruneMessagesForRetention,
+  {}
+)
+
 // Instagram sync cron - Every 4 hours
 crons.interval(
   'instagram-sync',

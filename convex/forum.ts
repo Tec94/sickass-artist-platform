@@ -110,7 +110,9 @@ export const getThreads = query({
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
       .collect();
 
-    threads = threads.filter((t) => !t.isDeleted);
+    threads = threads.filter(
+      (t) => !t.isDeleted && (t.moderationStatus ?? "active") === "active"
+    );
 
     // Sort based on requested field
     if (args.sort === "newest") {
@@ -168,7 +170,11 @@ export const getThreadDetail = query({
     // For public categories, allow viewing without authentication
 
     const thread = await ctx.db.get(args.threadId);
-    if (!thread || thread.isDeleted) {
+    if (
+      !thread ||
+      thread.isDeleted ||
+      (thread.moderationStatus ?? "active") !== "active"
+    ) {
       throw new ConvexError("Thread not found");
     }
 
@@ -218,7 +224,9 @@ export const getReplies = query({
       .collect();
 
     // Filter out deleted replies and apply cursor if provided
-    let filteredReplies = allReplies.filter((r) => !r.isDeleted);
+    let filteredReplies = allReplies.filter(
+      (r) => !r.isDeleted && (r.moderationStatus ?? "active") === "active"
+    );
 
     if (args.cursor) {
       const cursorIndex = filteredReplies.findIndex(
@@ -249,7 +257,11 @@ export const subscribeToThread = query({
   handler: async (ctx, args) => {
     // Get thread
     const thread = await ctx.db.get(args.threadId);
-    if (!thread || thread.isDeleted) {
+    if (
+      !thread ||
+      thread.isDeleted ||
+      (thread.moderationStatus ?? "active") !== "active"
+    ) {
       return null;
     }
 
@@ -260,7 +272,7 @@ export const subscribeToThread = query({
       .collect();
 
     const replies = allReplies
-      .filter((r) => !r.isDeleted)
+      .filter((r) => !r.isDeleted && (r.moderationStatus ?? "active") === "active")
       .sort((a, b) => a.createdAt - b.createdAt)
       .map(r => ({
         ...r,
@@ -359,6 +371,7 @@ export const createThread = mutation({
       replyCount: 0,
       viewCount: 0,
       isDeleted: false,
+      moderationStatus: "active",
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -471,7 +484,11 @@ export const createReply = mutation({
 
     // Get thread and check access
     const thread = await ctx.db.get(args.threadId);
-    if (!thread || thread.isDeleted) {
+    if (
+      !thread ||
+      thread.isDeleted ||
+      (thread.moderationStatus ?? "active") !== "active"
+    ) {
       throw new ConvexError("Thread not found");
     }
 
@@ -500,6 +517,7 @@ export const createReply = mutation({
       upVoteCount: 0,
       downVoteCount: 0,
       isDeleted: false,
+      moderationStatus: "active",
       createdAt: Date.now(),
     });
 
@@ -603,7 +621,11 @@ export const castThreadVote = mutation({
 
     // Get thread
     const thread = await ctx.db.get(args.threadId);
-    if (!thread || thread.isDeleted) {
+    if (
+      !thread ||
+      thread.isDeleted ||
+      (thread.moderationStatus ?? "active") !== "active"
+    ) {
       throw new ConvexError("Thread not found");
     }
 
@@ -806,6 +828,10 @@ export const deleteThread = mutation({
     await ctx.db.patch(args.threadId, {
       isDeleted: true,
       deletedAt: Date.now(),
+      moderationStatus: "removed",
+      removedAt: Date.now(),
+      removedBy: userId,
+      removalReason: "Removed by author/moderator",
     });
 
     return { success: true };
@@ -849,6 +875,10 @@ export const deleteReply = mutation({
     await ctx.db.patch(args.replyId, {
       isDeleted: true,
       deletedAt: Date.now(),
+      moderationStatus: "removed",
+      removedAt: Date.now(),
+      removedBy: userId,
+      removalReason: "Removed by author/moderator",
     });
 
     return { success: true };

@@ -1,8 +1,8 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { useState, useCallback, useMemo } from 'react'
-import { Doc, Id } from '../../convex/_generated/dataModel'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import type { Doc, Id } from '../../convex/_generated/dataModel'
 import { MerchErrorBoundary } from '../components/Merch/ErrorBoundary'
 import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
@@ -13,13 +13,11 @@ import { useUser } from '../contexts/UserContext'
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
-  
-  const product = useQuery(api.merch.getProductDetail,
-    productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip'
-  )
+
+  const product = useQuery(api.merch.getProductDetail, productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip')
   const { isSignedIn, userProfile } = useUser()
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
-  
+
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)
   const toggleWishlistMutation = useMutation(api.merch.toggleWishlist)
@@ -27,15 +25,19 @@ export function MerchDetail() {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [autoRotateEnabled, setAutoRotateEnabled] = useState(true)
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [modelError, setModelError] = useState(false)
+  const modelViewerRef = useRef<HTMLElement | null>(null)
 
-  // Auto-select first available variant
   const selectedVariant = useMemo(() => {
     if (!product) return null
-    if (selectedVariantId) return product.variants.find(v => v._id === selectedVariantId) || null
-    return product.variants.find(v => v.stock > 0) || product.variants[0] || null
+    if (selectedVariantId) return product.variants.find((variant) => variant._id === selectedVariantId) || null
+    return product.variants.find((variant) => variant.stock > 0) || product.variants[0] || null
   }, [product, selectedVariantId])
 
-  const isInWishlist = wishlist?.some(item => item._id === productId)
+  const isInWishlist = wishlist?.some((item) => item._id === productId)
 
   const handleAddToCart = useCallback(async () => {
     if (!selectedVariant) {
@@ -45,23 +47,18 @@ export function MerchDetail() {
 
     setIsLoading(true)
     try {
-      await retryWithBackoff(() =>
-        addToCartMutation({
-          variantId: selectedVariant._id,
-          quantity,
-        })
-      )
+      await retryWithBackoff(() => addToCartMutation({ variantId: selectedVariant._id, quantity }))
       showToast('Added to cart!', { type: 'success' })
-    } catch (err) {
-      const parsed = parseConvexError(err)
+    } catch (error) {
+      const parsed = parseConvexError(error)
       logError(parsed, { component: 'MerchDetail', action: 'add_to_cart', metadata: { productId } })
       showToast(parsed.userMessage, { type: 'error' })
     } finally {
       setIsLoading(false)
     }
-  }, [selectedVariant, quantity, addToCartMutation, retryWithBackoff, productId])
+  }, [addToCartMutation, productId, quantity, retryWithBackoff, selectedVariant])
 
-  const handleToggleWishlist = async () => {
+  const handleToggleWishlist = useCallback(async () => {
     if (!productId) return
     try {
       await toggleWishlistMutation({ productId: productId as Id<'merchProducts'> })
@@ -69,13 +66,66 @@ export function MerchDetail() {
     } catch {
       showToast('Login to wishlist items', { type: 'error' })
     }
-  }
+  }, [isInWishlist, productId, toggleWishlistMutation])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setPrefersReducedMotion(media.matches)
+    update()
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', update)
+      return () => media.removeEventListener('change', update)
+    }
+    media.addListener(update)
+    return () => media.removeListener(update)
+  }, [])
+
+  useEffect(() => {
+    if (!product?.model3dUrl) {
+      setModelLoaded(false)
+      setModelError(false)
+      return
+    }
+
+    setModelLoaded(false)
+    setModelError(false)
+
+    const element = modelViewerRef.current
+    if (!element) return
+
+    const handleLoad = () => setModelLoaded(true)
+    const handleError = () => setModelError(true)
+
+    element.addEventListener('load', handleLoad)
+    element.addEventListener('error', handleError)
+    return () => {
+      element.removeEventListener('load', handleLoad)
+      element.removeEventListener('error', handleError)
+    }
+  }, [product?.model3dUrl])
+
+  const defaultAutoRotate = product?.modelConfig?.autoRotate ?? true
+  useEffect(() => {
+    if (!product?.model3dUrl) {
+      setAutoRotateEnabled(false)
+      return
+    }
+    setAutoRotateEnabled(!prefersReducedMotion && defaultAutoRotate)
+  }, [defaultAutoRotate, prefersReducedMotion, product?.model3dUrl])
+
+  useEffect(() => {
+    if (modelError) setAutoRotateEnabled(false)
+  }, [modelError])
 
   if (product === null) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white">
-        <h1 className="text-2xl font-bold uppercase tracking-widest mb-4">Product Not Found</h1>
-        <button onClick={() => navigate('/store')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-sm font-bold uppercase tracking-widest transition-colors">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
+        <h1 className="mb-4 text-2xl font-bold uppercase tracking-widest">Product Not Found</h1>
+        <button
+          onClick={() => navigate('/store')}
+          className="bg-red-600 px-6 py-3 text-sm font-bold uppercase tracking-widest transition-colors hover:bg-red-700"
+        >
           Back to Shop
         </button>
       </div>
@@ -84,111 +134,180 @@ export function MerchDetail() {
 
   if (product === undefined) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white">
-        <iconify-icon icon="solar:spinner-linear" width="32" height="32" class="animate-spin text-red-500"></iconify-icon>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
+        <iconify-icon icon="solar:spinner-linear" width="32" height="32" className="animate-spin text-red-500" />
         <p className="mt-4 text-zinc-400">Loading...</p>
       </div>
     )
   }
 
-  const imageUrl = product.thumbnailUrl || product.imageUrls[0] || "/images/placeholder.jpg"
-  const description = product.description || product.longDescription || 'Premium quality merchandise from ROA WOLVES.'
+  const imageUrl = product.thumbnailUrl || product.imageUrls[0] || '/images/placeholder.jpg'
+  const description = product.description || product.longDescription || 'Premium quality merchandise from ROAPR Studio.'
 
-  // Extract unique sizes and colors from variants
-  const sizes = [...new Set(product.variants.map(v => v.size).filter(Boolean))]
-  const colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))]
+  const sizes = [...new Set(product.variants.map((variant) => variant.size).filter(Boolean))]
+  const colors = [...new Set(product.variants.map((variant) => variant.color).filter(Boolean))]
   const selectedSize = selectedVariant?.size || sizes[0] || ''
   const selectedColor = selectedVariant?.color || colors[0] || ''
+
+  const has3dModel = Boolean(product.model3dUrl) && !modelError
+  const viewerPoster = product.modelPosterUrl || imageUrl
+  const minFieldOfView = product.modelConfig?.minFov ? `${product.modelConfig.minFov}deg` : undefined
+  const maxFieldOfView = product.modelConfig?.maxFov ? `${product.modelConfig.maxFov}deg` : undefined
+  const autoRotateActive = autoRotateEnabled && !prefersReducedMotion && has3dModel
+
+  const modelViewerProps = {
+    src: product.model3dUrl ?? undefined,
+    poster: viewerPoster,
+    loading: 'lazy' as const,
+    reveal: 'auto' as const,
+    className: 'h-full w-full rounded-xl border border-zinc-800 bg-black',
+    style: { width: '100%', height: '100%' },
+    'camera-controls': true,
+    'auto-rotate': autoRotateActive ? true : undefined,
+    'camera-orbit': product.modelConfig?.cameraOrbit,
+    'min-field-of-view': minFieldOfView,
+    'max-field-of-view': maxFieldOfView,
+  }
 
   return (
     <MerchErrorBoundary>
       <div className="min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
         <FreeShippingBanner />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
-          <Link to="/store" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white mb-8 transition-colors">
-            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
+
+        <div className="animate-fade-in mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <Link to="/store" className="mb-8 inline-flex items-center gap-2 text-zinc-500 transition-colors hover:text-white">
+            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
             Back to Shop
           </Link>
 
-          <div className="flex flex-col md:flex-row gap-12">
-            {/* Left Side - Image */}
-            <div className="w-full md:w-3/5 bg-zinc-900 border border-zinc-800 relative flex items-center justify-center p-8 min-h-[500px]">
-              <img 
-                src={imageUrl} 
-                alt={product.name} 
-                className="max-h-[500px] w-auto object-contain shadow-2xl"
-              />
+          <div className="flex flex-col gap-12 md:flex-row">
+            <div className="relative flex min-h-[520px] w-full items-center justify-center overflow-hidden border border-zinc-800 bg-zinc-900 p-6 md:w-3/5">
+              {has3dModel ? (
+                <div className="relative flex h-full w-full max-w-[640px] flex-col">
+                  <div className="absolute left-4 top-4 z-10 rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+                    3D view
+                  </div>
+                  {!modelLoaded && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-black/70 text-xs uppercase tracking-[0.24em] text-white">
+                      <iconify-icon icon="solar:spinner-linear" width="24" height="24" className="animate-spin" />
+                      Loading model
+                    </div>
+                  )}
+                  <div className="relative h-full min-h-[480px] w-full">
+                    <model-viewer ref={modelViewerRef} {...modelViewerProps} />
+                  </div>
+                  <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+                    {prefersReducedMotion && (
+                      <span className="rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
+                        Reduced motion
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setAutoRotateEnabled((prev) => !prev)}
+                      disabled={prefersReducedMotion || !has3dModel}
+                      className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] transition-colors ${
+                        autoRotateActive
+                          ? 'border-red-600 bg-red-600 text-white hover:bg-red-500'
+                          : 'border-white/20 bg-black/70 text-white hover:border-white/50'
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {autoRotateActive ? 'Auto-rotate on' : 'Auto-rotate off'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <img src={viewerPoster} alt={product.name} className="max-h-[520px] w-auto object-contain shadow-2xl" />
+              )}
+
+              {product.model3dUrl && modelError && (
+                <div className="absolute inset-x-6 bottom-6 rounded-lg border border-red-900/60 bg-red-950/70 px-4 py-3 text-xs uppercase tracking-[0.2em] text-red-200">
+                  3D viewer unavailable. Showing poster image.
+                </div>
+              )}
             </div>
 
-            {/* Right Side - Details */}
-            <div className="w-full md:w-2/5 flex flex-col">
-              
-              <div className="flex justify-between items-start mb-4">
-                <h1 className="text-3xl md:text-5xl font-display font-bold text-white uppercase tracking-wider leading-tight">
+            <div className="flex w-full flex-col md:w-2/5">
+              <div className="mb-4 flex items-start justify-between">
+                <h1 className="font-display text-3xl font-bold uppercase tracking-wider leading-tight text-white md:text-5xl">
                   {product.name}
                 </h1>
               </div>
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-6">
+              <div className="mb-6 flex items-center gap-2">
                 <div className="flex text-yellow-500">
-                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
-                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
-                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
-                  <iconify-icon icon="solar:star-bold" width="16" height="16"></iconify-icon>
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" class="opacity-50"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                  <iconify-icon icon="solar:star-bold" width="16" height="16" className="opacity-50" />
                 </div>
-                <span className="text-sm text-zinc-400 font-medium">4.5 (500 Reviews)</span>
+                <span className="text-sm font-medium text-zinc-400">4.5 (500 Reviews)</span>
               </div>
 
-              <div className="flex items-baseline gap-4 mb-8">
-                <span className="text-3xl text-red-500 font-display font-bold">${(product.price / 100).toFixed(2)}</span>
+              <div className="mb-8 flex items-baseline gap-4">
+                <span className="font-display text-3xl font-bold text-red-500">${(product.price / 100).toFixed(2)}</span>
               </div>
 
-              <p className="text-zinc-400 text-sm leading-relaxed mb-8 border-b border-zinc-800 pb-8">
-                {description}
-              </p>
+              <p className="mb-8 border-b border-zinc-800 pb-8 text-sm leading-relaxed text-zinc-400">{description}</p>
 
-              {/* Color Selection */}
               {colors.length > 0 && (
                 <div className="mb-6">
-                  <span className="text-xs text-zinc-500 uppercase tracking-widest block mb-3 font-bold">
+                  <span className="mb-3 block text-xs font-bold uppercase tracking-widest text-zinc-500">
                     Color: <span className="text-white">{selectedColor}</span>
                   </span>
                   <div className="flex gap-3">
-                    {colors.map(color => (
+                    {colors.map((color) => (
                       <button
                         key={color}
+                        type="button"
                         onClick={() => {
-                          const variant = product.variants.find(v => v.color === color)
+                          const variant = product.variants.find((item) => item.color === color)
                           if (variant) setSelectedVariantId(variant._id)
                         }}
-                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color ? 'border-red-600' : 'border-zinc-800 hover:border-zinc-500'}`}
+                        className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all ${
+                          selectedColor === color ? 'border-red-600' : 'border-zinc-800 hover:border-zinc-500'
+                        }`}
                       >
-                        <div className={`w-9 h-9 rounded-full ${color === 'Black' ? 'bg-black' : color === 'White' ? 'bg-white' : color === 'Scarlet' || color === 'Red' ? 'bg-red-600' : 'bg-zinc-400'}`}></div>
+                        <div
+                          className={`h-9 w-9 rounded-full ${
+                            color === 'Black'
+                              ? 'bg-black'
+                              : color === 'White'
+                                ? 'bg-white'
+                                : color === 'Scarlet' || color === 'Red'
+                                  ? 'bg-red-600'
+                                  : 'bg-zinc-400'
+                          }`}
+                        />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Size Selection */}
               {sizes.length > 0 && (
                 <div className="mb-8">
-                  <div className="flex justify-between mb-3">
-                    <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Select Size</span>
-                    <button className="text-xs text-zinc-500 underline hover:text-white">Size Guide</button>
+                  <div className="mb-3 flex justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Select Size</span>
+                    <button type="button" className="text-xs text-zinc-500 underline transition-colors hover:text-white">
+                      Size Guide
+                    </button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {sizes.map(size => (
+                    {sizes.map((size) => (
                       <button
                         key={size}
+                        type="button"
                         onClick={() => {
-                          const variant = product.variants.find(v => v.size === size)
+                          const variant = product.variants.find((item) => item.size === size)
                           if (variant) setSelectedVariantId(variant._id)
                         }}
-                        className={`py-3 text-sm font-bold border transition-all ${selectedSize === size ? 'bg-white text-black border-white' : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'}`}
+                        className={`border py-3 text-sm font-bold transition-all ${
+                          selectedSize === size
+                            ? 'border-white bg-white text-black'
+                            : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
+                        }`}
                       >
                         {size}
                       </button>
@@ -197,41 +316,49 @@ export function MerchDetail() {
                 </div>
               )}
 
-              {/* Quantity & Actions */}
-              <div className="flex items-end gap-4 mb-8">
+              <div className="mb-8 flex items-end gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Quantity</label>
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Quantity</label>
                   <div className="flex items-center border border-zinc-800 bg-zinc-950">
-                    <button 
+                    <button
+                      type="button"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors text-lg font-light"
+                      className="flex h-12 w-12 items-center justify-center text-lg font-light text-zinc-500 transition-colors hover:text-white"
                     >
-                      −
+                      -
                     </button>
-                    <div className="w-12 h-12 flex items-center justify-center text-white text-base font-medium border-x border-zinc-800">{quantity}</div>
-                    <button 
+                    <div className="flex h-12 w-12 items-center justify-center border-x border-zinc-800 text-base font-medium text-white">
+                      {quantity}
+                    </div>
+                    <button
+                      type="button"
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors text-lg font-light"
+                      className="flex h-12 w-12 items-center justify-center text-lg font-light text-zinc-500 transition-colors hover:text-white"
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <button 
+                <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={isLoading || selectedVariant?.stock === 0}
-                  className="flex-1 h-12 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-800 text-white text-xs font-bold uppercase tracking-[0.2em] transition-all"
+                  className="h-12 flex-1 border border-zinc-700 bg-zinc-900 text-xs font-bold uppercase tracking-[0.2em] text-white transition-all hover:border-zinc-600 hover:bg-zinc-800 disabled:border-zinc-800 disabled:bg-zinc-800 disabled:text-zinc-500"
                 >
                   {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
                 </button>
-                <button 
+                <button
+                  type="button"
                   onClick={handleToggleWishlist}
-                  className={`w-12 h-12 border flex items-center justify-center transition-colors ${isInWishlist ? 'text-red-600 border-red-900 bg-red-900/10' : 'border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600'}`}
+                  className={`flex h-12 w-12 items-center justify-center border transition-colors ${
+                    isInWishlist
+                      ? 'border-red-900 bg-red-900/10 text-red-600'
+                      : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white'
+                  }`}
                 >
-                  <iconify-icon icon={isInWishlist ? "solar:heart-bold" : "solar:heart-linear"} width="20" height="20"></iconify-icon>
+                  <iconify-icon icon={isInWishlist ? 'solar:heart-bold' : 'solar:heart-linear'} width="20" height="20" />
                 </button>
               </div>
-
             </div>
           </div>
         </div>

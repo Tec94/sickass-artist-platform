@@ -305,11 +305,11 @@ const InstagramLightboxContent = ({ item }: { item: InstagramGalleryItem }) => {
          <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px]">
                <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                  <img src="https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c" className="w-full h-full object-cover" alt="roawolf" />
+                  <img src="https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c" className="w-full h-full object-cover" alt="roapr__" />
                </div>
             </div>
             <div>
-               <h4 className="font-bold text-white text-sm">roawolf</h4>
+               <h4 className="font-bold text-white text-sm">roapr__</h4>
                <p className="text-zinc-500 text-xs">Instagram</p>
             </div>
             <a 
@@ -325,7 +325,7 @@ const InstagramLightboxContent = ({ item }: { item: InstagramGalleryItem }) => {
          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             <div className="mb-6">
                <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                  <span className="font-bold text-white mr-2">roawolf</span>
+                  <span className="font-bold text-white mr-2">roapr__</span>
                   {item.metadata.caption}
                </p>
                <p className="text-xs text-zinc-500 mt-2">

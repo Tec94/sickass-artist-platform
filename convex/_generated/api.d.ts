@@ -26,6 +26,8 @@ import type * as inventoryRepair from "../inventoryRepair.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as merch from "../merch.js";
 import type * as migrations from "../migrations.js";
+import type * as moderation from "../moderation.js";
+import type * as moderationUtils from "../moderationUtils.js";
 import type * as offlineQueue from "../offlineQueue.js";
 import type * as orders from "../orders.js";
 import type * as points from "../points.js";
@@ -71,6 +73,8 @@ declare const fullApi: ApiFromModules<{
   leaderboard: typeof leaderboard;
   merch: typeof merch;
   migrations: typeof migrations;
+  moderation: typeof moderation;
+  moderationUtils: typeof moderationUtils;
   offlineQueue: typeof offlineQueue;
   orders: typeof orders;
   points: typeof points;

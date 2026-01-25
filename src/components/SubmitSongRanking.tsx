@@ -3,6 +3,7 @@ import { api } from '../../convex/_generated/api'
 import { useAuth } from '../hooks/useAuth'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { getCurrentLeaderboardId, type LeaderboardPeriod } from '../utils/leaderboard'
 
 interface Song {
   spotifyTrackId: string
@@ -10,23 +11,6 @@ interface Song {
   artist: string
   rank: number
   albumCover: string
-}
-
-type LeaderboardPeriod = 'monthly' | 'quarterly' | 'allTime'
-
-function getCurrentLeaderboardId(period: LeaderboardPeriod): string {
-  const now = new Date()
-
-  if (period === 'allTime') {
-    return 'all-time'
-  }
-
-  if (period === 'monthly') {
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  }
-
-  const quarter = Math.floor(now.getMonth() / 3) + 1
-  return `${now.getFullYear()}-Q${quarter}`
 }
 
 export const SubmitSongRanking = ({
@@ -96,7 +80,6 @@ export const SubmitSongRanking = ({
     setError(null)
     try {
       await submitMutation({
-        userId: user._id,
         leaderboardId: getCurrentLeaderboardId(period),
         submissionType,
         rankedSongs: rankedSongs.map(s => ({

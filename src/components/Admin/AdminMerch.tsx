@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
@@ -8,6 +8,13 @@ import { useAuth } from '../../hooks/useAuth'
 type ProductCategory = 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other'
 type ProductStatus = 'active' | 'draft' | 'archived'
 
+type ModelConfigFormData = {
+  autoRotate: boolean
+  cameraOrbit: string
+  minFov?: number
+  maxFov?: number
+}
+
 interface ProductFormData {
   name: string
   description: string
@@ -16,6 +23,9 @@ interface ProductFormData {
   tags: string[]
   images: string[]
   status: ProductStatus
+  model3dUrl: string
+  modelPosterUrl: string
+  modelConfig: ModelConfigFormData
 }
 
 const initialFormData: ProductFormData = {
@@ -25,11 +35,35 @@ const initialFormData: ProductFormData = {
   category: 'apparel',
   tags: [],
   images: [],
-  status: 'draft'
+  status: 'draft',
+  model3dUrl: '',
+  modelPosterUrl: '',
+  modelConfig: {
+    autoRotate: true,
+    cameraOrbit: '',
+    minFov: undefined,
+    maxFov: undefined,
+  },
+}
+
+const MAX_MODEL_MB = 40
+const MAX_POSTER_MB = 10
+
+function buildModelConfig(data: ModelConfigFormData) {
+  const config: { autoRotate: boolean; cameraOrbit?: string; minFov?: number; maxFov?: number } = {
+    autoRotate: data.autoRotate,
+  }
+  const trimmedOrbit = data.cameraOrbit.trim()
+  if (trimmedOrbit) config.cameraOrbit = trimmedOrbit
+  if (data.minFov && data.minFov > 0) config.minFov = data.minFov
+  if (data.maxFov && data.maxFov > 0) config.maxFov = data.maxFov
+  return config
 }
 
 export function AdminMerch() {
   const { isSignedIn, user } = useAuth()
+  const hasAdminAccess = Boolean(user && (user.role === 'admin' || user.role === 'mod' || user.role === 'artist'))
+  const includeDrafts = user?.role === 'admin'
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<Id<'merchProducts'> | null>(null)
   const [formData, setFormData] = useState<ProductFormData>(initialFormData)
@@ -37,97 +71,189 @@ export function AdminMerch() {
   const [tagInput, setTagInput] = useState('')
   const [imageUrlInput, setImageUrlInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingAsset, setUploadingAsset] = useState<'model' | 'poster' | null>(null)
+
+  const modelFileRef = useRef<HTMLInputElement>(null)
+  const posterFileRef = useRef<HTMLInputElement>(null)
 
   // Fetch products
-  const products = useQuery(api.merch.getProducts, { 
-    page: 0, 
+  const products = useQuery(api.merch.getProducts, {
+    page: 0,
     pageSize: 50,
-    search: searchQuery || undefined
+    search: searchQuery || undefined,
+    includeDrafts: includeDrafts ? true : undefined,
   })
 
   // Admin mutations
   const createProduct = useMutation(api.admin.createProduct)
   const updateProduct = useMutation(api.admin.updateProduct)
   const archiveProduct = useMutation(api.admin.archiveProduct)
+  const generateUploadUrl = useMutation(api.admin.generateMerchUploadUrl)
+  const resolveUpload = useMutation(api.admin.resolveMerchUpload)
 
-  // Check if user has admin/mod/artist permissions
-  const hasAdminAccess = user && (user.role === 'admin' || user.role === 'mod' || user.role === 'artist')
+  const resetForm = useCallback(() => {
+    setFormData(initialFormData)
+    setEditingId(null)
+    setShowForm(false)
+    setTagInput('')
+    setImageUrlInput('')
+    setUploadingAsset(null)
+  }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!isSignedIn || !hasAdminAccess) {
-      showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
-      return
-    }
+  const uploadAsset = useCallback(
+    async (file: File, kind: 'model' | 'poster') => {
+      if (!isSignedIn || !hasAdminAccess) {
+        showToast('You must be signed in with admin privileges to upload assets.', { type: 'error' })
+        return
+      }
 
-    if (!formData.name.trim()) {
-      showToast('Product name is required', { type: 'error' })
-      return
-    }
+      if (kind === 'model' && !file.name.toLowerCase().endsWith('.glb')) {
+        showToast('3D models must be provided as .glb files.', { type: 'error' })
+        return
+      }
+      if (kind === 'poster' && !file.type.startsWith('image/')) {
+        showToast('Poster uploads must be image files.', { type: 'error' })
+        return
+      }
 
-    if (formData.price <= 0) {
-      showToast('Price must be greater than 0', { type: 'error' })
-      return
-    }
+      const maxBytes = (kind === 'model' ? MAX_MODEL_MB : MAX_POSTER_MB) * 1024 * 1024
+      if (file.size > maxBytes) {
+        showToast(`File exceeds the ${kind === 'model' ? MAX_MODEL_MB : MAX_POSTER_MB}MB limit.`, { type: 'error' })
+        return
+      }
 
-    setIsSubmitting(true)
-    try {
-      if (editingId) {
-        // Update existing product
-        await updateProduct({
-          productId: editingId,
-          updates: {
+      setUploadingAsset(kind)
+      try {
+        const uploadUrl = await generateUploadUrl({})
+        const response = await fetch(uploadUrl, { method: 'POST', body: file })
+        if (!response.ok) {
+          throw new Error(`Upload failed (${response.status})`)
+        }
+        const payload = (await response.json()) as { storageId?: Id<'_storage'> }
+        if (!payload.storageId) {
+          throw new Error('Upload did not return a storage id')
+        }
+        const { url } = await resolveUpload({ storageId: payload.storageId })
+        if (kind === 'model') {
+          setFormData((prev) => ({ ...prev, model3dUrl: url }))
+        } else {
+          setFormData((prev) => ({ ...prev, modelPosterUrl: url }))
+        }
+        showToast(kind === 'model' ? '3D model uploaded.' : 'Poster uploaded.', { type: 'success' })
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Failed to upload asset.', { type: 'error' })
+      } finally {
+        setUploadingAsset(null)
+        if (kind === 'model' && modelFileRef.current) modelFileRef.current.value = ''
+        if (kind === 'poster' && posterFileRef.current) posterFileRef.current.value = ''
+      }
+    },
+    [generateUploadUrl, hasAdminAccess, isSignedIn, resolveUpload]
+  )
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      if (!isSignedIn || !hasAdminAccess) {
+        showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
+        return
+      }
+
+      if (!formData.name.trim()) {
+        showToast('Product name is required', { type: 'error' })
+        return
+      }
+
+      if (formData.price <= 0) {
+        showToast('Price must be greater than 0', { type: 'error' })
+        return
+      }
+
+      if (
+        formData.modelConfig.minFov &&
+        formData.modelConfig.maxFov &&
+        formData.modelConfig.minFov > formData.modelConfig.maxFov
+      ) {
+        showToast('Minimum field of view cannot exceed maximum field of view.', { type: 'error' })
+        return
+      }
+
+      const trimmedModelUrl = formData.model3dUrl.trim()
+      const trimmedPosterUrl = formData.modelPosterUrl.trim()
+      const hasModel = trimmedModelUrl.length > 0
+      const modelConfig = hasModel ? buildModelConfig(formData.modelConfig) : undefined
+
+      setIsSubmitting(true)
+      try {
+        if (editingId) {
+          const updates: Parameters<typeof updateProduct>[0]['updates'] = {
             name: formData.name,
             description: formData.description,
-            price: Math.round(formData.price * 100), // Convert to cents
+            price: Math.round(formData.price * 100),
             category: formData.category,
             tags: formData.tags,
             images: formData.images,
             status: formData.status,
-          },
-        })
-        showToast('Product updated successfully!', { type: 'success' })
-      } else {
-        // Create new product
-        await createProduct({
-          name: formData.name,
-          description: formData.description,
-          price: Math.round(formData.price * 100), // Convert to cents
-          category: formData.category,
-          tags: formData.tags,
-          images: formData.images,
-          status: formData.status,
-        })
-        showToast('Product created successfully!', { type: 'success' })
-      }
-      setShowForm(false)
-      setEditingId(null)
-      setFormData(initialFormData)
-    } catch (error) {
-      console.error('Error saving product:', error)
-      showToast(
-        error instanceof Error ? error.message : 'Failed to save product. Please try again.',
-        { type: 'error' }
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+          }
+          if (hasModel) updates.model3dUrl = trimmedModelUrl
+          if (trimmedPosterUrl) updates.modelPosterUrl = trimmedPosterUrl
+          if (modelConfig) updates.modelConfig = modelConfig
 
-  const handleEdit = (product: Doc<'merchProducts'>) => {
+          await updateProduct({ productId: editingId, updates })
+          showToast('Product updated successfully!', { type: 'success' })
+        } else {
+          const payload: Parameters<typeof createProduct>[0] = {
+            name: formData.name,
+            description: formData.description,
+            price: Math.round(formData.price * 100),
+            category: formData.category,
+            tags: formData.tags,
+            images: formData.images,
+            status: formData.status,
+          }
+          if (hasModel) payload.model3dUrl = trimmedModelUrl
+          if (trimmedPosterUrl) payload.modelPosterUrl = trimmedPosterUrl
+          if (modelConfig) payload.modelConfig = modelConfig
+
+          await createProduct(payload)
+          showToast('Product created successfully!', { type: 'success' })
+        }
+        resetForm()
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Failed to save product. Please try again.', {
+          type: 'error',
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [createProduct, editingId, formData, hasAdminAccess, isSignedIn, resetForm, updateProduct]
+  )
+
+  const handleEdit = useCallback((product: Doc<'merchProducts'>) => {
     setFormData({
       name: product.name,
       description: product.description,
-      price: product.price,
+      price: product.price / 100,
       category: product.category as ProductCategory,
       tags: product.tags || [],
       images: product.imageUrls || [],
-      status: product.status as ProductStatus
+      status: product.status as ProductStatus,
+      model3dUrl: product.model3dUrl || '',
+      modelPosterUrl: product.modelPosterUrl || '',
+      modelConfig: {
+        autoRotate: product.modelConfig?.autoRotate ?? true,
+        cameraOrbit: product.modelConfig?.cameraOrbit || '',
+        minFov: product.modelConfig?.minFov,
+        maxFov: product.modelConfig?.maxFov,
+      },
     })
+    setTagInput('')
+    setImageUrlInput('')
     setEditingId(product._id)
     setShowForm(true)
-  }
+  }, [])
 
   const handleDelete = async (productId: Id<'merchProducts'>) => {
     if (!isSignedIn || !hasAdminAccess) {
@@ -182,6 +308,8 @@ export function AdminMerch() {
         <button className="add-btn" onClick={() => {
           setFormData(initialFormData)
           setEditingId(null)
+          setTagInput('')
+          setImageUrlInput('')
           setShowForm(true)
         }}>
           <iconify-icon icon="solar:plus-linear" width="18" height="18"></iconify-icon>
@@ -202,11 +330,11 @@ export function AdminMerch() {
 
       {/* Product Form Modal */}
       {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+        <div className="modal-overlay" onClick={resetForm}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
-              <button className="close-btn" onClick={() => setShowForm(false)}>
+              <button className="close-btn" onClick={resetForm}>
                 <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
               </button>
             </div>
@@ -319,13 +447,143 @@ export function AdminMerch() {
                 </div>
               </div>
 
+              <div className="form-group model-section">
+                <div className="model-header">
+                  <label>3D Model (.glb)</label>
+                  <span className="hint-text">Hero products can include an interactive model viewer.</span>
+                </div>
+                <div className="upload-row">
+                  <input
+                    type="url"
+                    value={formData.model3dUrl}
+                    onChange={(e) => setFormData(p => ({ ...p, model3dUrl: e.target.value }))}
+                    placeholder="https://.../figurine.glb"
+                  />
+                  <button
+                    type="button"
+                    className="upload-btn"
+                    onClick={() => modelFileRef.current?.click()}
+                    disabled={uploadingAsset === 'model'}
+                  >
+                    {uploadingAsset === 'model' ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+                <input
+                  ref={modelFileRef}
+                  type="file"
+                  accept=".glb,model/gltf-binary"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void uploadAsset(file, 'model')
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Model Poster Image</label>
+                <div className="upload-row">
+                  <input
+                    type="url"
+                    value={formData.modelPosterUrl}
+                    onChange={(e) => setFormData(p => ({ ...p, modelPosterUrl: e.target.value }))}
+                    placeholder="https://.../poster.jpg"
+                  />
+                  <button
+                    type="button"
+                    className="upload-btn"
+                    onClick={() => posterFileRef.current?.click()}
+                    disabled={uploadingAsset === 'poster'}
+                  >
+                    {uploadingAsset === 'poster' ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+                <input
+                  ref={posterFileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void uploadAsset(file, 'poster')
+                  }}
+                />
+              </div>
+
+              <div className="form-row model-config-row">
+                <div className="form-group">
+                  <label>Auto-rotate</label>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${formData.modelConfig.autoRotate ? 'active' : ''}`}
+                    onClick={() =>
+                      setFormData(prev => ({
+                        ...prev,
+                        modelConfig: { ...prev.modelConfig, autoRotate: !prev.modelConfig.autoRotate },
+                      }))
+                    }
+                  >
+                    {formData.modelConfig.autoRotate ? 'Enabled' : 'Disabled'}
+                  </button>
+                </div>
+                <div className="form-group">
+                  <label>Camera Orbit</label>
+                  <input
+                    type="text"
+                    value={formData.modelConfig.cameraOrbit}
+                    onChange={(e) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        modelConfig: { ...prev.modelConfig, cameraOrbit: e.target.value },
+                      }))
+                    }
+                    placeholder="0deg 75deg 2.2m"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row model-config-row">
+                <div className="form-group">
+                  <label>Min FOV (deg)</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="120"
+                    value={formData.modelConfig.minFov ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        modelConfig: { ...prev.modelConfig, minFov: value ? Number(value) : undefined },
+                      }))
+                    }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Max FOV (deg)</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="120"
+                    value={formData.modelConfig.maxFov ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        modelConfig: { ...prev.modelConfig, maxFov: value ? Number(value) : undefined },
+                      }))
+                    }}
+                  />
+                </div>
+              </div>
+
               <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)} disabled={isSubmitting}>
+                <button type="button" className="cancel-btn" onClick={resetForm} disabled={isSubmitting}>
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <iconify-icon icon="solar:spinner-linear" width="16" height="16" class="animate-spin"></iconify-icon>
+                    <iconify-icon icon="solar:spinner-linear" width="16" height="16" className="animate-spin"></iconify-icon>
                   ) : (
                     <iconify-icon icon="solar:diskette-linear" width="16" height="16"></iconify-icon>
                   )}
@@ -357,6 +615,7 @@ export function AdminMerch() {
                   <iconify-icon icon="solar:gallery-linear" width="24" height="24"></iconify-icon>
                 </div>
               )}
+              {product.model3dUrl && <span className="model-badge">3D</span>}
             </div>
             <div className="product-info">
               <h4>{product.name}</h4>
@@ -462,7 +721,7 @@ export function AdminMerch() {
           border: 1px solid #2a2a2a;
           border-radius: 16px;
           width: 100%;
-          max-width: 600px;
+          max-width: 720px;
           max-height: 90vh;
           overflow-y: auto;
         }
@@ -532,6 +791,10 @@ export function AdminMerch() {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           gap: 16px;
+        }
+
+        .model-config-row {
+          grid-template-columns: 1fr 2fr;
         }
 
         .tag-input-row {
@@ -621,6 +884,71 @@ export function AdminMerch() {
           justify-content: center;
         }
 
+        .model-section {
+          padding: 16px;
+          border: 1px solid #1f1f1f;
+          border-radius: 12px;
+          background: #0d0d0d;
+        }
+
+        .model-header {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 8px;
+        }
+
+        .hint-text {
+          font-size: 11px;
+          color: #666;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+        }
+
+        .upload-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .upload-btn {
+          padding: 10px 16px;
+          background: #8b0000;
+          border: 1px solid #8b0000;
+          border-radius: 8px;
+          color: white;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+
+        .upload-btn:hover {
+          background: #a00000;
+        }
+
+        .upload-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .toggle-btn {
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid #2a2a2a;
+          background: #0a0a0a;
+          color: #e0e0e0;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+          border-color: #c41e3a;
+          color: white;
+          background: rgba(196, 30, 58, 0.15);
+        }
+
         .form-actions {
           display: flex;
           gap: 12px;
@@ -707,12 +1035,28 @@ export function AdminMerch() {
           border-radius: 8px;
           overflow: hidden;
           flex-shrink: 0;
+          position: relative;
         }
 
         .product-image img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+
+        .model-badge {
+          position: absolute;
+          bottom: 6px;
+          left: 6px;
+          padding: 2px 6px;
+          border-radius: 6px;
+          background: rgba(0, 0, 0, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
         }
 
         .no-image {
@@ -814,6 +1158,16 @@ export function AdminMerch() {
           color: #c41e3a;
         }
 
+        @media (max-width: 1024px) {
+          .form-row {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .model-config-row {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
         @media (max-width: 768px) {
           .admin-merch {
             padding: 16px;
@@ -829,8 +1183,13 @@ export function AdminMerch() {
             justify-content: center;
           }
 
-          .form-row {
+          .form-row,
+          .model-config-row {
             grid-template-columns: 1fr;
+          }
+
+          .upload-row {
+            flex-direction: column;
           }
 
           .product-card {

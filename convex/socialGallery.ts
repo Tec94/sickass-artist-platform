@@ -1,4 +1,4 @@
-import { query, action, internalMutation, mutation } from './_generated/server'
+﻿import { query, action, internalMutation, mutation } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 
@@ -174,39 +174,39 @@ export const searchSocialGallery = query({
  */
 const SCRAPED_DATA = {
   instagram: {
-    profile_username: "roawolf",
+    profile_username: "roapr__",
     profile_pic_url: "https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c",
     posts: [
       {
-        url: "https://www.instagram.com/roawolf/p/DDM1vIakd6c/",
+        url: "https://www.instagram.com/roapr__/p/DDM1vIakd6c/",
         thumbnail: "https://images.unsplash.com/photo-1514525253344-f2038747a83d?q=80&w=1000&auto=format&fit=crop",
         caption: "The Wolfpack is growing. 🐺🩸 #ROA #Community",
         likeCount: 12450,
         commentCount: 420
       },
       {
-        url: "https://www.instagram.com/roawolf/p/DCmEIobjQIQ/",
+        url: "https://www.instagram.com/roapr__/p/DCmEIobjQIQ/",
         thumbnail: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=1000&auto=format&fit=crop",
         caption: "NEW SHOWS ADDED. Link in bio. 🎫🔥",
         likeCount: 8900,
         commentCount: 112
       },
       {
-        url: "https://www.instagram.com/roawolf/p/DBdtmCpEbNs/",
+        url: "https://www.instagram.com/roapr__/p/DBdtmCpEbNs/",
         thumbnail: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop",
         caption: "Studio nights. Cooking something special. 🧪🩸",
         likeCount: 15420,
         commentCount: 842
       },
       {
-        url: "https://www.instagram.com/roawolf/p/DAgrErUETi8/",
+        url: "https://www.instagram.com/roapr__/p/DAgrErUETi8/",
         thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1000&auto=format&fit=crop",
         caption: "Gratitude. 🐺🙏",
         likeCount: 22100,
         commentCount: 1105
       },
       {
-        url: "https://www.instagram.com/roawolf/p/D-j_XPJDdH2/",
+        url: "https://www.instagram.com/roapr__/p/D-j_XPJDdH2/",
         thumbnail: "https://images.unsplash.com/photo-1459749411177-042180ceea72?q=80&w=1000&auto=format&fit=crop",
         caption: "EENIMINIMAINIMOE 🩸 OUT NOW.",
         likeCount: 45200,
@@ -444,7 +444,7 @@ export const seedDirect = mutation({
       if (!existing) {
         await ctx.db.insert('instagramPosts', {
           igPostId: igId,
-          igAccountId: 'roawolf_official',
+          igAccountId: 'roapr__',
           mediaUrl: post.thumbnail,
           thumbnailUrl: post.thumbnail,
           caption: post.caption,
@@ -507,7 +507,7 @@ export const saveSocialData = internalMutation({
       if (!existing) {
         await ctx.db.insert('instagramPosts', {
           igPostId: igId,
-          igAccountId: 'roawolf_official',
+          igAccountId: 'roapr__',
           mediaUrl: post.thumbnail,
           thumbnailUrl: post.thumbnail,
           caption: post.caption,
@@ -551,3 +551,4 @@ export const saveSocialData = internalMutation({
     }
   }
 })
+

@@ -8,12 +8,15 @@ import { useAnalytics } from '../hooks/useAnalytics'
 import { LiveLeaderboard } from '../components/Leaderboard/LiveLeaderboard'
 import { SongRankingWidget } from '../components/Leaderboard/SongRankingWidget'
 import { UserRankingsFeed } from '../components/Leaderboard/UserRankingsFeed'
+import { RankingPeriodTabs } from '../components/Leaderboard/RankingPeriodTabs'
 import { useTranslation } from '../hooks/useTranslation'
+import type { LeaderboardPeriod } from '../utils/leaderboard'
 
 export const Dashboard = () => {
   useAnalytics() // Track page views
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_isLoaded, setIsLoaded] = useState(false)
+  const [period, setPeriod] = useState<LeaderboardPeriod>('weekly')
   const { t } = useTranslation()
 
   // Use the optimized dashboard data query
@@ -143,22 +146,27 @@ export const Dashboard = () => {
 
         {/* Music Leaderboard Section */}
         <div className="mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-display font-bold text-white uppercase">{t('dashboard.songLeaderboard')}</h2>
-            <div className="h-px bg-zinc-800 flex-1 ml-8"></div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+            <div className="flex items-center gap-6 min-w-0">
+              <h2 className="text-3xl font-display font-bold text-white uppercase whitespace-nowrap">
+                {t('dashboard.songLeaderboard')}
+              </h2>
+              <div className="hidden lg:block h-px bg-zinc-800 flex-1 min-w-[120px]"></div>
+            </div>
+            <RankingPeriodTabs period={period} onChange={setPeriod} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Community Feed (Left - 2 Cols) */}
             <div className="lg:col-span-2 space-y-8">
-              <UserRankingsFeed />
+              <UserRankingsFeed period={period} />
             </div>
 
             {/* Live Rankings & Actions (Right - 1 Col) */}
             <div className="space-y-8">
-              <SongRankingWidget />
+              <SongRankingWidget period={period} />
               <div className="h-[600px]">
-                <LiveLeaderboard />
+                <LiveLeaderboard period={period} onPeriodChange={setPeriod} showTabs={false} limit={12} />
               </div>
             </div>
           </div>

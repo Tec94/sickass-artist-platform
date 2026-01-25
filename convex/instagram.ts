@@ -43,7 +43,7 @@ export const upsertInstagramPostsInternal = internalMutation({
         likeCount: post.like_count || 0,
         commentCount: post.comments_count || 0,
         viewCount: post.views || undefined,
-        igLink: `https://instagram.com/p/${post.id}`,
+        igLink: `https://www.instagram.com/p/${post.id}`,
         syncedAt: now,
         igSourceCreatedAt: new Date(post.timestamp).getTime(),
         cacheExpiresAt: now + 24 * 60 * 60 * 1000,

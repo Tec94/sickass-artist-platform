@@ -1,159 +1,526 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { FanStatusBadge } from '../Profile/FanStatusBadge'
 import { ReactionPicker } from './ReactionPicker'
+import { showToast } from '../../lib/toast'
+import type { ChatAttachment, ChatMessage, ChatSticker, OptimisticMessage } from '../../types/chat'
 
-interface MessageItemProps {
-  message: any
-  isPinned?: boolean
-  onDelete?: () => void
-  onReact?: (emoji: string) => void
-  currentUserId: string
-  isStacked?: boolean
+type MessageView = ChatMessage | OptimisticMessage
+
+type AuthorView = {
+  username: string
+  displayName: string
+  avatar: string
+  fanTier: Doc<'users'>['fanTier']
+  level: number
+  xp: number
 }
 
-export function MessageItem({ message, isPinned = false, onDelete, onReact, currentUserId, isStacked = false }: MessageItemProps) {
+interface MessageItemProps {
+  message: MessageView
+  isPinned?: boolean
+  onDelete?: (message: MessageView) => void
+  onReact?: (message: MessageView, emoji: string) => void
+  onReport?: (messageId: Id<'messages'>, reason: string, note?: string) => Promise<void>
+  onRetry?: (tempId: string) => Promise<void>
+  currentUserId?: Id<'users'>
+  isStacked?: boolean
+  compactMode: boolean
+  autoplayMedia: boolean
+  showStickers: boolean
+  stickerMap: Map<string, ChatSticker>
+}
+
+const REPORT_REASONS = [
+  { value: 'hate_speech', label: 'Hate speech or slur' },
+  { value: 'harassment', label: 'Harassment or bullying' },
+  { value: 'spam', label: 'Spam or scam' },
+  { value: 'explicit', label: 'Explicit content' },
+  { value: 'impersonation', label: 'Impersonation' },
+  { value: 'other', label: 'Other' },
+] as const
+
+function normalizeTier(tier?: string): Doc<'users'>['fanTier'] {
+  switch (tier) {
+    case 'silver':
+    case 'gold':
+    case 'platinum':
+      return tier
+    case 'bronze':
+    default:
+      return 'bronze'
+  }
+}
+
+function deriveUsername(displayName: string, authorId: string) {
+  const slug = displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 24)
+  if (slug.length > 0) return slug
+  return `fan-${authorId.slice(-6)}`
+}
+
+function formatTimestamp(timestamp: number) {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const isToday = now.toDateString() === date.toDateString()
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return isToday ? time : `${date.toLocaleDateString()} ${time}`
+}
+
+function toServerMessageId(message: MessageView): Id<'messages'> | null {
+  const id = String(message._id)
+  if (id.startsWith('temp-')) return null
+  return message._id as Id<'messages'>
+}
+
+export function MessageItem({
+  message,
+  isPinned = false,
+  onDelete,
+  onReact,
+  onReport,
+  onRetry,
+  currentUserId,
+  isStacked = false,
+  compactMode,
+  autoplayMedia,
+  showStickers,
+  stickerMap,
+}: MessageItemProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false)
   const [showActions, setShowActions] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState<(typeof REPORT_REASONS)[number]['value']>('spam')
+  const [reportNote, setReportNote] = useState('')
+  const [reportState, setReportState] = useState<'idle' | 'submitting'>('idle')
+  const [reportError, setReportError] = useState<string | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
-  // Format timestamp as relative time
-  const formatTimestamp = (timestamp: number) => {
-    const now = Date.now()
-    const diff = now - timestamp
-    const seconds = Math.floor(diff / 1000)
-    const minutes = Math.floor(seconds / 60)
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
+  const messageId = String(message._id)
+  const isTemp = messageId.startsWith('temp-')
+  const isFailed = message.status === 'failed'
+  const isSending = message.status === 'sending'
+  const isOwnMessage = Boolean(currentUserId && message.authorId === currentUserId)
 
-    if (seconds < 60) return `${seconds}s ago`
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    if (days < 7) return `${days}d ago`
-    return new Date(timestamp).toLocaleDateString()
-  }
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setPrefersReducedMotion(media.matches)
+    update()
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', update)
+      return () => media.removeEventListener('change', update)
+    }
+    media.addListener(update)
+    return () => media.removeListener(update)
+  }, [])
 
-  // Mock user data for avatar - in real app this would come from context
-  const mockUser = {
-    _id: message.authorId,
-    username: message.authorDisplayName,
-    displayName: message.authorDisplayName,
-    avatar: message.authorAvatar,
-    fanTier: message.authorTier,
-    level: 1,
-    xp: 0
-  }
+  const overlayOpen = Boolean(lightboxUrl) || showReportModal
+  useEffect(() => {
+    if (!overlayOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (showReportModal) {
+        setShowReportModal(false)
+      } else {
+        setLightboxUrl(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [overlayOpen, showReportModal])
 
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setShowReactionPicker(!showReactionPicker)
-  }
+  const author = useMemo<AuthorView>(() => {
+    const displayName = message.authorDisplayName || 'Fan'
+    const username = deriveUsername(displayName, String(message.authorId))
+    const tier = normalizeTier(message.authorTier)
+    const avatar = message.authorAvatar || `https://api.dicebear.com/7.x/shapes/svg?seed=${username}`
+    return {
+      username,
+      displayName,
+      avatar,
+      fanTier: tier,
+      level: 1,
+      xp: 0,
+    }
+  }, [message.authorAvatar, message.authorDisplayName, message.authorId, message.authorTier])
 
-  const hasReactions = message.reactionEmojis && message.reactionEmojis.length > 0
+  const attachments = message.attachments ?? []
+  const sticker = message.stickerId ? stickerMap.get(String(message.stickerId)) : undefined
+  const allowAutoplay = autoplayMedia && !prefersReducedMotion
+
+  const hasText = !message.isDeleted && message.content.trim().length > 0
+  const shouldRenderText = message.isDeleted || hasText || (attachments.length === 0 && !message.stickerId)
+  const textContent = message.isDeleted ? '[removed]' : hasText ? message.content : '[no text]'
+  const canReact = Boolean(onReact && !message.isDeleted && !isTemp && !isFailed)
+  const canReport = Boolean(onReport && !message.isDeleted && !isTemp && !isFailed)
+  const canDelete = Boolean(onDelete && isOwnMessage && !message.isDeleted)
+
+  const handleReact = useCallback(
+    (emoji: string) => {
+      if (!canReact || !onReact) return
+      onReact(message, emoji)
+    },
+    [canReact, message, onReact]
+  )
+
+  const handleDelete = useCallback(() => {
+    if (!onDelete) return
+    onDelete(message)
+  }, [message, onDelete])
+
+  const handleRetry = useCallback(() => {
+    if (!onRetry || !isFailed || !isTemp) return
+    void onRetry(messageId)
+  }, [isFailed, isTemp, messageId, onRetry])
+
+  const openReportModal = useCallback(() => {
+    if (!canReport) return
+    setReportError(null)
+    setReportState('idle')
+    setShowReportModal(true)
+  }, [canReport])
+
+  const submitReport = useCallback(async () => {
+    if (!onReport || reportState === 'submitting') return
+    const serverId = toServerMessageId(message)
+    if (!serverId) {
+      showToast('Message is not available to report yet.', { type: 'error' })
+      return
+    }
+
+    setReportState('submitting')
+    setReportError(null)
+    try {
+      await onReport(serverId, reportReason, reportNote.trim() || undefined)
+      showToast('Report submitted to moderators.', { type: 'success' })
+      setShowReportModal(false)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit report'
+      setReportError(errorMessage)
+    } finally {
+      setReportState('idle')
+    }
+  }, [message, onReport, reportNote, reportReason, reportState])
+
+  const reactionEmojis = message.reactionEmojis ?? []
+
+  const basePadding = compactMode ? 'py-1.5' : 'py-2'
+  const gapClass = compactMode ? 'gap-2.5' : 'gap-3'
 
   return (
     <div
-      className={`flex items-start gap-3 px-3 py-0.5 hover:bg-[#1a1a1a]/50 transition-colors relative group/item ${
+      className={`group/item relative flex items-start ${gapClass} px-3 ${basePadding} transition-colors hover:bg-[#1a1a1a]/50 ${
         isPinned ? 'border-l-2 border-[#c41e3a]' : ''
-      } ${isStacked ? '' : 'mt-3'}`}
+      } ${isStacked ? '' : compactMode ? 'mt-2' : 'mt-3'}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
-      onContextMenu={handleContextMenu}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        if (canReact) setShowReactionPicker((prev) => !prev)
+      }}
     >
-      {/* Avatar column - fixed width for alignment */}
-      <div className="flex-shrink-0 w-10 pt-0.5">
+      <div className={`flex-shrink-0 ${compactMode ? 'w-9' : 'w-10'} pt-0.5`}>
         {!isStacked ? (
-          <ProfileAvatar user={mockUser as any} size="sm" />
+          <ProfileAvatar user={author} size="sm" />
         ) : (
-          <span className="text-[10px] text-[#808080] font-light opacity-0 group-hover/item:opacity-100 transition-opacity block text-center leading-[20px]">
-            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+          <span className="block text-center text-[10px] font-light leading-[20px] text-[#808080] opacity-0 transition-opacity group-hover/item:opacity-100">
+            {formatTimestamp(message.createdAt)}
           </span>
         )}
       </div>
 
-      {/* Message Content */}
-      <div className="flex-1 min-w-0">
-        {/* Header - Only if not stacked */}
+      <div className="min-w-0 flex-1">
         {!isStacked && (
           <div className="flex items-center gap-2 leading-tight">
-            <span className="text-white font-semibold text-sm">
-              {message.authorDisplayName}
-            </span>
+            <span className="text-sm font-semibold text-white">{author.displayName}</span>
             <div className="flex-shrink-0">
-              <FanStatusBadge user={mockUser as any} size="sm" />
+              <FanStatusBadge user={{ fanTier: author.fanTier, level: author.level, xp: author.xp }} size="sm" />
             </div>
-            <span className="text-[#808080] text-[11px] font-medium">
-              {formatTimestamp(message.createdAt)}
-            </span>
-            {isPinned && <span className="text-[#c41e3a] text-xs">📌</span>}
-            {message.isDeleted && <span className="text-[#c41e3a] text-xs">[deleted]</span>}
+            <span className="text-[11px] font-medium text-[#808080]">{formatTimestamp(message.createdAt)}</span>
+            {isPinned && <span className="text-xs text-[#c41e3a]">Pinned</span>}
+            {message.isDeleted && <span className="text-xs text-[#c41e3a]">Removed</span>}
           </div>
         )}
 
-        {/* Message Text */}
-        <div className={`text-[#e0e0e0] text-[15px] leading-snug whitespace-pre-wrap break-words ${
-          message.isDeleted ? 'italic text-[#808080]' : ''
-        }`}>
-          {message.isDeleted ? '[deleted]' : message.content}
-        </div>
+        {shouldRenderText && (
+          <div
+            className={`text-[15px] leading-snug text-[#e0e0e0] whitespace-pre-wrap break-words ${
+              message.isDeleted ? 'italic text-[#808080]' : ''
+            }`}
+          >
+            {textContent}
+          </div>
+        )}
 
-        {/* Reactions - only render if there are reactions */}
-        {hasReactions && (
-          <div className="flex items-center gap-1 flex-wrap mt-1">
-            {(message.reactionEmojis as string[]).map((emoji, index) => (
+        {!message.isDeleted && attachments.length > 0 && (
+          <div className={`mt-2 grid grid-cols-1 gap-2 ${attachments.length > 1 ? 'md:grid-cols-2' : ''}`}>
+            {attachments.map((attachment, index) => (
+              <AttachmentTile
+                key={`${attachment.storageId}-${index}`}
+                attachment={attachment}
+                allowAutoplay={allowAutoplay}
+                onOpenLightbox={setLightboxUrl}
+              />
+            ))}
+          </div>
+        )}
+
+        {!message.isDeleted && message.stickerId && (
+          <div className="mt-2">
+            {showStickers ? (
+              sticker ? (
+                <img
+                  src={sticker.imageUrl}
+                  alt={sticker.name}
+                  loading="lazy"
+                  className="h-28 w-28 rounded-xl border border-[#2a2a2a] bg-[#0a0a0a] object-contain p-2"
+                />
+              ) : (
+                <div className="inline-flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-[#3a3a3a] bg-[#0b0b0b] text-xs uppercase tracking-[0.2em] text-[#707070]">
+                  Sticker missing
+                </div>
+              )
+            ) : (
+              <div className="inline-flex h-20 items-center rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 text-xs uppercase tracking-[0.2em] text-[#808080]">
+                Sticker hidden
+              </div>
+            )}
+          </div>
+        )}
+
+        {reactionEmojis.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            {reactionEmojis.map((emoji) => (
               <button
-                key={index}
-                className="flex items-center gap-1 px-1.5 py-0.5 bg-[#1a1a1a]/50 rounded-md text-xs hover:bg-[#2a2a2a]/50 transition-colors border border-[#2a2a2a]"
-                onClick={() => onReact?.(emoji)}
+                key={emoji}
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-[#2a2a2a] bg-[#1a1a1a]/50 px-1.5 py-0.5 text-xs transition-colors hover:bg-[#2a2a2a]/60"
+                onClick={() => handleReact(emoji)}
               >
                 <span>{emoji}</span>
-                <span className="text-[#e0e0e0] font-medium">{message.reactionCount}</span>
+                {message.reactionCount > 0 && <span className="font-medium text-[#e0e0e0]">{message.reactionCount}</span>}
               </button>
             ))}
           </div>
         )}
+
+        {isSending && (
+          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#606060]">Sending...</div>
+        )}
+
+        {isFailed && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#ff6b6b]">
+            <span className="font-semibold uppercase tracking-[0.2em]">{message.errorMessage || 'Failed to send'}</span>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="rounded-md border border-[#ff6b6b]/40 px-2 py-0.5 font-semibold uppercase tracking-[0.2em] text-[#ff6b6b] transition-colors hover:border-[#ff6b6b] hover:text-white"
+              >
+                Retry
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-md border border-[#2a2a2a] px-2 py-0.5 font-semibold uppercase tracking-[0.2em] text-[#b0b0b0] transition-colors hover:border-[#c41e3a] hover:text-white"
+              >
+                Dismiss
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Action Buttons - shown on hover */}
-      <div className={`flex items-center gap-1 absolute top-0 right-4 bg-[#111] border border-[#2a2a2a] rounded-md px-1.5 py-1 shadow-2xl transition-all duration-200 z-10 ${
-        (showActions || showReactionPicker) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}>
-        <button
-          onClick={() => setShowReactionPicker(!showReactionPicker)}
-          className="p-1 text-[#808080] hover:text-white hover:bg-[#1a1a1a] rounded transition-all"
-          title="Add reaction (or right-click)"
-        >
-          <iconify-icon icon="solar:sticker-smiley-bold" style={{ fontSize: '16px' }}></iconify-icon>
-        </button>
-
-        {onDelete && message.authorId === currentUserId && (
+      <div
+        className={`absolute right-4 top-0 z-10 flex items-center gap-1 rounded-md border border-[#2a2a2a] bg-[#111] px-1.5 py-1 shadow-2xl transition-all duration-150 ${
+          showActions || showReactionPicker ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
+        {canReact && (
           <button
-            onClick={onDelete}
-            className="p-1 text-[#808080] hover:text-[#c41e3a] hover:bg-[#1a1a1a] rounded transition-all"
+            type="button"
+            onClick={() => setShowReactionPicker((prev) => !prev)}
+            className="rounded p-1 text-[#808080] transition-all hover:bg-[#1a1a1a] hover:text-white"
+            title="Add reaction"
+          >
+            <iconify-icon icon="solar:sticker-smiley-bold" style={{ fontSize: '16px' }} />
+          </button>
+        )}
+
+        {canReport && (
+          <button
+            type="button"
+            onClick={openReportModal}
+            className="rounded p-1 text-[#808080] transition-all hover:bg-[#1a1a1a] hover:text-white"
+            title="Report message"
+          >
+            <iconify-icon icon="solar:flag-2-bold" style={{ fontSize: '16px' }} />
+          </button>
+        )}
+
+        {canDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="rounded p-1 text-[#808080] transition-all hover:bg-[#1a1a1a] hover:text-[#c41e3a]"
             title="Delete message"
           >
-            <iconify-icon icon="solar:trash-bin-trash-bold" style={{ fontSize: '16px' }}></iconify-icon>
+            <iconify-icon icon="solar:trash-bin-trash-bold" style={{ fontSize: '16px' }} />
           </button>
         )}
       </div>
 
-      {/* Reaction Picker Popover */}
-      {showReactionPicker && (
-        <div className="absolute z-50 top-full right-4 mt-1">
+      {showReactionPicker && canReact && (
+        <div className="absolute right-4 top-full z-40 mt-1">
           <div className="relative">
-            <div 
-              className="fixed inset-0 z-[-1]" 
-              onClick={() => setShowReactionPicker(false)}
-            ></div>
+            <div className="fixed inset-0 z-[-1]" onClick={() => setShowReactionPicker(false)} />
             <ReactionPicker
               onReact={(emoji) => {
-                onReact?.(emoji)
+                handleReact(emoji)
                 setShowReactionPicker(false)
               }}
-              currentReactions={message.reactionEmojis || []}
+              currentReactions={reactionEmojis}
             />
           </div>
         </div>
       )}
+
+      {lightboxUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setLightboxUrl(null)}>
+          <button
+            type="button"
+            className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/40 p-2 text-white transition-colors hover:border-white/50"
+            onClick={() => setLightboxUrl(null)}
+            aria-label="Close image preview"
+          >
+            <iconify-icon icon="solar:close-circle-linear" width="22" height="22" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Attachment preview"
+            className="max-h-[85vh] max-w-[90vw] rounded-xl border border-white/10 object-contain shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowReportModal(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#111] p-5" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h4 className="text-base font-semibold text-white">Report message</h4>
+              <button
+                type="button"
+                onClick={() => setShowReportModal(false)}
+                className="rounded p-1 text-[#808080] transition-colors hover:bg-[#1a1a1a] hover:text-white"
+                aria-label="Close report dialog"
+              >
+                <iconify-icon icon="solar:close-circle-linear" width="20" height="20" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm">
+              <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Reason</label>
+              <select
+                value={reportReason}
+                onChange={(event) => setReportReason(event.target.value as (typeof REPORT_REASONS)[number]['value'])}
+                className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white focus:border-[#c41e3a] focus:outline-none"
+              >
+                {REPORT_REASONS.map((reason) => (
+                  <option key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+
+              <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Note (optional)</label>
+              <textarea
+                value={reportNote}
+                onChange={(event) => setReportNote(event.target.value)}
+                rows={3}
+                maxLength={400}
+                placeholder="Add context for moderators"
+                className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white placeholder:text-[#606060] focus:border-[#c41e3a] focus:outline-none"
+              />
+              {reportError && <div className="text-xs font-medium text-[#ff6b6b]">{reportError}</div>}
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowReportModal(false)}
+                className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#b0b0b0] transition-colors hover:border-[#3a3a3a] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReport}
+                disabled={reportState === 'submitting'}
+                className="rounded-lg border border-[#c41e3a] bg-[#c41e3a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#d92745] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {reportState === 'submitting' ? 'Sending...' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface AttachmentTileProps {
+  attachment: ChatAttachment
+  allowAutoplay: boolean
+  onOpenLightbox: (url: string) => void
+}
+
+function AttachmentTile({ attachment, allowAutoplay, onOpenLightbox }: AttachmentTileProps) {
+  const url = attachment.url || attachment.thumbnailUrl
+  const isImage = attachment.type === 'image'
+  const mediaClass = 'w-full max-w-[420px] rounded-xl border border-[#2a2a2a] bg-[#0a0a0a] shadow-lg'
+
+  if (!url) {
+    return (
+      <div className={`${mediaClass} flex h-40 items-center justify-center text-xs uppercase tracking-[0.2em] text-[#707070]`}>
+        Media unavailable
+      </div>
+    )
+  }
+
+  if (isImage) {
+    return (
+      <button type="button" className={`${mediaClass} overflow-hidden`} onClick={() => onOpenLightbox(url)}>
+        <img src={url} alt="Attachment" loading="lazy" className="h-full w-full object-cover" />
+      </button>
+    )
+  }
+
+  return (
+    <div className={`${mediaClass} overflow-hidden`}>
+      <video
+        src={url}
+        poster={attachment.thumbnailUrl}
+        controls
+        playsInline
+        muted={allowAutoplay}
+        autoPlay={allowAutoplay}
+        preload="metadata"
+        className="h-full w-full object-cover"
+      />
     </div>
   )
 }

@@ -58,6 +58,23 @@ export type PaginatedResult<T> = {
   page: number
 }
 
+function buildCreatorView(creator: Doc<'users'> | null, artistId: Id<'users'>) {
+  if (creator) {
+    return {
+      _id: creator._id,
+      displayName: creator.displayName,
+      avatar: creator.avatar,
+    }
+  }
+
+  const seed = String(artistId).slice(-8)
+  return {
+    _id: artistId,
+    displayName: 'ROAPR Studio',
+    avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}`,
+  }
+}
+
 export type EventDetailWithContext = {
   event: {
     _id: Id<'events'>
@@ -224,11 +241,7 @@ export const getEvents = query({
           capacity: event.capacity,
           ticketsSold: event.ticketsSold,
           availablePercent: (event.capacity - event.ticketsSold) / event.capacity,
-          creator: {
-            _id: creator!._id,
-            displayName: creator!.displayName,
-            avatar: creator!.avatar,
-          },
+          creator: buildCreatorView(creator, event.artistId),
           createdAt: event.createdAt,
         }
       })
@@ -285,11 +298,7 @@ export const searchEvents = query({
           capacity: event.capacity,
           ticketsSold: event.ticketsSold,
           availablePercent: (event.capacity - event.ticketsSold) / event.capacity,
-          creator: {
-            _id: creator!._id,
-            displayName: creator!.displayName,
-            avatar: creator!.avatar,
-          },
+          creator: buildCreatorView(creator, event.artistId),
           createdAt: event.createdAt,
         }
       })

@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server"
 import { v, ConvexError } from "convex/values"
+import { DEFAULT_MODERATION_POLICY } from "./moderationUtils"
 
 // Helper to check if user has admin privileges
 async function requireAdmin(ctx: any) {
@@ -23,6 +24,31 @@ async function requireAdmin(ctx: any) {
 
     return user
 }
+
+const SUPPORTED_MEDIA_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
+]
+
+const DEFAULT_CHAT_SERVER_SETTINGS = {
+    slowModeSeconds: 0,
+    maxImageMb: 6,
+    maxVideoMb: 24,
+    allowedMediaTypes: SUPPORTED_MEDIA_TYPES,
+    enabledStickerPackIds: [] as any[],
+    retentionDays: undefined as number | undefined,
+}
+
+const buildProductSearchText = (name: string, description: string, tags: string[]) =>
+    [name, description, tags.join(" ")].join(" ").toLowerCase()
+
+const normalizeWordList = (items: string[] | undefined) =>
+    Array.from(
+        new Set((items || []).map((item) => item.toLowerCase().trim()).filter(Boolean))
+    ).slice(0, 500)
 
 // ==================== USER MANAGEMENT ====================
 
@@ -139,6 +165,14 @@ export const createProduct = mutation({
         tags: v.array(v.string()),
         images: v.array(v.string()),
         status: v.union(v.literal("active"), v.literal("draft"), v.literal("archived")),
+        model3dUrl: v.optional(v.string()),
+        modelPosterUrl: v.optional(v.string()),
+        modelConfig: v.optional(v.object({
+            autoRotate: v.optional(v.boolean()),
+            cameraOrbit: v.optional(v.string()),
+            minFov: v.optional(v.number()),
+            maxFov: v.optional(v.number()),
+        })),
     },
     handler: async (ctx, args) => {
         const admin = await requireAdmin(ctx)
@@ -152,6 +186,7 @@ export const createProduct = mutation({
         }
 
         const now = Date.now()
+        const searchText = buildProductSearchText(args.name, args.description, args.tags)
         const productId = await ctx.db.insert("merchProducts", {
             name: args.name,
             description: args.description,
@@ -159,8 +194,12 @@ export const createProduct = mutation({
             price: args.price,
             category: args.category as "apparel" | "accessories" | "vinyl" | "limited" | "other",
             tags: args.tags,
+            searchText,
             imageUrls: args.images,
             thumbnailUrl: args.images[0] || "",
+            model3dUrl: args.model3dUrl,
+            modelPosterUrl: args.modelPosterUrl,
+            modelConfig: args.modelConfig,
             totalStock: 0,
             lowStockThreshold: 10,
             status: args.status,
@@ -172,6 +211,28 @@ export const createProduct = mutation({
         })
 
         return { success: true, productId }
+    },
+})
+
+export const generateMerchUploadUrl = mutation({
+    args: {},
+    handler: async (ctx) => {
+        await requireAdmin(ctx)
+        return await ctx.storage.generateUploadUrl()
+    },
+})
+
+export const resolveMerchUpload = mutation({
+    args: {
+        storageId: v.id("_storage"),
+    },
+    handler: async (ctx, args) => {
+        await requireAdmin(ctx)
+        const url = await ctx.storage.getUrl(args.storageId)
+        if (!url) {
+            throw new ConvexError("Upload not found. Please retry.")
+        }
+        return { url }
     },
 })
 
@@ -187,6 +248,14 @@ export const updateProduct = mutation({
             tags: v.optional(v.array(v.string())),
             images: v.optional(v.array(v.string())),
             status: v.optional(v.union(v.literal("active"), v.literal("draft"), v.literal("archived"))),
+            model3dUrl: v.optional(v.string()),
+            modelPosterUrl: v.optional(v.string()),
+            modelConfig: v.optional(v.object({
+                autoRotate: v.optional(v.boolean()),
+                cameraOrbit: v.optional(v.string()),
+                minFov: v.optional(v.number()),
+                maxFov: v.optional(v.number()),
+            })),
         }),
     },
     handler: async (ctx, args) => {
@@ -201,9 +270,15 @@ export const updateProduct = mutation({
             throw new ConvexError("Price must be non-negative")
         }
 
+        const nextName = args.updates.name ?? product.name
+        const nextDescription = args.updates.description ?? product.description
+        const nextTags = args.updates.tags ?? product.tags ?? []
+        const searchText = buildProductSearchText(nextName, nextDescription, nextTags)
+
         // Build update object with proper types
         const updateData: Record<string, any> = {
             updatedAt: Date.now(),
+            searchText,
         }
         if (args.updates.name !== undefined) updateData.name = args.updates.name
         if (args.updates.description !== undefined) updateData.description = args.updates.description
@@ -218,6 +293,9 @@ export const updateProduct = mutation({
             updateData.thumbnailUrl = args.updates.images[0] || product.thumbnailUrl
         }
         if (args.updates.status !== undefined) updateData.status = args.updates.status
+        if (args.updates.model3dUrl !== undefined) updateData.model3dUrl = args.updates.model3dUrl
+        if (args.updates.modelPosterUrl !== undefined) updateData.modelPosterUrl = args.updates.modelPosterUrl
+        if (args.updates.modelConfig !== undefined) updateData.modelConfig = args.updates.modelConfig
 
         await ctx.db.patch(args.productId, updateData)
 
@@ -243,6 +321,464 @@ export const archiveProduct = mutation({
         })
 
         return { success: true, productId: args.productId }
+    },
+})
+
+// ==================== CHAT SETTINGS & STICKERS ====================
+
+export const updateServerSettings = mutation({
+    args: {
+        slowModeSeconds: v.optional(v.number()),
+        maxImageMb: v.optional(v.number()),
+        maxVideoMb: v.optional(v.number()),
+        allowedMediaTypes: v.optional(v.array(v.string())),
+        enabledStickerPackIds: v.optional(v.array(v.id("chatStickerPacks"))),
+        retentionDays: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireAdmin(ctx)
+
+        const allowedSlowModes = new Set([0, 5, 10, 30])
+        if (args.slowModeSeconds !== undefined && !allowedSlowModes.has(args.slowModeSeconds)) {
+            throw new ConvexError("Slow mode must be one of: 0, 5, 10, 30 seconds")
+        }
+
+        if (args.maxImageMb !== undefined && (args.maxImageMb < 1 || args.maxImageMb > 100)) {
+            throw new ConvexError("Image limit must be between 1MB and 100MB")
+        }
+        if (args.maxVideoMb !== undefined && (args.maxVideoMb < 1 || args.maxVideoMb > 500)) {
+            throw new ConvexError("Video limit must be between 1MB and 500MB")
+        }
+
+        if (args.allowedMediaTypes) {
+            const invalid = args.allowedMediaTypes.filter((type) => !SUPPORTED_MEDIA_TYPES.includes(type))
+            if (invalid.length > 0) {
+                throw new ConvexError(`Unsupported media types: ${invalid.join(", ")}`)
+            }
+        }
+
+        const now = Date.now()
+        const existing = await ctx.db.query("chatServerSettings").first()
+
+        const baseEnabledPackIds = args.enabledStickerPackIds ?? existing?.enabledStickerPackIds ?? []
+        const enabledStickerPackIds: any[] = []
+        for (const packId of baseEnabledPackIds) {
+            const pack = await ctx.db.get(packId)
+            if (!pack || !pack.isActive) {
+                if (args.enabledStickerPackIds) {
+                    throw new ConvexError("Cannot enable an inactive or missing sticker pack")
+                }
+                continue
+            }
+            enabledStickerPackIds.push(packId)
+        }
+
+        const retentionDaysValue = args.retentionDays !== undefined
+            ? (args.retentionDays > 0 ? args.retentionDays : undefined)
+            : existing?.retentionDays
+        if (retentionDaysValue !== undefined && (retentionDaysValue < 1 || retentionDaysValue > 365)) {
+            throw new ConvexError("Retention must be between 1 and 365 days")
+        }
+
+        const nextSettings = {
+            slowModeSeconds: args.slowModeSeconds ?? existing?.slowModeSeconds ?? DEFAULT_CHAT_SERVER_SETTINGS.slowModeSeconds,
+            maxImageMb: args.maxImageMb ?? existing?.maxImageMb ?? DEFAULT_CHAT_SERVER_SETTINGS.maxImageMb,
+            maxVideoMb: args.maxVideoMb ?? existing?.maxVideoMb ?? DEFAULT_CHAT_SERVER_SETTINGS.maxVideoMb,
+            allowedMediaTypes: args.allowedMediaTypes
+                ? [...args.allowedMediaTypes]
+                : existing?.allowedMediaTypes ?? [...DEFAULT_CHAT_SERVER_SETTINGS.allowedMediaTypes],
+            enabledStickerPackIds,
+            retentionDays: retentionDaysValue,
+            updatedAt: now,
+            updatedBy: admin._id,
+        }
+
+        if (existing) {
+            await ctx.db.patch(existing._id, nextSettings)
+            return { ...existing, ...nextSettings }
+        }
+
+        const settingsId = await ctx.db.insert("chatServerSettings", nextSettings)
+        return await ctx.db.get(settingsId)
+    },
+})
+
+export const createStickerPack = mutation({
+    args: {
+        name: v.string(),
+        description: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireAdmin(ctx)
+
+        const name = args.name.trim()
+        if (name.length < 2) {
+            throw new ConvexError("Sticker pack name is too short")
+        }
+
+        const packs = await ctx.db.query("chatStickerPacks").collect()
+        const duplicate = packs.find((pack) => pack.name.toLowerCase() === name.toLowerCase())
+        if (duplicate) {
+            throw new ConvexError("A sticker pack with this name already exists")
+        }
+
+        const packId = await ctx.db.insert("chatStickerPacks", {
+            name,
+            description: args.description?.trim(),
+            isActive: true,
+            createdAt: Date.now(),
+            createdBy: admin._id,
+        })
+
+        return await ctx.db.get(packId)
+    },
+})
+
+export const toggleStickerPackActive = mutation({
+    args: {
+        packId: v.id("chatStickerPacks"),
+        isActive: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        await requireAdmin(ctx)
+
+        const pack = await ctx.db.get(args.packId)
+        if (!pack) {
+            throw new ConvexError("Sticker pack not found")
+        }
+
+        await ctx.db.patch(args.packId, { isActive: args.isActive })
+
+        if (!args.isActive) {
+            const settings = await ctx.db.query("chatServerSettings").first()
+            if (settings && settings.enabledStickerPackIds.includes(args.packId)) {
+                await ctx.db.patch(settings._id, {
+                    enabledStickerPackIds: settings.enabledStickerPackIds.filter((id: any) => id !== args.packId),
+                    updatedAt: Date.now(),
+                })
+            }
+        }
+
+        return { success: true }
+    },
+})
+
+export const listStickerPacks = query({
+    args: {},
+    handler: async (ctx) => {
+        await requireAdmin(ctx)
+
+        const packs = await ctx.db.query("chatStickerPacks").collect()
+        const settings = await ctx.db.query("chatServerSettings").first()
+        const enabledIds = new Set(settings?.enabledStickerPackIds ?? [])
+
+        const packsWithCounts = await Promise.all(
+            packs.map(async (pack) => {
+                const stickers = await ctx.db
+                    .query("chatStickers")
+                    .withIndex("by_pack", (q) => q.eq("packId", pack._id))
+                    .collect()
+
+                return {
+                    ...pack,
+                    stickerCount: stickers.length,
+                    isEnabled: enabledIds.has(pack._id),
+                }
+            })
+        )
+
+        return packsWithCounts.sort((a, b) => a.name.localeCompare(b.name))
+    },
+})
+
+export const generateStickerUploadUrl = mutation({
+    args: {},
+    handler: async (ctx) => {
+        await requireAdmin(ctx)
+        return await ctx.storage.generateUploadUrl()
+    },
+})
+
+export const uploadSticker = mutation({
+    args: {
+        packId: v.id("chatStickerPacks"),
+        name: v.string(),
+        storageId: v.id("_storage"),
+        tags: v.optional(v.array(v.string())),
+    },
+    handler: async (ctx, args) => {
+        await requireAdmin(ctx)
+
+        const pack = await ctx.db.get(args.packId)
+        if (!pack || !pack.isActive) {
+            throw new ConvexError("Sticker pack not found or inactive")
+        }
+
+        const url = await ctx.storage.getUrl(args.storageId)
+        if (!url) {
+            throw new ConvexError("Upload not found")
+        }
+
+        const tags = normalizeWordList(args.tags)
+
+        const stickerId = await ctx.db.insert("chatStickers", {
+            packId: args.packId,
+            name: args.name.trim(),
+            imageUrl: url,
+            storageId: args.storageId,
+            tags,
+            createdAt: Date.now(),
+            isActive: true,
+        })
+
+        return await ctx.db.get(stickerId)
+    },
+})
+
+// ==================== MODERATION POLICY & FLAGS ====================
+
+export const updateModerationPolicy = mutation({
+    args: {
+        warningWindowDays: v.optional(v.number()),
+        warningThreshold: v.optional(v.number()),
+        timeoutDurationsMs: v.optional(v.array(v.number())),
+        banThreshold: v.optional(v.number()),
+        denylist: v.optional(v.array(v.string())),
+        allowlist: v.optional(v.array(v.string())),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireAdmin(ctx)
+
+        const existing = await ctx.db.query("moderationPolicy").first()
+        const base = existing ?? DEFAULT_MODERATION_POLICY
+
+        const warningWindowDays = args.warningWindowDays ?? base.warningWindowDays
+        if (warningWindowDays < 1 || warningWindowDays > 180) {
+            throw new ConvexError("Warning window must be between 1 and 180 days")
+        }
+
+        const warningThreshold = args.warningThreshold ?? base.warningThreshold
+        if (warningThreshold < 1 || warningThreshold > 10) {
+            throw new ConvexError("Warning threshold must be between 1 and 10")
+        }
+
+        const timeoutDurationsMs = args.timeoutDurationsMs
+            ? Array.from(new Set(args.timeoutDurationsMs.filter((d) => d > 0))).sort((a, b) => a - b).slice(0, 10)
+            : base.timeoutDurationsMs
+        if (timeoutDurationsMs.length === 0) {
+            throw new ConvexError("At least one timeout duration is required")
+        }
+
+        const banThreshold = args.banThreshold ?? base.banThreshold
+        if (banThreshold < 1 || banThreshold > 5) {
+            throw new ConvexError("Ban threshold must be between 1 and 5")
+        }
+
+        const denylist = normalizeWordList(args.denylist ?? base.denylist)
+        const allowlist = normalizeWordList(args.allowlist ?? base.allowlist)
+
+        const nextPolicy = {
+            warningWindowDays,
+            warningThreshold,
+            timeoutDurationsMs,
+            banThreshold,
+            denylist,
+            allowlist,
+            updatedAt: Date.now(),
+            updatedBy: admin._id,
+        }
+
+        if (existing) {
+            await ctx.db.patch(existing._id, nextPolicy)
+            return { ...existing, ...nextPolicy }
+        }
+
+        const policyId = await ctx.db.insert("moderationPolicy", nextPolicy)
+        return await ctx.db.get(policyId)
+    },
+})
+
+export const updateFeatureFlag = mutation({
+    args: {
+        key: v.string(),
+        enabled: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        const admin = await requireAdmin(ctx)
+        const key = args.key.trim()
+        if (key.length < 2 || key.length > 64) {
+            throw new ConvexError("Feature flag key must be between 2 and 64 characters")
+        }
+
+        const existing = await ctx.db
+            .query("adminFeatureFlags")
+            .withIndex("by_key", (q) => q.eq("key", key))
+            .first()
+
+        const next = {
+            key,
+            enabled: args.enabled,
+            updatedAt: Date.now(),
+            updatedBy: admin._id,
+        }
+
+        if (existing) {
+            await ctx.db.patch(existing._id, next)
+            return { ...existing, ...next }
+        }
+
+        const flagId = await ctx.db.insert("adminFeatureFlags", next)
+        return await ctx.db.get(flagId)
+    },
+})
+
+export const getFeatureFlags = query({
+    args: {},
+    handler: async (ctx) => {
+        const flags = await ctx.db.query("adminFeatureFlags").collect()
+        return flags.reduce<Record<string, boolean>>((acc, flag) => {
+            acc[flag.key] = flag.enabled
+            return acc
+        }, {})
+    },
+})
+
+export const seedModerationData = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const admin = await requireAdmin(ctx)
+
+        const existingSeed = await ctx.db
+            .query("moderationReports")
+            .withIndex("by_status_createdAt", (q) => q.eq("status", "open"))
+            .order("desc")
+            .take(50)
+        if (existingSeed.some((report) => report.note === "seeded-demo")) {
+            return { seeded: false, reason: "Seed data already present" }
+        }
+
+        const channel = await ctx.db.query("channels").first()
+        if (!channel) {
+            throw new ConvexError("Create at least one channel before seeding moderation data")
+        }
+
+        const now = Date.now()
+        let seedMessage = await ctx.db
+            .query("messages")
+            .withIndex("by_channel", (q) => q.eq("channelId", channel._id))
+            .order("desc")
+            .take(1)
+        let messageId = seedMessage[0]?._id
+
+        if (!messageId) {
+            messageId = await ctx.db.insert("messages", {
+                channelId: channel._id,
+                authorId: admin._id,
+                authorDisplayName: admin.displayName,
+                authorAvatar: admin.avatar,
+                authorTier: admin.fanTier,
+                content: "Seeded moderation sample message",
+                messageType: "text",
+                editedAt: undefined,
+                isPinned: false,
+                isDeleted: false,
+                deletedAt: undefined,
+                deletedBy: undefined,
+                reactionEmojis: [],
+                reactionCount: 0,
+                upVoteCount: 0,
+                downVoteCount: 0,
+                netVoteCount: 0,
+                idempotencyKey: `seed-${now}`,
+                createdAt: now,
+            })
+            await ctx.db.patch(channel._id, {
+                messageCount: channel.messageCount + 1,
+                lastMessageAt: now,
+                lastMessageId: messageId,
+                updatedAt: now,
+            })
+        }
+
+        const users = await ctx.db.query("users").take(3)
+        const reporters = users.length > 0 ? users : [admin]
+
+        for (const reporter of reporters) {
+            await ctx.db.insert("moderationReports", {
+                contentType: "chat_message",
+                contentId: messageId,
+                reportedBy: reporter._id,
+                reason: "harassment",
+                note: "seeded-demo",
+                status: "open",
+                createdAt: now,
+            })
+        }
+
+        const category = await ctx.db.query("categories").first()
+        if (category) {
+            const threadId = await ctx.db.insert("threads", {
+                title: "Seeded moderation thread",
+                content: "This thread exists to seed the moderation queue.",
+                authorId: admin._id,
+                authorDisplayName: admin.displayName,
+                authorAvatar: admin.avatar,
+                authorTier: admin.fanTier,
+                categoryId: category._id,
+                tags: ["seeded"],
+                upVoterIds: [],
+                downVoterIds: [],
+                upVoteCount: 0,
+                downVoteCount: 0,
+                netVoteCount: 0,
+                replyCount: 0,
+                viewCount: 0,
+                isDeleted: false,
+                moderationStatus: "active",
+                createdAt: now,
+                updatedAt: now,
+            })
+
+            await ctx.db.patch(category._id, {
+                threadCount: (category.threadCount || 0) + 1,
+                lastThreadAt: now,
+            })
+
+            const replyId = await ctx.db.insert("replies", {
+                threadId,
+                authorId: admin._id,
+                authorDisplayName: admin.displayName,
+                authorAvatar: admin.avatar,
+                authorTier: admin.fanTier,
+                content: "Seeded moderation reply",
+                upVoterIds: [],
+                downVoterIds: [],
+                upVoteCount: 0,
+                downVoteCount: 0,
+                isDeleted: false,
+                moderationStatus: "active",
+                createdAt: now,
+            })
+
+            await ctx.db.patch(threadId, {
+                replyCount: 1,
+                lastReplyAt: now,
+                lastReplyById: admin._id,
+                updatedAt: now,
+            })
+
+            await ctx.db.insert("moderationReports", {
+                contentType: "forum_reply",
+                contentId: replyId,
+                reportedBy: admin._id,
+                reason: "spam",
+                note: "seeded-demo",
+                status: "open",
+                createdAt: now,
+            })
+        }
+
+        return { seeded: true }
     },
 })
 

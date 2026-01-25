@@ -88,7 +88,44 @@ export const seedDemoData = mutation({
         }
 
         // 3. Create Mock Products
-        const products = [
+        type SeedProduct = {
+            name: string
+            description: string
+            price: number
+            category: 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other'
+            image: string
+            options: Array<{ size: string; color: string }>
+            tags?: string[]
+            model3dUrl?: string
+            modelPosterUrl?: string
+            modelConfig?: {
+                autoRotate?: boolean
+                cameraOrbit?: string
+                minFov?: number
+                maxFov?: number
+            }
+        }
+
+        const products: SeedProduct[] = [
+            {
+                name: 'ROAPR Mini Figurine',
+                description: 'Limited drop sculpt inspired by the tour visuals.',
+                price: 12500, // $125.00
+                category: 'limited' as const,
+                image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1000&auto=format&fit=crop',
+                tags: ['ROAPR Studio', 'Limited Drop', 'figurine'],
+                model3dUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                modelPosterUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.webp',
+                modelConfig: {
+                    autoRotate: true,
+                    cameraOrbit: '0deg 75deg 120%',
+                    minFov: 30,
+                    maxFov: 80,
+                },
+                options: [
+                    { size: 'Standard', color: 'Nebula' }
+                ]
+            },
             {
                 name: 'ROA Elite Watch',
                 description: 'Premium stainless steel chronograph with Wolfpack engraving.',
@@ -184,6 +221,8 @@ export const seedDemoData = mutation({
 
         if (creator) {
             for (const p of products) {
+                const productTags = p.tags ?? ['demo', 'new']
+                const searchText = [p.name, p.description, p.category, ...productTags].join(' ').toLowerCase()
                 const productId = await ctx.db.insert('merchProducts', {
                     name: p.name,
                     description: p.description,
@@ -193,7 +232,11 @@ export const seedDemoData = mutation({
                     imageUrls: [p.image],
                     thumbnailUrl: p.image,
                     category: p.category,
-                    tags: ['demo', 'new'],
+                    tags: productTags,
+                    model3dUrl: p.model3dUrl,
+                    modelPosterUrl: p.modelPosterUrl,
+                    modelConfig: p.modelConfig,
+                    searchText,
                     status: 'active',
                     isPreOrder: false,
                     isDropProduct: false,

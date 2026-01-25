@@ -2,7 +2,21 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
-export type AdminTab = 'overview' | 'merch' | 'events' | 'chat' | 'forum' | 'queues' | 'quests' | 'users' | 'points' | 'rewards' | 'redemptions' | 'instagram' | 'system'
+export type AdminTab =
+  | 'overview'
+  | 'merch'
+  | 'events'
+  | 'chat'
+  | 'forum'
+  | 'moderation'
+  | 'queues'
+  | 'quests'
+  | 'users'
+  | 'points'
+  | 'rewards'
+  | 'redemptions'
+  | 'instagram'
+  | 'system'
 
 interface AdminOverviewProps {
   onNavigate: (tab: AdminTab) => void
@@ -38,6 +52,7 @@ export function AdminOverview({ onNavigate }: AdminOverviewProps) {
     { label: 'Create Event', icon: 'solar:calendar-linear', tab: 'events', action: 'add' },
     { label: 'Create Channel', icon: 'solar:chat-square-dots-linear', tab: 'chat', action: 'add' },
     { label: 'New Category', icon: 'solar:clipboard-list-linear', tab: 'forum', action: 'add' },
+    { label: 'Moderation Hub', icon: 'solar:shield-warning-linear', tab: 'moderation', action: 'review' },
     { label: 'View Users', icon: 'solar:users-group-rounded-linear', tab: 'users', action: 'view' },
   ]
 

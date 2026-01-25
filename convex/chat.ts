@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
@@ -9,8 +9,88 @@ import {
   validateIdempotencyKey,
   updateUserSocialPoints,
 } from "./helpers";
+import {
+  findBlockedTerm,
+  getModerationPolicy,
+  isUserBanned,
+  isUserTimedOut,
+} from "./moderationUtils";
 
 type FanTier = "bronze" | "silver" | "gold" | "platinum";
+
+const DEFAULT_CHAT_SETTINGS = {
+  slowModeSeconds: 0,
+  maxImageMb: 6,
+  maxVideoMb: 24,
+  allowedMediaTypes: [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
+  ],
+  enabledStickerPackIds: [] as Id<"chatStickerPacks">[],
+  retentionDays: undefined as number | undefined,
+};
+
+const DEFAULT_USER_CHAT_SETTINGS = {
+  autoplayMedia: true,
+  showStickers: true,
+  compactMode: false,
+};
+
+const RECENT_MESSAGE_WINDOW = 50;
+const MAX_ATTACHMENTS = 4;
+const RATE_LIMIT_WINDOW_MS = 30 * 1000;
+const RATE_LIMIT_MAX_MESSAGES = 12;
+
+const getServerSettingsInternal = async (ctx: any) => {
+  const settings = await ctx.db.query("chatServerSettings").first();
+  return settings ? { ...DEFAULT_CHAT_SETTINGS, ...settings } : DEFAULT_CHAT_SETTINGS;
+};
+
+const getUserChatSettingsInternal = async (
+  ctx: any,
+  userId: Id<"users">
+) => {
+  const settings = await ctx.db
+    .query("userChatSettings")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .first();
+
+  return settings ? { ...DEFAULT_USER_CHAT_SETTINGS, ...settings } : DEFAULT_USER_CHAT_SETTINGS;
+};
+
+const getUserModerationStatusInternal = async (ctx: any, userId: Id<"users">) => {
+  return await ctx.db
+    .query("userModerationStatus")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .first();
+};
+
+const assertUserCanChat = async (ctx: any, userId: Id<"users">) => {
+  const status = await getUserModerationStatusInternal(ctx, userId);
+  if (isUserBanned(status)) {
+    throw new ConvexError("You are banned from chat.");
+  }
+  if (isUserTimedOut(status)) {
+    const secondsRemaining = Math.max(
+      1,
+      Math.ceil(((status?.timeoutUntil ?? 0) - Date.now()) / 1000)
+    );
+    throw new ConvexError(`You are timed out for ${secondsRemaining}s.`);
+  }
+  return status;
+};
+
+const normalizeMessage = (message: any) => ({
+  ...message,
+  messageType: message.messageType ?? "text",
+  attachments: message.attachments ?? [],
+  upVoteCount: message.upVoteCount || 0,
+  downVoteCount: message.downVoteCount || 0,
+  netVoteCount: message.netVoteCount || 0,
+});
 
 export const getChannels = query({
   args: {},
@@ -102,51 +182,34 @@ export const getMessages = query({
       throw new ConvexError("Access denied");
     }
 
-    let limit = args.limit;
-    if (limit > 50) {
-      limit = 50;
-    }
+    const limit = Math.max(1, Math.min(args.limit, RECENT_MESSAGE_WINDOW));
 
-    let allMessages = await ctx.db
-      .query("messages")
-      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-      .collect();
+    const baseQuery = args.cursor
+      ? ctx.db
+          .query("messages")
+          .withIndex("by_channel", (q) =>
+            q.eq("channelId", args.channelId).lt("createdAt", args.cursor!.createdAt)
+          )
+      : ctx.db
+          .query("messages")
+          .withIndex("by_channel", (q) => q.eq("channelId", args.channelId));
 
-    allMessages = allMessages.filter((m) => !m.isDeleted);
+    const rawMessages = await baseQuery.order("desc").take(limit + 1);
+    const activeMessages = rawMessages.filter((m) => !m.isDeleted);
+    const pageMessages = activeMessages.slice(0, limit);
 
-    allMessages.sort((a, b) => b.createdAt - a.createdAt);
+    const hasMore = rawMessages.length > limit;
+    const oldestMessage = pageMessages[pageMessages.length - 1];
 
-    if (args.cursor) {
-      const cursorIndex = allMessages.findIndex(
-        (m) => m._id === args.cursor!.messageId
-      );
-      if (cursorIndex !== -1) {
-        allMessages = allMessages.slice(cursorIndex + 1);
-      }
-    }
+    const nextCursor =
+      hasMore && oldestMessage
+        ? { messageId: oldestMessage._id, createdAt: oldestMessage.createdAt }
+        : null;
 
-    const messages = allMessages.slice(0, limit).map(m => ({
-      ...m,
-      upVoteCount: m.upVoteCount || 0,
-      downVoteCount: m.downVoteCount || 0,
-      netVoteCount: m.netVoteCount || 0,
-      upVoterIds: m.upVoterIds || [],
-      downVoterIds: m.downVoterIds || [],
-    }));
-
-    const hasMore = allMessages.length > limit;
-
-    let nextCursor: { messageId: Id<"messages">; createdAt: number } | null =
-      null;
-    if (hasMore && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      nextCursor = {
-        messageId: lastMessage._id,
-        createdAt: lastMessage.createdAt,
-      };
-    }
-
-    return { messages, nextCursor };
+    return {
+      messages: pageMessages.reverse().map(normalizeMessage),
+      nextCursor,
+    };
   },
 });
 
@@ -161,22 +224,16 @@ export const subscribeToMessages = query({
       throw new ConvexError("Access denied");
     }
 
-    const messages = await ctx.db
+    const recentMessages = await ctx.db
       .query("messages")
       .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-      .collect();
+      .order("desc")
+      .take(RECENT_MESSAGE_WINDOW);
 
-    return messages
+    return recentMessages
       .filter((m) => !m.isDeleted)
-      .map(m => ({
-        ...m,
-        upVoteCount: m.upVoteCount || 0,
-        downVoteCount: m.downVoteCount || 0,
-        netVoteCount: m.netVoteCount || 0,
-        upVoterIds: m.upVoterIds || [],
-        downVoterIds: m.downVoterIds || [],
-      }))
-      .sort((a, b) => a.createdAt - b.createdAt);
+      .reverse()
+      .map(normalizeMessage);
   },
 });
 
@@ -191,16 +248,115 @@ export const subscribeToTyping = query({
       throw new ConvexError("Access denied");
     }
 
-    const indicators = await ctx.db
+    const now = Date.now();
+    return await ctx.db
       .query("userTypingIndicators")
-      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
+      .withIndex("by_channel", (q) =>
+        q.eq("channelId", args.channelId).gt("expiresAt", now)
+      )
+      .order("asc")
+      .collect();
+  },
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const getServerSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    await getCurrentUser(ctx);
+    return await getServerSettingsInternal(ctx);
+  },
+});
+
+export const getUserChatSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    return await getUserChatSettingsInternal(ctx, user._id);
+  },
+});
+
+export const updateUserChatSettings = mutation({
+  args: {
+    autoplayMedia: v.optional(v.boolean()),
+    showStickers: v.optional(v.boolean()),
+    compactMode: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const existing = await ctx.db
+      .query("userChatSettings")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+
+    const nextSettings = {
+      autoplayMedia:
+        args.autoplayMedia ?? existing?.autoplayMedia ?? DEFAULT_USER_CHAT_SETTINGS.autoplayMedia,
+      showStickers:
+        args.showStickers ?? existing?.showStickers ?? DEFAULT_USER_CHAT_SETTINGS.showStickers,
+      compactMode:
+        args.compactMode ?? existing?.compactMode ?? DEFAULT_USER_CHAT_SETTINGS.compactMode,
+      updatedAt: Date.now(),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, nextSettings);
+      return { ...existing, ...nextSettings };
+    }
+
+    const insertedId = await ctx.db.insert("userChatSettings", {
+      userId: user._id,
+      ...nextSettings,
+    });
+    return await ctx.db.get(insertedId);
+  },
+});
+
+export const getStickerPacks = query({
+  args: {},
+  handler: async (ctx) => {
+    await getCurrentUser(ctx);
+    const settings = await getServerSettingsInternal(ctx);
+
+    const packs = await ctx.db
+      .query("chatStickerPacks")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
 
-    const now = Date.now();
+    const enabledPackIds =
+      settings.enabledStickerPackIds.length > 0
+        ? new Set(settings.enabledStickerPackIds)
+        : null;
 
-    return indicators
-      .filter((i) => i.expiresAt > now)
-      .sort((a, b) => a.createdAt - b.createdAt);
+    const filteredPacks = enabledPackIds
+      ? packs.filter((pack) => enabledPackIds.has(pack._id))
+      : packs;
+
+    const packsWithStickers = await Promise.all(
+      filteredPacks.map(async (pack) => {
+        const stickers = await ctx.db
+          .query("chatStickers")
+          .withIndex("by_pack", (q) => q.eq("packId", pack._id).eq("isActive", true))
+          .collect();
+
+        return {
+          ...pack,
+          stickers,
+        };
+      })
+    );
+
+    return packsWithStickers;
   },
 });
 
@@ -209,6 +365,20 @@ export const sendMessage = mutation({
     channelId: v.id("channels"),
     content: v.string(),
     idempotencyKey: v.string(),
+    attachments: v.optional(
+      v.array(
+        v.object({
+          storageId: v.id("_storage"),
+          type: v.union(v.literal("image"), v.literal("video")),
+          sizeBytes: v.number(),
+          contentType: v.string(),
+          width: v.optional(v.number()),
+          height: v.optional(v.number()),
+          durationMs: v.optional(v.number()),
+        })
+      )
+    ),
+    stickerId: v.optional(v.id("chatStickers")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
@@ -223,14 +393,95 @@ export const sendMessage = mutation({
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
+    await assertUserCanChat(ctx, userId);
 
     const trimmedContent = args.content.trim();
-    if (!trimmedContent) {
+    if (trimmedContent.length > 5000) {
+      throw new ConvexError("Message must be 5000 characters or less");
+    }
+
+    const settings = await getServerSettingsInternal(ctx);
+    await assertUserCanChat(ctx, userId);
+
+    const attachmentsInput = args.attachments ?? [];
+    if (attachmentsInput.length > MAX_ATTACHMENTS) {
+      throw new ConvexError(`You can attach up to ${MAX_ATTACHMENTS} files.`);
+    }
+
+    const enforceAllowedTypes = settings.allowedMediaTypes.length > 0;
+    const allowedTypes = new Set(settings.allowedMediaTypes);
+
+    const attachments = [];
+    for (const attachment of attachmentsInput) {
+      if (
+        (attachment.type === "image" && !attachment.contentType.startsWith("image/")) ||
+        (attachment.type === "video" && !attachment.contentType.startsWith("video/"))
+      ) {
+        throw new ConvexError("Attachment type does not match content type.");
+      }
+
+      if (enforceAllowedTypes && !allowedTypes.has(attachment.contentType)) {
+        throw new ConvexError("This media type is not allowed.");
+      }
+
+      const maxMb =
+        attachment.type === "image" ? settings.maxImageMb : settings.maxVideoMb;
+      const maxBytes = Math.max(1, maxMb) * 1024 * 1024;
+
+      if (attachment.sizeBytes <= 0 || attachment.sizeBytes > maxBytes) {
+        throw new ConvexError("Attachment exceeds the server size limit.");
+      }
+
+      const url = await ctx.storage.getUrl(attachment.storageId);
+      if (!url) {
+        throw new ConvexError("Upload not found. Please retry the upload.");
+      }
+
+      attachments.push({
+        type: attachment.type,
+        storageId: attachment.storageId,
+        url,
+        thumbnailUrl: attachment.type === "image" ? url : undefined,
+        width: attachment.width,
+        height: attachment.height,
+        durationMs: attachment.durationMs,
+        sizeBytes: attachment.sizeBytes,
+        contentType: attachment.contentType,
+      });
+    }
+
+    let sticker = null;
+    if (args.stickerId) {
+      sticker = await ctx.db.get(args.stickerId);
+      if (!sticker || !sticker.isActive) {
+        throw new ConvexError("Sticker not found.");
+      }
+
+      const pack = await ctx.db.get(sticker.packId);
+      if (!pack || !pack.isActive) {
+        throw new ConvexError("Sticker pack is not available.");
+      }
+
+      if (
+        settings.enabledStickerPackIds.length > 0 &&
+        !settings.enabledStickerPackIds.includes(pack._id)
+      ) {
+        throw new ConvexError("Sticker pack is not enabled on this server.");
+      }
+    }
+
+    const hasText = trimmedContent.length > 0;
+    const hasAttachments = attachments.length > 0;
+    const hasSticker = !!sticker;
+
+    if (!hasText && !hasAttachments && !hasSticker) {
       throw new ConvexError("Message content cannot be empty");
     }
 
-    if (trimmedContent.length > 5000) {
-      throw new ConvexError("Message must be 5000 characters or less");
+    const moderationPolicy = await getModerationPolicy(ctx);
+    const blockedTerm = hasText ? findBlockedTerm(trimmedContent, moderationPolicy) : null;
+    if (blockedTerm) {
+      throw new ConvexError("Message violates the server moderation policy.");
     }
 
     const isValidKey = await validateIdempotencyKey(
@@ -252,11 +503,55 @@ export const sendMessage = mutation({
         .first();
 
       if (existingMessage) {
-        return existingMessage;
+        return normalizeMessage(existingMessage);
       }
     }
 
     const now = Date.now();
+
+    if (settings.slowModeSeconds > 0) {
+      const lastMessages = await ctx.db
+        .query("messages")
+        .withIndex("by_author_channel", (q) =>
+          q.eq("authorId", userId).eq("channelId", args.channelId)
+        )
+        .order("desc")
+        .take(1);
+
+      const lastMessage = lastMessages[0];
+      if (lastMessage) {
+        const nextAllowedAt = lastMessage.createdAt + settings.slowModeSeconds * 1000;
+        if (nextAllowedAt > now) {
+          const secondsRemaining = Math.ceil((nextAllowedAt - now) / 1000);
+          throw new ConvexError(`Slow mode is enabled. Try again in ${secondsRemaining}s.`);
+        }
+      }
+    }
+
+    const recentMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_author_channel", (q) =>
+        q
+          .eq("authorId", userId)
+          .eq("channelId", args.channelId)
+          .gt("createdAt", now - RATE_LIMIT_WINDOW_MS)
+      )
+      .take(RATE_LIMIT_MAX_MESSAGES + 1);
+
+    if (recentMessages.length > RATE_LIMIT_MAX_MESSAGES) {
+      throw new ConvexError("You are sending messages too quickly. Please slow down.");
+    }
+
+    let messageType: "text" | "media" | "sticker" | "mixed" = "text";
+    if (hasAttachments && (hasText || hasSticker)) {
+      messageType = "mixed";
+    } else if (hasAttachments) {
+      messageType = "media";
+    } else if (hasSticker && !hasText) {
+      messageType = "sticker";
+    } else if (hasSticker && hasText) {
+      messageType = "mixed";
+    }
 
     const messageId = await ctx.db.insert("messages", {
       channelId: args.channelId,
@@ -265,6 +560,9 @@ export const sendMessage = mutation({
       authorAvatar: user.avatar,
       authorTier: user.fanTier,
       content: trimmedContent,
+      messageType,
+      attachments: attachments.length > 0 ? attachments : undefined,
+      stickerId: sticker?._id,
       editedAt: undefined,
       isPinned: false,
       isDeleted: false,
@@ -272,8 +570,6 @@ export const sendMessage = mutation({
       deletedBy: undefined,
       reactionEmojis: [],
       reactionCount: 0,
-      upVoterIds: [],
-      downVoterIds: [],
       upVoteCount: 0,
       downVoteCount: 0,
       netVoteCount: 0,
@@ -302,7 +598,7 @@ export const sendMessage = mutation({
     }
 
     const message = await ctx.db.get(messageId);
-    return message;
+    return message ? normalizeMessage(message) : null;
   },
 });
 
@@ -330,6 +626,7 @@ export const addReaction = mutation({
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
+    await assertUserCanChat(ctx, userId);
 
     const existingReaction = await ctx.db
       .query("reactions")
@@ -386,6 +683,7 @@ export const removeReaction = mutation({
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
+    await assertUserCanChat(ctx, userId);
 
     const reactions = await ctx.db
       .query("reactions")
@@ -490,16 +788,44 @@ export const editMessage = mutation({
     }
 
     const trimmedContent = args.newContent.trim();
-    if (!trimmedContent) {
-      throw new ConvexError("Message content cannot be empty");
-    }
-
     if (trimmedContent.length > 5000) {
       throw new ConvexError("Message must be 5000 characters or less");
     }
 
+    const hasAccess = await canAccessChannel(ctx, userId, message.channelId);
+    if (!hasAccess) {
+      throw new ConvexError("Access denied");
+    }
+    await assertUserCanChat(ctx, userId);
+
+    const hasAttachments = (message.attachments?.length ?? 0) > 0;
+    const hasSticker = !!message.stickerId;
+    const hasText = trimmedContent.length > 0;
+
+    if (!hasText && !hasAttachments && !hasSticker) {
+      throw new ConvexError("Message content cannot be empty");
+    }
+
+    const moderationPolicy = await getModerationPolicy(ctx);
+    const blockedTerm = hasText ? findBlockedTerm(trimmedContent, moderationPolicy) : null;
+    if (blockedTerm) {
+      throw new ConvexError("Message violates the server moderation policy.");
+    }
+
+    let messageType: "text" | "media" | "sticker" | "mixed" = "text";
+    if (hasAttachments && (hasText || hasSticker)) {
+      messageType = "mixed";
+    } else if (hasAttachments) {
+      messageType = "media";
+    } else if (hasSticker && !hasText) {
+      messageType = "sticker";
+    } else if (hasSticker && hasText) {
+      messageType = "mixed";
+    }
+
     await ctx.db.patch(args.messageId, {
       content: trimmedContent,
+      messageType,
       editedAt: Date.now(),
     });
 
@@ -522,6 +848,7 @@ export const setTypingIndicator = mutation({
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
+    await assertUserCanChat(ctx, userId);
 
     if (args.isTyping) {
       const existingIndicators = await ctx.db
@@ -582,61 +909,171 @@ export const castMessageVote = mutation({
     if (!hasAccess) {
       throw new ConvexError("Access denied");
     }
+    await assertUserCanChat(ctx, userId);
 
-    const isCurrentlyUpvoted = message.upVoterIds?.includes(userId) || false;
-    const isCurrentlyDownvoted = message.downVoterIds?.includes(userId) || false;
+    const now = Date.now();
+    let voteRecord = await ctx.db
+      .query("messageVotes")
+      .withIndex("by_message_user", (q) =>
+        q.eq("messageId", args.messageId).eq("userId", userId)
+      )
+      .first();
 
-    let newUpVoterIds = message.upVoterIds || [];
-    let newDownVoterIds = message.downVoterIds || [];
+    if (!voteRecord) {
+      const fallbackVoteType = message.upVoterIds?.includes(userId)
+        ? "up"
+        : message.downVoterIds?.includes(userId)
+        ? "down"
+        : null;
+
+      if (fallbackVoteType) {
+        const seededVoteId = await ctx.db.insert("messageVotes", {
+          messageId: args.messageId,
+          userId,
+          voteType: fallbackVoteType,
+          createdAt: now,
+        });
+        voteRecord = { _id: seededVoteId, voteType: fallbackVoteType } as any;
+      }
+    }
+
+    const oldUpVoteCount = message.upVoteCount || 0;
+    const oldDownVoteCount = message.downVoteCount || 0;
+    const oldNetVoteCount = oldUpVoteCount - oldDownVoteCount;
+
     let upDelta = 0;
     let downDelta = 0;
 
     if (args.voteType === "up") {
-      if (isCurrentlyUpvoted) {
-        // Toggle off
-        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+      if (voteRecord?.voteType === "up") {
+        await ctx.db.delete(voteRecord._id);
         upDelta = -1;
-      } else {
-        // Vote up
-        newUpVoterIds = [...newUpVoterIds, userId];
+      } else if (voteRecord?.voteType === "down") {
+        await ctx.db.patch(voteRecord._id, { voteType: "up", createdAt: now });
         upDelta = 1;
-        if (isCurrentlyDownvoted) {
-          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
-          downDelta = -1;
-        }
-      }
-    } else {
-      if (isCurrentlyDownvoted) {
-        // Toggle off
-        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
         downDelta = -1;
       } else {
-        // Vote down
-        newDownVoterIds = [...newDownVoterIds, userId];
+        await ctx.db.insert("messageVotes", {
+          messageId: args.messageId,
+          userId,
+          voteType: "up",
+          createdAt: now,
+        });
+        upDelta = 1;
+      }
+    } else {
+      if (voteRecord?.voteType === "down") {
+        await ctx.db.delete(voteRecord._id);
+        downDelta = -1;
+      } else if (voteRecord?.voteType === "up") {
+        await ctx.db.patch(voteRecord._id, { voteType: "down", createdAt: now });
+        upDelta = -1;
         downDelta = 1;
-        if (isCurrentlyUpvoted) {
-          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
-          upDelta = -1;
-        }
+      } else {
+        await ctx.db.insert("messageVotes", {
+          messageId: args.messageId,
+          userId,
+          voteType: "down",
+          createdAt: now,
+        });
+        downDelta = 1;
       }
     }
 
-    const newUpVoteCount = (message.upVoteCount || 0) + upDelta;
-    const newDownVoteCount = (message.downVoteCount || 0) + downDelta;
+    const newUpVoteCount = Math.max(0, oldUpVoteCount + upDelta);
+    const newDownVoteCount = Math.max(0, oldDownVoteCount + downDelta);
     const newNetVoteCount = newUpVoteCount - newDownVoteCount;
 
     await ctx.db.patch(args.messageId, {
-      upVoterIds: newUpVoterIds,
-      downVoterIds: newDownVoterIds,
       upVoteCount: newUpVoteCount,
       downVoteCount: newDownVoteCount,
       netVoteCount: newNetVoteCount,
     });
 
     // Sync points to author
-    const pointDelta = upDelta - downDelta;
+    const pointDelta = newNetVoteCount - oldNetVoteCount;
     await updateUserSocialPoints(ctx, message.authorId, pointDelta);
 
     return { success: true, netVoteCount: newNetVoteCount };
+  },
+});
+
+export const pruneMessagesForRetention = internalMutation({
+  args: { batchSize: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const settings = await ctx.db.query("chatServerSettings").first();
+    const retentionDays = settings?.retentionDays;
+    if (!retentionDays || retentionDays <= 0) {
+      return { pruned: 0, skipped: true };
+    }
+
+    const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+    const batchSize = Math.min(Math.max(args.batchSize ?? 200, 1), 500);
+
+    const oldMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_createdAt", (q) => q.lt("createdAt", cutoff))
+      .order("asc")
+      .take(batchSize);
+
+    if (oldMessages.length === 0) {
+      return { pruned: 0, skipped: false };
+    }
+
+    const channelDeletes = new Map<Id<"channels">, number>();
+
+    for (const message of oldMessages) {
+      const messageVotes = await ctx.db
+        .query("messageVotes")
+        .withIndex("by_message", (q) => q.eq("messageId", message._id))
+        .collect();
+      for (const vote of messageVotes) {
+        await ctx.db.delete(vote._id);
+      }
+
+      const reactions = await ctx.db
+        .query("reactions")
+        .withIndex("by_message_emoji", (q) => q.eq("messageId", message._id))
+        .collect();
+      for (const reaction of reactions) {
+        await ctx.db.delete(reaction._id);
+      }
+
+      for (const attachment of message.attachments ?? []) {
+        try {
+          await ctx.storage.delete(attachment.storageId);
+        } catch (error) {
+          console.warn("Failed to delete attachment during pruning", attachment.storageId, error);
+        }
+      }
+
+      await ctx.db.delete(message._id);
+      channelDeletes.set(
+        message.channelId,
+        (channelDeletes.get(message.channelId) ?? 0) + 1
+      );
+    }
+
+    for (const [channelId, deletedCount] of channelDeletes.entries()) {
+      const channel = await ctx.db.get(channelId);
+      if (!channel) continue;
+
+      const recent = await ctx.db
+        .query("messages")
+        .withIndex("by_channel", (q) => q.eq("channelId", channelId))
+        .order("desc")
+        .take(10);
+
+      const lastActive = recent.find((m) => !m.isDeleted) ?? null;
+
+      await ctx.db.patch(channelId, {
+        messageCount: Math.max(0, channel.messageCount - deletedCount),
+        lastMessageAt: lastActive?.createdAt,
+        lastMessageId: lastActive?._id,
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { pruned: oldMessages.length, skipped: false };
   },
 });

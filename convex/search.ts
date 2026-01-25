@@ -27,14 +27,18 @@ export const searchThreads = query({
     }
 
     const searchTerm = args.query.toLowerCase().trim();
+    const candidateLimit = Math.min(limit * 10, 200);
 
     // Get all threads in the category
     const allThreads = await ctx.db
       .query("threads")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .collect();
+      .order("desc")
+      .take(candidateLimit);
 
-    const threads = allThreads.filter((t) => !t.isDeleted);
+    const threads = allThreads.filter(
+      (t) => !t.isDeleted && (t.moderationStatus ?? "active") === "active"
+    );
 
     // Search in title and tags
     const results = threads.filter((thread) => {
@@ -81,12 +85,14 @@ export const searchMessages = query({
     }
 
     const searchTerm = args.query.toLowerCase().trim();
+    const candidateLimit = Math.min(limit * 20, 400);
 
     // Get all messages in the channel
     const allMessages = await ctx.db
       .query("messages")
       .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-      .collect();
+      .order("desc")
+      .take(candidateLimit);
 
     const messages = allMessages.filter((m) => !m.isDeleted);
 
@@ -365,6 +371,7 @@ async function searchThreadsGlobal(
       .filter((t) => {
         // Skip deleted threads
         if (t.isDeleted) return false;
+        if ((t.moderationStatus ?? "active") !== "active") return false;
 
         // Check search term match
         const matchesSearch =
@@ -609,13 +616,35 @@ async function searchMerchGlobal(
   limit: number
 ): Promise<SearchMerchResult[]> {
   try {
-    const products = await ctx.db.query("merchProducts").collect();
+    const candidateLimit = Math.min(limit * 4, 80);
 
-    const results = products.filter(p =>
-      p.status !== 'archived' &&
-      (p.name.toLowerCase().includes(searchTerm) ||
-        p.description.toLowerCase().includes(searchTerm) ||
-        p.tags.some(t => t.toLowerCase().includes(searchTerm)))
+    const indexed = await ctx.db
+      .query("merchProducts")
+      .withSearchIndex("search_merchProducts", (q) =>
+        q.search("searchText", searchTerm).eq("status", "active")
+      )
+      .take(candidateLimit);
+
+    let candidates = indexed;
+    if (candidates.length < limit) {
+      const recentActive = await ctx.db
+        .query("merchProducts")
+        .withIndex("by_status_created", (q) => q.eq("status", "active"))
+        .order("desc")
+        .take(candidateLimit);
+      candidates = [...candidates, ...recentActive];
+    }
+
+    const deduped = Array.from(
+      new Map(candidates.map((product) => [String(product._id), product])).values()
+    );
+
+    const results = deduped.filter(
+      (product) =>
+        product.status === "active" &&
+        (product.name.toLowerCase().includes(searchTerm) ||
+          product.description.toLowerCase().includes(searchTerm) ||
+          product.tags.some((tag) => tag.toLowerCase().includes(searchTerm)))
     );
 
     return results
