@@ -108,6 +108,11 @@ export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
           border-radius: 50%;
           background: linear-gradient(45deg, transparent, var(--ring-color), transparent);
           animation: rotate-ring 4s linear infinite;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          aspect-ratio: 1 / 1;
+          overflow: hidden;
         }
 
         .avatar-img {
@@ -115,6 +120,9 @@ export function ProfileAvatar({ user, size = 'md' }: ProfileAvatarProps) {
           border: 2px solid #000;
           position: relative;
           z-index: 2;
+          object-fit: cover;
+          aspect-ratio: 1 / 1;
+          display: block;
         }
 
         @keyframes rotate-ring {

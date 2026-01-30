@@ -1,0 +1,48 @@
+{
+  "private-suit-varsity-jacket": [
+    "jacket1",
+    "jacket2"
+  ],
+  "wolfpack-bomber-jacket": [
+    "jacket1",
+    "jacket2"
+  ],
+  "windbreaker": [
+    "jacket3",
+    "jacket4"
+  ],
+  "private-suit-windbreaker": [
+    "jacket3",
+    "jacket4"
+  ],
+  "wolfpack-windbreaker": [
+    "jacket3",
+    "jacket4"
+  ],
+  "elite-fit-denim": [
+    "jeans3",
+    "jeans1"
+  ],
+  "coated-stack-denim": [
+    "jeans1",
+    "jeans3"
+  ],
+  "jeans1": [
+    "jeans3",
+    "jeans1"
+  ],
+  "cargo-jeans": "jeans2",
+  "signature-wolf-logo-t-shirt": [
+    "shirt1",
+    "shirt2"
+  ],
+  "jetski-motion-tee": [
+    "shirt1",
+    "shirt2"
+  ],
+  "wolfpack-world-tour-poster": "poster1",
+  "ppc-vinyl": "disk1",
+  "ppc-poster": "poster1",
+  "private-suite-vol-2-vinyl": "disk2",
+  "private-suite-vol-2-poster": "poster2"
+}

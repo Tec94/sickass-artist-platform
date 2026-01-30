@@ -1,87 +1,42 @@
-﻿import { query, action, internalMutation, mutation } from './_generated/server'
+import { query, action, internalMutation, mutation } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 
 /**
- * Get unified gallery items (Instagram + Spotify)
+ * Get unified gallery items (Spotify only).
  */
 export const getSocialGalleryItems = query({
   args: {
-    source: v.optional(v.union(
-      v.literal('instagram'),
-      v.literal('spotify'),
-      v.literal('all')
-    )),
+    source: v.optional(v.union(v.literal('spotify'), v.literal('all'))),
     limit: v.optional(v.number()),
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit || 20, 100)
     const takeLimit = Math.min(limit + 1, 101)
-    const source = args.source || 'all'
 
-    const items = []
+    const spotifyTracks = await ctx.db
+      .query('spotifySongs')
+      .filter((q) => q.eq(q.field('isArtistRelease'), true))
+      .order('desc')
+      .take(takeLimit)
 
-    // Fetch Instagram posts
-    if (source === 'instagram' || source === 'all') {
-      const igPosts = await ctx.db
-        .query('instagramPosts')
-        .withIndex('by_igSourceCreatedAt')
-        .filter((q) => q.eq(q.field('isFeatured'), true))
-        .filter((q) => q.eq(q.field('isActive'), true))
-        .order('desc')
-        .take(takeLimit)
-
-      items.push(
-        ...igPosts.map(post => ({
-          _id: post._id,
-          type: 'instagram' as const,
-          id: post.igPostId,
-          thumbnail: post.thumbnailUrl,
-          title: post.caption?.split('\n')[0] || 'Instagram Post',
-          metadata: {
-            caption: post.caption,
-            likeCount: post.likeCount,
-            commentCount: post.commentCount,
-            url: post.igLink,
-            mediaType: post.mediaType,
-            mediaUrl: post.mediaUrl,
-          },
-          createdAt: post.igSourceCreatedAt,
-        }))
-      )
-    }
-
-    // Fetch Spotify tracks (new releases)
-    if (source === 'spotify' || source === 'all') {
-      const spotifyTracks = await ctx.db
-        .query('spotifySongs')
-        .filter((q) => q.eq(q.field('isArtistRelease'), true))
-        .order('desc')
-        .take(takeLimit)
-
-      items.push(
-        ...spotifyTracks.map(track => ({
-          _id: track._id,
-          type: 'spotify' as const,
-          id: track.spotifyTrackId,
-          thumbnail: track.albumCover,
-          title: track.title,
-          metadata: {
-            artist: track.artist,
-            album: track.albumTitle,
-            previewUrl: track.previewUrl,
-            url: track.externalUrl,
-            hasPreview: !!track.previewUrl,
-            popularity: track.popularity,
-          },
-          createdAt: track.syncedAt,
-        }))
-      )
-    }
-
-    // Sort by recency
-    items.sort((a, b) => b.createdAt - a.createdAt)
+    const items = spotifyTracks.map((track) => ({
+      _id: track._id,
+      type: 'spotify' as const,
+      id: track.spotifyTrackId,
+      thumbnail: track.albumCover,
+      title: track.title,
+      metadata: {
+        artist: track.artist,
+        album: track.albumTitle,
+        previewUrl: track.previewUrl,
+        url: track.externalUrl,
+        hasPreview: !!track.previewUrl,
+        popularity: track.popularity,
+      },
+      createdAt: track.syncedAt,
+    }))
 
     return {
       items: items.slice(0, limit),
@@ -91,7 +46,7 @@ export const getSocialGalleryItems = query({
 })
 
 /**
- * Search across all social gallery items
+ * Search across Spotify gallery items.
  */
 export const searchSocialGallery = query({
   args: { query: v.string(), limit: v.optional(v.number()) },
@@ -99,37 +54,6 @@ export const searchSocialGallery = query({
     const limit = Math.min(args.limit || 20, 100)
     const q = args.query.toLowerCase()
 
-    const items = []
-
-    // Search Instagram
-    const igPosts = await ctx.db
-      .query('instagramPosts')
-      .filter((q) => q.eq(q.field('isFeatured'), true))
-      .filter((q) => q.eq(q.field('isActive'), true))
-      .collect()
-
-    const filteredIG = igPosts
-      .filter(post => post.caption.toLowerCase().includes(q))
-      .map((post) => ({
-        _id: post._id,
-        type: 'instagram' as const,
-        id: post.igPostId,
-        thumbnail: post.thumbnailUrl,
-        title: post.caption?.split('\n')[0] || 'Post',
-        metadata: {
-          caption: post.caption,
-          likeCount: post.likeCount,
-          commentCount: post.commentCount,
-          url: post.igLink,
-          mediaType: post.mediaType,
-          mediaUrl: post.mediaUrl,
-        },
-        createdAt: post.igSourceCreatedAt,
-      }))
-
-    items.push(...filteredIG)
-
-    // Search Spotify
     const spotifyTracks = await ctx.db.query('spotifySongs').collect()
 
     const filteredSpotify = spotifyTracks
@@ -156,64 +80,20 @@ export const searchSocialGallery = query({
         createdAt: track.syncedAt,
       }))
 
-    items.push(...filteredSpotify)
-
-    // Sort by relevance (title match > other fields)
-    items.sort((a, b) => {
+    filteredSpotify.sort((a, b) => {
       const aMatch = a.title.toLowerCase().includes(q) ? 1 : 0
       const bMatch = b.title.toLowerCase().includes(q) ? 1 : 0
       return bMatch - aMatch
     })
 
-    return items.slice(0, limit)
+    return filteredSpotify.slice(0, limit)
   },
 })
 
 /**
- * Seeding logic for unified gallery
+ * Seeding logic for Spotify gallery.
  */
 const SCRAPED_DATA = {
-  instagram: {
-    profile_username: "roapr__",
-    profile_pic_url: "https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c",
-    posts: [
-      {
-        url: "https://www.instagram.com/roapr__/p/DDM1vIakd6c/",
-        thumbnail: "https://images.unsplash.com/photo-1514525253344-f2038747a83d?q=80&w=1000&auto=format&fit=crop",
-        caption: "The Wolfpack is growing. 🐺🩸 #ROA #Community",
-        likeCount: 12450,
-        commentCount: 420
-      },
-      {
-        url: "https://www.instagram.com/roapr__/p/DCmEIobjQIQ/",
-        thumbnail: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=1000&auto=format&fit=crop",
-        caption: "NEW SHOWS ADDED. Link in bio. 🎫🔥",
-        likeCount: 8900,
-        commentCount: 112
-      },
-      {
-        url: "https://www.instagram.com/roapr__/p/DBdtmCpEbNs/",
-        thumbnail: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop",
-        caption: "Studio nights. Cooking something special. 🧪🩸",
-        likeCount: 15420,
-        commentCount: 842
-      },
-      {
-        url: "https://www.instagram.com/roapr__/p/DAgrErUETi8/",
-        thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1000&auto=format&fit=crop",
-        caption: "Gratitude. 🐺🙏",
-        likeCount: 22100,
-        commentCount: 1105
-      },
-      {
-        url: "https://www.instagram.com/roapr__/p/D-j_XPJDdH2/",
-        thumbnail: "https://images.unsplash.com/photo-1459749411177-042180ceea72?q=80&w=1000&auto=format&fit=crop",
-        caption: "EENIMINIMAINIMOE 🩸 OUT NOW.",
-        likeCount: 45200,
-        commentCount: 3120
-      }
-    ]
-  },
   spotify: {
     artist_name: "ROA",
     albums: [
@@ -430,38 +310,9 @@ export const seed = action({
 export const seedDirect = mutation({
   args: {},
   handler: async (ctx) => {
-    const { instagram, spotify } = SCRAPED_DATA
+    const { spotify } = SCRAPED_DATA
 
-    let igInserted = 0
     let spotifyInserted = 0
-
-    for (const post of instagram.posts) {
-      const igId = post.url.split('p/')[1]?.split('/')[0] || 'unknown'
-      const existing = await ctx.db.query('instagramPosts')
-        .filter(q => q.eq(q.field('igPostId'), igId))
-        .first();
-
-      if (!existing) {
-        await ctx.db.insert('instagramPosts', {
-          igPostId: igId,
-          igAccountId: 'roapr__',
-          mediaUrl: post.thumbnail,
-          thumbnailUrl: post.thumbnail,
-          caption: post.caption,
-          mediaType: 'image',
-          likeCount: post.likeCount,
-          commentCount: post.commentCount,
-          igLink: post.url,
-          syncedAt: Date.now(),
-          igSourceCreatedAt: Date.now(),
-          cacheExpiresAt: Date.now() + 86400000,
-          isFeatured: true,
-          isActive: true,
-          createdAt: Date.now(),
-        })
-        igInserted++
-      }
-    }
 
     for (const album of spotify.albums) {
       const spotifyId = album.spotifyAlbumUrl.split('album/')[1] || 'unknown'
@@ -489,41 +340,14 @@ export const seedDirect = mutation({
       }
     }
 
-    return { igInserted, spotifyInserted }
+    return { spotifyInserted }
   },
 })
 
 export const saveSocialData = internalMutation({
   args: { data: v.any() },
   handler: async (ctx, args) => {
-    const { instagram, spotify } = args.data
-
-    for (const post of instagram.posts) {
-      const igId = post.url.split('p/')[1]?.split('/')[0] || 'unknown'
-      const existing = await ctx.db.query('instagramPosts')
-        .filter(q => q.eq(q.field('igPostId'), igId))
-        .first();
-
-      if (!existing) {
-        await ctx.db.insert('instagramPosts', {
-          igPostId: igId,
-          igAccountId: 'roapr__',
-          mediaUrl: post.thumbnail,
-          thumbnailUrl: post.thumbnail,
-          caption: post.caption,
-          mediaType: 'image',
-          likeCount: post.likeCount,
-          commentCount: post.commentCount,
-          igLink: post.url,
-          syncedAt: Date.now(),
-          igSourceCreatedAt: Date.now(),
-          cacheExpiresAt: Date.now() + 86400000,
-          isFeatured: true,
-          isActive: true,
-          createdAt: Date.now(),
-        })
-      }
-    }
+    const { spotify } = args.data
 
     for (const album of spotify.albums) {
       const spotifyId = album.spotifyAlbumUrl.split('album/')[1] || 'unknown'
@@ -551,4 +375,3 @@ export const saveSocialData = internalMutation({
     }
   }
 })
-

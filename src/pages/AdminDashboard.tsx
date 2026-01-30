@@ -9,7 +9,6 @@ import {
   AdminModerationHub,
   AdminQueues, 
   AdminUsers, 
-  AdminInstagram,
   AdminSystem,
   AdminPoints,
   AdminRewards,
@@ -31,7 +30,6 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'points', label: 'Points & XP', icon: 'solar:star-linear' },
   { id: 'rewards', label: 'Rewards', icon: 'solar:gift-linear' },
   { id: 'redemptions', label: 'Redemptions', icon: 'solar:ticket-linear' },
-  { id: 'instagram', label: 'Instagram', icon: 'solar:camera-linear' },
   { id: 'system', label: 'System', icon: 'solar:settings-linear' },
 ]
 
@@ -85,8 +83,6 @@ export function AdminDashboard() {
         return <AdminRewards />
       case 'redemptions':
         return <AdminRedemptions />
-      case 'instagram':
-        return <AdminInstagram />
       case 'system':
         return <AdminSystem />
       default:

@@ -35,7 +35,7 @@ export const MerchNavbar = ({ cartCount, onOpenCart, onGoHome }: MerchNavbarProp
 
           {/* Center: Logo */}
           <div className="navbar-center" onClick={onGoHome}>
-            <h1 className="logo-text">ROA WOLVES</h1>
+          <h1 className="logo-text">ROA</h1>
           </div>
 
           {/* Right: Icons */}

@@ -2,6 +2,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ProductCard } from './ProductCard'
 import { useRef } from 'react'
+import { getMerchSlugCandidates } from '../../utils/merchImages'
 
 interface RelatedProductsProps {
   productId: string
@@ -20,12 +21,27 @@ export function RelatedProducts({
     category: category as 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other' | undefined,
     sortBy: 'newest',
   })
+  const relatedProducts = result?.items
+    ? result.items.filter(p => p._id !== productId).slice(0, 4)
+    : []
+  const manifestSlugs = Array.from(new Set(
+    relatedProducts.flatMap((product) => getMerchSlugCandidates({
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    }))
+  ))
+  const merchManifestEntries = useQuery(
+    api.merchManifest.getMerchImageManifestEntries,
+    manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
   if (!result?.items.length) return null
-
-  const relatedProducts = result.items.filter(p => p._id !== productId).slice(0, 4)
 
   if (!relatedProducts.length) return null
 
@@ -52,6 +68,7 @@ export function RelatedProducts({
               <ProductCard
                 product={product}
                 onAddToCart={onAddToCart}
+                manifest={merchManifestEntries?.entries ?? null}
               />
             </div>
           ))}

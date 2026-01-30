@@ -2,17 +2,6 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-// Removed SpotifyPlayer import as we implementing custom lightbox player UI
-// import { SpotifyPlayer } from './SpotifyPlayer' 
-
-interface InstagramMetadata {
-  caption: string
-  likeCount: number
-  commentCount: number
-  url: string
-  mediaType: string
-  mediaUrl?: string
-}
 
 interface SpotifyMetadata {
   artist: string
@@ -31,30 +20,21 @@ interface GalleryItemBase {
   createdAt: number
 }
 
-type InstagramGalleryItem = GalleryItemBase & {
-  type: 'instagram'
-  metadata: InstagramMetadata
-}
-
 type SpotifyGalleryItem = GalleryItemBase & {
   type: 'spotify'
   metadata: SpotifyMetadata
 }
 
-type GalleryItem = InstagramGalleryItem | SpotifyGalleryItem
+type GalleryItem = SpotifyGalleryItem
 
 export const SocialGallery = () => {
-  const [source, setSource] = useState<'all' | 'instagram' | 'spotify'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
 
-  const galleryItems = useQuery(
-    api.socialGallery.getSocialGalleryItems,
-    {
-      source,
-      limit: 50,
-    }
-  )
+  const galleryItems = useQuery(api.socialGallery.getSocialGalleryItems, {
+    source: 'spotify',
+    limit: 50,
+  })
 
   const searchResults = useQuery(
     api.socialGallery.searchSocialGallery,
@@ -79,18 +59,6 @@ export const SocialGallery = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-12">
-      {/* Header Section - REMOVED to save space as requested */ }
-      {/* 
-      <div className="text-center space-y-4">
-        <h1 className="text-5xl md:text-7xl font-display font-black text-white uppercase tracking-tighter">
-          The <span className="text-red-600">Connect</span>
-        </h1>
-        <p className="text-zinc-400 font-medium max-w-2xl mx-auto">
-          Exclusive feed from the Wolfpack. Instagram posts, Spotify releases, and more.
-        </p>
-      </div> 
-      */}
-
       {/* Spotify Featured Section */}
       <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden backdrop-blur-sm p-1">
         <iframe 
@@ -120,29 +88,9 @@ export const SocialGallery = () => {
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-zinc-700">
-          {(['all', 'instagram', 'spotify'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => {
-                setSource(tab)
-                setSearchQuery('')
-              }}
-              className={`px-6 py-2.5 rounded-md font-bold text-xs uppercase tracking-widest transition-all ${
-                source === tab
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
-                  : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                 {tab === 'instagram' && <iconify-icon icon="mdi:instagram" width="16"></iconify-icon>}
-                 {tab === 'spotify' && <iconify-icon icon="mdi:spotify" width="16"></iconify-icon>}
-                 {tab === 'all' && <iconify-icon icon="solar:layers-minimalistic-bold" width="16"></iconify-icon>}
-                 <span>{tab}</span>
-              </div>
-            </button>
-          ))}
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
+          <iconify-icon icon="mdi:spotify" width="16"></iconify-icon>
+          Spotify albums
         </div>
       </div>
 
@@ -208,15 +156,9 @@ const GalleryItemCard = ({ item, onSelect }: GalleryItemCardProps) => {
 
         {/* Type Badge */}
         <div className="absolute top-3 right-3 z-10">
-          <span
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 ${
-              item.type === 'instagram'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600'
-                : 'bg-[#1DB954]'
-            }`}
-          >
-            <iconify-icon icon={item.type === 'instagram' ? 'mdi:instagram' : 'mdi:spotify'} width="12"></iconify-icon>
-            {item.type}
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 bg-[#1DB954]">
+            <iconify-icon icon="mdi:spotify" width="12"></iconify-icon>
+            spotify
           </span>
         </div>
 
@@ -224,19 +166,10 @@ const GalleryItemCard = ({ item, onSelect }: GalleryItemCardProps) => {
         <div className="absolute inset-0 flex flex-col justify-end p-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
           <h3 className="text-white font-bold text-lg leading-tight line-clamp-2 mb-2 drop-shadow-lg">{item.title}</h3>
           
-          {item.type === 'instagram' && (
-            <div className="flex items-center gap-4 text-xs font-bold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-               <span className="flex items-center gap-1"><iconify-icon icon="solar:heart-bold" class="text-red-500"></iconify-icon> {item.metadata.likeCount.toLocaleString()}</span>
-               <span className="flex items-center gap-1"><iconify-icon icon="solar:chat-round-dots-bold" class="text-white"></iconify-icon> {item.metadata.commentCount.toLocaleString()}</span>
-            </div>
-          )}
-          
-          {item.type === 'spotify' && (
-             <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                <span className="text-[#1DB954]">●</span>
-                <span>{item.metadata.artist}</span>
-             </div>
-          )}
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+            <span className="text-[#1DB954]">●</span>
+            <span>{item.metadata.artist}</span>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -273,96 +206,9 @@ const GalleryLightbox = ({ item, onClose }: GalleryLightboxProps) => {
         </button>
 
         {/* Content Split */}
-        {item.type === 'instagram' ? (
-           <InstagramLightboxContent item={item} />
-        ) : (
-           <SpotifyLightboxContent item={item} />
-        )}
+        <SpotifyLightboxContent item={item} />
       </motion.div>
     </motion.div>
-  )
-}
-
-const InstagramLightboxContent = ({ item }: { item: InstagramGalleryItem }) => {
-  return (
-    <>
-      {/* Visual Side */}
-      <div className="w-full md:w-2/3 bg-zinc-900 flex items-center justify-center relative overflow-hidden group">
-         <img
-          src={item.metadata.mediaUrl || item.thumbnail}
-          alt={item.title}
-          className="w-full h-full object-contain"
-         />
-         {/* Navigation hints could go here for carousel */}
-         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition">
-            Scroll to zoom • Drag to pan
-         </div>
-      </div>
-      
-      {/* Meta Side */}
-      <div className="w-full md:w-1/3 border-l border-zinc-800 bg-zinc-950 flex flex-col">
-         {/* Header */}
-         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-[2px]">
-               <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                  <img src="https://scontent-dfw5-2.cdninstagram.com/v/t51.2885-19/612959370_17927794098188462_4693225202175355032_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QFSPWXiNt0pPmQCmxomIYsQLjgTHqO0v_en0p_D27i1PNi7CMhGPR9MocKNWaTBjR4&_nc_ohc=pISQ62kIw0kQ7kNvwFc9UqN&_nc_gid=4Aufo93r2GdLQhILp1n0Yw&edm=APU89FABAAAA&ccb=7-5&oh=00_AfrWSICifTsw5_cacdQhE2EdIQvSY74dAUbYzEvlYve2ng&oe=697056F1&_nc_sid=bc0c2c" className="w-full h-full object-cover" alt="roapr__" />
-               </div>
-            </div>
-            <div>
-               <h4 className="font-bold text-white text-sm">roapr__</h4>
-               <p className="text-zinc-500 text-xs">Instagram</p>
-            </div>
-            <a 
-              href={item.metadata.url} 
-              target="_blank" 
-              className="ml-auto text-blue-500 text-xs font-bold hover:text-blue-400"
-            >
-               Follow
-            </a>
-         </div>
-
-         {/* Comments/Caption Area */}
-         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            <div className="mb-6">
-               <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                  <span className="font-bold text-white mr-2">roapr__</span>
-                  {item.metadata.caption}
-               </p>
-               <p className="text-xs text-zinc-500 mt-2">
-                  {new Date(item.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
-               </p>
-            </div>
-
-            {/* Mock Comments */}
-            <div className="space-y-4 pt-4 border-t border-zinc-900">
-               {['Fire 🔥', 'The goat 🐐', 'Waiting for the album!!', 'Legendary'].map((comment, i) => (
-                  <div key={i} className="flex gap-3">
-                     <div className="w-8 h-8 rounded-full bg-zinc-800 flex-shrink-0" />
-                     <div>
-                        <p className="text-xs font-bold text-zinc-400">user_{i + 420}</p>
-                        <p className="text-xs text-zinc-300">{comment}</p>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
-
-         {/* Actions Footer */}
-         <div className="p-4 border-t border-zinc-800 space-y-4 bg-black">
-            <div className="flex items-center justify-between text-2xl px-2">
-               <div className="flex gap-4 text-white">
-                  <button className="hover:text-red-500 transition"><iconify-icon icon="solar:heart-linear"></iconify-icon></button>
-                  <button className="hover:text-zinc-300 transition"><iconify-icon icon="solar:chat-round-linear"></iconify-icon></button>
-                  <button className="hover:text-zinc-300 transition"><iconify-icon icon="solar:plain-3-linear"></iconify-icon></button>
-               </div>
-               <button className="text-white hover:text-zinc-300 transition"><iconify-icon icon="solar:bookmark-linear"></iconify-icon></button>
-            </div>
-            <div className="px-2">
-               <p className="font-bold text-sm text-white">{item.metadata.likeCount.toLocaleString()} likes</p>
-            </div>
-         </div>
-      </div>
-    </>
   )
 }
 

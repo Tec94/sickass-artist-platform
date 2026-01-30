@@ -33,7 +33,7 @@ type ThreadItem =
   | { kind: 'welcome'; key: string; channelName: string }
   | { kind: 'message'; key: string; message: ChatMessage | OptimisticMessage }
 
-const STACK_WINDOW_MS = 5 * 60 * 1000
+const STACK_WINDOW_MS = 2 * 60 * 1000
 
 function isTempId(id: string) {
   return id.startsWith('temp-')
@@ -59,7 +59,7 @@ export function MessageThread({
   const [listHeight, setListHeight] = useState(600)
   const listRef = useListRef() as MutableRefObject<ListImperativeAPI | null>
   const rowHeightKey = `${channelId}-${userSettings.compactMode ? 'compact' : 'cozy'}`
-  const rowHeight = useDynamicRowHeight({ defaultRowHeight: userSettings.compactMode ? 72 : 96, key: rowHeightKey })
+  const rowHeight = useDynamicRowHeight({ defaultRowHeight: userSettings.compactMode ? 56 : 80, key: rowHeightKey })
   const isAtBottomRef = useRef(true)
   const pendingLoadMoreRef = useRef<{ scrollHeight: number; scrollTop: number } | null>(null)
   const lastItemCountRef = useRef(0)

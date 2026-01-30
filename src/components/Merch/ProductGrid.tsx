@@ -1,9 +1,10 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ProductCard } from './ProductCard'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MerchFilters } from '../../hooks/useMerchFilters'
 import { Doc } from '../../../convex/_generated/dataModel'
+import { getMerchSlugCandidates } from '../../utils/merchImages'
 
 type EnrichedProduct = Doc<'merchProducts'> & {
   variants: Doc<'merchVariants'>[]
@@ -33,6 +34,23 @@ export function ProductGrid({
     search: filters.search || undefined,
     sortBy: filters.sortBy || undefined,
   })
+  const manifestSlugs = useMemo(() => {
+    if (accumulatedItems.length === 0) return []
+    const slugs = accumulatedItems.flatMap((product) => getMerchSlugCandidates({
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    }))
+    return Array.from(new Set(slugs))
+  }, [accumulatedItems])
+
+  const merchManifestEntries = useQuery(
+    api.merchManifest.getMerchImageManifestEntries,
+    manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
 
   // Reset accumulation when filters change
   useEffect(() => {
@@ -106,6 +124,7 @@ export function ProductGrid({
             product={product}
             onAddToCart={onAddToCart}
             loading={result === undefined}
+            manifest={merchManifestEntries?.entries ?? null}
           />
         ))}
       </div>

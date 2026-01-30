@@ -19,7 +19,12 @@ export type ChatServerSettings = Doc<'chatServerSettings'>
 export type ChatUserSettings = Doc<'userChatSettings'>
 export type ChatSticker = Doc<'chatStickers'>
 export type ChatStickerPack = Doc<'chatStickerPacks'> & { stickers: ChatSticker[] }
-export type ChatMessage = Doc<'messages'> & { status?: 'sending' | 'sent' | 'failed'; errorMessage?: string }
+export type ChatMessage = Doc<'messages'> & {
+  stickerUrl?: string
+  stickerName?: string
+  status?: 'sending' | 'sent' | 'failed'
+  errorMessage?: string
+}
 
 export type OptimisticMessage = Omit<ChatMessage, '_id' | '_creationTime'> & {
   _id: string

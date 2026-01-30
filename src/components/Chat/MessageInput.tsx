@@ -35,6 +35,8 @@ type SendMessageInput = {
   content: string
   attachments?: AttachmentInput[]
   stickerId?: Id<'chatStickers'>
+  stickerPreviewUrl?: string
+  stickerName?: string
   author: {
     id: Id<'users'>
     displayName: string
@@ -165,9 +167,12 @@ export function MessageInput({
   const [showStickerPicker, setShowStickerPicker] = useState(false)
   const [selectedStickerId, setSelectedStickerId] = useState<Id<'chatStickers'> | null>(null)
   const [selectedStickerPreview, setSelectedStickerPreview] = useState<string | null>(null)
+  const [selectedStickerName, setSelectedStickerName] = useState<string | null>(null)
+  const [isStickerUploading, setIsStickerUploading] = useState(false)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const stickerInputRef = useRef<HTMLInputElement>(null)
   const attachmentsRef = useRef<PendingAttachment[]>(attachments)
   const removedIdsRef = useRef<Set<string>>(new Set())
   const uploadTasksRef = useRef<Map<string, Promise<void>>>(new Map())
@@ -178,6 +183,7 @@ export function MessageInput({
   const { t } = useTranslation()
 
   const generateUploadUrl = useMutation(api.chat.generateUploadUrl)
+  const uploadUserSticker = useMutation(api.chat.uploadUserSticker)
   const setTypingIndicator = useMutation(api.chat.setTypingIndicator)
 
   useEffect(() => {
@@ -193,6 +199,7 @@ export function MessageInput({
       setShowStickerPicker(false)
       setSelectedStickerId(null)
       setSelectedStickerPreview(null)
+      setSelectedStickerName(null)
     }
   }, [userSettings.showStickers])
 
@@ -218,9 +225,11 @@ export function MessageInput({
     if (!sticker) {
       setSelectedStickerId(null)
       setSelectedStickerPreview(null)
+      setSelectedStickerName(null)
       return
     }
     setSelectedStickerPreview(sticker.imageUrl)
+    setSelectedStickerName(sticker.name)
   }, [selectedStickerId, stickerLookup])
 
   useEffect(() => {
@@ -481,18 +490,22 @@ export function MessageInput({
       attachments: latestAttachments,
       stickerId: selectedStickerId,
       stickerPreview: selectedStickerPreview,
+      stickerName: selectedStickerName,
     }
 
     setMessageContent('')
     setAttachments([])
     setSelectedStickerId(null)
     setSelectedStickerPreview(null)
+    setSelectedStickerName(null)
     textareaRef.current?.focus()
 
     const result = await sendMessage({
       content: trimmedContent,
       attachments: attachmentsInput.length > 0 ? attachmentsInput : undefined,
       stickerId: selectedStickerId ?? undefined,
+      stickerPreviewUrl: selectedStickerPreview ?? undefined,
+      stickerName: selectedStickerName ?? undefined,
       author: { id: user._id, displayName, avatar, tier },
       idempotencyKey,
     })
@@ -507,6 +520,7 @@ export function MessageInput({
         setAttachments(snapshot.attachments)
         setSelectedStickerId(snapshot.stickerId)
         setSelectedStickerPreview(snapshot.stickerPreview)
+        setSelectedStickerName(snapshot.stickerName)
         setMessageContent(snapshot.content)
         textareaRef.current?.focus()
       }
@@ -523,6 +537,7 @@ export function MessageInput({
     messageContent,
     removeMessage,
     selectedStickerId,
+    selectedStickerName,
     selectedStickerPreview,
     sendMessage,
     sendTypingIndicator,
@@ -543,8 +558,43 @@ export function MessageInput({
   const handleStickerSelect = useCallback((sticker: ChatSticker) => {
     setSelectedStickerId(sticker._id)
     setSelectedStickerPreview(sticker.imageUrl)
+    setSelectedStickerName(sticker.name)
     setShowStickerPicker(false)
   }, [])
+
+  const handleStickerUpload = useCallback(
+    async (file: File) => {
+      if (!user) {
+        showToast('Sign in to upload stickers.', { type: 'error' })
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        showToast('Stickers must be an image file.', { type: 'error' })
+        return
+      }
+      const maxStickerMb = 4
+      if (file.size > maxStickerMb * MB) {
+        showToast(`Sticker exceeds ${maxStickerMb}MB limit.`, { type: 'error' })
+        return
+      }
+
+      setIsStickerUploading(true)
+      try {
+        const storageId = await uploadFileWithRetry(file)
+        await uploadUserSticker({
+          storageId,
+          name: file.name.replace(/\.[a-z0-9]+$/i, ''),
+        })
+        showToast('Sticker uploaded!', { type: 'success' })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to upload sticker'
+        showToast(message, { type: 'error' })
+      } finally {
+        setIsStickerUploading(false)
+      }
+    },
+    [uploadFileWithRetry, uploadUserSticker, user]
+  )
 
   const failedMessages = optimisticMessages.filter((message) => message.status === 'failed')
   const retryAllFailed = useCallback(async () => {
@@ -572,6 +622,22 @@ export function MessageInput({
         onChange={(event) => handleFiles(event.target.files)}
       />
 
+      <input
+        ref={stickerInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file) {
+            void handleStickerUpload(file)
+          }
+          if (stickerInputRef.current) {
+            stickerInputRef.current.value = ''
+          }
+        }}
+      />
+
       {attachments.length > 0 && (
         <div className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-4">
           {attachments.map((attachment) => (
@@ -594,6 +660,7 @@ export function MessageInput({
             onClick={() => {
               setSelectedStickerId(null)
               setSelectedStickerPreview(null)
+              setSelectedStickerName(null)
             }}
             className="text-[#808080] hover:text-white"
           >
@@ -602,11 +669,18 @@ export function MessageInput({
         </div>
       )}
 
+      {isStickerUploading && (
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#808080]">
+          <iconify-icon icon="solar:spinner-linear" width="14" height="14" className="animate-spin" />
+          Uploading sticker...
+        </div>
+      )}
+
       {slowModeLabel && (
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#707070]">{slowModeLabel}</div>
       )}
 
-      <div className="relative flex min-h-[48px] items-end gap-3 rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-4 py-2">
+      <div className="relative flex min-h-[48px] items-center gap-3 rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-4 py-2">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -616,6 +690,28 @@ export function MessageInput({
         >
           <iconify-icon icon="solar:add-circle-bold" style={{ fontSize: '24px' }} />
         </button>
+
+        {userSettings.showStickers && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowStickerPicker((prev) => !prev)}
+              className="flex flex-shrink-0 items-center justify-center rounded-full border border-transparent px-1 text-[#808080] transition-colors hover:border-[#2a2a2a] hover:text-white"
+              title="Stickers"
+            >
+              <iconify-icon icon="solar:sticker-smiley-bold" style={{ fontSize: '22px' }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => stickerInputRef.current?.click()}
+              className="flex flex-shrink-0 items-center justify-center rounded-full border border-transparent px-1 text-[#808080] transition-colors hover:border-[#2a2a2a] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              title="Upload sticker"
+              disabled={!user || isStickerUploading}
+            >
+              <iconify-icon icon="solar:upload-minimalistic-bold" style={{ fontSize: '20px' }} />
+            </button>
+          </>
+        )}
 
         {!isOnline && (
           <div className="absolute -top-9 left-0 rounded bg-[#c41e3a]/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white">
@@ -636,22 +732,11 @@ export function MessageInput({
         />
 
         <div className="flex flex-shrink-0 items-center gap-2 text-[#808080]">
-          {userSettings.showStickers && stickerPacks.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowStickerPicker((prev) => !prev)}
-              className="flex items-center justify-center transition-colors hover:text-white"
-              title="Stickers"
-            >
-              <iconify-icon icon="solar:sticker-smiley-bold" style={{ fontSize: '22px' }} />
-            </button>
-          )}
-
           <button
             type="button"
             onClick={() => void handleSend()}
             disabled={!user || isSending || !hasAnyContent}
-            className={`flex items-center justify-center transition-colors ${
+            className={`flex items-center justify-center rounded-full border border-transparent px-2 py-1 transition-colors ${
               !user || isSending || !hasAnyContent ? 'cursor-not-allowed text-[#333]' : 'text-[#c41e3a] hover:text-[#ff3355]'
             }`}
             title="Send message"
@@ -660,9 +745,16 @@ export function MessageInput({
           </button>
         </div>
 
-        {showStickerPicker && userSettings.showStickers && stickerPacks.length > 0 && (
+        {showStickerPicker && userSettings.showStickers && (
           <div className="absolute bottom-14 right-2 z-50">
-            <StickerPicker packs={stickerPacks} onSelect={handleStickerSelect} onClose={() => setShowStickerPicker(false)} />
+            <StickerPicker
+              packs={stickerPacks}
+              onSelect={handleStickerSelect}
+              onClose={() => setShowStickerPicker(false)}
+              currentUserId={user?._id}
+              onUploadSticker={handleStickerUpload}
+              isUploading={isStickerUploading}
+            />
           </div>
         )}
       </div>

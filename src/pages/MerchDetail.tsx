@@ -9,12 +9,29 @@ import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 import { useUser } from '../contexts/UserContext'
+import { ImageGallery } from '../components/Merch/ImageGallery'
+import { getMerchImagesForVariation, getMerchSlugCandidates, getVariationIndexFromColor } from '../utils/merchImages'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
 
   const product = useQuery(api.merch.getProductDetail, productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip')
+  const manifestSlugs = useMemo(() => {
+    if (!product) return []
+    return getMerchSlugCandidates({
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    })
+  }, [product])
+  const merchManifestEntries = useQuery(
+    api.merchManifest.getMerchImageManifestEntries,
+    manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
   const { isSignedIn, userProfile } = useUser()
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
 
@@ -148,9 +165,32 @@ export function MerchDetail() {
   const colors = [...new Set(product.variants.map((variant) => variant.color).filter(Boolean))]
   const selectedSize = selectedVariant?.size || sizes[0] || ''
   const selectedColor = selectedVariant?.color || colors[0] || ''
+  const variationIndex = getVariationIndexFromColor(
+    {
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    },
+    selectedColor
+  )
+  const galleryImages = getMerchImagesForVariation(
+    {
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    },
+    variationIndex,
+    merchManifestEntries?.entries ?? null
+  )
 
   const has3dModel = Boolean(product.model3dUrl) && !modelError
-  const viewerPoster = product.modelPosterUrl || imageUrl
+  const viewerPoster = product.modelPosterUrl || galleryImages[0] || imageUrl
   const minFieldOfView = product.modelConfig?.minFov ? `${product.modelConfig.minFov}deg` : undefined
   const maxFieldOfView = product.modelConfig?.maxFov ? `${product.modelConfig.maxFov}deg` : undefined
   const autoRotateActive = autoRotateEnabled && !prefersReducedMotion && has3dModel
@@ -217,7 +257,9 @@ export function MerchDetail() {
                   </div>
                 </div>
               ) : (
-                <img src={viewerPoster} alt={product.name} className="max-h-[520px] w-auto object-contain shadow-2xl" />
+                <div className="w-full max-w-[640px]">
+                  <ImageGallery images={galleryImages} alt={product.name} />
+                </div>
               )}
 
               {product.model3dUrl && modelError && (

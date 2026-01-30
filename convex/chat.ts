@@ -49,6 +49,25 @@ const getServerSettingsInternal = async (ctx: any) => {
   return settings ? { ...DEFAULT_CHAT_SETTINGS, ...settings } : DEFAULT_CHAT_SETTINGS;
 };
 
+const getOrCreateUserStickerPack = async (ctx: any, userId: Id<"users">) => {
+  const existing = await ctx.db
+    .query("chatStickerPacks")
+    .withIndex("by_creator", (q: any) => q.eq("createdBy", userId))
+    .first();
+
+  if (existing) return existing;
+
+  const packId = await ctx.db.insert("chatStickerPacks", {
+    name: "My Stickers",
+    description: "Personal sticker collection",
+    isActive: true,
+    createdAt: Date.now(),
+    createdBy: userId,
+  });
+
+  return await ctx.db.get(packId);
+};
+
 const getUserChatSettingsInternal = async (
   ctx: any,
   userId: Id<"users">
@@ -325,7 +344,7 @@ export const updateUserChatSettings = mutation({
 export const getStickerPacks = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    const user = await getCurrentUser(ctx);
     const settings = await getServerSettingsInternal(ctx);
 
     const packs = await ctx.db
@@ -342,8 +361,17 @@ export const getStickerPacks = query({
       ? packs.filter((pack) => enabledPackIds.has(pack._id))
       : packs;
 
+    const userPack = await ctx.db
+      .query("chatStickerPacks")
+      .withIndex("by_creator", (q) => q.eq("createdBy", user._id))
+      .first();
+
+    const combinedPacks = userPack
+      ? Array.from(new Map([...filteredPacks, userPack].map((pack) => [String(pack._id), pack])).values())
+      : filteredPacks;
+
     const packsWithStickers = await Promise.all(
-      filteredPacks.map(async (pack) => {
+      combinedPacks.map(async (pack) => {
         const stickers = await ctx.db
           .query("chatStickers")
           .withIndex("by_pack", (q) => q.eq("packId", pack._id).eq("isActive", true))
@@ -357,6 +385,42 @@ export const getStickerPacks = query({
     );
 
     return packsWithStickers;
+  },
+});
+
+export const uploadUserSticker = mutation({
+  args: {
+    storageId: v.id("_storage"),
+    name: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) {
+      throw new ConvexError("Upload not found. Please retry.");
+    }
+
+    const pack = await getOrCreateUserStickerPack(ctx, userId);
+    if (!pack) {
+      throw new ConvexError("Unable to create sticker pack.");
+    }
+
+    const name = (args.name ?? "Custom sticker").trim() || "Custom sticker";
+
+    const stickerId = await ctx.db.insert("chatStickers", {
+      packId: pack._id,
+      name,
+      imageUrl: url,
+      storageId: args.storageId,
+      tags: args.tags ?? [],
+      createdAt: Date.now(),
+      isActive: true,
+    });
+
+    return { stickerId, imageUrl: url, name };
   },
 });
 
@@ -462,7 +526,9 @@ export const sendMessage = mutation({
         throw new ConvexError("Sticker pack is not available.");
       }
 
+      const isUserPack = pack.createdBy && String(pack.createdBy) === String(userId);
       if (
+        !isUserPack &&
         settings.enabledStickerPackIds.length > 0 &&
         !settings.enabledStickerPackIds.includes(pack._id)
       ) {
@@ -563,6 +629,8 @@ export const sendMessage = mutation({
       messageType,
       attachments: attachments.length > 0 ? attachments : undefined,
       stickerId: sticker?._id,
+      stickerUrl: sticker?.imageUrl,
+      stickerName: sticker?.name,
       editedAt: undefined,
       isPinned: false,
       isDeleted: false,

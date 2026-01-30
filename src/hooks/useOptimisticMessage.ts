@@ -26,6 +26,8 @@ type SendMessageInput = {
   content: string
   attachments?: AttachmentInput[]
   stickerId?: Id<'chatStickers'>
+  stickerPreviewUrl?: string
+  stickerName?: string
   author: AuthorInput
   idempotencyKey?: string
 }
@@ -98,14 +100,14 @@ export function useOptimisticMessage({
     async (tempId: string, payload: SendMessageInput) => {
       const attachmentsPayload = toMutationAttachments(payload.attachments)
 
-      try {
-        await sendMessageMutation({
-          channelId,
-          content: payload.content,
-          idempotencyKey: payload.idempotencyKey!,
-          attachments: attachmentsPayload,
-          stickerId: payload.stickerId,
-        })
+    try {
+      await sendMessageMutation({
+        channelId,
+        content: payload.content,
+        idempotencyKey: payload.idempotencyKey!,
+        attachments: attachmentsPayload,
+        stickerId: payload.stickerId,
+      })
 
         setOptimisticMessages((prev) =>
           prev.map((message) =>
@@ -152,6 +154,8 @@ export function useOptimisticMessage({
         messageType: computeMessageType(payload),
         attachments: toDisplayAttachments(payload.attachments),
         stickerId: payload.stickerId,
+        stickerUrl: payload.stickerPreviewUrl,
+        stickerName: payload.stickerName,
         editedAt: undefined,
         isPinned: false,
         isDeleted: false,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { ProfileAvatar } from '../Profile/ProfileAvatar'
 import { FanStatusBadge } from '../Profile/FanStatusBadge'
@@ -157,6 +158,8 @@ export function MessageItem({
 
   const attachments = message.attachments ?? []
   const sticker = message.stickerId ? stickerMap.get(String(message.stickerId)) : undefined
+  const stickerUrl = sticker?.imageUrl ?? message.stickerUrl
+  const stickerName = sticker?.name ?? message.stickerName ?? 'Sticker'
   const allowAutoplay = autoplayMedia && !prefersReducedMotion
 
   const hasText = !message.isDeleted && message.content.trim().length > 0
@@ -215,14 +218,15 @@ export function MessageItem({
 
   const reactionEmojis = message.reactionEmojis ?? []
 
-  const basePadding = compactMode ? 'py-1.5' : 'py-2'
-  const gapClass = compactMode ? 'gap-2.5' : 'gap-3'
+  const basePadding = compactMode ? (isStacked ? 'py-0.5' : 'py-1') : (isStacked ? 'py-0.5' : 'py-1.5')
+  const gapClass = compactMode ? 'gap-2' : 'gap-2.5'
+  const stackMargin = isStacked ? 'mt-0.5' : compactMode ? 'mt-1' : 'mt-1.5'
 
   return (
     <div
       className={`group/item relative flex items-start ${gapClass} px-3 ${basePadding} transition-colors hover:bg-[#1a1a1a]/50 ${
         isPinned ? 'border-l-2 border-[#c41e3a]' : ''
-      } ${isStacked ? '' : compactMode ? 'mt-2' : 'mt-3'}`}
+      } ${stackMargin}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       onContextMenu={(event) => {
@@ -230,7 +234,7 @@ export function MessageItem({
         if (canReact) setShowReactionPicker((prev) => !prev)
       }}
     >
-      <div className={`flex-shrink-0 ${compactMode ? 'w-9' : 'w-10'} pt-0.5`}>
+      <div className={`flex-shrink-0 ${compactMode ? 'h-10 w-10' : 'h-11 w-11'} pt-0.5 flex items-start justify-center`}>
         {!isStacked ? (
           <ProfileAvatar user={author} size="sm" />
         ) : (
@@ -279,10 +283,10 @@ export function MessageItem({
         {!message.isDeleted && message.stickerId && (
           <div className="mt-2">
             {showStickers ? (
-              sticker ? (
+              stickerUrl ? (
                 <img
-                  src={sticker.imageUrl}
-                  alt={sticker.name}
+                  src={stickerUrl}
+                  alt={stickerName}
                   loading="lazy"
                   className="h-28 w-28 rounded-xl border border-[#2a2a2a] bg-[#0a0a0a] object-contain p-2"
                 />
@@ -398,86 +402,90 @@ export function MessageItem({
         </div>
       )}
 
-      {lightboxUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setLightboxUrl(null)}>
-          <button
-            type="button"
-            className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/40 p-2 text-white transition-colors hover:border-white/50"
-            onClick={() => setLightboxUrl(null)}
-            aria-label="Close image preview"
-          >
-            <iconify-icon icon="solar:close-circle-linear" width="22" height="22" />
-          </button>
-          <img
-            src={lightboxUrl}
-            alt="Attachment preview"
-            className="max-h-[85vh] max-w-[90vw] rounded-xl border border-white/10 object-contain shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
-      )}
+      {lightboxUrl &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setLightboxUrl(null)}>
+            <button
+              type="button"
+              className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/40 p-2 text-white transition-colors hover:border-white/50"
+              onClick={() => setLightboxUrl(null)}
+              aria-label="Close image preview"
+            >
+              <iconify-icon icon="solar:close-circle-linear" width="22" height="22" />
+            </button>
+            <img
+              src={lightboxUrl}
+              alt="Attachment preview"
+              className="max-h-[85vh] max-w-[90vw] rounded-xl border border-white/10 object-contain shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>,
+          document.body
+        )}
 
-      {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowReportModal(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#111] p-5" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-white">Report message</h4>
-              <button
-                type="button"
-                onClick={() => setShowReportModal(false)}
-                className="rounded p-1 text-[#808080] transition-colors hover:bg-[#1a1a1a] hover:text-white"
-                aria-label="Close report dialog"
-              >
-                <iconify-icon icon="solar:close-circle-linear" width="20" height="20" />
-              </button>
+      {showReportModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowReportModal(false)}>
+            <div className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#111] p-5" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h4 className="text-base font-semibold text-white">Report message</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  className="rounded p-1 text-[#808080] transition-colors hover:bg-[#1a1a1a] hover:text-white"
+                  aria-label="Close report dialog"
+                >
+                  <iconify-icon icon="solar:close-circle-linear" width="20" height="20" />
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3 text-sm">
+                <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Reason</label>
+                <select
+                  value={reportReason}
+                  onChange={(event) => setReportReason(event.target.value as (typeof REPORT_REASONS)[number]['value'])}
+                  className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white focus:border-[#c41e3a] focus:outline-none"
+                >
+                  {REPORT_REASONS.map((reason) => (
+                    <option key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Note (optional)</label>
+                <textarea
+                  value={reportNote}
+                  onChange={(event) => setReportNote(event.target.value)}
+                  rows={3}
+                  maxLength={400}
+                  placeholder="Add context for moderators"
+                  className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white placeholder:text-[#606060] focus:border-[#c41e3a] focus:outline-none"
+                />
+                {reportError && <div className="text-xs font-medium text-[#ff6b6b]">{reportError}</div>}
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#b0b0b0] transition-colors hover:border-[#3a3a3a] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitReport}
+                  disabled={reportState === 'submitting'}
+                  className="rounded-lg border border-[#c41e3a] bg-[#c41e3a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#d92745] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {reportState === 'submitting' ? 'Sending...' : 'Submit'}
+                </button>
+              </div>
             </div>
-
-            <div className="mt-4 space-y-3 text-sm">
-              <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Reason</label>
-              <select
-                value={reportReason}
-                onChange={(event) => setReportReason(event.target.value as (typeof REPORT_REASONS)[number]['value'])}
-                className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white focus:border-[#c41e3a] focus:outline-none"
-              >
-                {REPORT_REASONS.map((reason) => (
-                  <option key={reason.value} value={reason.value}>
-                    {reason.label}
-                  </option>
-                ))}
-              </select>
-
-              <label className="block text-xs uppercase tracking-[0.2em] text-[#808080]">Note (optional)</label>
-              <textarea
-                value={reportNote}
-                onChange={(event) => setReportNote(event.target.value)}
-                rows={3}
-                maxLength={400}
-                placeholder="Add context for moderators"
-                className="w-full rounded-lg border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 text-sm text-white placeholder:text-[#606060] focus:border-[#c41e3a] focus:outline-none"
-              />
-              {reportError && <div className="text-xs font-medium text-[#ff6b6b]">{reportError}</div>}
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowReportModal(false)}
-                className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#b0b0b0] transition-colors hover:border-[#3a3a3a] hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={submitReport}
-                disabled={reportState === 'submitting'}
-                className="rounded-lg border border-[#c41e3a] bg-[#c41e3a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#d92745] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {reportState === 'submitting' ? 'Sending...' : 'Submit'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

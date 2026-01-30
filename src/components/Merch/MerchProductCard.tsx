@@ -5,6 +5,8 @@ import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
 import { useUser } from '../../contexts/UserContext'
+import { getMerchPrimaryImages } from '../../utils/merchImages'
+import type { MerchImageManifest } from '../../types/merch'
 
 interface MerchProductCardProps {
   product: {
@@ -17,14 +19,25 @@ interface MerchProductCardProps {
     isNew?: boolean
     totalStock?: number
     category?: string
+    tags?: string[]
     variants?: any[]
   }
+  manifest?: MerchImageManifest | null
 }
 
-export const MerchProductCard = ({ product }: MerchProductCardProps) => {
+export const MerchProductCard = ({ product, manifest }: MerchProductCardProps) => {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
   const isOutOfStock = product.totalStock === 0
+
+  const merchImages = getMerchPrimaryImages({
+    name: product.name,
+    imageUrls: product.imageUrls,
+    thumbnailUrl: product.thumbnailUrl,
+    category: product.category,
+    tags: product.tags,
+    variants: product.variants,
+  }, manifest)
 
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
   const addToCart = useMutation(api.cart.addToCart)
@@ -81,13 +94,13 @@ export const MerchProductCard = ({ product }: MerchProductCardProps) => {
     >
       <div className="card-image-container">
         <img 
-          src={product.thumbnailUrl || product.imageUrls[0] || '/images/placeholder.jpg'} 
+          src={merchImages[0] || product.thumbnailUrl || product.imageUrls[0] || '/images/placeholder.jpg'} 
           alt={product.name}
-          className={`card-image primary ${isHovered && product.imageUrls[1] ? 'hidden' : ''}`}
+          className={`card-image primary ${isHovered && merchImages[1] ? 'hidden' : ''}`}
         />
-        {product.imageUrls[1] && (
+        {merchImages[1] && (
           <img 
-            src={product.imageUrls[1]} 
+            src={merchImages[1]} 
             alt={product.name}
             className={`card-image secondary ${isHovered ? 'visible' : ''}`}
           />

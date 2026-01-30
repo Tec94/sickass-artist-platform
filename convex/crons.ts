@@ -57,13 +57,6 @@ crons.interval(
   {}
 )
 
-// Instagram sync cron - Every 4 hours
-crons.interval(
-  'instagram-sync',
-  { hours: 4 }, // Every 4 hours
-  internal.instagramSync.syncInstagramPostsInternal
-)
-
 // Spotify sync cron - Daily at 2 AM UTC
 crons.daily(
   'spotify-sync',

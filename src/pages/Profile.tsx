@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import type { Language } from '../contexts/LanguageContext';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export const Profile = () => {
   const { user, isSignedIn, isLoading, signOut } = useAuth();
@@ -33,6 +35,11 @@ export const Profile = () => {
     level: Math.floor(((user as any).points || (user as any).votedPoints || 0) / 100) + 1,
     xp: ((user as any).points || (user as any).votedPoints || 0) % 100
   };
+
+  const activeQuests = useQuery(
+    api.quests.getUserQuests,
+    user ? { userId: user._id } : 'skip'
+  );
 
   const socials = (user as any).socials || {};
 
@@ -191,21 +198,47 @@ export const Profile = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {[1, 2, 3, 4].map((i) => (
-                 <div key={i} className="bg-zinc-950 border border-zinc-900 p-6 rounded-sm group hover:border-red-900/50 transition-colors">
+              {activeQuests === undefined && (
+                <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
+                  {t('profile.loading')}
+                </div>
+              )}
+              {activeQuests !== undefined && activeQuests.length === 0 && (
+                <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
+                  {t('profile.noActiveQuests') || 'No active quests right now.'}
+                </div>
+              )}
+              {activeQuests?.map((quest) => {
+                const progressPercent = Math.min(100, Math.round((quest.progress / quest.target) * 100));
+                const iconIsUrl = quest.icon?.startsWith('http') || quest.icon?.startsWith('/');
+                return (
+                  <div key={quest.progressId} className="bg-zinc-950 border border-zinc-900 p-6 rounded-sm group hover:border-red-900/50 transition-colors">
                     <div className="flex justify-between items-start mb-4">
-                       <div className="p-3 bg-zinc-900 border border-zinc-800 group-hover:bg-red-950/20 group-hover:border-red-900/50 transition-colors">
-                          <iconify-icon icon="solar:fire-bold" class="text-red-600 text-xl"></iconify-icon>
-                       </div>
-                       <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">{t('profile.inProgress')}</span>
+                      <div className="p-3 bg-zinc-900 border border-zinc-800 group-hover:bg-red-950/20 group-hover:border-red-900/50 transition-colors">
+                        {iconIsUrl ? (
+                          <img src={quest.icon} alt={quest.name} className="h-6 w-6 object-contain" />
+                        ) : (
+                          <span className="text-red-600 text-xl">{quest.icon || '🔥'}</span>
+                        )}
+                      </div>
+                      <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">
+                        {quest.isCompleted ? (t('profile.completed') || 'Completed') : t('profile.inProgress')}
+                      </span>
                     </div>
-                    <h4 className="text-white font-bold uppercase text-xs tracking-wide mb-2">{t('profile.questTitle')} {i}</h4>
-                    <p className="text-zinc-500 text-xs mb-4">{t('profile.questDescription')}</p>
+                    <h4 className="text-white font-bold uppercase text-xs tracking-wide mb-2">{quest.name}</h4>
+                    <p className="text-zinc-500 text-xs mb-4">{quest.description}</p>
+                    <div className="flex justify-between text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">
+                      <span>
+                        {quest.progress}/{quest.target}
+                      </span>
+                      <span>{progressPercent}%</span>
+                    </div>
                     <div className="h-1.5 bg-zinc-900 rounded-full">
-                       <div className="h-full bg-zinc-800 w-1/3 rounded-full"></div>
+                      <div className="h-full bg-zinc-800 rounded-full" style={{ width: `${progressPercent}%` }}></div>
                     </div>
-                 </div>
-               ))}
+                  </div>
+                );
+              })}
             </div>
           </section>
         </div>

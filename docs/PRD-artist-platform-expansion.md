@@ -10,6 +10,10 @@ The platform already ships a real-time chat, leaderboard logic, merch store, and
 - Make rankings live on the dashboard (and decide whether to keep or retire the standalone ranking page).
 - Update the artist Instagram links to https://www.instagram.com/roapr__/ across the site.
 - Add artist-branded merch, including a mini-figurine with a 3D interactive model on its product page.
+- Reorganize merch product images by item and variation, and show variation-specific galleries on PDP.
+- Sync active quests on user profiles directly from the database.
+- Update the community gallery to only show Spotify albums (remove Instagram posts).
+- Polish chatroom UI: group consecutive messages, tighten spacing, fix avatar crop, and center media modals/chat bar content.
 - Prepare backend and frontend for high-scale usage (spikes in chat, rankings, and merch traffic).
 
 ## Non-goals (this release)
@@ -38,6 +42,7 @@ In scope:
 - User settings (mute defaults, media autoplay, sticker visibility, compact mode).
 - Upload images and videos in chat.
 - Custom chat stickers (admin-managed packs, user selection).
+- User-uploaded stickers that are saved per account.
 - Moderation pipeline for chat and forum (reports, review queue, actions, audit log).
 - Admin console that links settings, moderation, and live content data.
 
@@ -48,6 +53,7 @@ Out of scope:
 ### User Stories
 - As a fan, I can upload an image or video in chat.
 - As a fan, I can use custom stickers in my messages.
+- As a fan, I can upload my own stickers and use them from my account.
 - As an admin, I can configure media limits and slow mode.
 - As a user, I can control media autoplay and sticker visibility.
 - As a user, I can report a chat message or forum post.
@@ -70,6 +76,7 @@ Out of scope:
 - Support image uploads (JPG, PNG, WebP) and video uploads (MP4, WebM).
 - Attachments are optional per message; text-only and media-only messages allowed.
 - Sticker picker with search, pack tabs, and recent stickers.
+- Chat bar includes a visible sticker button for quick access.
 - Admin settings include:
   - Slow mode per channel (0s, 5s, 10s, 30s).
   - Max attachment size (image and video).
@@ -123,6 +130,8 @@ Out of scope:
   - `name`, `description`, `isActive`, `createdAt`
 - `chatStickers`:
   - `packId`, `name`, `imageUrl`, `storageId`, `tags`, `createdAt`, `isActive`
+- `userStickers`:
+  - `userId`, `name`, `imageUrl`, `storageId`, `tags`, `createdAt`, `isActive`
 - `chatServerSettings`:
   - `slowModeSeconds`, `maxImageMb`, `maxVideoMb`, `allowedMediaTypes`, `enabledStickerPackIds`, `retentionDays`
 - `userChatSettings`:
@@ -133,6 +142,7 @@ Out of scope:
 - `chat.sendMessage` accepts optional attachments and stickerId.
 - `chat.getServerSettings` query and `admin.updateServerSettings` mutation.
 - `chat.getStickerPacks` query and `admin.createStickerPack` / `admin.uploadSticker` mutations.
+- `chat.uploadUserSticker` mutation and `chat.getUserStickers` query.
 - `moderation.reportContent` mutation.
 - `moderation.getQueue` query with filters and pagination.
 - `moderation.takeAction` mutation (warn/remove/timeout/ban).
@@ -151,6 +161,8 @@ Out of scope:
 ### Acceptance Criteria
 - Users can send and view image/video messages in chat.
 - Sticker picker works with at least one admin-created pack.
+- Users can upload and use their own custom stickers (account-specific).
+- Sticker button is visible in the main chat bar and opens the picker.
 - Admin can update slow mode and media limits without redeploy.
 - User chat settings persist and take effect immediately.
 - Reported chat and forum content appear in a live moderation queue.
@@ -291,6 +303,154 @@ Out of scope:
 ### Acceptance Criteria
 - Mini-figurine PDP renders a 3D model with rotate/zoom.
 - Page remains usable on mobile and low-end devices.
+
+---
+
+## Feature 5: Merch Image Variations + Public Asset Reorg
+
+### Problem
+Merch product images are not organized by item/variation, and PDP image galleries do not change when a user selects a different color/design variation.
+
+### Scope
+In scope:
+- Reorganize public merch assets into item folders (ex: jackets, tees) with consistent variation naming.
+- Define a file naming convention to map variation images to PDP galleries.
+- Update PDP to default to variation 1 images and switch galleries on variation change.
+- Infer variations and image sets from filenames (no new product metadata yet).
+
+Out of scope:
+- CDN hosting or runtime image transformation (use current static assets).
+- New product variants beyond existing catalog.
+
+### User Stories
+- As a fan, I see the default variation images when I open a product page.
+- As a fan, when I switch color/design, the image gallery updates to that variation.
+- As an admin, I can add new variation images by following a simple naming convention.
+
+### Asset Organization Convention
+Proposed structure:
+- `public/merch/{category}/{productSlug}/`
+- Filenames: `{productSlug}-{variationIndex}-{imageIndex}.jpg`
+
+Example:
+- `public/merch/jackets/jacket1/jacket1-1-1.jpg` (variation 1, image 1)
+- `public/merch/jackets/jacket1/jacket1-2-1.jpg` (variation 2, image 1)
+- `public/merch/jackets/jacket1/jacket1-2-2.jpg` (variation 2, image 2)
+
+Parsing rules:
+- `productSlug` is inferred from the filename prefix before the first `-`.
+- `variationIndex` is the first numeric segment after the slug.
+- `imageIndex` is the second numeric segment after the slug.
+
+### Functional Requirements
+- PDP defaults to `variationIndex = 1` if no selection is made.
+- Variation selector updates gallery to the matching image set.
+- If a variation has missing images, fall back to variation 1.
+- Gallery uses deterministic ordering by `imageIndex`.
+- Product variation options (labels, colors) continue to come from existing UI config; images are mapped by filename inference.
+
+### Data Model Changes
+- None for Phase 1 (variation images are inferred from filenames).
+
+### Edge Cases
+- Variation selected that has no images: show fallback + toast (optional).
+- Mixed file extensions (jpg/png/webp): maintain consistent extension per variation.
+- Asset missing from public folder: log warning in dev, fail gracefully in prod.
+
+### Acceptance Criteria
+- Public merch assets are organized by category and product.
+- PDP shows variation 1 images by default.
+- Switching variations updates the gallery without reload.
+- Missing variation assets fall back to variation 1 without breaking layout.
+
+---
+
+## Feature 6: User Profile Active Quests Sync
+
+### Problem
+The active quests shown on a user profile can drift from the database state.
+
+### Scope
+In scope:
+- Replace any hardcoded or cached active quest list with a live query.
+- Ensure profile page reflects real-time active quests and their statuses.
+
+Out of scope:
+- New quest types or quest logic changes.
+
+### Functional Requirements
+- Profile pulls active quests from the database on page load.
+- Data refresh happens on profile re-entry (no real-time subscription required).
+- Empty state for users with no active quests.
+
+### Acceptance Criteria
+- Active quests on profile always match the database.
+- Changes to quests appear on profile without manual refresh.
+
+---
+
+## Feature 7: Community Gallery Spotify-Only View
+
+### Problem
+The community gallery currently shows Instagram posts that should be removed.
+
+### Scope
+In scope:
+- Remove Instagram posts from the community gallery.
+- Display only Spotify albums.
+ - Remove Instagram fetches from the data layer and delete Instagram entries in the database.
+
+Out of scope:
+- New social providers or Instagram replacements.
+
+### Functional Requirements
+- Gallery data source filters to Spotify-only content.
+- Database no longer stores or reads Instagram content for gallery.
+- Empty state if no albums are available.
+
+### Acceptance Criteria
+- Community gallery contains only Spotify albums.
+- No Instagram content is rendered or fetched for the gallery.
+- Instagram entries are removed from the database layer used by the gallery.
+
+---
+
+## Feature 8: Chatroom UX Polish
+
+### Problem
+Consecutive messages feel overly spaced, avatars render as stretched, media modals are not centered on the viewport, and chat bar content is not horizontally centered.
+
+### Scope
+In scope:
+- Group consecutive messages from the same user within a short time window.
+- Tighten vertical padding for consecutive messages.
+- Ensure avatars render as perfect circles (no stretch).
+- Center media modal on the viewport (not the chat container).
+- Horizontally center chat bar contents within the outer container.
+
+Out of scope:
+- Changing message storage schema (UI-only grouping).
+
+### Functional Requirements
+- Define a grouping window (default: 2 minutes).
+- If two consecutive messages are from the same user and within the window:
+  - Render as a single message block with stacked body content.
+  - Suppress repeated avatar and username for subsequent entries.
+- Reduce top/bottom padding between consecutive messages.
+- Avatar images use `object-fit: cover` and equal width/height.
+- Media modal uses fixed positioning and centers on viewport.
+- Chat bar contents align center horizontally and preserve spacing between controls.
+
+### Edge Cases
+- Mixed media + text in grouped messages (render each item in order).
+- Editing/deleting a message within a group should not break layout.
+- Messages crossing the time window should render as separate blocks.
+
+### Acceptance Criteria
+- Consecutive messages within 2 minutes from the same user render as one block (text and media included).
+- Avatar appears perfectly circular at all sizes.
+- Media modal opens centered on the screen and can be dismissed by click outside or X.
+- Chat bar contents are centered within the outer container.
 
 ---
 

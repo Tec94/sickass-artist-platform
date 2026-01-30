@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { ChatSticker, ChatStickerPack } from '../../types/chat'
 
@@ -9,6 +9,9 @@ interface StickerPickerProps {
   packs: ChatStickerPack[]
   onSelect: (sticker: ChatSticker) => void
   onClose: () => void
+  currentUserId?: string
+  onUploadSticker?: (file: File) => Promise<void>
+  isUploading?: boolean
 }
 
 function loadRecents(): string[] {
@@ -30,10 +33,18 @@ function saveRecents(recents: string[]) {
   }
 }
 
-export function StickerPicker({ packs, onSelect, onClose }: StickerPickerProps) {
+export function StickerPicker({
+  packs,
+  onSelect,
+  onClose,
+  currentUserId,
+  onUploadSticker,
+  isUploading = false,
+}: StickerPickerProps) {
   const [activeTab, setActiveTab] = useState<string>('recent')
   const [search, setSearch] = useState('')
   const [recents, setRecents] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setRecents(loadRecents())
@@ -56,12 +67,18 @@ export function StickerPicker({ packs, onSelect, onClose }: StickerPickerProps) 
 
   const allStickers = useMemo(() => Array.from(stickerMap.values()), [stickerMap])
   const searchTerm = search.trim().toLowerCase()
+  const userPack = useMemo(
+    () => packs.find((pack) => currentUserId && String(pack.createdBy) === String(currentUserId)) ?? null,
+    [packs, currentUserId]
+  )
 
   const visibleStickers = useMemo(() => {
     const base =
       activeTab === 'recent'
         ? recentStickers
-        : packs.find((pack) => String(pack._id) === activeTab)?.stickers ?? allStickers
+        : activeTab === 'my'
+          ? userPack?.stickers ?? []
+          : packs.find((pack) => String(pack._id) === activeTab)?.stickers ?? allStickers
 
     if (!searchTerm) return base
     return base.filter(
@@ -81,9 +98,12 @@ export function StickerPicker({ packs, onSelect, onClose }: StickerPickerProps) 
   }
 
   const tabs = useMemo(() => {
-    const packTabs = packs.map((pack) => ({ id: String(pack._id), label: pack.name }))
-    return [{ id: 'recent', label: 'Recent' }, ...packTabs]
-  }, [packs])
+    const packTabs = packs
+      .filter((pack) => !userPack || String(pack._id) !== String(userPack._id))
+      .map((pack) => ({ id: String(pack._id), label: pack.name }))
+    const userTab = currentUserId ? [{ id: 'my', label: 'My Stickers' }] : []
+    return [{ id: 'recent', label: 'Recent' }, ...userTab, ...packTabs]
+  }, [packs, currentUserId, userPack])
 
   return (
     <motion.div
@@ -108,12 +128,52 @@ export function StickerPicker({ packs, onSelect, onClose }: StickerPickerProps) 
             className="w-full pl-8 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white focus:outline-none focus:border-red-600"
           />
         </div>
+        {onUploadSticker && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 text-zinc-400 hover:text-white transition disabled:opacity-50"
+            title="Upload sticker"
+            disabled={isUploading}
+          >
+            <iconify-icon
+              icon={isUploading ? 'solar:spinner-linear' : 'solar:add-circle-bold'}
+              width="20"
+              height="20"
+              className={isUploading ? 'animate-spin' : undefined}
+            ></iconify-icon>
+          </button>
+        )}
         <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white transition">
           <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
         </button>
       </div>
 
+      {onUploadSticker && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            if (file) {
+              void onUploadSticker(file)
+            }
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
+          }}
+        />
+      )}
+
       <div className="px-2 pt-2">
+        {isUploading && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            <iconify-icon icon="solar:spinner-linear" width="14" height="14" className="animate-spin"></iconify-icon>
+            Uploading sticker...
+          </div>
+        )}
         <div className="flex gap-1 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
@@ -133,7 +193,9 @@ export function StickerPicker({ packs, onSelect, onClose }: StickerPickerProps) 
 
       <div className="p-3 max-h-80 overflow-y-auto">
         {visibleStickers.length === 0 ? (
-          <div className="text-center text-zinc-500 text-sm py-10">No stickers found</div>
+          <div className="text-center text-zinc-500 text-sm py-10">
+            {activeTab === 'my' ? 'Upload your first sticker' : 'No stickers found'}
+          </div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
             {visibleStickers.map((sticker) => (

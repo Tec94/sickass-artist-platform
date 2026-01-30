@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ImageGalleryProps {
@@ -10,6 +10,11 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
+
+  useEffect(() => {
+    setSelectedIndex(0)
+    setImageErrors({})
+  }, [images])
 
   const displayImages = images.slice(0, 10) // Max 10 images
   const selectedImage = imageErrors[selectedIndex]

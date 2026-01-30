@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Doc } from '../../../convex/_generated/dataModel'
+import { getMerchPrimaryImages } from '../../utils/merchImages'
+import type { MerchImageManifest } from '../../types/merch'
 
 interface ProductCardProps {
   product: Doc<'merchProducts'> & {
@@ -9,14 +11,22 @@ interface ProductCardProps {
   }
   onAddToCart: (variantId: string, quantity: number) => Promise<void>
   loading?: boolean
+  manifest?: MerchImageManifest | null
 }
 
-export function ProductCard({ product, onAddToCart, loading }: ProductCardProps) {
+export function ProductCard({ product, onAddToCart, loading, manifest }: ProductCardProps) {
   const [_imageError, setImageError] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const imageUrl = "/src/public/assets/test-image.jpg"
+  const merchImages = getMerchPrimaryImages({
+    name: product.name,
+    imageUrls: product.imageUrls,
+    thumbnailUrl: product.thumbnailUrl,
+    category: product.category,
+    tags: product.tags,
+    variants: product.variants,
+  }, manifest)
+  const imageUrl = merchImages[0] || product.thumbnailUrl || '/images/placeholder.jpg'
 
   const handleAddToCart = async () => {
     setError(null)

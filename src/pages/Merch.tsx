@@ -8,6 +8,7 @@ import { MerchSidebar } from '../components/Merch/MerchSidebar'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 import { useTranslation } from '../hooks/useTranslation'
+import { getMerchSlugCandidates } from '../utils/merchImages'
 
 export function Merch() {
   const [searchParams] = useSearchParams()
@@ -29,7 +30,6 @@ export function Merch() {
     pageSize: 100,
     sortBy: 'newest' as const
   })
-  
   const handleCollectionToggle = useCallback((collection: string) => {
     setSelectedCollections(prev => 
       prev.includes(collection)
@@ -93,6 +93,24 @@ export function Merch() {
 
     return filtered
   }, [productsQuery, activeCategory, maxPrice, selectedCollections, searchQuery, sortBy, stockFilter])
+
+  const manifestSlugs = useMemo(() => {
+    if (!filteredProducts.length) return []
+    const slugs = filteredProducts.flatMap((product) => getMerchSlugCandidates({
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    }))
+    return Array.from(new Set(slugs))
+  }, [filteredProducts])
+
+  const merchManifestEntries = useQuery(
+    api.merchManifest.getMerchImageManifestEntries,
+    manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
 
   // Category labels for mobile tabs
   const categoryLabels: Record<string, string> = {
@@ -206,6 +224,7 @@ export function Merch() {
                     <MerchProductCard 
                       key={product._id} 
                       product={product as any}
+                      manifest={merchManifestEntries?.entries ?? null}
                     />
                   ))}
                 </div>

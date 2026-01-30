@@ -15,7 +15,6 @@ export type AdminTab =
   | 'points'
   | 'rewards'
   | 'redemptions'
-  | 'instagram'
   | 'system'
 
 interface AdminOverviewProps {
