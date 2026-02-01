@@ -166,7 +166,7 @@ export const Gallery = () => {
                      setSeedResult('Seeding...');
                      try {
                        const result = await seedDirect();
-                       setSeedResult(`Seeded! IG: ${result.igInserted}, Spotify: ${result.spotifyInserted}`);
+                       setSeedResult(`Seeded! Spotify: ${result.spotifyInserted}`);
                      } catch (e) {
                        setSeedResult(`Error: ${e}`);
                      }

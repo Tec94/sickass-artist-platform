@@ -147,12 +147,16 @@ export const merchImageAliases = {
     "jacket4"
   ],
   "elite-fit-denim": [
-    "jeans3",
-    "jeans1"
+    "jeans1",
+    "jeans3"
   ],
   "coated-stack-denim": [
-    "jeans3",
-    "jeans1"
+    "jeans1",
+    "jeans3"
+  ],
+  "jeans1": [
+    "jeans1",
+    "jeans3"
   ],
   "cargo-jeans": "jeans2",
   "signature-wolf-logo-t-shirt": [

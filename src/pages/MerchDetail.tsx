@@ -10,7 +10,7 @@ import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 import { useUser } from '../contexts/UserContext'
 import { ImageGallery } from '../components/Merch/ImageGallery'
-import { getMerchImagesForVariation, getMerchSlugCandidates, getVariationIndexFromColor } from '../utils/merchImages'
+import { getMerchImagesForVariation, getMerchSlugCandidates, getOrderedColors, getVariationIndexFromColor } from '../utils/merchImages'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -51,6 +51,21 @@ export function MerchDetail() {
   const selectedVariant = useMemo(() => {
     if (!product) return null
     if (selectedVariantId) return product.variants.find((variant) => variant._id === selectedVariantId) || null
+
+    const orderedColors = getOrderedColors({
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl,
+      category: product.category,
+      tags: product.tags,
+      variants: product.variants,
+    })
+    const preferredColor = orderedColors[0]
+    if (preferredColor) {
+      const preferredVariant = product.variants.find((variant) => variant.color === preferredColor && variant.stock > 0)
+      if (preferredVariant) return preferredVariant
+    }
+
     return product.variants.find((variant) => variant.stock > 0) || product.variants[0] || null
   }, [product, selectedVariantId])
 
@@ -162,7 +177,14 @@ export function MerchDetail() {
   const description = product.description || product.longDescription || 'Premium quality merchandise from ROAPR Studio.'
 
   const sizes = [...new Set(product.variants.map((variant) => variant.size).filter(Boolean))]
-  const colors = [...new Set(product.variants.map((variant) => variant.color).filter(Boolean))]
+  const colors = getOrderedColors({
+    name: product.name,
+    imageUrls: product.imageUrls,
+    thumbnailUrl: product.thumbnailUrl,
+    category: product.category,
+    tags: product.tags,
+    variants: product.variants,
+  })
   const selectedSize = selectedVariant?.size || sizes[0] || ''
   const selectedColor = selectedVariant?.color || colors[0] || ''
   const variationIndex = getVariationIndexFromColor(

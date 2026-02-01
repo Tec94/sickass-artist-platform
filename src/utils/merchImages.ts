@@ -13,6 +13,19 @@ type ManifestEntry = MerchImageManifest[keyof MerchImageManifest];
 const SLUG_FROM_FILENAME = /\/([^/]+)-\d+(?:-\d+)?\.[a-z0-9]+$/i;
 const SLUG_FROM_MERCH_PATH = /\/merch\/[^/]+\/([^/]+)\/\1-\d+-\d+\.[a-z0-9]+$/i;
 
+const COLOR_ORDER_OVERRIDES: Record<string, string[]> = {
+  'private-suit-varsity-jacket': ['Navy/Cream', 'Black'],
+  'wolfpack-bomber-jacket': ['Navy/Cream', 'Black'],
+  'private-suit-windbreaker': ['White', 'Blue/White/Black'],
+  'wolfpack-windbreaker': ['White', 'Blue/White/Black'],
+  'windbreaker': ['White', 'Blue/White/Black'],
+  'coated-stack-denim': ['Black Wax-Coated', 'Bleached Light Blue'],
+  'elite-fit-denim': ['Black Wax-Coated', 'Bleached Light Blue'],
+  'jeans1': ['Black Wax-Coated', 'Bleached Light Blue'],
+  'jetski-motion-tee': ['Black', 'White'],
+  'signature-wolf-logo-t-shirt': ['Black', 'White'],
+};
+
 export function slugifyMerchName(input: string) {
   return input
     .toLowerCase()
@@ -58,13 +71,36 @@ function resolveProductSlug(product: MerchProduct, manifest?: MerchImageManifest
   return slugifyMerchName(product.name);
 }
 
+export function getOrderedColors(product: MerchProduct) {
+  const colors = Array.from(
+    new Set(product.variants?.map((variant) => variant.color).filter(Boolean) ?? [])
+  );
+
+  if (colors.length <= 1) return colors;
+
+  const candidates = getMerchSlugCandidates(product);
+  const override = candidates
+    .map((candidate) => COLOR_ORDER_OVERRIDES[candidate])
+    .find(Boolean);
+
+  if (!override) return colors;
+
+  const ordered: string[] = [];
+  for (const color of override) {
+    if (colors.includes(color)) ordered.push(color);
+  }
+  for (const color of colors) {
+    if (!ordered.includes(color)) ordered.push(color);
+  }
+
+  return ordered;
+}
+
 export function getVariationIndexFromColor(
   product: MerchProduct,
   selectedColor?: string | null
 ) {
-  const colors = Array.from(
-    new Set(product.variants?.map((variant) => variant.color).filter(Boolean) ?? [])
-  );
+  const colors = getOrderedColors(product);
   if (colors.length === 0) return 1;
   if (!selectedColor) return 1;
   const index = colors.findIndex((color) => color === selectedColor);

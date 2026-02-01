@@ -33,10 +33,10 @@ export const MerchProductCard = ({ product, manifest }: MerchProductCardProps) =
   const merchImages = getMerchPrimaryImages({
     name: product.name,
     imageUrls: product.imageUrls,
-    thumbnailUrl: product.thumbnailUrl,
-    category: product.category,
-    tags: product.tags,
-    variants: product.variants,
+    thumbnailUrl: product.thumbnailUrl ?? product.imageUrls?.[0] ?? null,
+    category: product.category ?? 'other',
+    tags: product.tags ?? [],
+    variants: product.variants ?? [],
   }, manifest)
 
   const toggleWishlist = useMutation(api.merch.toggleWishlist)

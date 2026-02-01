@@ -1,7 +1,7 @@
 import { query, mutation } from './_generated/server'
 import type { QueryCtx } from './_generated/server'
 import type { Doc } from './_generated/dataModel'
-import { getCurrentUser } from './helpers'
+import { getCurrentUser, getOrCreateCurrentUser } from './helpers'
 import { v, ConvexError } from 'convex/values'
 
 type MerchCategory = 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other'
@@ -354,7 +354,11 @@ export const toggleWishlist = mutation({
     try {
       user = await getCurrentUser(ctx)
     } catch {
-      throw new ConvexError('You must be logged in to manage your wishlist')
+      try {
+        user = await getOrCreateCurrentUser(ctx)
+      } catch {
+        throw new ConvexError('You must be logged in to manage your wishlist')
+      }
     }
 
     const existing = await ctx.db

@@ -35,8 +35,6 @@ if (fs.existsSync(aliasPath)) {
   }
 }
 
-const staged = new Map();
-
 for (const filePath of fileEntries) {
   const rel = path.relative(root, filePath).split(path.sep);
   if (rel.length < 3) continue;
@@ -48,35 +46,21 @@ for (const filePath of fileEntries) {
   const [, slug, variationRaw, imageRaw] = match;
   if (slug !== productSlug) continue;
 
-  const firstIndex = Number(variationRaw);
-  const secondIndex = Number(imageRaw);
-  if (!Number.isFinite(firstIndex) || !Number.isFinite(secondIndex)) continue;
+  const imageIndex = Number(variationRaw);
+  if (!Number.isFinite(imageIndex)) continue;
+  const variationIndex = 1;
 
   const webPath = `/${path.posix.join('merch', category, productSlug, fileName)}`;
 
-  if (!staged.has(productSlug)) {
-    staged.set(productSlug, { category, files: [] });
+  if (!manifest[productSlug]) {
+    manifest[productSlug] = { category, variations: {} };
   }
-  staged.get(productSlug).files.push({ firstIndex, secondIndex, url: webPath });
-}
 
-for (const [productSlug, entry] of staged.entries()) {
-  const files = entry.files;
-  const hasMultiVariation = files.some((file) => file.secondIndex > 1);
-  const uniqueFirst = new Set(files.map((file) => file.firstIndex));
-  const useImageFirst = !hasMultiVariation && uniqueFirst.size > 1;
-
-  manifest[productSlug] = { category: entry.category, variations: {} };
   const variations = manifest[productSlug].variations;
-
-  for (const file of files) {
-    const variationIndex = useImageFirst ? 1 : file.firstIndex;
-    const imageIndex = useImageFirst ? file.firstIndex : file.secondIndex;
-    if (!variations[variationIndex]) {
-      variations[variationIndex] = [];
-    }
-    variations[variationIndex].push({ imageIndex, url: file.url });
+  if (!variations[variationIndex]) {
+    variations[variationIndex] = [];
   }
+  variations[variationIndex].push({ imageIndex, url: webPath });
 }
 
 for (const entry of Object.values(manifest)) {

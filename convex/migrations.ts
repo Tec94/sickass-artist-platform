@@ -107,7 +107,19 @@ export const migrateMerchProductsToNewAssets = mutation({
         thumbnailUrl: '/merch/jackets/jacket1/jacket1-1-1.png',
         tags: ['private-suit-varsity-jacket', 'varsity', 'jacket'],
       },
+      'Private Suit Varsity Jacket': {
+        name: 'Private Suit Varsity Jacket',
+        imageUrls: ['/merch/jackets/jacket1/jacket1-1-1.png'],
+        thumbnailUrl: '/merch/jackets/jacket1/jacket1-1-1.png',
+        tags: ['private-suit-varsity-jacket', 'varsity', 'jacket'],
+      },
       'Signature Wolf Logo T-Shirt': {
+        name: 'Jetski Motion Tee',
+        imageUrls: ['/merch/shirts/shirt1/shirt1-1-1.jpeg'],
+        thumbnailUrl: '/merch/shirts/shirt1/shirt1-1-1.jpeg',
+        tags: ['jetski-motion-tee', 'graphic-tee'],
+      },
+      'Jetski Motion Tee': {
         name: 'Jetski Motion Tee',
         imageUrls: ['/merch/shirts/shirt1/shirt1-1-1.jpeg'],
         thumbnailUrl: '/merch/shirts/shirt1/shirt1-1-1.jpeg',
@@ -119,7 +131,19 @@ export const migrateMerchProductsToNewAssets = mutation({
         thumbnailUrl: '/merch/jeans/jeans1/jeans1-1-1.jpeg',
         tags: ['coated-stack-denim', 'denim'],
       },
+      'Coated Stack Denim': {
+        name: 'Coated Stack Denim',
+        imageUrls: ['/merch/jeans/jeans1/jeans1-1-1.jpeg'],
+        thumbnailUrl: '/merch/jeans/jeans1/jeans1-1-1.jpeg',
+        tags: ['coated-stack-denim', 'denim'],
+      },
       'Wolfpack World Tour Poster': {
+        name: 'PPC Poster',
+        imageUrls: ['/merch/posters/poster1/poster1-1-1.jpeg'],
+        thumbnailUrl: '/merch/posters/poster1/poster1-1-1.jpeg',
+        tags: ['ppc-poster', 'poster'],
+      },
+      'PPC Poster': {
         name: 'PPC Poster',
         imageUrls: ['/merch/posters/poster1/poster1-1-1.jpeg'],
         thumbnailUrl: '/merch/posters/poster1/poster1-1-1.jpeg',
