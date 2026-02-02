@@ -120,6 +120,7 @@ export const MerchProductCard = ({ product, manifest }: MerchProductCardProps) =
         <button 
           className={`wishlist-btn ${isHovered || isWishlisted ? 'visible' : ''} ${isWishlisted ? 'active' : ''}`}
           onClick={handleWishlist}
+          type="button"
         >
           <iconify-icon 
             icon={isWishlisted ? "solar:heart-bold" : "solar:heart-linear"} 

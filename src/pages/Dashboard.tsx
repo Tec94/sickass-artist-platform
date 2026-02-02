@@ -13,6 +13,34 @@ import { useTranslation } from '../hooks/useTranslation'
 import type { LeaderboardPeriod } from '../utils/leaderboard'
 import { LogoSlider } from '../components/ui/LogoSlider'
 
+type PromoTone = 'red' | 'amber' | 'blue' | 'emerald'
+type PromoType = 'store' | 'event' | 'announcement' | 'promo'
+
+type PromoItemBase = {
+  key: string
+  type: PromoType
+  eyebrow: string
+  title: string
+  meta: string
+  cta: string
+  tone: PromoTone
+  tag?: string
+  image?: string | null
+}
+
+type PromoLinkItem = PromoItemBase & {
+  href: string
+  onClick?: never
+}
+
+type PromoActionItem = PromoItemBase & {
+  onClick: () => void
+  href?: never
+}
+
+type PromoItem = PromoLinkItem | PromoActionItem
+type PromoRailItem = PromoItem & { railKey: string }
+
 export const Dashboard = () => {
   useAnalytics() // Track page views
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,7 +66,7 @@ export const Dashboard = () => {
   // Trending forum posts might be in trendingForum array
   const forumPosts = dashboardData?.trendingForum || []
 
-  const promoItems = [
+  const promoItems: PromoItem[] = [
     ...(dashboardData?.topMerch || []).slice(0, 3).map((product) => ({
       key: `merch-${product._id}`,
       type: 'store',
@@ -92,7 +120,7 @@ export const Dashboard = () => {
     },
   ]
 
-  const promoRailItems = Array.from(
+  const promoRailItems: PromoRailItem[] = Array.from(
     { length: Math.max(promoItems.length, 8) },
     (_, index) => {
       const item = promoItems[index % promoItems.length]
@@ -264,6 +292,10 @@ export const Dashboard = () => {
                       {content}
                     </button>
                   )
+                }
+
+                if (!item.href) {
+                  return null
                 }
 
                 return (
