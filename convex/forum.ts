@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { getCurrentUser, canAccessCategory, isModerator, updateUserSocialPoints } from "./helpers";
 
 // QUERIES
@@ -400,6 +400,16 @@ export const createThread = mutation({
       // Don't fail thread creation if points fail
     }
 
+    try {
+      await ctx.runMutation(internal.quests.incrementQuestProgress, {
+        userId,
+        questType: 'thread_post',
+        amount: 1,
+      });
+    } catch (error) {
+      console.error('Failed to increment quest progress:', error);
+    }
+
     return { threadId };
   },
 });
@@ -549,6 +559,16 @@ export const createReply = mutation({
       });
     } catch (error) {
       console.error('Failed to award points:', error);
+    }
+
+    try {
+      await ctx.runMutation(internal.quests.incrementQuestProgress, {
+        userId,
+        questType: 'forum_reply',
+        amount: 1,
+      });
+    } catch (error) {
+      console.error('Failed to increment quest progress:', error);
     }
 
     return { replyId };

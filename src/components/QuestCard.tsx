@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useAuth } from '../hooks/useAuth'
+import { useTokenAuth } from './ConvexAuthProvider'
 import type { Id } from '../../convex/_generated/dataModel'
 
 interface QuestCardProps {
@@ -46,7 +47,6 @@ export const QuestCard = ({
 
     try {
       await claimReward({
-        userId: user._id,
         progressId: progressId,
       })
       onRewardClaimed?.()
@@ -136,11 +136,13 @@ interface QuestListProps {
  * Quest list for dashboard/page
  */
 export const QuestList = ({ userId }: QuestListProps) => {
-  const quests = useQuery(api.quests.getUserQuests, {
-    userId: userId,
-  })
+  const { hasValidToken, isTokenLoading } = useTokenAuth()
+  const quests = useQuery(
+    api.quests.getUserQuests,
+    hasValidToken ? { userId: userId } : 'skip'
+  )
 
-  if (!quests) {
+  if (isTokenLoading || !hasValidToken || !quests) {
     return <div className="animate-pulse">Loading quests...</div>
   }
 

@@ -963,6 +963,37 @@ export default defineSchema({
     .index('by_user_channel', ['userId', 'channelId'])
     .index('by_user', ['userId']),
 
+  // User notifications
+  notifications: defineTable({
+    userId: v.id('users'),
+    title: v.string(),
+    message: v.string(),
+    type: v.optional(v.string()),
+    actionUrl: v.optional(v.string()),
+    isRead: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index('by_user_createdAt', ['userId', 'createdAt'])
+    .index('by_user_unread', ['userId', 'isRead', 'createdAt']),
+
+  // Analytics events (batched from client)
+  analyticsEvents: defineTable({
+    name: v.string(),
+    data: v.any(),
+    timestamp: v.number(),
+    sessionId: v.string(),
+    userId: v.optional(v.string()),
+    tier: v.optional(v.union(
+      v.literal('artist'),
+      v.literal('admin'),
+      v.literal('mod'),
+      v.literal('fan')
+    )),
+    createdAt: v.number(),
+  })
+    .index('by_user_createdAt', ['userId', 'createdAt'])
+    .index('by_name_createdAt', ['name', 'createdAt']),
+
   // Admin feature flags (for live testing toggles)
   adminFeatureFlags: defineTable({
     key: v.string(),

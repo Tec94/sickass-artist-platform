@@ -7,6 +7,7 @@ export const en = {
         search: 'Search',
         viewAll: 'View All',
         signIn: 'Sign In',
+        signOut: 'Sign Out',
         remove: 'Remove',
         continueShopping: 'Continue Shopping',
         noImage: 'No Image',
@@ -63,6 +64,8 @@ export const en = {
         activeQuests: 'Active Quests',
         viewAll: 'View All',
         inProgress: 'In Progress',
+        completed: 'Completed',
+        noActiveQuests: 'No active quests right now.',
         questTitle: 'Wolfpack Recruit',
         questDescription: 'Complete 5 forum posts and get 10 likes to earn rewards.',
         edit: {

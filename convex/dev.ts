@@ -98,7 +98,7 @@ export const initializeStreakMilestones = mutation({
  */
 export const initializeDefaultQuests = mutation({
     args: { adminId: v.id('users') },
-    handler: async (ctx, args) => {
+    handler: async (ctx, _args) => {
         const baseQuests = [
             // Daily quests
             {
@@ -177,7 +177,6 @@ export const initializeDefaultQuests = mutation({
                     isActive: true,
                     startsAt,
                     endsAt,
-                    adminId: args.adminId,
                 })
                 created++
             } catch (error) {

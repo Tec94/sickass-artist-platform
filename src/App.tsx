@@ -7,6 +7,7 @@ import { LanguageProvider } from './contexts/LanguageContext'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { ProfileUser } from './pages/ProfileUser'
+import { Quests } from './pages/Quests'
 import { Gallery } from './pages/Gallery'
 import { Forum } from './pages/Forum'
 import { ForumThreadDetail } from './pages/ForumThreadDetail'
@@ -236,6 +237,11 @@ function AppContent() {
                     <ProfileUser />
                   </ProtectedRoute>
                 } />
+                <Route path="/quests" element={
+                  <ProtectedRoute>
+                    <Quests />
+                  </ProtectedRoute>
+                } />
 
                 {/* Admin Sub-routes */}
                 <Route path="/admin/events" element={
@@ -283,7 +289,7 @@ function AppContent() {
           <div className="w-8 h-8 flex items-center justify-center bg-zinc-900 group-hover:bg-red-950 rounded transition-colors">
             <iconify-icon icon="solar:shield-user-linear" width="18" height="18" class="text-zinc-400 group-hover:text-red-500 transition-colors"></iconify-icon>
           </div>
-          <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 group-hover:text-white pr-2 max-w-0 group-hover:max-w-[200px] overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 group-hover:text-white pr-0 max-w-0 opacity-0 scale-x-0 origin-left group-hover:opacity-100 group-hover:scale-x-100 group-hover:max-w-[200px] group-hover:pr-2 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out">
             {t('store.adminManagement')}
           </span>
         </Link>

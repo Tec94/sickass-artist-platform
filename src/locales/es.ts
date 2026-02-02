@@ -7,6 +7,7 @@ export const es = {
         search: 'Buscar',
         viewAll: 'Ver Todo',
         signIn: 'Iniciar Sesión',
+        signOut: 'Cerrar Sesión',
         remove: 'Eliminar',
         continueShopping: 'Continuar Comprando',
         noImage: 'Sin Imagen',
@@ -63,6 +64,8 @@ export const es = {
         activeQuests: 'Misiones Activas',
         viewAll: 'Ver Todo',
         inProgress: 'En Progreso',
+        completed: 'Completado',
+        noActiveQuests: 'No hay misiones activas en este momento.',
         questTitle: 'Recluta Wolfpack',
         questDescription: 'Completa 5 publicaciones en el foro y obtén 10 likes para ganar recompensas.',
         edit: {

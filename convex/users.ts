@@ -227,6 +227,20 @@ export const update = mutation({
     }),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!currentUser || currentUser._id.toString() !== args.userId.toString()) {
+      throw new ConvexError("Unauthorized");
+    }
+
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new ConvexError("User not found");

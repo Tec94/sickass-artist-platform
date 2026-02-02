@@ -30,6 +30,8 @@ export interface AnalyticsEvent {
   tier?: 'artist' | 'admin' | 'mod' | 'fan'
 }
 
+type AnalyticsTransport = (events: AnalyticsEvent[]) => Promise<void>
+
 const BATCH_TIMEOUT = 30000 // 30 seconds
 const EVENT_THROTTLE = 100 // Max 1 event per 100ms
 const BLOCKED_KEYS = ['email', 'password', 'token', 'auth', 'ssn', 'credit', 'card']
@@ -78,6 +80,7 @@ class AnalyticsManager {
   private lastEventTime = 0
   private sessionId = this.generateSessionId()
   private currentUser: { id?: string; tier?: 'artist' | 'admin' | 'mod' | 'fan' } | null = null
+  private transport: AnalyticsTransport | null = null
 
   constructor() {
     // Flush on page unload
@@ -104,6 +107,10 @@ class AnalyticsManager {
 
   setCurrentUser(user: { id?: string; tier?: 'artist' | 'admin' | 'mod' | 'fan' } | null) {
     this.currentUser = user
+  }
+
+  setTransport(transport: AnalyticsTransport | null) {
+    this.transport = transport
   }
 
   // Track event with throttling
@@ -190,14 +197,15 @@ class AnalyticsManager {
       console.log('[Analytics] Flushing events:', events)
     }
 
+    if (!this.transport) {
+      if (import.meta.env.DEV) {
+        console.warn('[Analytics] No transport configured. Skipping flush.')
+      }
+      return
+    }
+
     try {
-      // Send via fetch with keepalive (survives page unload)
-      await fetch('/api/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events }),
-        keepalive: true,
-      })
+      await this.transport(events)
     } catch (error) {
       console.error('Analytics flush failed:', error)
 

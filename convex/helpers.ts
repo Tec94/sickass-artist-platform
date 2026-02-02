@@ -167,10 +167,13 @@ export const canAccessChannel = async (
   }
 
   if (channel.requiredFanTier) {
-    const tierLevel = getTierLevel(user.fanTier)
-    const requiredLevel = getTierLevel(channel.requiredFanTier)
-    if (tierLevel < requiredLevel) {
-      return false
+    const isStaff = user.role === 'admin' || user.role === 'mod' || user.role === 'artist'
+    if (!isStaff) {
+      const tierLevel = getTierLevel(user.fanTier)
+      const requiredLevel = getTierLevel(channel.requiredFanTier)
+      if (tierLevel < requiredLevel) {
+        return false
+      }
     }
   }
 

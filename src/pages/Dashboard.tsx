@@ -11,6 +11,7 @@ import { UserRankingsFeed } from '../components/Leaderboard/UserRankingsFeed'
 import { RankingPeriodTabs } from '../components/Leaderboard/RankingPeriodTabs'
 import { useTranslation } from '../hooks/useTranslation'
 import type { LeaderboardPeriod } from '../utils/leaderboard'
+import { LogoSlider } from '../components/ui/LogoSlider'
 
 export const Dashboard = () => {
   useAnalytics() // Track page views
@@ -18,6 +19,7 @@ export const Dashboard = () => {
   const [_isLoaded, setIsLoaded] = useState(false)
   const [period, setPeriod] = useState<LeaderboardPeriod>('weekly')
   const { t } = useTranslation()
+  const [promoCopiedAt, setPromoCopiedAt] = useState<number | null>(null)
 
   // Use the optimized dashboard data query
   const dashboardData = useQuery(api.dashboard.getDashboardData)
@@ -35,6 +37,74 @@ export const Dashboard = () => {
   const topProduct = dashboardData?.topMerch?.[0]
   // Trending forum posts might be in trendingForum array
   const forumPosts = dashboardData?.trendingForum || []
+
+  const promoItems = [
+    ...(dashboardData?.topMerch || []).slice(0, 3).map((product) => ({
+      key: `merch-${product._id}`,
+      type: 'store',
+      eyebrow: 'Store Banner',
+      title: product.name,
+      meta: `$${(product.price / 100).toFixed(2)} · ${product.category}`,
+      cta: 'Shop now',
+      href: `/store/product/${product._id}`,
+      tone: 'red',
+      image: product.image,
+      tag: 'Limited drop',
+    })),
+    ...(dashboardData?.upcomingEvents || []).slice(0, 3).map((event) => ({
+      key: `event-${event._id}`,
+      type: 'event',
+      eyebrow: 'Event Banner',
+      title: event.title,
+      meta: `${new Date(event.startAtUtc).toLocaleDateString()} · ${event.city}`,
+      cta: 'View tickets',
+      href: `/events/${event._id}`,
+      tone: 'amber',
+      image: event.imageUrl,
+      tag: 'On sale now',
+    })),
+    ...(dashboardData?.recentAnnouncements || []).slice(0, 2).map((note) => ({
+      key: `announce-${note._id}`,
+      type: 'announcement',
+      eyebrow: 'Live Bulletin',
+      title: note.content.length > 40 ? `${note.content.slice(0, 40)}…` : note.content,
+      meta: `by ${note.authorDisplayName}`,
+      cta: 'Open chat',
+      href: '/chat',
+      tone: 'blue',
+      tag: 'Community',
+    })),
+    {
+      key: 'promo-code',
+      type: 'promo',
+      eyebrow: 'Promo Banner',
+      title: 'WOLVES10',
+      meta: '10% off merch for 24h',
+      cta: promoCopiedAt ? 'Copied!' : 'Copy code',
+      onClick: () => {
+        if (navigator?.clipboard) {
+          navigator.clipboard.writeText('WOLVES10').catch(() => null)
+        }
+        setPromoCopiedAt(Date.now())
+      },
+      tone: 'emerald',
+      tag: 'Today only',
+    },
+  ]
+
+  const promoRailItems = Array.from(
+    { length: Math.max(promoItems.length, 8) },
+    (_, index) => {
+      const item = promoItems[index % promoItems.length]
+      return { ...item, railKey: `${item.key}-${index}` }
+    }
+  )
+
+  useEffect(() => {
+    if (!promoCopiedAt) return
+    const timer = setTimeout(() => setPromoCopiedAt(null), 2000)
+    return () => clearTimeout(timer)
+  }, [promoCopiedAt])
 
   return (
     <div className="animate-fade-in pb-20">
@@ -142,6 +212,75 @@ export const Dashboard = () => {
             </Link>
           </div>
 
+        </div>
+
+        {/* Live Screen Rail */}
+        <div className="mt-16">
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-500 font-bold whitespace-nowrap">
+              Live Signal Screens
+            </p>
+            <div className="h-px bg-zinc-800 flex-1 min-w-[120px]"></div>
+            <span className="text-[11px] text-zinc-500">Sliding banners for announcements, drops, and events.</span>
+          </div>
+          <div className="bg-zinc-950/60 border border-zinc-800/70 rounded-2xl p-6">
+            <LogoSlider
+              logos={promoRailItems.map((item) => {
+                const content = (
+                  <>
+                    <div className="promo-screen">
+                      <div className="promo-screen__media">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} loading="lazy" />
+                        ) : (
+                          <div className="promo-screen__pattern" />
+                        )}
+                        <div className={`promo-screen__badge promo-eyebrow--${item.tone}`}>
+                          {item.eyebrow}
+                        </div>
+                        {item.tag && (
+                          <div className="promo-screen__tag">{item.tag}</div>
+                        )}
+                      </div>
+                      <div className="promo-screen__content">
+                        <div className="promo-title">{item.title}</div>
+                        <div className="promo-meta">{item.meta}</div>
+                        <div className="promo-cta">→ {item.cta}</div>
+                      </div>
+                    </div>
+                  </>
+                )
+
+                if (item.onClick) {
+                  return (
+                    <button
+                      key={item.railKey}
+                      className="promo-card"
+                      data-tone={item.tone}
+                      data-type={item.type}
+                      onClick={item.onClick}
+                      type="button"
+                    >
+                      {content}
+                    </button>
+                  )
+                }
+
+                return (
+                  <Link key={item.railKey} to={item.href} className="promo-card" data-tone={item.tone} data-type={item.type}>
+                    {content}
+                  </Link>
+                )
+              })}
+              speed={48}
+              direction="left"
+              showBlur
+              blurLayers={12}
+              blurIntensity={1.4}
+              pauseOnHover
+              className="promo-rail"
+            />
+          </div>
         </div>
 
         {/* Music Leaderboard Section */}

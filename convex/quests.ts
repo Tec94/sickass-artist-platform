@@ -1,9 +1,32 @@
 import { mutation, query, internalMutation } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-import { api } from './_generated/api'
+import { api, internal } from './_generated/api'
+import { getCurrentUserOrNull } from './helpers'
 
 // ============ TYPES ============
 type QuestType = 'daily' | 'weekly' | 'milestone' | 'seasonal' | 'challenge'
+
+async function requireAdmin(ctx: any) {
+  const identity = await ctx.auth.getUserIdentity()
+  if (!identity) {
+    throw new ConvexError('Not authenticated')
+  }
+
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q: any) => q.eq('clerkId', identity.subject))
+    .first()
+
+  if (!user) {
+    throw new ConvexError('User not found')
+  }
+
+  if (user.role !== 'admin' && user.role !== 'mod' && user.role !== 'artist') {
+    throw new ConvexError('Insufficient permissions. Admin, mod, or artist role required.')
+  }
+
+  return user
+}
 
 // ============ MUTATIONS ============
 
@@ -38,14 +61,9 @@ export const createQuest = mutation({
     startsAt: v.number(),
     endsAt: v.number(),
     priority: v.number(),
-    adminId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    // Verify admin
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can create quests')
-    }
+    await requireAdmin(ctx)
 
     // Check if quest exists
     const existing = await ctx.db
@@ -96,7 +114,7 @@ export const createQuest = mutation({
 /**
  * Assign quest to user (called on signup or via cron)
  */
-export const assignQuestToUser = mutation({
+export const assignQuestToUser = internalMutation({
   args: {
     userId: v.id('users'),
     questId: v.id('quests'),
@@ -157,7 +175,7 @@ export const assignQuestToUser = mutation({
  * Increment user's quest progress
  * Called whenever user performs a relevant action
  */
-export const incrementQuestProgress = mutation({
+export const incrementQuestProgress = internalMutation({
   args: {
     userId: v.id('users'),
     questType: v.string(), // "thread_post", "forum_reply", etc
@@ -218,16 +236,18 @@ export const incrementQuestProgress = mutation({
  */
 export const claimQuestReward = mutation({
   args: {
-    userId: v.id('users'),
     progressId: v.id('questProgress'),
   },
   handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    const userId = user._id
+
     const progress = await ctx.db.get(args.progressId)
     if (!progress) {
       throw new ConvexError('Quest progress not found')
     }
 
-    if (progress.userId.toString() !== args.userId.toString()) {
+    if (progress.userId.toString() !== userId.toString()) {
       throw new ConvexError('Unauthorized')
     }
 
@@ -247,7 +267,7 @@ export const claimQuestReward = mutation({
     // Award points
     const idempotencyKey = `quest-${progress._id}`
     await ctx.runMutation(api.points.awardPoints, {
-      userId: args.userId,
+      userId,
       type: 'quest_complete',
       amount: quest.rewardPoints,
       description: `Completed: ${quest.name}`,
@@ -290,6 +310,15 @@ function doesQuestMatchAction(category: string, actionType: string): boolean {
 export const getUserQuests = query({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {
+    const currentUser = await getCurrentUserOrNull(ctx)
+    if (!currentUser) {
+      return []
+    }
+
+    if (currentUser._id.toString() !== args.userId.toString() && currentUser.role !== 'admin') {
+      throw new ConvexError('Unauthorized')
+    }
+
     const progress = await ctx.db
       .query('questProgress')
       .filter(q => q.eq(q.field('userId'), args.userId))
@@ -332,6 +361,7 @@ export const getUserQuests = query({
 export const getAvailableQuests = query({
   args: { type: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx)
     const quests = await ctx.db
       .query('quests')
       .filter(q => q.eq(q.field('isActive'), true))
@@ -342,6 +372,69 @@ export const getAvailableQuests = query({
       : quests
 
     return filtered.sort((a, b) => a.priority - b.priority)
+  },
+})
+
+export const getAllQuests = query({
+  args: { type: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx)
+    const quests = await ctx.db.query('quests').collect()
+
+    const filtered = args.type
+      ? quests.filter(q => q.type === (args.type as QuestType))
+      : quests
+
+    return filtered.sort((a, b) => a.priority - b.priority)
+  },
+})
+
+export const assignQuestToSelf = mutation({
+  args: { questId: v.id('quests') },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx)
+
+    const existing = await ctx.db
+      .query('questProgress')
+      .filter(q => q.eq(q.field('userId'), admin._id))
+      .filter(q => q.eq(q.field('questId'), args.questId))
+      .first()
+
+    if (existing) {
+      return { alreadyAssigned: true }
+    }
+
+    const quest = await ctx.db.get(args.questId)
+    if (!quest) {
+      throw new ConvexError('Quest not found')
+    }
+
+    let expiresAt = Date.now()
+    if (quest.type === 'daily') {
+      const tomorrow = new Date()
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+      tomorrow.setUTCHours(0, 0, 0, 0)
+      expiresAt = tomorrow.getTime()
+    } else if (quest.type === 'weekly') {
+      const nextSunday = new Date()
+      nextSunday.setUTCDate(nextSunday.getUTCDate() + (7 - nextSunday.getUTCDay()))
+      nextSunday.setUTCHours(0, 0, 0, 0)
+      expiresAt = nextSunday.getTime()
+    } else {
+      expiresAt = quest.endsAt
+    }
+
+    const progressId = await ctx.db.insert('questProgress', {
+      userId: admin._id,
+      questId: args.questId,
+      currentProgress: 0,
+      isCompleted: false,
+      pointsClaimed: false,
+      createdAt: Date.now(),
+      expiresAt,
+    })
+
+    return { progressId, expiresAt }
   },
 })
 
@@ -367,7 +460,7 @@ export const dailyQuestAssignment = internalMutation({
     for (const user of users) {
       for (const quest of dailyQuests) {
         try {
-          const result = await ctx.runMutation(api.quests.assignQuestToUser, {
+          const result = await ctx.runMutation(internal.quests.assignQuestToUser, {
             userId: user._id,
             questId: quest._id,
           })
@@ -408,7 +501,7 @@ export const weeklyQuestAssignment = internalMutation({
     for (const user of users) {
       for (const quest of weeklyQuests) {
         try {
-          const result = await ctx.runMutation(api.quests.assignQuestToUser, {
+          const result = await ctx.runMutation(internal.quests.assignQuestToUser, {
             userId: user._id,
             questId: quest._id,
           })

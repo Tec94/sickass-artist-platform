@@ -3,6 +3,263 @@
 @tailwind components;
 @tailwind utilities;
 
+/* LogoSlider - CSS Variables & Animations */
+.logo-slider {
+  --speed: 60;
+  --count: 8;
+  --blurs: 8;
+  --blur: 1;
+}
+
+.logo-slider__container {
+  mask: linear-gradient(90deg, transparent, black 15% 85%, transparent);
+  -webkit-mask: linear-gradient(90deg, transparent, black 15% 85%, transparent);
+}
+
+.logo-slider__blur > div {
+  z-index: var(--blur-index);
+  mask: linear-gradient(
+    90deg,
+    transparent calc(var(--blur-index) * calc((100 / var(--blurs)) * 1%)),
+    black calc((var(--blur-index) + 1) * calc((100 / var(--blurs)) * 1%)),
+    black calc((var(--blur-index) + 2) * calc((100 / var(--blurs)) * 1%)),
+    transparent calc((var(--blur-index) + 3) * calc((100 / var(--blurs)) * 1%))
+  );
+  backdrop-filter: blur(calc((var(--blur-index, 0) * var(--blur, 0)) * 1px));
+  -webkit-backdrop-filter: blur(calc((var(--blur-index, 0) * var(--blur, 0)) * 1px));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .logo-slider__track {
+    gap: 0;
+  }
+
+  .logo-slider__item {
+    --duration: calc(var(--speed) * 1s);
+    --delay: calc((var(--duration) / var(--count)) * (var(--item-index, 0) * -1));
+    --origin-x: calc(((var(--count) - var(--item-index)) + var(--inset, 0)) * 100%);
+    --destination-x: calc((var(--item-index) + 1 + var(--outset, 0)) * -100%);
+    animation: logo-slider-slide var(--duration) var(--delay) infinite linear;
+    translate: var(--origin-x) 0;
+  }
+
+  @keyframes logo-slider-slide {
+    100% {
+      translate: var(--destination-x) 0;
+    }
+  }
+}
+
+.logo-slider__container[data-direction='right'] .logo-slider__item {
+  animation-direction: reverse;
+}
+
+.logo-slider__container[data-pause-on-hover='true']:hover .logo-slider__item {
+  animation-play-state: paused;
+}
+
+/* Promo Rail Variant */
+.promo-rail .logo-slider__item {
+  width: 340px;
+  height: 210px;
+}
+
+@media (min-width: 768px) {
+  .promo-rail .logo-slider__item {
+    width: 420px;
+    height: 240px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .promo-rail .logo-slider__item {
+    width: 460px;
+    height: 260px;
+  }
+}
+
+.promo-card {
+  --accent: 244, 63, 94;
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(var(--accent), 0.35);
+  background: linear-gradient(135deg, rgba(9, 9, 11, 0.98), rgba(5, 5, 8, 0.96));
+  color: #f4f4f5;
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.promo-card::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 80%;
+  background: radial-gradient(circle at top right, rgba(var(--accent), 0.28), transparent 60%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.promo-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.035) 0,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.promo-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(var(--accent), 0.65);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45);
+}
+
+.promo-card[data-tone='red'] {
+  --accent: 244, 63, 94;
+}
+
+.promo-card[data-tone='amber'] {
+  --accent: 251, 191, 36;
+}
+
+.promo-card[data-tone='blue'] {
+  --accent: 56, 189, 248;
+}
+
+.promo-card[data-tone='emerald'] {
+  --accent: 52, 211, 153;
+}
+
+.promo-screen {
+  display: grid;
+  grid-template-rows: 58% 1fr;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.promo-screen__media {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at top left, rgba(63, 63, 70, 0.4), rgba(15, 15, 17, 0.8));
+}
+
+.promo-screen__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.65));
+  pointer-events: none;
+}
+
+.promo-screen__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.1) contrast(1.05);
+  transform: scale(1.05);
+}
+
+.promo-screen__pattern {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(120deg, rgba(244, 63, 94, 0.2), transparent 60%),
+    linear-gradient(320deg, rgba(56, 189, 248, 0.18), transparent 55%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 2px,
+      transparent 2px,
+      transparent 10px
+    );
+}
+
+.promo-screen__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.promo-screen__tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  background: rgba(var(--accent), 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(var(--accent), 0.35);
+}
+
+.promo-screen__content {
+  display: grid;
+  gap: 6px;
+  padding: 14px 18px 16px;
+  background: linear-gradient(180deg, rgba(8, 8, 10, 0.9), rgba(5, 5, 8, 0.98));
+}
+
+.promo-eyebrow--red {
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.promo-eyebrow--amber {
+  color: rgba(252, 211, 77, 0.95);
+}
+
+.promo-eyebrow--blue {
+  color: rgba(125, 211, 252, 0.95);
+}
+
+.promo-eyebrow--emerald {
+  color: rgba(110, 231, 183, 0.95);
+}
+
+.promo-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.promo-meta {
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.promo-cta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--accent), 0.9);
+}
+
 /* Import skeleton styles for zero CLS loading states */
 
 

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -5,11 +6,18 @@ import { useTranslation } from '../hooks/useTranslation';
 import type { Language } from '../contexts/LanguageContext';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { useTokenAuth } from '../components/ConvexAuthProvider';
 
 export const Profile = () => {
   const { user, isSignedIn, isLoading, signOut } = useAuth();
+  const { hasValidToken, isTokenLoading } = useTokenAuth();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useTranslation();
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar]);
 
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">{t('profile.loading')}</div>;
@@ -36,10 +44,12 @@ export const Profile = () => {
     xp: ((user as any).points || (user as any).votedPoints || 0) % 100
   };
 
+  const canFetchQuests = !!user && hasValidToken;
   const activeQuests = useQuery(
     api.quests.getUserQuests,
-    user ? { userId: user._id } : 'skip'
+    canFetchQuests ? { userId: user._id } : 'skip'
   );
+  const isQuestsLoading = isTokenLoading || !hasValidToken;
 
   const socials = (user as any).socials || {};
 
@@ -58,11 +68,12 @@ export const Profile = () => {
           <div className="bg-zinc-950 border border-zinc-900 rounded-sm p-8 flex flex-col items-center text-center sticky top-24">
             <div className="relative mb-6">
               <div className="w-40 h-40 rounded-full border-2 border-red-600 p-1 flex items-center justify-center overflow-hidden">
-                {user.avatar ? (
+                {user.avatar && !avatarError ? (
                   <img 
                     src={user.avatar} 
                     alt={user.displayName || 'User'} 
                     className="w-full h-full rounded-full object-cover"
+                    onError={() => setAvatarError(true)}
                   />
                 ) : (
                   <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-4xl font-bold text-zinc-700">
@@ -194,21 +205,26 @@ export const Profile = () => {
                   <span className="w-1.5 h-6 bg-red-600 rounded-sm"></span>
                   {t('profile.activeQuests')}
                </h3>
-               <button className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold tracking-widest">{t('profile.viewAll')}</button>
+               <button
+                 className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold tracking-widest"
+                 onClick={() => navigate('/quests')}
+               >
+                 {t('profile.viewAll')}
+               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeQuests === undefined && (
+              {(isQuestsLoading || activeQuests === undefined) && (
                 <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
                   {t('profile.loading')}
                 </div>
               )}
-              {activeQuests !== undefined && activeQuests.length === 0 && (
+              {!isQuestsLoading && activeQuests !== undefined && activeQuests.length === 0 && (
                 <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
                   {t('profile.noActiveQuests') || 'No active quests right now.'}
                 </div>
               )}
-              {activeQuests?.map((quest) => {
+              {!isQuestsLoading && activeQuests?.map((quest) => {
                 const progressPercent = Math.min(100, Math.round((quest.progress / quest.target) * 100));
                 const iconIsUrl = quest.icon?.startsWith('http') || quest.icon?.startsWith('/');
                 return (

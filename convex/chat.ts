@@ -1,11 +1,12 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import {
   getCurrentUser,
   canAccessChannel,
   isModerator,
+  getTierLevel,
   validateIdempotencyKey,
   updateUserSocialPoints,
 } from "./helpers";
@@ -131,25 +132,27 @@ export const getChannels = query({
 
     const allChannels = await ctx.db.query("channels").collect();
 
-    const tierHierarchy: Record<FanTier, number> = {
-      bronze: 0,
-      silver: 1,
-      gold: 2,
-      platinum: 3,
+    const roleHierarchy: Record<string, number> = {
+      artist: 4,
+      admin: 3,
+      mod: 2,
+      crew: 1,
+      fan: 0,
     };
 
     const accessibleChannels = allChannels.filter((channel) => {
-      if (channel.requiredRole && user.role !== channel.requiredRole) {
-        if (user.role !== "admin") {
+      if (channel.requiredRole) {
+        const userLevel = roleHierarchy[user.role] ?? 0;
+        const requiredLevel = roleHierarchy[channel.requiredRole] ?? 0;
+        if (userLevel < requiredLevel) {
           return false;
         }
       }
 
-      if (channel.requiredFanTier) {
-        if (
-          tierHierarchy[user.fanTier] <
-          tierHierarchy[channel.requiredFanTier as FanTier]
-        ) {
+      if (channel.requiredFanTier && !isModerator(user)) {
+        const userLevel = getTierLevel(user.fanTier);
+        const requiredLevel = getTierLevel(channel.requiredFanTier as FanTier);
+        if (userLevel < requiredLevel) {
           return false;
         }
       }
@@ -663,6 +666,16 @@ export const sendMessage = mutation({
       });
     } catch (error) {
       console.error('Failed to award points:', error);
+    }
+
+    try {
+      await ctx.runMutation(internal.quests.incrementQuestProgress, {
+        userId,
+        questType: 'chat_message',
+        amount: 1,
+      });
+    } catch (error) {
+      console.error('Failed to increment quest progress:', error);
     }
 
     const message = await ctx.db.get(messageId);

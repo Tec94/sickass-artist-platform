@@ -50,6 +50,12 @@ const normalizeWordList = (items: string[] | undefined) =>
         new Set((items || []).map((item) => item.toLowerCase().trim()).filter(Boolean))
     ).slice(0, 500)
 
+const toChannelSlug = (name: string) =>
+    name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+
 // ==================== USER MANAGEMENT ====================
 
 export const getUsers = query({
@@ -784,6 +790,81 @@ export const seedModerationData = mutation({
 
 // ==================== CHANNEL MANAGEMENT ====================
 
+export const listChannels = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity()
+        if (!identity) {
+            return []
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
+            .first()
+
+        if (!user) {
+            return []
+        }
+
+        if (user.role !== "admin" && user.role !== "mod" && user.role !== "artist") {
+            throw new ConvexError("Insufficient permissions. Admin, mod, or artist role required.")
+        }
+
+        const channels = await ctx.db.query("channels").collect()
+        return channels.sort((a, b) => a.createdAt - b.createdAt)
+    },
+})
+
+export const seedDefaultChannels = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const admin = await requireAdmin(ctx)
+        const defaults = [
+            {
+                name: "general",
+                description: "General chat for the community",
+                category: "general" as const,
+            },
+            {
+                name: "announcements",
+                description: "Official updates and news",
+                category: "announcements" as const,
+            },
+        ]
+
+        const created: { name: string; channelId: string }[] = []
+
+        for (const channel of defaults) {
+            const slug = toChannelSlug(channel.name)
+            const existing = await ctx.db
+                .query("channels")
+                .withIndex("by_slug", (q) => q.eq("slug", slug))
+                .first()
+
+            if (existing) continue
+
+            const now = Date.now()
+            const channelId = await ctx.db.insert("channels", {
+                name: channel.name,
+                slug,
+                description: channel.description,
+                requiredRole: undefined,
+                requiredFanTier: undefined,
+                category: channel.category,
+                createdBy: admin._id,
+                createdAt: now,
+                updatedAt: now,
+                messageCount: 0,
+            })
+
+            created.push({ name: channel.name, channelId })
+        }
+
+        return { created, skipped: defaults.length - created.length }
+    },
+})
+
 export const createChannel = mutation({
     args: {
         name: v.string(),
@@ -816,10 +897,7 @@ export const createChannel = mutation({
         }
 
         // Generate slug from name
-        const slug = args.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
+        const slug = toChannelSlug(args.name)
 
         // Check for duplicate slug
         const existing = await ctx.db

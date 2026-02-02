@@ -3,6 +3,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
+import { useAuth } from '../../hooks/useAuth'
+import { useTokenAuth } from '../ConvexAuthProvider'
 
 type ChannelAccessLevel = 'public' | 'members' | 'vip'
 
@@ -19,19 +21,27 @@ const initialFormData: ChannelFormData = {
 }
 
 export function AdminChat() {
+  const { user, isLoading: isUserLoading } = useAuth()
+  const { hasValidToken, isTokenLoading } = useTokenAuth()
+
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<Id<'channels'> | null>(null)
   const [formData, setFormData] = useState<ChannelFormData>(initialFormData)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+
+  const isRoleAllowed = !!user && ['admin', 'mod', 'artist'].includes(user.role)
+  const canManageChannels = hasValidToken && isRoleAllowed
 
   // Fetch channels
-  const channels = useQuery(api.chat.getChannels)
+  const channels = useQuery(api.admin.listChannels, canManageChannels ? {} : 'skip')
 
   // Admin mutations
   const createChannel = useMutation(api.admin.createChannel)
   const updateChannel = useMutation(api.admin.updateChannel)
   const deleteChannel = useMutation(api.admin.deleteChannel)
+  const seedDefaultChannels = useMutation(api.admin.seedDefaultChannels)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,8 +54,11 @@ export function AdminChat() {
     setIsSubmitting(true)
     try {
       // Map access level to backend schema
-      const requiredRole = formData.accessLevel === 'vip' ? 'fan' as const : undefined
-      const requiredFanTier = formData.accessLevel === 'vip' ? 'gold' as const : undefined
+      const requiredRole =
+        formData.accessLevel === 'members' || formData.accessLevel === 'vip'
+          ? ('fan' as const)
+          : undefined
+      const requiredFanTier = formData.accessLevel === 'vip' ? ('gold' as const) : undefined
 
       if (editingId) {
         await updateChannel({
@@ -81,11 +94,17 @@ export function AdminChat() {
     }
   }
 
-  const handleEdit = (channel: { _id: Id<'channels'>; name: string; description?: string }) => {
+  const handleEdit = (channel: { _id: Id<'channels'>; name: string; description?: string; requiredRole?: string | null; requiredFanTier?: string | null }) => {
+    const accessLevel: ChannelAccessLevel = channel.requiredFanTier
+      ? 'vip'
+      : channel.requiredRole
+      ? 'members'
+      : 'public'
+
     setFormData({
       name: channel.name,
       description: channel.description || '',
-      accessLevel: 'public' // Would come from channel data
+      accessLevel,
     })
     setEditingId(channel._id)
     setShowForm(true)
@@ -114,9 +133,83 @@ export function AdminChat() {
     }
   }
 
+  const getChannelAccess = (channel: { requiredRole?: string | null; requiredFanTier?: string | null }) => {
+    if (channel.requiredFanTier) {
+      return { level: 'vip' as const, label: 'VIP' }
+    }
+    if (channel.requiredRole) {
+      return { level: 'members' as const, label: 'Members' }
+    }
+    return { level: 'public' as const, label: 'Public' }
+  }
+
+  const handleSeedDefaults = async () => {
+    setIsSeeding(true)
+    try {
+      await seedDefaultChannels()
+      showToast('Default channels checked', { type: 'success' })
+    } catch (error) {
+      console.error('Error seeding channels:', error)
+      showToast(
+        error instanceof Error ? error.message : 'Failed to seed channels. Please try again.',
+        { type: 'error' }
+      )
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   const filteredChannels = channels?.filter(ch => 
     ch.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || []
+
+  if (isTokenLoading || isUserLoading) {
+    return (
+      <div className="admin-chat">
+        <div className="empty-state">
+          <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin"></iconify-icon>
+          <h3>Loading admin tools</h3>
+          <p>Syncing your session…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasValidToken) {
+    return (
+      <div className="admin-chat">
+        <div className="empty-state">
+          <iconify-icon icon="solar:shield-warning-linear" width="48" height="48"></iconify-icon>
+          <h3>Session not ready</h3>
+          <p>Please refresh or sign out and back in to access admin tools.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="admin-chat">
+        <div className="empty-state">
+          <iconify-icon icon="solar:user-cross-linear" width="48" height="48"></iconify-icon>
+          <h3>User profile missing</h3>
+          <p>We couldn’t load your profile. Try refreshing the page.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isRoleAllowed) {
+    return (
+      <div className="admin-chat">
+        <div className="empty-state">
+          <iconify-icon icon="solar:shield-warning-linear" width="48" height="48"></iconify-icon>
+          <h3>Access denied</h3>
+          <p>Your account doesn’t have access to manage chat channels.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="admin-chat">
@@ -126,14 +219,20 @@ export function AdminChat() {
           <h2>Chat Channel Management</h2>
           <p>Create and manage chat channels for the community</p>
         </div>
-        <button className="add-btn" onClick={() => {
-          setFormData(initialFormData)
-          setEditingId(null)
-          setShowForm(true)
-        }}>
-          <iconify-icon icon="solar:add-circle-linear" width="18" height="18"></iconify-icon>
-          Create Channel
-        </button>
+        <div className="header-actions">
+          <button className="seed-btn" onClick={handleSeedDefaults} disabled={isSeeding}>
+            <iconify-icon icon="solar:database-linear" width="18" height="18"></iconify-icon>
+            {isSeeding ? 'Seeding...' : 'Seed Defaults'}
+          </button>
+          <button className="add-btn" onClick={() => {
+            setFormData(initialFormData)
+            setEditingId(null)
+            setShowForm(true)
+          }}>
+            <iconify-icon icon="solar:add-circle-linear" width="18" height="18"></iconify-icon>
+            Create Channel
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -243,7 +342,9 @@ export function AdminChat() {
           </div>
         )}
 
-        {filteredChannels.map(channel => (
+        {filteredChannels.map(channel => {
+          const access = getChannelAccess(channel)
+          return (
           <div key={channel._id} className="channel-card">
             <div className="channel-icon">
               <iconify-icon icon="solar:hashtag-linear" width="24" height="24"></iconify-icon>
@@ -252,13 +353,13 @@ export function AdminChat() {
               <div className="channel-name-row">
                 <h4># {channel.name}</h4>
                 <span className="access-badge">
-                  <iconify-icon icon={getAccessIcon('public')} width="14" height="14"></iconify-icon> 
-                  Public
+                  <iconify-icon icon={getAccessIcon(access.level)} width="14" height="14"></iconify-icon> 
+                  {access.label}
                 </span>
               </div>
               <p className="channel-desc">{channel.description || 'No description'}</p>
               <div className="channel-stats">
-                <span><iconify-icon icon="solar:chat-square-dots-linear" width="14" height="14"></iconify-icon> — messages</span>
+                <span><iconify-icon icon="solar:chat-square-dots-linear" width="14" height="14"></iconify-icon> {channel.messageCount ?? 0} messages</span>
                 <span><iconify-icon icon="solar:users-group-rounded-linear" width="14" height="14"></iconify-icon> — members</span>
               </div>
             </div>
@@ -271,7 +372,7 @@ export function AdminChat() {
               </button>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Moderation Section */}
@@ -767,7 +868,13 @@ export function AdminChat() {
             gap: 16px;
           }
 
-          .add-btn {
+          .header-actions {
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .add-btn,
+          .seed-btn {
             width: 100%;
             justify-content: center;
           }

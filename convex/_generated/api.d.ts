@@ -9,6 +9,7 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as analytics from "../analytics.js";
 import type * as cart from "../cart.js";
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
@@ -27,6 +28,7 @@ import type * as merchManifest from "../merchManifest.js";
 import type * as migrations from "../migrations.js";
 import type * as moderation from "../moderation.js";
 import type * as moderationUtils from "../moderationUtils.js";
+import type * as notifications from "../notifications.js";
 import type * as offlineQueue from "../offlineQueue.js";
 import type * as orders from "../orders.js";
 import type * as points from "../points.js";
@@ -55,6 +57,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  analytics: typeof analytics;
   cart: typeof cart;
   chat: typeof chat;
   crons: typeof crons;
@@ -73,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   moderation: typeof moderation;
   moderationUtils: typeof moderationUtils;
+  notifications: typeof notifications;
   offlineQueue: typeof offlineQueue;
   orders: typeof orders;
   points: typeof points;

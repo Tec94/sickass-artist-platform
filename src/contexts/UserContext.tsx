@@ -42,10 +42,12 @@ export function UserProvider({ children }: UserProviderProps) {
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
   const hasRecordedLoginRef = useRef(false)
   const hasInitializedRef = useRef(false)
+  const lastAvatarRef = useRef<string | null>(null)
   
   // Convex mutations & queries
   const createUserMutation = useMutation(api.users.create)
   const recordLoginMutation = useMutation(api.users.recordLogin)
+  const updateUserMutation = useMutation(api.users.update)
   const getUserQuery = useQuery(
     api.users.getByClerkId,
     isSignedIn && effectiveUserId ? { clerkId: effectiveUserId } : 'skip'
@@ -180,6 +182,22 @@ export function UserProvider({ children }: UserProviderProps) {
       hasRecordedLoginRef.current = false
     }
   }, [getUserQuery, recordLoginMutation])
+
+  useEffect(() => {
+    if (!userProfile || !user || !user.picture) return
+    if (userProfile.avatar === user.picture) return
+    if (lastAvatarRef.current === user.picture) return
+
+    lastAvatarRef.current = user.picture
+    updateUserMutation({
+      userId: userProfile._id,
+      updates: {
+        avatar: user.picture,
+      },
+    }).catch((error) => {
+      console.error('[UserContext] Failed to refresh avatar:', error)
+    })
+  }, [user, userProfile, updateUserMutation])
   
   // Reset state on sign out
   useEffect(() => {
@@ -188,6 +206,7 @@ export function UserProvider({ children }: UserProviderProps) {
       setIsProfileLoaded(false)
       hasRecordedLoginRef.current = false
       hasInitializedRef.current = false
+      lastAvatarRef.current = null
     }
   }, [isSignedIn, isLoading])
   
