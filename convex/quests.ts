@@ -1,7 +1,7 @@
 import { mutation, query, internalMutation } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
 import { api, internal } from './_generated/api'
-import { getCurrentUserOrNull } from './helpers'
+import { getCurrentUser, getCurrentUserOrNull } from './helpers'
 
 // ============ TYPES ============
 type QuestType = 'daily' | 'weekly' | 'milestone' | 'seasonal' | 'challenge'

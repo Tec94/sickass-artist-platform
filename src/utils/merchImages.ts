@@ -73,7 +73,11 @@ function resolveProductSlug(product: MerchProduct, manifest?: MerchImageManifest
 
 export function getOrderedColors(product: MerchProduct) {
   const colors = Array.from(
-    new Set(product.variants?.map((variant) => variant.color).filter(Boolean) ?? [])
+    new Set(
+      product.variants
+        ?.map((variant) => variant.color)
+        .filter((color): color is string => Boolean(color)) ?? []
+    )
   );
 
   if (colors.length <= 1) return colors;

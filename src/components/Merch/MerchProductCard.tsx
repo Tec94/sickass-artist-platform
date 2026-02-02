@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { Id } from '../../../convex/_generated/dataModel'
+import { Id, type Doc } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
 import { useUser } from '../../contexts/UserContext'
 import { getMerchPrimaryImages } from '../../utils/merchImages'
@@ -18,7 +18,7 @@ interface MerchProductCardProps {
     thumbnailUrl?: string
     isNew?: boolean
     totalStock?: number
-    category?: string
+    category?: Doc<'merchProducts'>['category']
     tags?: string[]
     variants?: any[]
   }
