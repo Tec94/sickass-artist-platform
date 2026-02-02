@@ -138,7 +138,7 @@ function AppContent() {
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requiredRole={['admin', 'mod', 'artist']} requireConvexAuth>
                       <Suspense fallback={<div className="text-white p-8 text-center">Loading Admin...</div>}>
                         <AdminDashboard />
                       </Suspense>
@@ -245,27 +245,27 @@ function AppContent() {
 
                 {/* Admin Sub-routes */}
                 <Route path="/admin/events" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole={['admin', 'mod', 'artist']} requireConvexAuth>
                     <AdminEvents />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/events/new" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole={['admin', 'mod', 'artist']} requireConvexAuth>
                     <AdminEventForm />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/redemptions" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin" requireConvexAuth>
                     <AdminRedemptions />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/rewards" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin" requireConvexAuth>
                     <AdminRewards />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/points" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin" requireConvexAuth>
                     <AdminPoints />
                   </ProtectedRoute>
                 } />

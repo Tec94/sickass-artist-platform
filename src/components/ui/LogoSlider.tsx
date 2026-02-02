@@ -53,11 +53,11 @@ export const LogoSlider = ({
           </div>
         )}
 
-        <ul className="logo-slider__track flex items-center h-full w-fit m-0 p-0 list-none">
+        <ul className="logo-slider__track flex h-full w-fit m-0 p-0 list-none">
           {logos.map((logo, index) => (
             <li
               key={index}
-              className="logo-slider__item h-4/5 w-[120px] sm:w-[140px] lg:w-[160px] aspect-video grid place-items-center shrink-0"
+              className="logo-slider__item grid place-items-center shrink-0"
               style={{ ['--item-index' as string]: index } as React.CSSProperties}
             >
               <div className="w-full h-full flex items-center justify-center">

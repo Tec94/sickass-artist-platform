@@ -66,58 +66,78 @@ export const Dashboard = () => {
   // Trending forum posts might be in trendingForum array
   const forumPosts = dashboardData?.trendingForum || []
 
-  const promoItems: PromoItem[] = [
-    ...(dashboardData?.topMerch || []).slice(0, 3).map((product) => ({
-      key: `merch-${product._id}`,
-      type: 'store',
-      eyebrow: 'Store Banner',
-      title: product.name,
-      meta: `$${(product.price / 100).toFixed(2)} · ${product.category}`,
-      cta: 'Shop now',
-      href: `/store/product/${product._id}`,
-      tone: 'red',
-      image: product.image,
-      tag: 'Limited drop',
-    })),
-    ...(dashboardData?.upcomingEvents || []).slice(0, 3).map((event) => ({
-      key: `event-${event._id}`,
-      type: 'event',
-      eyebrow: 'Event Banner',
-      title: event.title,
-      meta: `${new Date(event.startAtUtc).toLocaleDateString()} · ${event.city}`,
-      cta: 'View tickets',
-      href: `/events/${event._id}`,
-      tone: 'amber',
-      image: event.imageUrl,
-      tag: 'On sale now',
-    })),
-    ...(dashboardData?.recentAnnouncements || []).slice(0, 2).map((note) => ({
-      key: `announce-${note._id}`,
-      type: 'announcement',
-      eyebrow: 'Live Bulletin',
-      title: note.content.length > 40 ? `${note.content.slice(0, 40)}…` : note.content,
-      meta: `by ${note.authorDisplayName}`,
-      cta: 'Open chat',
-      href: '/chat',
-      tone: 'blue',
-      tag: 'Community',
-    })),
-    {
-      key: 'promo-code',
-      type: 'promo',
-      eyebrow: 'Promo Banner',
-      title: 'WOLVES10',
-      meta: '10% off merch for 24h',
-      cta: promoCopiedAt ? 'Copied!' : 'Copy code',
-      onClick: () => {
-        if (navigator?.clipboard) {
-          navigator.clipboard.writeText('WOLVES10').catch(() => null)
-        }
-        setPromoCopiedAt(Date.now())
-      },
-      tone: 'emerald',
-      tag: 'Today only',
+  const merchPromoItems = (dashboardData?.topMerch || [])
+    .slice(0, 3)
+    .map(
+      (product): PromoLinkItem => ({
+        key: `merch-${product._id}`,
+        type: 'store',
+        eyebrow: 'Merch Drop',
+        title: product.name,
+        meta: `$${(product.price / 100).toFixed(2)} · ${product.category}`,
+        cta: 'Shop now',
+        href: `/store/product/${product._id}`,
+        tone: 'red',
+        image: product.image,
+        tag: 'Limited drop',
+      })
+    )
+
+  const eventPromoItems = (dashboardData?.upcomingEvents || [])
+    .slice(0, 3)
+    .map(
+      (event): PromoLinkItem => ({
+        key: `event-${event._id}`,
+        type: 'event',
+        eyebrow: 'Stage Call',
+        title: event.title,
+        meta: `${new Date(event.startAtUtc).toLocaleDateString()} · ${event.city}`,
+        cta: 'View tickets',
+        href: `/events/${event._id}`,
+        tone: 'amber',
+        image: event.imageUrl,
+        tag: 'On sale now',
+      })
+    )
+
+  const announcementPromoItems = (dashboardData?.recentAnnouncements || [])
+    .slice(0, 2)
+    .map(
+      (note): PromoLinkItem => ({
+        key: `announce-${note._id}`,
+        type: 'announcement',
+        eyebrow: 'Wolfpack Wire',
+        title: note.content.length > 40 ? `${note.content.slice(0, 40)}…` : note.content,
+        meta: `by ${note.authorDisplayName}`,
+        cta: 'Open chat',
+        href: '/chat',
+        tone: 'blue',
+        tag: 'Community',
+      })
+    )
+
+  const promoCodeItem: PromoActionItem = {
+    key: 'promo-code',
+    type: 'promo',
+    eyebrow: 'Pack Perk',
+    title: 'WOLVES10',
+    meta: '10% off merch for 24h',
+    cta: promoCopiedAt ? 'Copied!' : 'Copy code',
+    onClick: () => {
+      if (navigator?.clipboard) {
+        navigator.clipboard.writeText('WOLVES10').catch(() => null)
+      }
+      setPromoCopiedAt(Date.now())
     },
+    tone: 'emerald',
+    tag: 'Today only',
+  }
+
+  const promoItems: PromoItem[] = [
+    ...merchPromoItems,
+    ...eventPromoItems,
+    ...announcementPromoItems,
+    promoCodeItem,
   ]
 
   const promoRailItems: PromoRailItem[] = Array.from(
@@ -306,9 +326,7 @@ export const Dashboard = () => {
               })}
               speed={48}
               direction="left"
-              showBlur
-              blurLayers={12}
-              blurIntensity={1.4}
+              showBlur={false}
               pauseOnHover
               className="promo-rail"
             />

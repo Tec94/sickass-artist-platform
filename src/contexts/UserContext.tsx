@@ -6,6 +6,44 @@ import { api } from '../../convex/_generated/api'
 import { Doc } from '../../convex/_generated/dataModel'
 import { useTokenAuth } from '../components/ConvexAuthProvider'
 
+const USER_CACHE_KEY = 'user_profile_cache_v1'
+const USER_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+type CachedUserProfile = {
+  clerkId: string
+  profile: Doc<'users'>
+  cachedAt: number
+}
+
+const readCachedProfile = (clerkId: string | null) => {
+  if (!clerkId || typeof localStorage === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as CachedUserProfile
+    if (parsed.clerkId !== clerkId) return null
+    if (Date.now() - parsed.cachedAt > USER_CACHE_TTL_MS) return null
+    return parsed.profile
+  } catch {
+    return null
+  }
+}
+
+const writeCachedProfile = (profile: Doc<'users'>) => {
+  if (typeof localStorage === 'undefined') return
+  const payload: CachedUserProfile = {
+    clerkId: profile.clerkId,
+    profile,
+    cachedAt: Date.now(),
+  }
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(payload))
+}
+
+const clearCachedProfile = () => {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem(USER_CACHE_KEY)
+}
+
 interface UserContextType {
   // Auth0 auth state
   authUser: Record<string, unknown> | null
@@ -43,6 +81,16 @@ export function UserProvider({ children }: UserProviderProps) {
   const hasRecordedLoginRef = useRef(false)
   const hasInitializedRef = useRef(false)
   const lastAvatarRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!effectiveUserId) return
+    if (userProfile?.clerkId === effectiveUserId) return
+    const cachedProfile = readCachedProfile(effectiveUserId)
+    if (cachedProfile) {
+      setUserProfile(cachedProfile)
+      setIsProfileLoaded(true)
+    }
+  }, [effectiveUserId, userProfile?.clerkId])
   
   // Convex mutations & queries
   const createUserMutation = useMutation(api.users.create)
@@ -170,6 +218,7 @@ export function UserProvider({ children }: UserProviderProps) {
   useEffect(() => {
     if (getUserQuery !== undefined && getUserQuery !== null) {
       setUserProfile(getUserQuery)
+      writeCachedProfile(getUserQuery)
 
       if (!hasRecordedLoginRef.current) {
         hasRecordedLoginRef.current = true
@@ -207,6 +256,7 @@ export function UserProvider({ children }: UserProviderProps) {
       hasRecordedLoginRef.current = false
       hasInitializedRef.current = false
       lastAvatarRef.current = null
+      clearCachedProfile()
     }
   }, [isSignedIn, isLoading])
   
@@ -216,10 +266,12 @@ export function UserProvider({ children }: UserProviderProps) {
     setIsProfileLoaded(false)
     hasRecordedLoginRef.current = false
     hasInitializedRef.current = false
+    clearCachedProfile()
   }
   
   const refreshUserProfile = () => {
     setIsProfileLoaded(false)
+    clearCachedProfile()
     refreshAuth()
   }
   

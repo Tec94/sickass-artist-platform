@@ -1,7 +1,7 @@
 {
   "name": "sickass-artist-platform",
   "private": true,
-  "version": "1.6.03",
+  "version": "1.6.04",
   "type": "module",
   "scripts": {
     "dev": "vite",
