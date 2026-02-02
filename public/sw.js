@@ -1,11 +1,7 @@
 // Bump this when changing app shell caching behavior.
-const CACHE_NAME = 'sickass-v2'
-const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/favicon.ico',
-  '/offline.html',
-]
+const CACHE_NAME = 'sickass-v3'
+const OFFLINE_URL = '/offline.html'
+const URLS_TO_CACHE = [OFFLINE_URL]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -36,18 +32,21 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Always try network for navigations to avoid serving stale app shells.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    )
+    return
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Return cached version if available
       if (response) {
         return response
       }
 
-      // Otherwise fetch from network
-      return fetch(event.request).catch(() => {
-        // Fallback on network error
-        return caches.match('/offline.html')
-      })
+      return fetch(event.request)
     })
   )
 })
