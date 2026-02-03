@@ -283,11 +283,11 @@ function AppContent() {
         {/* Admin Quick Access Button */}
         <Link 
           to="/admin" 
-          className="fixed bottom-6 left-6 z-[100] group flex items-center gap-2 bg-black/80 hover:bg-zinc-900 border border-zinc-800 hover:border-red-900/50 p-2 rounded-lg transition-all duration-300 backdrop-blur-md"
+          className="fixed bottom-6 left-6 z-[100] group flex items-center gap-2 bg-black/80 hover:bg-zinc-900 border border-zinc-800 hover:border-red-900/50 p-1 rounded-lg transition-all duration-300 backdrop-blur-md"
           title={t('store.adminManagement')}
         >
-          <div className="w-8 h-8 flex items-center justify-center bg-zinc-900 group-hover:bg-red-950 rounded transition-colors">
-            <iconify-icon icon="solar:shield-user-linear" width="18" height="18" class="text-zinc-400 group-hover:text-red-500 transition-colors"></iconify-icon>
+          <div className="w-7 h-7 flex items-center justify-center bg-zinc-900 group-hover:bg-red-950 rounded transition-colors">
+            <iconify-icon icon="solar:shield-user-linear" width="20" height="20" class="block text-zinc-400 group-hover:text-red-500 transition-colors"></iconify-icon>
           </div>
           <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 group-hover:text-white pr-0 max-w-0 opacity-0 scale-x-0 origin-left group-hover:opacity-100 group-hover:scale-x-100 group-hover:max-w-[200px] group-hover:pr-2 overflow-hidden whitespace-nowrap transition-all duration-500 ease-in-out">
             {t('store.adminManagement')}
