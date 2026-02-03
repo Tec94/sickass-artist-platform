@@ -1,17 +1,19 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalSearch } from '../../hooks/useGlobalSearch'
+import type { SearchNavResult } from '../../hooks/useGlobalSearch'
 import { SearchResults } from './SearchResults'
 import { RecentSearches } from './RecentSearches'
 import { SearchResultTabs } from './SearchResultTabs'
 import { useTranslation } from '../../hooks/useTranslation'
 
-type ResultFilter = 'all' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels' | 'merch' | 'events'
+type ResultFilter = 'all' | 'pages' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels' | 'merch' | 'events'
 
 interface SearchModalProps {
   isOpen: boolean
   onClose: () => void
+  navLinks?: SearchNavResult[]
 }
 
 // Helper to flatten results for navigation
@@ -20,6 +22,7 @@ function getFlatResults(
   filter: ResultFilter
 ): Array<{ type: string; [key: string]: unknown }> {
   const all = [
+    ...(results.nav ?? []).map((n) => ({ ...n, type: 'pages' as const })),
     ...results.users.map((u) => ({ ...u, type: 'user' as const })),
     ...results.threads.map((t) => ({ ...t, type: 'thread' as const })),
     ...results.gallery.map((g) => ({ ...g, type: 'gallery' as const })),
@@ -33,7 +36,7 @@ function getFlatResults(
   return all.filter((r) => r.type === filter)
 }
 
-export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
+export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLinks }) => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const {
@@ -52,6 +55,53 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all')
   const inputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
+  const defaultNavLinks: SearchNavResult[] = useMemo(() => ([
+    { name: t('nav.dashboard'), path: '/dashboard', keywords: ['home'] },
+    { name: t('nav.store'), path: '/store', keywords: ['shop', 'merch', 'products'] },
+    { name: t('nav.events'), path: '/events', keywords: ['tour', 'tickets'] },
+    { name: t('nav.gallery'), path: '/gallery', keywords: ['media', 'photos', 'videos'] },
+    { name: t('nav.forum'), path: '/forum', keywords: ['threads', 'community'] },
+    { name: t('nav.chat'), path: '/chat', keywords: ['messages', 'channels'] },
+    { name: t('nav.ranking'), path: '/ranking', keywords: ['leaderboard', 'songs'] },
+  ]), [t])
+  const resolvedNavLinks = navLinks ?? defaultNavLinks
+  const normalizedQuery = query.trim().toLowerCase()
+  const navResults = useMemo(
+    () =>
+      normalizedQuery.length > 0
+        ? resolvedNavLinks.filter((link) => {
+            const nameMatch = link.name.toLowerCase().includes(normalizedQuery)
+            const pathMatch = link.path.toLowerCase().includes(normalizedQuery)
+            const keywordMatch = (link.keywords || []).some((keyword) =>
+              keyword.toLowerCase().includes(normalizedQuery)
+            )
+            return nameMatch || pathMatch || keywordMatch
+          })
+        : [],
+    [normalizedQuery, resolvedNavLinks]
+  )
+  const combinedResults = useMemo(() => {
+    if (!results && navResults.length === 0) return null
+    const base = {
+      users: [],
+      threads: [],
+      gallery: [],
+      ugc: [],
+      channels: [],
+      merch: [],
+      events: [],
+      totalResults: 0,
+      query,
+      ...(results ?? {}),
+    }
+
+    return {
+      ...base,
+      nav: navResults,
+      totalResults: base.totalResults + navResults.length,
+    }
+  }, [results, navResults, query])
+  const hasAnyResults = (combinedResults?.totalResults ?? 0) > 0
 
   // Auto-focus input when modal opens
   useEffect(() => {
@@ -63,7 +113,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
 
   // Navigate to result based on type (must be before handleKeyDown)
   const handleSelectResult = useCallback(
-    (result: { type: string; _id?: string; contentId?: string; ugcId?: string }) => {
+    (result: { type: string; _id?: string; contentId?: string; ugcId?: string; path?: string }) => {
       addToRecentSearches(query)
 
       // Navigate based on result type
@@ -78,9 +128,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       } else if (result.type === 'channel' && result._id) {
         navigate(`/?gear=6&channelId=${result._id}`)
       } else if (result.type === 'merch' && result._id) {
-        navigate(`/merch/${result._id}`)
+        navigate(`/store/product/${result._id}`)
       } else if (result.type === 'event' && result._id) {
         navigate(`/events/${result._id}`)
+      } else if (result.type === 'pages' && result.path) {
+        navigate(result.path)
       }
 
       onClose()
@@ -101,7 +153,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       if (e.key === 'ArrowDown') {
         e.preventDefault()
         setSelectedResultIndex((prev) => {
-          const flatResults = results ? getFlatResults(results, resultFilter) : []
+          const flatResults = combinedResults ? getFlatResults(combinedResults, resultFilter) : []
           return Math.min(prev + 1, flatResults.length - 1)
         })
         return
@@ -116,7 +168,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       // Tab to switch filter tabs
       if (e.key === 'Tab') {
         e.preventDefault()
-        const tabs: ResultFilter[] = ['all', 'users', 'threads', 'gallery', 'ugc', 'channels', 'merch', 'events']
+        const tabs: ResultFilter[] = ['all', 'pages', 'users', 'threads', 'gallery', 'ugc', 'channels', 'merch', 'events']
         const currentIndex = tabs.indexOf(resultFilter)
         const nextIndex = e.shiftKey
           ? (currentIndex - 1 + tabs.length) % tabs.length
@@ -128,7 +180,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       // Enter to select
       if (e.key === 'Enter') {
         e.preventDefault()
-        const flatResults = results ? getFlatResults(results, resultFilter) : []
+        const flatResults = combinedResults ? getFlatResults(combinedResults, resultFilter) : []
         const selected = flatResults[selectedResultIndex]
         if (selected) {
           handleSelectResult(selected)
@@ -136,7 +188,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         return
       }
     },
-    [results, resultFilter, selectedResultIndex, onClose, handleSelectResult]
+    [combinedResults, resultFilter, selectedResultIndex, onClose, handleSelectResult]
   )
 
   // Focus trap: prevent focus from leaving modal
@@ -215,11 +267,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Tabs (if results exist) */}
-        {hasSearched && results && results.totalResults > 0 && (
+        {(hasSearched || navResults.length > 0) && combinedResults && hasAnyResults && (
           <SearchResultTabs
             activeTab={resultFilter}
             onChange={(tab) => setResultFilter(tab as ResultFilter)}
-            results={results}
+            results={combinedResults}
           />
         )}
 
@@ -246,9 +298,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           )}
 
           {/* Results */}
-          {!isLoading && !error && hasSearched && results && results.totalResults > 0 && (
+          {!isLoading && !error && (hasSearched || navResults.length > 0) && combinedResults && hasAnyResults && (
             <SearchResults
-              results={results}
+              results={combinedResults}
               filter={resultFilter}
               selectedIndex={selectedResultIndex}
               onSelect={handleSelectResult}
@@ -258,8 +310,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           {/* No results */}
           {!isLoading &&
             !error &&
-            hasSearched &&
-            (!results || results.totalResults === 0) && (
+            (hasSearched || navResults.length > 0) &&
+            (!combinedResults || !hasAnyResults) && (
               <div className="px-4 py-8 text-center">
                 <p className="text-gray-400">{t('search.noResults')}</p>
                 {query && (

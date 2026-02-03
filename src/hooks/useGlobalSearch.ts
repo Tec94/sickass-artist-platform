@@ -74,6 +74,13 @@ export type SearchEventResult = {
   saleStatus: string
 }
 
+export type SearchNavResult = {
+  name: string
+  path: string
+  description?: string
+  keywords?: string[]
+}
+
 export type SearchResult = {
   users: SearchUserResult[]
   threads: SearchThreadResult[]
@@ -82,6 +89,7 @@ export type SearchResult = {
   channels: SearchChannelResult[]
   merch: SearchMerchResult[]
   events: SearchEventResult[]
+  nav?: SearchNavResult[]
   totalResults: number
   query: string
 }

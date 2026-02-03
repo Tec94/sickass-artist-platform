@@ -9,6 +9,7 @@
   --count: 8;
   --blurs: 8;
   --blur: 1;
+  --inset: 0;
   --track-gap: 0px;
   --logo-item-width: 160px;
   --logo-item-height: 80px;
@@ -76,6 +77,7 @@
   --promo-card-width: 320px;
   --promo-card-height: 210px;
   --outset: -1;
+  --start-offset: calc(var(--promo-card-width) * -1.0);
   --track-gap: 8px;
   --logo-item-width: var(--promo-card-width);
   --logo-item-height: var(--promo-card-height);
@@ -113,6 +115,7 @@
 .promo-rail .logo-slider__track {
   height: var(--promo-card-height);
   align-items: stretch;
+  transform: translateX(var(--start-offset));
 }
 
 .promo-rail .logo-slider__item {

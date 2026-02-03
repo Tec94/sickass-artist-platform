@@ -136,7 +136,7 @@ export const en = {
 
     // Search
     search: {
-        placeholder: 'Search users, threads, merch, events...',
+        placeholder: 'Search pages, products, users, events...',
         noResults: 'No results found',
         tryDifferent: 'Try a different search term or browse recently active content',
         tryAgain: 'Try again',
@@ -275,6 +275,6 @@ export const en = {
     // Footer
     footer: {
         tagline: 'Premium athletic wear for the modern competitor.',
-        copyright: '© 2024 ROA WOLVES. All rights reserved.',
+        copyright: '© 2026 ROA. All rights reserved.',
     },
 };

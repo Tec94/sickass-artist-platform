@@ -7,17 +7,20 @@ import { api } from '../../convex/_generated/api';
 import { CartDrawer } from './CartDrawer';
 import { WishlistDrawer } from './WishlistDrawer';
 import { useTranslation } from '../hooks/useTranslation';
+import { SearchModal } from './Search/SearchModal';
+import { SearchTrigger } from './Search/SearchTrigger';
+import { useSearchModal } from '../hooks/useSearchModal';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { itemCount } = useCart();
   const { userProfile, isSignedIn } = useUser();
-  const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const { isSearchOpen, openSearch, closeSearch } = useSearchModal();
   const { t } = useTranslation();
   
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip');
@@ -32,21 +35,16 @@ const Header: React.FC = () => {
   const markNotificationRead = useMutation(api.notifications.markNotificationRead);
 
   const navLinks = [
-    { name: t('nav.dashboard'), path: '/dashboard' },
-    { name: t('nav.store'), path: '/store' },
-    { name: t('nav.events'), path: '/events' },
-    { name: t('nav.gallery'), path: '/gallery' },
-    { name: t('nav.forum'), path: '/forum' },
-    { name: t('nav.chat'), path: '/chat' },
-    { name: t('nav.ranking'), path: '/ranking' },
+    { name: t('nav.dashboard'), path: '/dashboard', keywords: ['home'] },
+    { name: t('nav.store'), path: '/store', keywords: ['shop', 'merch', 'products'] },
+    { name: t('nav.events'), path: '/events', keywords: ['tour', 'tickets'] },
+    { name: t('nav.gallery'), path: '/gallery', keywords: ['media', 'photos', 'videos'] },
+    { name: t('nav.forum'), path: '/forum', keywords: ['threads', 'community'] },
+    { name: t('nav.chat'), path: '/chat', keywords: ['messages', 'channels'] },
+    { name: t('nav.ranking'), path: '/ranking', keywords: ['leaderboard', 'songs'] },
   ];
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/store?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+  const iconButtonClass =
+    'relative inline-flex h-8 w-8 items-center justify-center text-zinc-400 transition-colors';
 
   useEffect(() => {
     setAvatarError(false);
@@ -112,23 +110,15 @@ const Header: React.FC = () => {
           </nav>
 
           {/* Icons */}
-          <div className="flex items-center gap-5">
-            <form onSubmit={handleSearch} className="hidden md:flex relative group">
-              <input 
-                type="text" 
-                placeholder={t('common.search')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-32 bg-zinc-900/50 border border-zinc-800 rounded-full text-zinc-200 py-1 pl-3 pr-8 text-sm focus:outline-none focus:border-red-600 focus:w-48 transition-all"
-              />
-              <button type="submit" className="absolute right-2 top-1.5 text-zinc-500 hover:text-white">
-                <iconify-icon icon="solar:magnifer-linear" width="16" height="16"></iconify-icon>
-              </button>
-            </form>
+          <div className="flex items-center gap-4">
+            <SearchTrigger
+              onClick={openSearch}
+              className="hidden md:flex h-8 items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-0 text-zinc-400 hover:text-white hover:border-red-600/60 transition-colors leading-none [&_kbd]:hidden [&_span]:text-xs"
+            />
 
             <div className="relative">
               <button
-                className="text-zinc-400 hover:text-white transition-colors relative"
+                className={`${iconButtonClass} hover:text-white`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsNotificationsOpen((prev) => !prev);
@@ -197,7 +187,7 @@ const Header: React.FC = () => {
                 e.stopPropagation();
                 setIsWishlistOpen(true);
               }}
-              className="relative text-zinc-400 hover:text-red-500 transition-colors"
+              className={`${iconButtonClass} hover:text-red-500`}
             >
               <iconify-icon icon="solar:heart-linear" width="20" height="20"></iconify-icon>
               {wishlistCount > 0 && (
@@ -213,7 +203,7 @@ const Header: React.FC = () => {
                 e.stopPropagation();
                 setIsCartOpen(true);
               }}
-              className="relative text-zinc-400 hover:text-red-500 transition-colors"
+              className={`${iconButtonClass} hover:text-red-500`}
             >
               <iconify-icon icon="solar:bag-3-linear" width="20" height="20"></iconify-icon>
               {itemCount > 0 && (
@@ -259,6 +249,7 @@ const Header: React.FC = () => {
       
     </header>
       
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} navLinks={navLinks} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
    </>

@@ -8,6 +8,7 @@ import type {
   SearchChannelResult,
   SearchMerchResult,
   SearchEventResult,
+  SearchNavResult,
 } from '../../hooks/useGlobalSearch'
 
 interface SearchResultsProps {
@@ -230,12 +231,41 @@ const EventResultItem = ({
   </button>
 )
 
+// Nav/page result item
+const NavResultItem = ({
+  result,
+  isSelected,
+  onClick,
+}: {
+  result: SearchNavResult
+  isSelected: boolean
+  onClick: () => void
+}) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
+      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
+    }`}
+  >
+    <div className="p-2 rounded bg-slate-500/20">
+      <iconify-icon icon="solar:link-linear" width="16" height="16" class="text-slate-300"></iconify-icon>
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-white font-medium truncate">{result.name}</p>
+      <p className="text-gray-400 text-sm truncate">{result.description || result.path}</p>
+    </div>
+    <span className="text-xs text-gray-500">Page</span>
+  </button>
+)
+
 export const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   filter,
   selectedIndex,
   onSelect,
 }) => {
+  const navResults = results.nav ?? []
+
   // Render appropriate item based on type
   const renderResultItem = (result: SearchUserResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
@@ -272,16 +302,29 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     return <EventResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'event' })} />
   }
 
+  const renderNavItem = (result: SearchNavResult, index: number): React.ReactNode => {
+    const isSelected = index === selectedIndex
+    return <NavResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'pages' })} />
+  }
+
   // Group results by type if filter is 'all'
   if (filter === 'all') {
     return (
       <div className="divide-y divide-red-500/10">
+        {navResults.length > 0 && (
+          <div>
+            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Pages
+            </div>
+            {navResults.slice(0, 4).map((result, index) => renderNavItem(result, index))}
+          </div>
+        )}
         {results.users.length > 0 && (
           <div>
             <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
               Users
             </div>
-            {results.users.slice(0, 3).map((result, index) => renderResultItem(result, index))}
+            {results.users.slice(0, 3).map((result, index) => renderResultItem(result, navResults.length + index))}
           </div>
         )}
         {results.threads.length > 0 && (
@@ -290,7 +333,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               Threads
             </div>
             {results.threads.slice(0, 3).map((result, index) =>
-              renderThreadItem(result, results.users.length + index)
+              renderThreadItem(result, navResults.length + results.users.length + index)
             )}
           </div>
         )}
@@ -300,7 +343,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               Gallery
             </div>
             {results.gallery.slice(0, 3).map((result, index) =>
-              renderGalleryItem(result, results.users.length + results.threads.length + index)
+              renderGalleryItem(result, navResults.length + results.users.length + results.threads.length + index)
             )}
           </div>
         )}
@@ -312,7 +355,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             {results.ugc.slice(0, 3).map((result, index) =>
               renderUGCItem(
                 result,
-                results.users.length + results.threads.length + results.gallery.length + index
+                navResults.length + results.users.length + results.threads.length + results.gallery.length + index
               )
             )}
           </div>
@@ -325,7 +368,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             {results.channels.slice(0, 3).map((result, index) =>
               renderChannelItem(
                 result,
-                results.users.length +
+                navResults.length +
+                  results.users.length +
                   results.threads.length +
                   results.gallery.length +
                   results.ugc.length +
@@ -342,7 +386,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             {results.merch.slice(0, 3).map((result, index) =>
               renderMerchItem(
                 result,
-                results.users.length +
+                navResults.length +
+                  results.users.length +
                   results.threads.length +
                   results.gallery.length +
                   results.ugc.length +
@@ -360,7 +405,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             {results.events.slice(0, 3).map((result, index) =>
               renderEventItem(
                 result,
-                results.users.length +
+                navResults.length +
+                  results.users.length +
                   results.threads.length +
                   results.gallery.length +
                   results.ugc.length +
@@ -417,6 +463,12 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       return (
         <div className="divide-y divide-red-500/10">
           {results.events.map((result, index) => renderEventItem(result, index))}
+        </div>
+      )
+    case 'pages':
+      return (
+        <div className="divide-y divide-red-500/10">
+          {navResults.map((result, index) => renderNavItem(result, index))}
         </div>
       )
     default:

@@ -12,8 +12,10 @@ export const SearchResultTabs: React.FC<SearchResultTabsProps> = ({
   onChange,
   results,
 }) => {
+  const navCount = results.nav?.length ?? 0
   const tabs = [
     { id: 'all', label: 'All', count: results.totalResults },
+    { id: 'pages', label: 'Pages', count: navCount },
     { id: 'users', label: 'Users', count: results.users.length },
     { id: 'threads', label: 'Threads', count: results.threads.length },
     { id: 'merch', label: 'Merch', count: results.merch.length },
