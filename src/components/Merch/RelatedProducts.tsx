@@ -3,6 +3,7 @@ import { api } from '../../../convex/_generated/api'
 import { ProductCard } from './ProductCard'
 import { useRef } from 'react'
 import { getMerchSlugCandidates } from '../../utils/merchImages'
+import { resolveMerchManifestEntries } from '../../utils/merchManifestClient'
 
 interface RelatedProductsProps {
   productId: string
@@ -38,6 +39,10 @@ export function RelatedProducts({
     api.merchManifest.getMerchImageManifestEntries,
     manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
   )
+  const resolvedManifestEntries = resolveMerchManifestEntries(
+    manifestSlugs,
+    merchManifestEntries?.entries ?? null
+  )
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -68,7 +73,7 @@ export function RelatedProducts({
               <ProductCard
                 product={product}
                 onAddToCart={onAddToCart}
-                manifest={merchManifestEntries?.entries ?? null}
+                manifest={resolvedManifestEntries}
               />
             </div>
           ))}

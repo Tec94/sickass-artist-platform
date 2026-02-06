@@ -3,8 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
-import { useAuth } from '../../hooks/useAuth'
-import { useTokenAuth } from '../ConvexAuthProvider'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 type ChannelAccessLevel = 'public' | 'members' | 'vip'
 
@@ -21,8 +20,7 @@ const initialFormData: ChannelFormData = {
 }
 
 export function AdminChat() {
-  const { user, isLoading: isUserLoading } = useAuth()
-  const { hasValidToken, isTokenLoading } = useTokenAuth()
+  const { user, isLoading: isUserLoading, hasValidToken, isTokenLoading, hasAdminAccess, tokenMatchesUser } = useAdminAccess()
 
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<Id<'channels'> | null>(null)
@@ -31,8 +29,7 @@ export function AdminChat() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSeeding, setIsSeeding] = useState(false)
 
-  const isRoleAllowed = !!user && ['admin', 'mod', 'artist'].includes(user.role)
-  const canManageChannels = hasValidToken && isRoleAllowed
+  const canManageChannels = hasValidToken && hasAdminAccess
 
   // Fetch channels
   const channels = useQuery(api.admin.listChannels, canManageChannels ? {} : 'skip')
@@ -175,7 +172,7 @@ export function AdminChat() {
     )
   }
 
-  if (!hasValidToken) {
+  if (!hasValidToken || !tokenMatchesUser) {
     return (
       <div className="admin-chat">
         <div className="empty-state">
@@ -199,7 +196,7 @@ export function AdminChat() {
     )
   }
 
-  if (!isRoleAllowed) {
+  if (!hasAdminAccess) {
     return (
       <div className="admin-chat">
         <div className="empty-state">

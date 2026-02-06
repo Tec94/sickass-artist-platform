@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { useAuth } from '../../hooks/useAuth'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 type QuestType = 'daily' | 'weekly' | 'milestone' | 'seasonal' | 'challenge'
 type QuestCategory = 'social' | 'creation' | 'commerce' | 'events' | 'engagement' | 'streak'
@@ -40,8 +40,8 @@ const baseFormState = () => ({
 })
 
 export const AdminQuests = () => {
-  const { user } = useAuth()
-  const quests = useQuery(api.quests.getAllQuests, {})
+  const { user, isAdmin, isReady, hasValidToken, hasAdminAccess, canUseAdminQueries, tokenMatchesUser } = useAdminAccess()
+  const quests = useQuery(api.quests.getAllQuests, canUseAdminQueries ? {} : 'skip')
   const createQuest = useMutation(api.quests.createQuest)
   const assignQuestToSelf = useMutation(api.quests.assignQuestToSelf)
 
@@ -55,7 +55,19 @@ export const AdminQuests = () => {
     return [...quests].sort((a, b) => a.priority - b.priority)
   }, [quests])
 
-  if (!user || user.role !== 'admin') {
+  if (!isReady) {
+    return <div className="text-zinc-500 p-8">Session syncing...</div>
+  }
+
+  if (!hasValidToken || !tokenMatchesUser) {
+    return <div className="text-zinc-500 p-8">Session not ready</div>
+  }
+
+  if (!user || !hasAdminAccess) {
+    return <div className="text-zinc-500 p-8">Admin access required</div>
+  }
+
+  if (!isAdmin) {
     return <div className="text-zinc-500 p-8">Admin access required</div>
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 interface QueueStats {
   waiting: number
@@ -11,14 +12,20 @@ interface QueueStats {
 }
 
 export function AdminQueues() {
+  const { canUseAdminQueries } = useAdminAccess()
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Fetch events for dropdown
-  const eventsData = useQuery(api.events.getEvents, { 
-    page: 0, 
-    pageSize: 50, 
-    sortBy: 'asc' 
-  })
+  const eventsData = useQuery(
+    api.events.getEvents,
+    canUseAdminQueries
+      ? {
+          page: 0,
+          pageSize: 50,
+          sortBy: 'asc',
+        }
+      : 'skip'
+  )
 
   // Placeholder queue stats - would come from a queue query
   const queueStats: QueueStats = {
@@ -119,25 +126,25 @@ export function AdminQueues() {
 
             {/* Queue Actions */}
             <div className="actions-grid">
-              <button className="action-btn primary" onClick={() => handleAdmitNext(1)}>
+              <button className="action-btn primary" onClick={() => handleAdmitNext(1)} disabled>
                 <iconify-icon icon="solar:play-linear" width="18" height="18"></iconify-icon>
-                Admit Next
+                Admit Next (Coming soon)
               </button>
-              <button className="action-btn primary" onClick={() => handleAdmitNext(5)}>
+              <button className="action-btn primary" onClick={() => handleAdmitNext(5)} disabled>
                 <iconify-icon icon="solar:forward-linear" width="18" height="18"></iconify-icon>
-                Admit Next 5
+                Admit Next 5 (Coming soon)
               </button>
-              <button className="action-btn primary" onClick={() => handleAdmitNext(10)}>
+              <button className="action-btn primary" onClick={() => handleAdmitNext(10)} disabled>
                 <iconify-icon icon="solar:forward-linear" width="18" height="18"></iconify-icon>
-                Admit Next 10
+                Admit Next 10 (Coming soon)
               </button>
-              <button className="action-btn warning" onClick={handleExpireAll}>
+              <button className="action-btn warning" onClick={handleExpireAll} disabled>
                 <iconify-icon icon="solar:restart-linear" width="18" height="18"></iconify-icon>
-                Expire All Waiting
+                Expire All Waiting (Coming soon)
               </button>
-              <button className="action-btn danger" onClick={handleClearQueue}>
+              <button className="action-btn danger" onClick={handleClearQueue} disabled>
                 <iconify-icon icon="solar:trash-bin-trash-linear" width="18" height="18"></iconify-icon>
-                Clear Queue
+                Clear Queue (Coming soon)
               </button>
             </div>
 
@@ -218,13 +225,13 @@ export function AdminQueues() {
         </div>
 
         <div className="offline-actions">
-          <button className="action-btn secondary">
+          <button className="action-btn secondary" disabled>
             <iconify-icon icon="solar:refresh-linear" width="16" height="16"></iconify-icon>
-            Force Sync
+            Force Sync (Coming soon)
           </button>
-          <button className="action-btn secondary">
+          <button className="action-btn secondary" disabled>
             <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
-            Clear Failed
+            Clear Failed (Coming soon)
           </button>
         </div>
 
@@ -368,6 +375,11 @@ export function AdminQueues() {
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
+        }
+
+        .action-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .action-btn.primary {

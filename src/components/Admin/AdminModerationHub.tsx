@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 type ModerationContentType = 'chat_message' | 'forum_thread' | 'forum_reply'
 type ModerationActionType = 'dismiss' | 'warn' | 'remove' | 'timeout' | 'ban'
@@ -78,6 +79,7 @@ function summaryText(item: QueueItem) {
   return '[message empty]'
 }
 export function AdminModerationHub() {
+  const { canUseAdminQueries } = useAdminAccess()
   const [statusFilter, setStatusFilter] = useState<'open' | 'resolved'>('open')
   const [typeFilter, setTypeFilter] = useState<ModerationContentType | 'all'>('all')
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all')
@@ -129,17 +131,19 @@ export function AdminModerationHub() {
     return args
   }, [severityFilter, statusFilter, typeFilter])
 
-  const baseQueue = useQuery(api.moderation.getQueue, baseArgs)
+  const baseQueue = useQuery(api.moderation.getQueue, canUseAdminQueries ? baseArgs : 'skip')
   const paginatedQueue = useQuery(
     api.moderation.getQueue,
-    requestedCursor ? { ...baseArgs, cursor: requestedCursor } : 'skip'
+    canUseAdminQueries && requestedCursor ? { ...baseArgs, cursor: requestedCursor } : 'skip'
   )
-  const stats = useQuery(api.moderation.getModerationStats, {})
-  const policy = useQuery(api.moderation.getPolicy, {})
-  const channels = useQuery(api.chat.getChannels, {})
-  const serverSettings = useQuery(api.chat.getServerSettings, {})
-  const stickerPacks = useQuery(api.admin.listStickerPacks, {}) as StickerPackAdmin[] | undefined
-  const featureFlags = useQuery(api.admin.getFeatureFlags, {})
+  const stats = useQuery(api.moderation.getModerationStats, canUseAdminQueries ? {} : 'skip')
+  const policy = useQuery(api.moderation.getPolicy, canUseAdminQueries ? {} : 'skip')
+  const channels = useQuery(api.chat.getChannels, canUseAdminQueries ? {} : 'skip')
+  const serverSettings = useQuery(api.chat.getServerSettings, canUseAdminQueries ? {} : 'skip')
+  const stickerPacks = useQuery(api.admin.listStickerPacks, canUseAdminQueries ? {} : 'skip') as
+    | StickerPackAdmin[]
+    | undefined
+  const featureFlags = useQuery(api.admin.getFeatureFlags, canUseAdminQueries ? {} : 'skip')
 
   const takeAction = useMutation(api.moderation.takeAction)
   const updatePolicy = useMutation(api.admin.updateModerationPolicy)

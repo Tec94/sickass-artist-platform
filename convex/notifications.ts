@@ -1,28 +1,6 @@
 import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-import { getCurrentUser } from './helpers'
-
-async function requireAdmin(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) {
-    throw new ConvexError('Not authenticated')
-  }
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q: any) => q.eq('clerkId', identity.subject))
-    .first()
-
-  if (!user) {
-    throw new ConvexError('User not found')
-  }
-
-  if (user.role !== 'admin' && user.role !== 'mod' && user.role !== 'artist') {
-    throw new ConvexError('Insufficient permissions.')
-  }
-
-  return user
-}
+import { getCurrentUser, requireAdmin } from './helpers'
 
 export const getUserNotifications = query({
   args: {

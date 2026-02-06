@@ -1,29 +1,7 @@
 import { query, mutation } from "./_generated/server"
 import { v, ConvexError } from "convex/values"
 import { DEFAULT_MODERATION_POLICY } from "./moderationUtils"
-
-// Helper to check if user has admin privileges
-async function requireAdmin(ctx: any) {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-        throw new ConvexError("Not authenticated")
-    }
-
-    const user = await ctx.db
-        .query("users")
-        .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
-        .first()
-
-    if (!user) {
-        throw new ConvexError("User not found")
-    }
-
-    if (user.role !== "admin" && user.role !== "mod" && user.role !== "artist") {
-        throw new ConvexError("Insufficient permissions. Admin, mod, or artist role required.")
-    }
-
-    return user
-}
+import { requireAdmin } from "./helpers"
 
 const SUPPORTED_MEDIA_TYPES = [
     "image/jpeg",
@@ -1218,6 +1196,7 @@ export const deleteReply = mutation({
 export const getAdminStats = query({
     args: {},
     handler: async (ctx) => {
+        await requireAdmin(ctx)
         const [products, channels, categories, users, events] = await Promise.all([
             ctx.db.query("merchProducts").collect(),
             ctx.db.query("channels").collect(),
@@ -1234,6 +1213,52 @@ export const getAdminStats = query({
             eventCount: events.length,
             adminCount: users.filter(u => u.role === "admin").length,
             modCount: users.filter(u => u.role === "mod").length,
+        }
+    },
+})
+
+const SYSTEM_TABLES = [
+    { name: "users", table: "users" },
+    { name: "channels", table: "channels" },
+    { name: "messages", table: "messages" },
+    { name: "threads", table: "threads" },
+    { name: "replies", table: "replies" },
+    { name: "categories", table: "categories" },
+    { name: "events", table: "events" },
+    { name: "merchProducts", table: "merchProducts" },
+    { name: "merchVariants", table: "merchVariants" },
+    { name: "merchOrders", table: "merchOrders" },
+] as const
+
+type SystemTableName = (typeof SYSTEM_TABLES)[number]["table"]
+
+async function getTableStats(ctx: any, table: SystemTableName) {
+    const rows = await ctx.db.query(table).collect()
+    const lastUpdated = rows.length > 0 ? Math.max(...rows.map((row: any) => row._creationTime)) : null
+    return { count: rows.length, lastUpdated }
+}
+
+export const getSystemStats = query({
+    args: {
+        refreshKey: v.optional(v.number()),
+    },
+    handler: async (ctx) => {
+        await requireAdmin(ctx)
+
+        const tables = await Promise.all(
+            SYSTEM_TABLES.map(async (entry) => {
+                const stats = await getTableStats(ctx, entry.table)
+                return {
+                    name: entry.name,
+                    count: stats.count,
+                    lastUpdated: stats.lastUpdated,
+                }
+            })
+        )
+
+        return {
+            generatedAt: Date.now(),
+            tables,
         }
     },
 })

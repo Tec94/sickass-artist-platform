@@ -1,11 +1,10 @@
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import type { Id } from '../../convex/_generated/dataModel'
+import { useAdminAccess } from '../hooks/useAdminAccess'
 
 export const AdminRewards = () => {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isAdmin, isReady, hasValidToken, hasAdminAccess, canUseAdminQueries, tokenMatchesUser } = useAdminAccess()
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
     rewardId: '',
@@ -18,17 +17,21 @@ export const AdminRewards = () => {
   })
 
   const createReward = useMutation(api.rewards.createReward)
-  const rewards = useQuery(api.rewards.getAvailableRewards, {})
+  const rewards = useQuery(api.rewards.getAvailableRewards, canUseAdminQueries ? {} : 'skip')
 
-  if (authLoading) {
-    return <div className="text-white p-8 text-center">Loading...</div>
+  if (!isReady) {
+    return <div className="text-white p-8 text-center">Session syncing...</div>
+  }
+
+  if (!hasValidToken || !tokenMatchesUser) {
+    return <div className="text-white p-8 text-center">Session not ready</div>
   }
 
   if (!user) {
     return <div className="text-white p-8 text-center">Sign in required</div>
   }
 
-  if (user.role !== 'admin') {
+  if (!hasAdminAccess || !isAdmin) {
     return <div className="text-white p-8 text-center">Admin access required</div>
   }
 
@@ -44,7 +47,6 @@ export const AdminRewards = () => {
         metadata: {
           discountPercent: formData.discountPercent,
         },
-        adminId: user._id as Id<'users'>,
       })
 
       alert('Reward created!')

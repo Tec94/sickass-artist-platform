@@ -1,6 +1,7 @@
 // React hooks not currently used
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 export type AdminTab =
   | 'overview'
@@ -44,7 +45,8 @@ const StatCard = ({ title, value, icon, trend, color }: StatCardProps) => (
 
 export function AdminOverview({ onNavigate }: AdminOverviewProps) {
   // Fetch stats from admin API
-  const stats = useQuery(api.admin.getAdminStats)
+  const { canUseAdminQueries } = useAdminAccess()
+  const stats = useQuery(api.admin.getAdminStats, canUseAdminQueries ? {} : 'skip')
 
   const quickActions: { label: string; icon: string; tab: AdminTab; action: string }[] = [
     { label: 'Add Product', icon: 'solar:box-linear', tab: 'merch', action: 'add' },

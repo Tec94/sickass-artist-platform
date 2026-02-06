@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
@@ -30,6 +31,7 @@ const fanTierOptions: { value: FanTier; label: string; color: string }[] = [
 ]
 
 export function AdminUsers() {
+  const { canUseAdminQueries, canUseAdminActions } = useAdminAccess()
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [editingUserId, setEditingUserId] = useState<Id<'users'> | null>(null)
@@ -37,12 +39,17 @@ export function AdminUsers() {
   const [_isSaving, setIsSaving] = useState(false)
 
   // Fetch real users from Convex
-  const usersData = useQuery(api.admin.getUsers, { 
-    page: 0, 
-    pageSize: 50, 
-    search: searchQuery || undefined,
-    role: roleFilter !== 'all' ? roleFilter : undefined 
-  })
+  const usersData = useQuery(
+    api.admin.getUsers,
+    canUseAdminQueries
+      ? {
+          page: 0,
+          pageSize: 50,
+          search: searchQuery || undefined,
+          role: roleFilter !== 'all' ? roleFilter : undefined,
+        }
+      : 'skip'
+  )
 
   // Mutations
   const updateUserRole = useMutation(api.admin.updateUserRole)
@@ -62,6 +69,10 @@ export function AdminUsers() {
 
   const handleSaveUser = async () => {
     if (!editData || !editingUserId) return
+    if (!canUseAdminActions) {
+      showToast('Session not ready or access denied', { type: 'error' })
+      return
+    }
     
     setIsSaving(true)
     try {

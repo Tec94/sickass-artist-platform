@@ -1,6 +1,66 @@
 import { mutation, query, internalMutation } from './_generated/server'
-import { v, ConvexError } from 'convex/values'
+import { v } from 'convex/values'
 import { internal } from './_generated/api'
+import { requireAdmin } from './helpers'
+
+type EmbeddedTrack = {
+  spotifyTrackId: string
+  title: string
+  artist: string
+  albumCover: string
+  externalUrl: string
+  albumTitle?: string
+  releaseDate?: string
+  durationMs?: number
+  popularity?: number
+  isrc?: string
+  previewUrl?: string | null
+}
+
+const EMBEDDED_TRACKS: EmbeddedTrack[] = [
+  {
+    spotifyTrackId: '7nrd0eIftH3NQLfgk20Qp9',
+    title: 'YOGURCITO REMIX',
+    artist: 'Kris R., ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02a12acd5e9f8c12c2fc6a1e44',
+    externalUrl: 'https://open.spotify.com/track/7nrd0eIftH3NQLfgk20Qp9',
+  },
+  {
+    spotifyTrackId: '4Hkp1TiYqGYhknFwtUsbqd',
+    title: 'ME GUSTAS CC',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02b2c0e9901d01c15c4cf8fed6',
+    externalUrl: 'https://open.spotify.com/track/4Hkp1TiYqGYhknFwtUsbqd',
+  },
+  {
+    spotifyTrackId: '3YrTrs2hJbLklaBdhr4TrH',
+    title: 'ETA - RMX',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02b2c0e9901d01c15c4cf8fed6',
+    externalUrl: 'https://open.spotify.com/track/3YrTrs2hJbLklaBdhr4TrH',
+  },
+  {
+    spotifyTrackId: '5hWpXZOs7vpz0JD3CIylsb',
+    title: 'FANTAS\u00cdA',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e0232be66e296d4b19ec9513506',
+    externalUrl: 'https://open.spotify.com/track/5hWpXZOs7vpz0JD3CIylsb',
+  },
+  {
+    spotifyTrackId: '30ga1gIdpg6M6ZshWo7YgC',
+    title: 'PPC',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e0285d36426f1aae4f2f3ae66bc',
+    externalUrl: 'https://open.spotify.com/track/30ga1gIdpg6M6ZshWo7YgC',
+  },
+  {
+    spotifyTrackId: '1agNeynGrAgsS1XbsJUM5w',
+    title: 'Pieza Exhibici\u00f3n',
+    artist: 'ROA',
+    albumCover: 'https://i.scdn.co/image/ab67616d00001e02392ba661e02dc5cc9ceed533',
+    externalUrl: 'https://open.spotify.com/track/1agNeynGrAgsS1XbsJUM5w',
+  },
+]
 
 // ============ INTERNAL MUTATION FOR UPSERTING TRACKS =====
 
@@ -72,12 +132,9 @@ export const upsertSpotifyTracksInternal = internalMutation({
  * Sync artist tracks from Spotify (admin-only, legacy signature)
  */
 export const syncArtistTracks = mutation({
-  args: { adminId: v.id('users') },
-  handler: async (ctx, args) => {
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can sync')
-    }
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx, ['admin'])
 
     await ctx.scheduler.runAfter(0, internal.spotifySync.syncSpotifyTracksInternal)
 
@@ -91,23 +148,59 @@ export const syncArtistTracks = mutation({
 export const adminTriggerSync = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError('Not authenticated')
-    }
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
-
-    if (!user || user.role !== 'admin') {
-      throw new ConvexError('Only admins can trigger sync')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     await ctx.scheduler.runAfter(0, internal.spotifySync.syncSpotifyTracksInternal)
 
     return { success: true, scheduled: true }
+  },
+})
+
+/**
+ * Seed Spotify table with embedded tracks (admin-only)
+ */
+export const seedEmbeddedTracks = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx, ['admin'])
+
+    const now = Date.now()
+    let inserted = 0
+    let updated = 0
+
+    for (const track of EMBEDDED_TRACKS) {
+      const existing = await ctx.db
+        .query('spotifySongs')
+        .withIndex('by_spotifyTrackId', (q) => q.eq('spotifyTrackId', track.spotifyTrackId))
+        .first()
+
+      const payload = {
+        spotifyTrackId: track.spotifyTrackId,
+        title: track.title,
+        artist: track.artist,
+        albumTitle: track.albumTitle ?? track.title,
+        albumCover: track.albumCover,
+        previewUrl: track.previewUrl ?? undefined,
+        duration: track.durationMs ?? 0,
+        releaseDate: track.releaseDate ?? '1970-01-01',
+        externalUrl: track.externalUrl,
+        isrc: track.isrc ?? '',
+        popularity: track.popularity ?? 0,
+        isArtistRelease: true,
+        syncedAt: now,
+        createdAt: existing?.createdAt ?? now,
+      }
+
+      if (existing) {
+        await ctx.db.patch(existing._id, payload)
+        updated += 1
+      } else {
+        await ctx.db.insert('spotifySongs', payload)
+        inserted += 1
+      }
+    }
+
+    return { success: true, inserted, updated, total: EMBEDDED_TRACKS.length }
   },
 })
 

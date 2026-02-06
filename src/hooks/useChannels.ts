@@ -8,8 +8,8 @@ interface UseChannelsResult {
   error: null
 }
 
-export function useChannels(): UseChannelsResult {
-  const channels = useQuery(api.chat.getChannels)
+export function useChannels(enabled: boolean = true): UseChannelsResult {
+  const channels = useQuery(api.chat.getChannels, enabled ? {} : 'skip')
 
   const typedChannels: Channel[] = channels?.map((channel) => ({
     _id: channel._id,
@@ -27,7 +27,7 @@ export function useChannels(): UseChannelsResult {
 
   return {
     channels: typedChannels,
-    isLoading: channels === undefined,
+    isLoading: enabled && channels === undefined,
     error: null,
   }
 }

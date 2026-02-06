@@ -2,22 +2,61 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc } from '../../../convex/_generated/dataModel'
 import { useState } from 'react'
+import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 export const AdminSpotify = () => {
-  const status = useQuery(api.spotify.getSyncStatus)
-  const tracks = useQuery(api.spotify.getArtistTracks)
+  const { canUseAdminQueries, isAdmin, isReady, hasValidToken, hasAdminAccess, tokenMatchesUser } = useAdminAccess()
+  const status = useQuery(api.spotify.getSyncStatus, canUseAdminQueries ? {} : 'skip')
+  const tracks = useQuery(api.spotify.getArtistTracks, canUseAdminQueries ? {} : 'skip')
   const triggerSync = useMutation(api.spotify.adminTriggerSync)
+  const seedEmbeddedTracks = useMutation(api.spotify.seedEmbeddedTracks)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+  const adminActionDisabled = !isAdmin || !isReady || !hasValidToken
 
   const handleSync = async () => {
+    if (adminActionDisabled) {
+      showToast('Admin role required to sync Spotify', { type: 'error' })
+      return
+    }
     try {
       setIsSyncing(true)
       await triggerSync()
       setTimeout(() => setIsSyncing(false), 3000)
     } catch (error) {
       console.error('Sync failed:', error)
+      showToast(error instanceof Error ? error.message : 'Sync failed', { type: 'error' })
       setIsSyncing(false)
     }
+  }
+
+  const handleSeed = async () => {
+    if (adminActionDisabled) {
+      showToast('Admin role required to seed embedded tracks', { type: 'error' })
+      return
+    }
+    try {
+      setIsSeeding(true)
+      const result = await seedEmbeddedTracks()
+      showToast(
+        `Seeded ${result.inserted ?? 0} tracks (${result.updated ?? 0} updated)`,
+        { type: 'success' }
+      )
+    } catch (error) {
+      console.error('Seed failed:', error)
+      showToast(error instanceof Error ? error.message : 'Seed failed', { type: 'error' })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  if (!isReady || !hasValidToken || !tokenMatchesUser) {
+    return <div className="text-white p-4">Session syncing…</div>
+  }
+
+  if (!hasAdminAccess) {
+    return <div className="text-white p-4">Admin access required</div>
   }
 
   if (!status || !tracks) {
@@ -64,11 +103,25 @@ export const AdminSpotify = () => {
 
         <button
           onClick={handleSync}
-          disabled={isSyncing}
+          disabled={isSyncing || adminActionDisabled}
           className="px-6 py-3 bg-green-600 text-white rounded font-semibold hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
         >
           {isSyncing ? 'Syncing...' : 'Sync Now'}
         </button>
+
+        <button
+          onClick={handleSeed}
+          disabled={isSeeding || adminActionDisabled}
+          className="ml-3 px-6 py-3 bg-gray-700 text-white rounded font-semibold hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
+        >
+          {isSeeding ? 'Seeding...' : 'Seed Embedded Tracks'}
+        </button>
+
+        {!isAdmin && (
+          <p className="mt-3 text-xs text-gray-400">
+            Spotify sync and seed actions require an admin role.
+          </p>
+        )}
       </div>
 
       {/* Tracks List */}

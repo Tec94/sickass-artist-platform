@@ -1,8 +1,36 @@
 import type { MutationCtx, QueryCtx } from './_generated/server'
+import { ConvexError } from 'convex/values'
 import type { Doc, Id } from './_generated/dataModel'
 
 type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+
+const ADMIN_ROLES: UserRole[] = ['admin', 'mod', 'artist']
+
+export const requireAdmin = async (
+  ctx: QueryCtx | MutationCtx,
+  allowedRoles: UserRole[] = ADMIN_ROLES
+): Promise<Doc<'users'>> => {
+  const identity = await ctx.auth.getUserIdentity()
+  if (!identity) {
+    throw new ConvexError('Not authenticated')
+  }
+
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .first()
+
+  if (!user) {
+    throw new ConvexError('User not found')
+  }
+
+  if (!allowedRoles.includes(user.role as UserRole)) {
+    throw new ConvexError('Insufficient permissions.')
+  }
+
+  return user
+}
 
 export const getCurrentUser = async (ctx: QueryCtx): Promise<Doc<'users'>> => {
   const identity = await ctx.auth.getUserIdentity()

@@ -1,32 +1,10 @@
 import { mutation, query, internalMutation } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
 import { api, internal } from './_generated/api'
-import { getCurrentUser, getCurrentUserOrNull } from './helpers'
+import { getCurrentUser, getCurrentUserOrNull, requireAdmin } from './helpers'
 
 // ============ TYPES ============
 type QuestType = 'daily' | 'weekly' | 'milestone' | 'seasonal' | 'challenge'
-
-async function requireAdmin(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) {
-    throw new ConvexError('Not authenticated')
-  }
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q: any) => q.eq('clerkId', identity.subject))
-    .first()
-
-  if (!user) {
-    throw new ConvexError('User not found')
-  }
-
-  if (user.role !== 'admin' && user.role !== 'mod' && user.role !== 'artist') {
-    throw new ConvexError('Insufficient permissions. Admin, mod, or artist role required.')
-  }
-
-  return user
-}
 
 // ============ MUTATIONS ============
 

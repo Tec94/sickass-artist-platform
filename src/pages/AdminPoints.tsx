@@ -1,11 +1,11 @@
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useAdminAccess } from '../hooks/useAdminAccess'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const AdminPoints = () => {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isAdmin, isReady, hasValidToken, hasAdminAccess, canUseAdminQueries, tokenMatchesUser } = useAdminAccess()
   const [userId, setUserId] = useState('')
   const [amount, setAmount] = useState(0)
   const [reason, setReason] = useState('')
@@ -15,23 +15,27 @@ export const AdminPoints = () => {
 
   const targetBalance = useQuery(
     api.points.getUserBalance,
-    userId ? { userId: userId as Id<'users'> } : 'skip'
+    userId && canUseAdminQueries ? { userId: userId as Id<'users'> } : 'skip'
   )
 
   const txHistory = useQuery(
     api.points.getUserTransactionHistory,
-    userId ? { userId: userId as Id<'users'>, limit: 25 } : 'skip'
+    userId && canUseAdminQueries ? { userId: userId as Id<'users'>, limit: 25 } : 'skip'
   )
 
-  if (authLoading) {
-    return <div className="text-white p-8 text-center">Loading...</div>
+  if (!isReady) {
+    return <div className="text-white p-8 text-center">Session syncing...</div>
+  }
+
+  if (!hasValidToken || !tokenMatchesUser) {
+    return <div className="text-white p-8 text-center">Session not ready</div>
   }
 
   if (!user) {
     return <div className="text-white p-8 text-center">Sign in required</div>
   }
 
-  if (user.role !== 'admin') {
+  if (!hasAdminAccess || !isAdmin) {
     return <div className="text-white p-8 text-center">Admin access required</div>
   }
 
@@ -52,7 +56,6 @@ export const AdminPoints = () => {
         userId: userId as Id<'users'>,
         amount,
         reason,
-        adminId: user._id as Id<'users'>,
       })
 
       alert('Points adjusted!')

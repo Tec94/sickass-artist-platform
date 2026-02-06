@@ -89,9 +89,20 @@ export function getOrderedColors(product: MerchProduct) {
 
   if (!override) return colors;
 
+  const normalizeColor = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '');
+  const colorMap = new Map<string, string>();
+  for (const color of colors) {
+    colorMap.set(normalizeColor(color), color);
+  }
+
   const ordered: string[] = [];
   for (const color of override) {
-    if (colors.includes(color)) ordered.push(color);
+    const resolved = colorMap.get(normalizeColor(color));
+    if (resolved && !ordered.includes(resolved)) ordered.push(resolved);
   }
   for (const color of colors) {
     if (!ordered.includes(color)) ordered.push(color);

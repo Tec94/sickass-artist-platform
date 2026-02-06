@@ -21,7 +21,7 @@ export const GearDisplay = ({ variant = 'default' }: { variant?: 'default' | 'ho
   const [hoveredGear, setHoveredGear] = useState<GearName | null>(null)
 
   const GEAR_PATHS: Record<GearName, string> = {
-    'R': '/R',
+    'R': '/admin',
     'N': '/dashboard',
     '1': '/events',
     '2': '/store',

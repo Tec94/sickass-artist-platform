@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 interface CategoryFormData {
   name: string
@@ -22,6 +23,7 @@ const iconOptions = ['💬', '🎵', '🎨', '📢', '🎮', '💡', '🎤', '�
 const colorOptions = ['#8b0000', '#1e40af', '#065f46', '#7c2d12', '#581c87', '#0f766e']
 
 export function AdminForum() {
+  const { canUseAdminQueries, canUseAdminActions } = useAdminAccess()
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [editingCategoryId, setEditingCategoryId] = useState<Id<'categories'> | null>(null)
   const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm)
@@ -30,7 +32,7 @@ export function AdminForum() {
   const [_isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch data
-  const categories = useQuery(api.forum.getCategories)
+  const categories = useQuery(api.forum.getCategories, canUseAdminQueries ? {} : 'skip')
 
   // Admin mutations
   const createCategory = useMutation(api.admin.createCategory)
@@ -43,6 +45,11 @@ export function AdminForum() {
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!canUseAdminActions) {
+      showToast('Session not ready or access denied', { type: 'error' })
+      return
+    }
     
     if (!categoryForm.name.trim()) {
       showToast('Category name is required', { type: 'error' })
@@ -98,6 +105,10 @@ export function AdminForum() {
   }
 
   const handleDeleteCategory = async (categoryId: Id<'categories'>) => {
+    if (!canUseAdminActions) {
+      showToast('Session not ready or access denied', { type: 'error' })
+      return
+    }
     if (!confirm('Delete this category? All threads will be moved to General.')) return
     
     try {

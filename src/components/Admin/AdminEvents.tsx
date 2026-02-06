@@ -4,20 +4,29 @@ import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
 import { formatEventDate, formatPrice, getSaleStatusBadge } from '../../utils/eventFormatters'
 import { showToast } from '../../lib/toast'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 export function AdminEvents() {
+  const { canUseAdminQueries, canUseAdminActions } = useAdminAccess()
   const eventsData = useQuery(
     api.events.getEvents,
-    { page: 0, pageSize: 50 }
+    canUseAdminQueries ? { page: 0, pageSize: 50 } : 'skip'
   )
 
-  const myTickets = useQuery(api.events.getUserTickets, { upcomingOnly: false })
+  const myTickets = useQuery(
+    api.events.getUserTickets,
+    canUseAdminQueries ? { upcomingOnly: false } : 'skip'
+  )
   const deleteEvent = useMutation(api.events.deleteEvent)
 
   const events = eventsData?.items || []
   const loading = !eventsData
 
   const handleDelete = async (eventId: string, title: string) => {
+    if (!canUseAdminActions) {
+      showToast('Session not ready or access denied', { type: 'error' })
+      return
+    }
     if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
       return
     }

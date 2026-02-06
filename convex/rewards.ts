@@ -1,6 +1,7 @@
 import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
 import { api } from './_generated/api'
+import { requireAdmin } from './helpers'
 
 // ============ UTILITIES ============
 
@@ -50,13 +51,9 @@ export const createReward = mutation({
       estimatedDeliveryDays: v.optional(v.number()),
     })),
     imageUrl: v.optional(v.string()),
-    adminId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can create rewards')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const existing = await ctx.db
       .query('rewards')
@@ -218,15 +215,11 @@ export const redeemReward = mutation({
 export const adminApproveRedemption = mutation({
   args: {
     redemptionId: v.id('userRedemptions'),
-    adminId: v.id('users'),
     trackingId: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can approve')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const redemption = await ctx.db.get(args.redemptionId)
     if (!redemption) {
@@ -251,14 +244,10 @@ export const adminApproveRedemption = mutation({
 export const adminRefundRedemption = mutation({
   args: {
     redemptionId: v.id('userRedemptions'),
-    adminId: v.id('users'),
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can refund')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const redemption = await ctx.db.get(args.redemptionId)
     if (!redemption) {

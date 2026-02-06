@@ -16,35 +16,71 @@ import {
   AdminQuests
 } from '../components/Admin'
 import type { AdminTab } from '../components/Admin/AdminOverview'
+import { useAdminAccess } from '../hooks/useAdminAccess'
 
-const tabs: { id: AdminTab; label: string; icon: string }[] = [
-  { id: 'overview', label: 'Overview', icon: 'solar:chart-square-linear' },
-  { id: 'merch', label: 'Merch', icon: 'solar:box-linear' },
-  { id: 'events', label: 'Events', icon: 'solar:calendar-linear' },
-  { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
-  { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
-  { id: 'moderation', label: 'Moderation', icon: 'solar:shield-warning-linear' },
-  { id: 'queues', label: 'Waitlist', icon: 'solar:clock-circle-linear' },
-  { id: 'quests', label: 'Quests', icon: 'solar:shield-star-linear' },
-  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
-  { id: 'points', label: 'Points & XP', icon: 'solar:star-linear' },
-  { id: 'rewards', label: 'Rewards', icon: 'solar:gift-linear' },
-  { id: 'redemptions', label: 'Redemptions', icon: 'solar:ticket-linear' },
-  { id: 'system', label: 'System', icon: 'solar:settings-linear' },
+const navGroups: { id: string; label: string; tabs: { id: AdminTab; label: string; icon: string }[] }[] = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    tabs: [{ id: 'overview', label: 'Overview', icon: 'solar:chart-square-linear' }],
+  },
+  {
+    id: 'commerce',
+    label: 'Commerce',
+    tabs: [
+      { id: 'merch', label: 'Merch', icon: 'solar:box-linear' },
+      { id: 'events', label: 'Events', icon: 'solar:calendar-linear' },
+    ],
+  },
+  {
+    id: 'community',
+    label: 'Community Ops',
+    tabs: [
+      { id: 'chat', label: 'Chat', icon: 'solar:chat-square-dots-linear' },
+      { id: 'forum', label: 'Forum', icon: 'solar:clipboard-list-linear' },
+      { id: 'moderation', label: 'Moderation', icon: 'solar:shield-warning-linear' },
+      { id: 'queues', label: 'Waitlist', icon: 'solar:clock-circle-linear' },
+    ],
+  },
+  {
+    id: 'engagement',
+    label: 'Engagement & Loyalty',
+    tabs: [
+      { id: 'quests', label: 'Quests', icon: 'solar:shield-star-linear' },
+      { id: 'points', label: 'Points & XP', icon: 'solar:star-linear' },
+      { id: 'rewards', label: 'Rewards', icon: 'solar:gift-linear' },
+      { id: 'redemptions', label: 'Redemptions', icon: 'solar:ticket-linear' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'System',
+    tabs: [
+      { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
+      { id: 'system', label: 'System', icon: 'solar:settings-linear' },
+    ],
+  },
 ]
+
+const allTabs = navGroups.flatMap((group) => group.tabs)
 
 export function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialTab = (searchParams.get('tab') as AdminTab) || 'overview'
+  const tabFromUrl = searchParams.get('tab') as AdminTab | null
+  const initialTab = allTabs.some((tab) => tab.id === tabFromUrl) ? (tabFromUrl as AdminTab) : 'overview'
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(navGroups.map((group) => [group.id, false]))
+  )
   const navigate = useNavigate()
+  const { user, isReady, hasValidToken, hasAdminAccess, tokenMatchesUser } = useAdminAccess()
 
   // Sync state with URL params
   useEffect(() => {
-    const tabFromUrl = searchParams.get('tab') as AdminTab
-    if (tabFromUrl && tabFromUrl !== activeTab && tabs.some(t => t.id === tabFromUrl)) {
-      setActiveTab(tabFromUrl)
+    const nextTab = searchParams.get('tab') as AdminTab
+    if (nextTab && nextTab !== activeTab && allTabs.some(t => t.id === nextTab)) {
+      setActiveTab(nextTab)
     }
   }, [searchParams, activeTab])
 
@@ -55,6 +91,13 @@ export function AdminDashboard() {
 
   const handleNavigate = (tab: AdminTab) => {
     handleTabChange(tab)
+  }
+
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }))
   }
 
   const renderContent = () => {
@@ -90,6 +133,52 @@ export function AdminDashboard() {
     }
   }
 
+  const canRenderAdmin = isReady && hasValidToken && tokenMatchesUser && !!user && hasAdminAccess
+
+  const renderAccessState = () => {
+    if (!isReady) {
+      return (
+        <div className="admin-state">
+          <iconify-icon icon="solar:spinner-linear" width="32" height="32" class="animate-spin"></iconify-icon>
+          <h3>Session syncing</h3>
+          <p>Preparing your admin session…</p>
+        </div>
+      )
+    }
+
+    if (!hasValidToken || !tokenMatchesUser) {
+      return (
+        <div className="admin-state">
+          <iconify-icon icon="solar:shield-warning-linear" width="32" height="32"></iconify-icon>
+          <h3>Session not ready</h3>
+          <p>Please refresh or sign out and back in to access admin tools.</p>
+        </div>
+      )
+    }
+
+    if (!user) {
+      return (
+        <div className="admin-state">
+          <iconify-icon icon="solar:user-cross-linear" width="32" height="32"></iconify-icon>
+          <h3>Sign in required</h3>
+          <p>Please sign in to access the admin dashboard.</p>
+        </div>
+      )
+    }
+
+    if (!hasAdminAccess) {
+      return (
+        <div className="admin-state">
+          <iconify-icon icon="solar:shield-warning-linear" width="32" height="32"></iconify-icon>
+          <h3>Access denied</h3>
+          <p>Your account doesn’t have permission to access admin tools.</p>
+        </div>
+      )
+    }
+
+    return null
+  }
+
   return (
     <div className="admin-dashboard">
       {/* Sidebar */}
@@ -110,17 +199,42 @@ export function AdminDashboard() {
         </div>
 
         <nav className="sidebar-nav">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => handleTabChange(tab.id)}
-              title={sidebarCollapsed ? tab.label : undefined}
-            >
-              <iconify-icon icon={tab.icon} width="18" height="18"></iconify-icon>
-              {!sidebarCollapsed && <span>{tab.label}</span>}
-            </button>
-          ))}
+          {navGroups.map(group => {
+            const isGroupCollapsed = !sidebarCollapsed && collapsedGroups[group.id]
+            return (
+              <div key={group.id} className="nav-group">
+                {!sidebarCollapsed && (
+                  <button
+                    className={`nav-group-header ${isGroupCollapsed ? 'collapsed' : ''}`}
+                    onClick={() => toggleGroup(group.id)}
+                    type="button"
+                    aria-expanded={!isGroupCollapsed}
+                  >
+                    <span className="nav-group-title">{group.label}</span>
+                    <iconify-icon
+                      icon="solar:alt-arrow-down-linear"
+                      width="16"
+                      height="16"
+                      class={`nav-group-icon ${isGroupCollapsed ? 'collapsed' : ''}`}
+                    ></iconify-icon>
+                  </button>
+                )}
+                <div className={`nav-group-items ${isGroupCollapsed ? 'collapsed' : ''}`}>
+                  {group.tabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                      onClick={() => handleTabChange(tab.id)}
+                      title={sidebarCollapsed ? tab.label : undefined}
+                    >
+                      <iconify-icon icon={tab.icon} width="18" height="18"></iconify-icon>
+                      {!sidebarCollapsed && <span>{tab.label}</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </nav>
 
         <div className="sidebar-footer">
@@ -142,16 +256,20 @@ export function AdminDashboard() {
           <h1>Admin Panel</h1>
           <select 
             value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value as AdminTab)}
+            onChange={(e) => handleTabChange(e.target.value as AdminTab)}
           >
-            {tabs.map(tab => (
-              <option key={tab.id} value={tab.id}>{tab.label}</option>
+            {navGroups.map(group => (
+              <optgroup key={group.id} label={group.label}>
+                {group.tabs.map(tab => (
+                  <option key={tab.id} value={tab.id}>{tab.label}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
 
         <div className="admin-content">
-          {renderContent()}
+          {canRenderAdmin ? renderContent() : renderAccessState()}
         </div>
       </main>
 
@@ -243,7 +361,50 @@ export function AdminDashboard() {
           padding: 16px 12px;
           display: flex;
           flex-direction: column;
+          gap: 12px;
+        }
+
+        .nav-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .nav-group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 6px 12px;
+          background: transparent;
+          border: none;
+          color: #606060;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+        }
+
+        .nav-group-header:hover {
+          color: #a0a0a0;
+        }
+
+        .nav-group-icon {
+          transition: transform 0.2s ease;
+        }
+
+        .nav-group-icon.collapsed {
+          transform: rotate(-90deg);
+        }
+
+        .nav-group-items {
+          display: flex;
+          flex-direction: column;
           gap: 4px;
+        }
+
+        .nav-group-items.collapsed {
+          display: none;
         }
 
         .nav-item {
@@ -352,6 +513,28 @@ export function AdminDashboard() {
         .admin-content {
           flex: 1;
           overflow-y: auto;
+        }
+
+        .admin-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 60px 20px;
+          color: #808080;
+          text-align: center;
+        }
+
+        .admin-state h3 {
+          margin: 0;
+          color: #e0e0e0;
+          font-size: 18px;
+        }
+
+        .admin-state p {
+          margin: 0;
+          color: #808080;
         }
 
         @media (max-width: 1024px) {

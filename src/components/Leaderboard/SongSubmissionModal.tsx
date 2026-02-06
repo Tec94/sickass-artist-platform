@@ -29,8 +29,11 @@ import {
   type SubmissionType,
   type LeaderboardPeriod,
 } from '../../utils/leaderboard'
+import { embeddedSpotifyTracks } from '../../data/spotifyEmbeddedTracks'
 
-type SpotifyTrack = Doc<'spotifySongs'>
+type SpotifyTrack = Pick<Doc<'spotifySongs'>, 'spotifyTrackId' | 'title' | 'artist' | 'albumCover'> & {
+  externalUrl?: string
+}
 
 type RankedSong = {
   spotifyTrackId: string
@@ -120,6 +123,24 @@ export const SongSubmissionModal = ({ isOpen, onClose, period }: SongSubmissionM
         }
       : 'skip'
   )
+  const fallbackResults = useMemo(() => {
+    if (searchTerm.length < 2) return []
+    const query = searchTerm.toLowerCase()
+    return embeddedSpotifyTracks
+      .filter((track) =>
+        track.title.toLowerCase().includes(query) ||
+        track.artist.toLowerCase().includes(query)
+      )
+      .slice(0, 10)
+      .map((track) => ({
+        spotifyTrackId: track.spotifyTrackId,
+        title: track.title,
+        artist: track.artist,
+        albumCover: track.albumCover,
+        externalUrl: track.externalUrl,
+      }))
+  }, [searchTerm])
+  const effectiveResults = (searchResults && searchResults.length > 0 ? searchResults : fallbackResults) as SpotifyTrack[]
 
   const userSubmission = useQuery(
     api.leaderboard.getUserSubmissionForPeriod,
@@ -338,10 +359,10 @@ export const SongSubmissionModal = ({ isOpen, onClose, period }: SongSubmissionM
                   disabled={rankedSongs.length >= limit}
                 />
 
-                {searchTerm.length >= 2 && searchResults && (
+                {searchTerm.length >= 2 && effectiveResults && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 max-h-72 overflow-y-auto">
-                    {searchResults.length > 0 ? (
-                      searchResults.map((track) => (
+                    {effectiveResults.length > 0 ? (
+                      effectiveResults.map((track) => (
                         <button
                           key={track.spotifyTrackId}
                           onClick={() => handleAddSong(track)}

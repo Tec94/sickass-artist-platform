@@ -1,8 +1,9 @@
 import { mutation, query } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
 import type { Id } from './_generated/dataModel'
-import { v, ConvexError } from 'convex/values'
+import { v } from 'convex/values'
 import { api } from './_generated/api'
+import { requireAdmin } from './helpers'
 
 // ============ UTILITIES ============
 
@@ -200,14 +201,9 @@ function calculateStreakBonus(days: number): number {
 export const adminResetStreak = mutation({
   args: {
     userId: v.id('users'),
-    adminId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    // Verify admin
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can reset streaks')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const today = getTodayISO()
     const streak = await ctx.db

@@ -3,7 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { showToast } from '../../lib/toast'
-import { useAuth } from '../../hooks/useAuth'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 type ProductCategory = 'apparel' | 'accessories' | 'vinyl' | 'limited' | 'other'
 type ProductStatus = 'active' | 'draft' | 'archived'
@@ -61,8 +61,7 @@ function buildModelConfig(data: ModelConfigFormData) {
 }
 
 export function AdminMerch() {
-  const { isSignedIn, user } = useAuth()
-  const hasAdminAccess = Boolean(user && (user.role === 'admin' || user.role === 'mod' || user.role === 'artist'))
+  const { user, canUseAdminQueries, canUseAdminActions } = useAdminAccess()
   const includeDrafts = user?.role === 'admin'
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<Id<'merchProducts'> | null>(null)
@@ -77,12 +76,17 @@ export function AdminMerch() {
   const posterFileRef = useRef<HTMLInputElement>(null)
 
   // Fetch products
-  const products = useQuery(api.merch.getProducts, {
-    page: 0,
-    pageSize: 50,
-    search: searchQuery || undefined,
-    includeDrafts: includeDrafts ? true : undefined,
-  })
+  const products = useQuery(
+    api.merch.getProducts,
+    canUseAdminQueries
+      ? {
+          page: 0,
+          pageSize: 50,
+          search: searchQuery || undefined,
+          includeDrafts: includeDrafts ? true : undefined,
+        }
+      : 'skip'
+  )
 
   // Admin mutations
   const createProduct = useMutation(api.admin.createProduct)
@@ -102,8 +106,8 @@ export function AdminMerch() {
 
   const uploadAsset = useCallback(
     async (file: File, kind: 'model' | 'poster') => {
-      if (!isSignedIn || !hasAdminAccess) {
-        showToast('You must be signed in with admin privileges to upload assets.', { type: 'error' })
+      if (!canUseAdminActions) {
+        showToast('Admin session not ready or access denied.', { type: 'error' })
         return
       }
 
@@ -148,15 +152,15 @@ export function AdminMerch() {
         if (kind === 'poster' && posterFileRef.current) posterFileRef.current.value = ''
       }
     },
-    [generateUploadUrl, hasAdminAccess, isSignedIn, resolveUpload]
+    [generateUploadUrl, canUseAdminActions, resolveUpload]
   )
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
 
-      if (!isSignedIn || !hasAdminAccess) {
-        showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
+      if (!canUseAdminActions) {
+        showToast('Admin session not ready or access denied.', { type: 'error' })
         return
       }
 
@@ -228,7 +232,7 @@ export function AdminMerch() {
         setIsSubmitting(false)
       }
     },
-    [createProduct, editingId, formData, hasAdminAccess, isSignedIn, resetForm, updateProduct]
+    [createProduct, editingId, formData, canUseAdminActions, resetForm, updateProduct]
   )
 
   const handleEdit = useCallback((product: Doc<'merchProducts'>) => {
@@ -256,8 +260,8 @@ export function AdminMerch() {
   }, [])
 
   const handleDelete = async (productId: Id<'merchProducts'>) => {
-    if (!isSignedIn || !hasAdminAccess) {
-      showToast('You must be signed in with admin privileges to perform this action', { type: 'error' })
+    if (!canUseAdminActions) {
+      showToast('Admin session not ready or access denied.', { type: 'error' })
       return
     }
     

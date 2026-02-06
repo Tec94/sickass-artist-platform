@@ -6,6 +6,7 @@ import { FanStatusBadge } from '../Profile/FanStatusBadge'
 import { ReactionPicker } from './ReactionPicker'
 import { showToast } from '../../lib/toast'
 import type { ChatAttachment, ChatMessage, ChatSticker, OptimisticMessage } from '../../types/chat'
+import { buildChatEmbeds, splitTextByUrls, type ChatEmbed } from '../../utils/chatEmbeds'
 
 type MessageView = ChatMessage | OptimisticMessage
 
@@ -70,6 +71,17 @@ function formatTimestamp(timestamp: number) {
   const isToday = now.toDateString() === date.toDateString()
   const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return isToday ? time : `${date.toLocaleDateString()} ${time}`
+}
+
+function formatUrlDisplay(rawUrl: string) {
+  try {
+    const parsed = new URL(rawUrl)
+    const host = parsed.hostname.replace('www.', '')
+    const path = parsed.pathname.length > 1 ? parsed.pathname : ''
+    return `${host}${path}`
+  } catch {
+    return rawUrl
+  }
 }
 
 function toServerMessageId(message: MessageView): Id<'messages'> | null {
@@ -165,6 +177,11 @@ export function MessageItem({
   const hasText = !message.isDeleted && message.content.trim().length > 0
   const shouldRenderText = message.isDeleted || hasText || (attachments.length === 0 && !message.stickerId)
   const textContent = message.isDeleted ? '[removed]' : hasText ? message.content : '[no text]'
+  const textParts = useMemo(() => splitTextByUrls(textContent), [textContent])
+  const embeds = useMemo(
+    () => (!message.isDeleted && hasText ? buildChatEmbeds(message.content) : []),
+    [hasText, message.content, message.isDeleted]
+  )
   const canReact = Boolean(onReact && !message.isDeleted && !isTemp && !isFailed)
   const canReport = Boolean(onReport && !message.isDeleted && !isTemp && !isFailed)
   const canDelete = Boolean(onDelete && isOwnMessage && !message.isDeleted)
@@ -263,7 +280,21 @@ export function MessageItem({
               message.isDeleted ? 'italic text-[#808080]' : ''
             }`}
           >
-            {textContent}
+            {textParts.map((part, index) =>
+              part.type === 'url' ? (
+                <a
+                  key={`${part.value}-${index}`}
+                  href={part.value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-red-300 hover:text-red-200 underline underline-offset-2 break-all"
+                >
+                  {formatUrlDisplay(part.value)}
+                </a>
+              ) : (
+                <span key={`${part.value}-${index}`}>{part.value}</span>
+              )
+            )}
           </div>
         )}
 
@@ -300,6 +331,19 @@ export function MessageItem({
                 Sticker hidden
               </div>
             )}
+          </div>
+        )}
+
+        {!message.isDeleted && embeds.length > 0 && (
+          <div className="mt-2 flex flex-col gap-2">
+            {embeds.map((embed) => (
+              <ChatEmbedCard
+                key={`${embed.type}-${embed.url}`}
+                embed={embed}
+                allowAutoplay={allowAutoplay}
+                onOpenLightbox={setLightboxUrl}
+              />
+            ))}
           </div>
         )}
 
@@ -530,5 +574,76 @@ function AttachmentTile({ attachment, allowAutoplay, onOpenLightbox }: Attachmen
         className="h-full w-full object-cover"
       />
     </div>
+  )
+}
+
+interface ChatEmbedCardProps {
+  embed: ChatEmbed
+  allowAutoplay: boolean
+  onOpenLightbox: (url: string) => void
+}
+
+function ChatEmbedCard({ embed, allowAutoplay, onOpenLightbox }: ChatEmbedCardProps) {
+  const baseClass = 'w-full max-w-[520px] rounded-xl border border-[#2a2a2a] bg-[#0a0a0a] shadow-lg overflow-hidden'
+
+  if (embed.type === 'youtube' || embed.type === 'vimeo') {
+    return (
+      <div className={baseClass}>
+        <div className="relative w-full pt-[56.25%]">
+          <iframe
+            src={embed.embedUrl}
+            title={embed.provider ?? 'Embedded video'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        </div>
+        <div className="px-3 py-2 text-xs uppercase tracking-[0.2em] text-[#808080]">{embed.provider}</div>
+      </div>
+    )
+  }
+
+  if (embed.type === 'video') {
+    return (
+      <div className={baseClass}>
+        <video
+          src={embed.embedUrl}
+          controls
+          playsInline
+          muted={allowAutoplay}
+          autoPlay={allowAutoplay}
+          preload="metadata"
+          className="h-full w-full object-cover"
+        />
+        <div className="px-3 py-2 text-xs uppercase tracking-[0.2em] text-[#808080]">{embed.displayUrl}</div>
+      </div>
+    )
+  }
+
+  if (embed.type === 'gif' || embed.type === 'image') {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenLightbox(embed.embedUrl)}
+        className={`${baseClass} text-left`}
+      >
+        <img src={embed.embedUrl} alt="Embedded media" loading="lazy" className="h-full w-full object-cover" />
+        <div className="px-3 py-2 text-xs uppercase tracking-[0.2em] text-[#808080]">
+          {embed.provider ?? 'Image'}
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <a
+      href={embed.embedUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${baseClass} block px-4 py-3 text-sm text-[#e0e0e0] transition-colors hover:border-[#c41e3a]`}
+    >
+      <div className="text-xs uppercase tracking-[0.2em] text-[#808080] mb-2">{embed.provider ?? 'Link'}</div>
+      <div className="font-semibold text-white break-all">{embed.displayUrl ?? embed.url}</div>
+    </a>
   )
 }

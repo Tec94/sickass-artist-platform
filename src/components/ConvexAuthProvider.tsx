@@ -70,8 +70,21 @@ export function ConvexAuthProvider({ children }: ConvexAuthProviderProps) {
           convex.setAuth(async () => {
             try {
               const c = await getIdTokenClaims()
-              return c?.__raw ?? null
+              const raw = c?.__raw ?? null
+              if (!raw && isMounted) {
+                setHasValidToken(false)
+                setTokenUserId(null)
+                setIsTokenLoading(false)
+                convex.clearAuth()
+              }
+              return raw
             } catch {
+              if (isMounted) {
+                setHasValidToken(false)
+                setTokenUserId(null)
+                setIsTokenLoading(false)
+                convex.clearAuth()
+              }
               return null
             }
           })

@@ -11,6 +11,7 @@ import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
 import { useUser } from '../contexts/UserContext'
 import { ImageGallery } from '../components/Merch/ImageGallery'
 import { getMerchImagesForVariation, getMerchSlugCandidates, getOrderedColors, getVariationIndexFromColor } from '../utils/merchImages'
+import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -31,6 +32,10 @@ export function MerchDetail() {
   const merchManifestEntries = useQuery(
     api.merchManifest.getMerchImageManifestEntries,
     manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
+  const resolvedManifestEntries = useMemo(
+    () => resolveMerchManifestEntries(manifestSlugs, merchManifestEntries?.entries ?? null),
+    [manifestSlugs, merchManifestEntries?.entries]
   )
   const { isSignedIn, userProfile } = useUser()
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
@@ -208,7 +213,7 @@ export function MerchDetail() {
       variants: product.variants,
     },
     variationIndex,
-    merchManifestEntries?.entries ?? null
+    resolvedManifestEntries
   )
 
   const has3dModel = Boolean(product.model3dUrl) && !modelError

@@ -5,10 +5,13 @@ import { ChannelList } from '../components/Chat/ChannelList'
 import { ChannelView } from '../components/Chat/ChannelView'
 import type { Id } from '../types/chat'
 import { useTranslation } from '../hooks/useTranslation'
+import { useTokenAuth } from '../components/ConvexAuthProvider'
 
 export function Chat() {
   const { user } = useAuth()
-  const { channels, isLoading: isChannelsLoading } = useChannels()
+  const { hasValidToken, isTokenLoading } = useTokenAuth()
+  const shouldLoadChannels = Boolean(user && hasValidToken && !isTokenLoading)
+  const { channels, isLoading: isChannelsLoading } = useChannels(shouldLoadChannels)
   const [selectedChannelId, setSelectedChannelId] = useState<Id<'channels'> | null>(null)
   const { t } = useTranslation()
   
@@ -25,6 +28,20 @@ export function Chat() {
           <iconify-icon icon="solar:lock-password-bold" style={{ fontSize: '48px', color: '#c41e3a' }}></iconify-icon>
           <h2 className="mt-4 text-xl font-bold">{t('chat.accessRestricted')}</h2>
           <p className="mt-2 opacity-70">{t('chat.signInToAccess')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isTokenLoading && !hasValidToken) {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#0a0a0a] text-[#e0e0e0]">
+        <div className="text-center p-8 bg-[#111] rounded-lg shadow-xl border border-[#1a1a1a] max-w-md">
+          <iconify-icon icon="solar:shield-warning-linear" style={{ fontSize: '48px', color: '#c41e3a' }}></iconify-icon>
+          <h2 className="mt-4 text-xl font-bold">Session not ready</h2>
+          <p className="mt-2 opacity-70">
+            Convex auth hasn&apos;t finished syncing. Refresh the page or sign out and back in.
+          </p>
         </div>
       </div>
     )

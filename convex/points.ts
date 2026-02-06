@@ -1,5 +1,6 @@
 import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
+import { requireAdmin } from './helpers'
 
 // ============ TYPES ============
 export type PointTransactionType =
@@ -283,14 +284,9 @@ export const adminAdjustPoints = mutation({
     userId: v.id('users'),
     amount: v.number(), // Can be negative
     reason: v.string(),
-    adminId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    // Verify admin
-    const admin = await ctx.db.get(args.adminId)
-    if (!admin || admin.role !== 'admin') {
-      throw new ConvexError('Only admins can adjust points')
-    }
+    const admin = await requireAdmin(ctx, ['admin'])
 
     if (!Number.isInteger(args.amount) || args.amount === 0) {
       throw new ConvexError('Adjustment amount must be a non-zero integer')
@@ -301,7 +297,7 @@ export const adminAdjustPoints = mutation({
     }
 
     const now = Date.now()
-    const idempotencyKey = `admin-${args.adminId}-${now}-${Math.random()}`
+    const idempotencyKey = `admin-${admin._id}-${now}-${Math.random()}`
 
     const user = await ctx.db.get(args.userId)
     if (!user) {

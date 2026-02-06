@@ -1,29 +1,46 @@
 import { useState } from 'react'
-// useQuery and api will be used when real stats are fetched
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { showToast } from '../../lib/toast'
+import { AdminSpotify } from './AdminSpotify'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 
 interface TableStats {
   name: string
   count: number | string
-  lastUpdated?: string
+  lastUpdated?: number | null
 }
 
 export function AdminSystem() {
+  const { canUseAdminQueries } = useAdminAccess()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  // Would fetch actual stats from Convex
-  const tableStats: TableStats[] = [
-    { name: 'users', count: '—', lastUpdated: 'Just now' },
-    { name: 'channels', count: '—', lastUpdated: 'Just now' },
-    { name: 'messages', count: '—', lastUpdated: 'Just now' },
-    { name: 'threads', count: '—', lastUpdated: 'Just now' },
-    { name: 'replies', count: '—', lastUpdated: 'Just now' },
-    { name: 'categories', count: '—', lastUpdated: 'Just now' },
-    { name: 'events', count: '—', lastUpdated: 'Just now' },
-    { name: 'merchProducts', count: '—', lastUpdated: 'Just now' },
-    { name: 'merchVariants', count: '—', lastUpdated: 'Just now' },
-    { name: 'orders', count: '—', lastUpdated: 'Just now' },
+  const systemStats = useQuery(
+    api.admin.getSystemStats,
+    canUseAdminQueries ? { refreshKey } : 'skip'
+  )
+
+  const defaultTables: TableStats[] = [
+    { name: 'users', count: '—', lastUpdated: null },
+    { name: 'channels', count: '—', lastUpdated: null },
+    { name: 'messages', count: '—', lastUpdated: null },
+    { name: 'threads', count: '—', lastUpdated: null },
+    { name: 'replies', count: '—', lastUpdated: null },
+    { name: 'categories', count: '—', lastUpdated: null },
+    { name: 'events', count: '—', lastUpdated: null },
+    { name: 'merchProducts', count: '—', lastUpdated: null },
+    { name: 'merchVariants', count: '—', lastUpdated: null },
+    { name: 'merchOrders', count: '—', lastUpdated: null },
   ]
+
+  const tableStats: TableStats[] = systemStats?.tables?.length
+    ? systemStats.tables.map((table) => ({
+        name: table.name,
+        count: table.count,
+        lastUpdated: table.lastUpdated ?? null,
+      }))
+    : defaultTables
 
   const systemMetrics = {
     uptime: '99.9%',
@@ -33,9 +50,13 @@ export function AdminSystem() {
   }
 
   const handleRefreshStats = async () => {
+    if (!canUseAdminQueries) {
+      showToast('Session not ready yet', { type: 'error' })
+      return
+    }
     setIsRefreshing(true)
-    // Simulate refresh
-    await new Promise(r => setTimeout(r, 1000))
+    setRefreshKey((prev) => prev + 1)
+    await new Promise(r => setTimeout(r, 600))
     setIsRefreshing(false)
     showToast('Stats refreshed', { type: 'success' })
   }
@@ -43,6 +64,11 @@ export function AdminSystem() {
   const handleClearCache = () => {
     if (!confirm('Clear all cached data? This may temporarily slow down the app.')) return
     showToast('Cache cleared', { type: 'success' })
+  }
+
+  const formatTimestamp = (value?: number | null) => {
+    if (!value) return '—'
+    return new Date(value).toLocaleString()
   }
 
   return (
@@ -133,10 +159,20 @@ export function AdminSystem() {
               <div className="table-info">
                 <span className="table-name">{table.name}</span>
                 <span className="table-count">{table.count} rows</span>
+                <span className="table-updated">Updated: {formatTimestamp(table.lastUpdated)}</span>
               </div>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Spotify Tools */}
+      <div className="spotify-section">
+        <div className="section-header">
+          <iconify-icon icon="solar:music-note-4-linear" width="20" height="20"></iconify-icon>
+          <h3>Spotify Sync</h3>
+        </div>
+        <AdminSpotify />
       </div>
 
       {/* Actions */}
@@ -167,8 +203,8 @@ export function AdminSystem() {
             <div className="action-content">
               <h4>Reindex Search</h4>
               <p>Rebuild search indexes for faster queries</p>
-              <button className="action-btn" onClick={() => showToast('Reindexing started', { type: 'success' })}>
-                Start Reindex
+              <button className="action-btn" disabled>
+                Coming soon
               </button>
             </div>
           </div>
@@ -180,8 +216,8 @@ export function AdminSystem() {
             <div className="action-content">
               <h4>Cleanup Old Data</h4>
               <p>Remove expired sessions, old logs, and temporary files</p>
-              <button className="action-btn warning" onClick={() => showToast('Cleanup scheduled', { type: 'success' })}>
-                Run Cleanup
+              <button className="action-btn warning" disabled>
+                Coming soon
               </button>
             </div>
           </div>
@@ -257,6 +293,7 @@ export function AdminSystem() {
 
         .health-section,
         .database-section,
+        .spotify-section,
         .actions-section,
         .log-section {
           background: #111;
@@ -394,6 +431,12 @@ export function AdminSystem() {
           color: #606060;
         }
 
+        .table-updated {
+          font-size: 11px;
+          color: #4a4a4a;
+          margin-top: 2px;
+        }
+
         .actions-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -455,6 +498,11 @@ export function AdminSystem() {
 
         .action-btn:hover {
           background: #2a2a2a;
+        }
+
+        .action-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
 
         .action-btn.warning {

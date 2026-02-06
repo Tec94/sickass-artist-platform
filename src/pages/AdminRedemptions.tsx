@@ -1,22 +1,24 @@
 import { useMutation, useQuery } from 'convex/react'
 import { useState } from 'react'
 import { api } from '../../convex/_generated/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAdminAccess } from '../hooks/useAdminAccess'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const AdminRedemptions = () => {
-  const { user, isLoading } = useAuth()
-  const pending = useQuery(api.rewards.getPendingRedemptions)
+  const { user, isAdmin, isReady, hasValidToken, hasAdminAccess, canUseAdminQueries, tokenMatchesUser } = useAdminAccess()
+  const pending = useQuery(api.rewards.getPendingRedemptions, canUseAdminQueries ? {} : 'skip')
   const approveMutation = useMutation(api.rewards.adminApproveRedemption)
   const [trackingId, setTrackingId] = useState<Record<string, string>>({})
 
-  if (isLoading) return <div className="animate-pulse text-white p-8">Loading...</div>
+  if (!isReady) return <div className="animate-pulse text-white p-8">Session syncing...</div>
+
+  if (!hasValidToken || !tokenMatchesUser) return <div className="text-white p-8">Session not ready</div>
 
   if (!user) {
     return <div className="text-white p-8">Sign in required</div>
   }
 
-  if (user.role !== 'admin') {
+  if (!hasAdminAccess || !isAdmin) {
     return <div className="text-white p-8">Admin access required</div>
   }
 
@@ -26,7 +28,6 @@ export const AdminRedemptions = () => {
     try {
       await approveMutation({
         redemptionId,
-        adminId: user._id,
         trackingId: trackingId[String(redemptionId)] || undefined,
       })
       alert('Approved!')

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { MerchFilters } from '../../hooks/useMerchFilters'
 import { Doc } from '../../../convex/_generated/dataModel'
 import { getMerchSlugCandidates } from '../../utils/merchImages'
+import { resolveMerchManifestEntries } from '../../utils/merchManifestClient'
 
 type EnrichedProduct = Doc<'merchProducts'> & {
   variants: Doc<'merchVariants'>[]
@@ -50,6 +51,10 @@ export function ProductGrid({
   const merchManifestEntries = useQuery(
     api.merchManifest.getMerchImageManifestEntries,
     manifestSlugs.length ? { slugs: manifestSlugs } : 'skip'
+  )
+  const resolvedManifestEntries = useMemo(
+    () => resolveMerchManifestEntries(manifestSlugs, merchManifestEntries?.entries ?? null),
+    [manifestSlugs, merchManifestEntries?.entries]
   )
 
   // Reset accumulation when filters change
@@ -124,7 +129,7 @@ export function ProductGrid({
             product={product}
             onAddToCart={onAddToCart}
             loading={result === undefined}
-            manifest={merchManifestEntries?.entries ?? null}
+            manifest={resolvedManifestEntries}
           />
         ))}
       </div>
