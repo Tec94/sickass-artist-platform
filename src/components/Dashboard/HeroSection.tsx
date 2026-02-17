@@ -18,7 +18,7 @@ export const HeroSection = () => {
   }, [])
 
   return (
-    <div className="animate-fade-in mb-8 rounded-xl border border-white/5 overflow-hidden bg-zinc-950 shadow-2xl">
+    <div className="animate-fade-in mb-8 overflow-hidden bg-zinc-950">
       {/* Hero Section - Premio Lo Nuestro Style */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         {/* Carousel Background */}

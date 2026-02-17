@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroSection } from '../components/Dashboard/HeroSection'
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import RelicAssemblyScroll from '../components/Landing/RelicAssemblyScroll'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { LiveLeaderboard } from '../components/Leaderboard/LiveLeaderboard'
 import { SongRankingWidget } from '../components/Leaderboard/SongRankingWidget'
@@ -48,6 +50,50 @@ export const Dashboard = () => {
   const [period, setPeriod] = useState<LeaderboardPeriod>('weekly')
   const { t } = useTranslation()
   const [promoCopiedAt, setPromoCopiedAt] = useState<number | null>(null)
+
+  // --- Frame-scroll hero setup ---
+  const pageRef = useRef<HTMLDivElement>(null)
+  const heroScrollSectionRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLElement>(null)
+
+  // Find the App's actual scroll container on mount
+  useEffect(() => {
+    const el = document.querySelector('[data-scroll-container]') as HTMLElement | null
+    if (el) {
+      ;(scrollContainerRef as React.MutableRefObject<HTMLElement | null>).current = el
+    }
+  }, [])
+
+  // Track only the frame-scroll hero section so keyframes complete before normal page flow.
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroScrollSectionRef,
+    container: scrollContainerRef as React.RefObject<HTMLElement>,
+    offset: ['start start', 'end end'],
+  })
+
+  // --- Text overlay transforms (threshold-based snap transitions) ---
+  // Text 1: visible at 0%, fades out by ~5%.
+  const opacity1 = useTransform(heroScrollProgress, [0, 0.04, 0.05], [1, 1, 0])
+  const y1 = useTransform(heroScrollProgress, [0, 0.05], [0, -20])
+
+  // Text 2: appears around 25%, fades out by ~30%.
+  const opacity2 = useTransform(heroScrollProgress, [0.245, 0.25, 0.29, 0.3], [0, 1, 1, 0])
+  const x2 = useTransform(heroScrollProgress, [0.245, 0.26], [-30, 0])
+
+  // Text 3: appears around 50%, fades out by ~55%.
+  const opacity3 = useTransform(heroScrollProgress, [0.495, 0.5, 0.54, 0.55], [0, 1, 1, 0])
+  const x3 = useTransform(heroScrollProgress, [0.495, 0.51], [30, 0])
+
+  // Text 4: appears around 75% and stays until the end of the frame sequence.
+  const opacity4 = useTransform(heroScrollProgress, [0.745, 0.75, 1], [0, 1, 1])
+  const scale4 = useTransform(heroScrollProgress, [0.745, 0.76], [0.95, 1])
+
+  // Add easing/inertia so frames don't halt instantly when scroll input stops.
+  const frameScrollProgress = useSpring(heroScrollProgress, {
+    stiffness: 180,
+    damping: 34,
+    mass: 0.35,
+  })
 
   // Use the optimized dashboard data query
   const dashboardData = useQuery(api.dashboard.getDashboardData)
@@ -155,16 +201,74 @@ export const Dashboard = () => {
   }, [promoCopiedAt])
 
   return (
-    <div className="animate-fade-in pb-20">
-      {/* Hero Section - Always renders first */}
-      <ErrorBoundary level="section" componentName="HeroSection">
-        <HeroSection />
-      </ErrorBoundary>
+    <div ref={pageRef} className="animate-fade-in pb-20">
+      {/* ═══ Frame-Scroll Hero Section ═══ */}
+      <div ref={heroScrollSectionRef} className="relative" style={{ height: '400vh' }}>
+        <div className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-[#050505]">
+          <RelicAssemblyScroll scrollYProgress={frameScrollProgress} />
+          {/* ─── Text Overlays (bound to sticky hero only) ─── */}
+          <motion.div
+            style={{ pointerEvents: 'none' }}
+            className="absolute inset-0 z-40 flex flex-col justify-center items-center p-6 md:p-12"
+          >
+            <motion.div
+              style={{ opacity: opacity1, y: y1 }}
+              className="absolute inset-0 flex items-center justify-center text-center"
+            >
+              <h1 className="text-4xl md:text-7xl font-bold tracking-tighter text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                PRIVATE SUITE.
+              </h1>
+            </motion.div>
 
-      {/* Widgets Grid - New Layout */}
+            <motion.div
+              style={{ opacity: opacity2, x: x2 }}
+              className="absolute inset-0 flex items-center justify-start px-[10%] md:px-[15%]"
+            >
+              <div className="max-w-md space-y-4">
+                <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white/90">THE RELICS RETURN.</h2>
+                <p className="text-lg md:text-xl text-white/60 leading-relaxed font-light">
+                  Armor forged in silence. <br />A legacy reassembled piece by piece.
+                </p>
+                <div className="h-px w-24 bg-gradient-to-r from-red-800 to-transparent opacity-50" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              style={{ opacity: opacity3, x: x3 }}
+              className="absolute inset-0 flex items-center justify-end px-[10%] md:px-[15%] text-right"
+            >
+              <div className="max-w-md space-y-4 flex flex-col items-end">
+                <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white/90">STEEL, SIN, AND GRACE.</h2>
+                <p className="text-lg md:text-xl text-white/60 leading-relaxed font-light">
+                  From the shadows of the old world <br />into the neon glare of the new.
+                </p>
+                <div className="h-px w-24 bg-gradient-to-l from-blue-900 to-transparent opacity-50" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              style={{ opacity: opacity4, scale: scale4 }}
+              className="absolute inset-0 flex flex-col items-center justify-center space-y-8"
+            >
+              <h2 className="text-5xl md:text-8xl font-bold tracking-tighter text-white/95 drop-shadow-[0_0_30px_rgba(255,255,255,0.15)] text-center">
+                LISTEN NOW.
+              </h2>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ═══ Original Carousel Hero (now Section 2) ═══ */}
+      <div className="w-full pt-16">
+        <ErrorBoundary level="section" componentName="HeroSection">
+          <HeroSection />
+        </ErrorBoundary>
+      </div>
+
+      {/* Widgets Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          
+
           {/* Next Event Widget */}
           <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col group hover:border-amber-500/30 transition-colors">
             <div className="flex items-center justify-between mb-4">
@@ -360,6 +464,7 @@ export const Dashboard = () => {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   )

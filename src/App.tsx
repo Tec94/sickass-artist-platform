@@ -97,12 +97,14 @@ const OrderDetail = lazy(() => import('./pages/OrderDetail').then(m => ({
     </MerchErrorBoundary>
   )
 })))
+
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminRedemptions = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRedemptions })))
 const AdminRewards = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRewards })))
 const AdminPoints = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminPoints })))
 
 const Ranking = lazy(() => import('./pages/Ranking.tsx').then(m => ({ default: m.Ranking })))
+const PrivateSuite = lazy(() => import('./pages/PrivateSuite').then(m => ({ default: m.PrivateSuite })))
 
 import Footer from './components/Footer'
 
@@ -126,7 +128,7 @@ function AppContent() {
                     overflow: hidden;
                   }
                 `}</style>
-                <div className="flex-1 flex flex-col overflow-auto">
+                <div className="flex-1 flex flex-col overflow-auto" data-scroll-container>
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -271,6 +273,11 @@ function AppContent() {
                 } />
 
                 <Route path="/test-errors" element={<TestErrorPage />} />
+                <Route path="/private-suite" element={
+                   <Suspense fallback={<div className="bg-[#050505] min-h-screen text-white flex items-center justify-center">Loading Suite...</div>}>
+                      <PrivateSuite />
+                   </Suspense>
+                } />
                 
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
