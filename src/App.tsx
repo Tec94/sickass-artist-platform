@@ -28,6 +28,7 @@ import { OfflineIndicator } from './components/OfflineIndicator'
 import { ConflictModal } from './components/ConflictModal'
 import { ConsentBanner } from './components/ConsentBanner'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
+import { Toaster } from 'sonner'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
@@ -128,7 +129,7 @@ function AppContent() {
                     overflow: hidden;
                   }
                 `}</style>
-                <div className="flex-1 flex flex-col overflow-auto" data-scroll-container>
+                <div className="relative flex-1 flex flex-col overflow-auto" data-scroll-container>
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -311,6 +312,9 @@ function AppContent() {
 
         {/* Consent Banner */}
         <ConsentBanner />
+        
+        {/* Toast Notifications */}
+        <Toaster position="bottom-right" theme="dark" closeButton richColors />
       </>
     )
 }

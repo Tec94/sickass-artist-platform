@@ -41,27 +41,27 @@ export const LiveLeaderboard = ({
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col h-full">
+    <div className="bg-[#111A24]/88 border border-[#2A3541] rounded-xl overflow-hidden flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-zinc-800 bg-zinc-900/50">
+      <div className="p-6 border-b border-[#2A3541] bg-[#0D151F]/70">
         <div className="flex flex-col gap-4 mb-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-display font-bold text-white uppercase flex items-center gap-2 whitespace-nowrap">
-              <iconify-icon icon="solar:cup-star-bold" class="text-yellow-500 flex-shrink-0" width="22" height="22"></iconify-icon> 
+            <h3 className="text-xl font-display font-semibold text-[#E8E1D5] uppercase flex items-center gap-2 whitespace-nowrap">
+              <iconify-icon icon="solar:cup-star-bold" class="text-[#C7A97A] flex-shrink-0" width="22" height="22"></iconify-icon> 
               <span className="truncate">{t('ranking.liveRankings')}</span>
             </h3>
           </div>
           
           {showTabs && (
-            <div className="flex bg-zinc-800 rounded-lg p-1 w-full">
+            <div className="flex bg-[#0A1118] border border-[#2A3541] rounded-lg p-1 w-full">
               {periodOptions.map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
-                  className={`flex-1 py-1.5 text-xs font-bold uppercase rounded-md transition whitespace-nowrap ${
+                  className={`flex-1 py-1.5 text-xs font-semibold uppercase rounded-md transition-colors whitespace-nowrap ${
                     activePeriod === p 
-                      ? 'bg-zinc-700 text-white shadow-sm' 
-                      : 'text-zinc-500 hover:text-zinc-300'
+                      ? 'bg-[#A62B3A] text-[#E8E1D5] shadow-[0_8px_18px_rgba(166,43,58,0.26)]' 
+                      : 'text-[#8FA0B2] hover:text-[#E8E1D5] hover:bg-[#1A2531]'
                   }`}
                 >
                   {p === 'allTime' ? t('ranking.allTime') : t(`events.${p === 'weekly' ? 'thisWeek' : 'thisMonth'}`)}
@@ -70,46 +70,46 @@ export const LiveLeaderboard = ({
             </div>
           )}
         </div>
-        <p className="text-zinc-400 text-sm flex items-center gap-2">
+        <p className="text-[#9AA7B5] text-sm flex items-center gap-2">
           <iconify-icon icon="solar:calendar-linear" width="14" height="14"></iconify-icon> {t('ranking.topSongsFor')} {getPeriodLabel()}
         </p>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700">
+      <div className="flex-1 overflow-y-auto">
         {leaderboard === undefined ? (
           // Loading State
           <div className="p-4 space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-zinc-800/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-16 bg-[#1A2531]/70 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : leaderboard.length === 0 ? (
           // Empty State
-          <div className="flex flex-col items-center justify-center h-64 text-zinc-500 p-6 text-center">
+          <div className="flex flex-col items-center justify-center h-64 text-[#7D8EA1] p-6 text-center">
             <iconify-icon icon="solar:music-library-2-bold-duotone" width="48" height="48" class="mb-4 opacity-20"></iconify-icon>
-            <p className="font-bold">{t('ranking.noRankingsYet')}</p>
+            <p className="font-semibold text-[#A8B5C3]">{t('ranking.noRankingsYet')}</p>
             <p className="text-sm mt-1">{t('ranking.beFirstToSubmit')}</p>
           </div>
         ) : (
           // List
-          <div className="divide-y divide-zinc-800/50">
+          <div className="divide-y divide-[#25313D]">
             {leaderboard.map((song, index) => (
               <motion.div
                 key={`${song.spotifyTrackId}-${period}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center gap-4 p-4 hover:bg-zinc-800/30 transition group ${
-                  index === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : ''
+                className={`flex items-center gap-4 p-4 transition-colors ${
+                  index === 0 ? 'bg-gradient-to-r from-[#C7A97A]/12 to-transparent' : ''
                 }`}
               >
                 {/* Rank */}
                 <div className={`
                   w-8 text-center font-display font-bold text-xl flex-shrink-0
-                  ${index === 0 ? 'text-yellow-500' : 
-                    index === 1 ? 'text-zinc-300' : 
-                    index === 2 ? 'text-amber-700' : 'text-zinc-600'}
+                  ${index === 0 ? 'text-[#D1B281]' : 
+                    index === 1 ? 'text-[#C7D2DE]' : 
+                    index === 2 ? 'text-[#A88658]' : 'text-[#6D7E8F]'}
                 `}>
                   {index + 1}
                 </div>
@@ -124,7 +124,7 @@ export const LiveLeaderboard = ({
                     }`}
                   />
                   {index === 0 && (
-                    <div className="absolute -top-2 -right-2 bg-yellow-500 text-black p-1 rounded-full shadow-lg flex items-center justify-center">
+                    <div className="absolute -top-2 -right-2 bg-[#C7A97A] text-[#111A24] p-1 rounded-full shadow-lg flex items-center justify-center">
                       <iconify-icon icon="solar:medal-ribbon-bold" width="12" height="12"></iconify-icon>
                     </div>
                   )}
@@ -132,18 +132,18 @@ export const LiveLeaderboard = ({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className={`font-bold text-white truncate ${index === 0 ? 'text-lg' : 'text-sm'}`}>
+                  <h4 className={`font-semibold text-[#E8E1D5] truncate ${index === 0 ? 'text-lg' : 'text-sm'}`}>
                     {song.songTitle}
                   </h4>
-                  <p className="text-zinc-400 text-xs truncate">{song.songArtist}</p>
+                  <p className="text-[#8EA0B3] text-xs truncate">{song.songArtist}</p>
                 </div>
 
                 {/* Score */}
                 <div className="text-right flex-shrink-0">
-                  <div className="text-white font-bold font-mono">
+                  <div className="text-[#E8E1D5] font-semibold font-mono">
                     {song.totalScore.toFixed(1)}
                   </div>
-                  <div className="text-zinc-500 text-[10px] uppercase tracking-wider">
+                  <div className="text-[#6E8093] text-[10px] uppercase tracking-wider">
                     {t('ranking.score')}
                   </div>
                 </div>
@@ -154,8 +154,8 @@ export const LiveLeaderboard = ({
       </div>
       
       {/* Footer */}
-      <div className="p-4 border-t border-zinc-800 bg-zinc-900/80 text-center">
-        <p className="text-xs text-zinc-500 flex items-center justify-center gap-2">
+      <div className="p-4 border-t border-[#2A3541] bg-[#0D151F]/75 text-center">
+        <p className="text-xs text-[#75879A] flex items-center justify-center gap-2">
           <iconify-icon icon="solar:chart-2-linear" width="12" height="12"></iconify-icon> {t('ranking.updateHourly')}
         </p>
       </div>

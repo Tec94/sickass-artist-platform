@@ -211,10 +211,10 @@ export function Merch() {
                     <button 
                       key={cat}
                       onClick={() => setActiveCategory(cat === 'All Products' ? '' : cat)}
-                      className={`whitespace-nowrap px-4 py-2 border text-xs font-bold uppercase ${
+                      className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase transition-all ${
                         (cat === 'All Products' && !activeCategory) || activeCategory === cat 
-                        ? 'bg-red-600 text-white border-red-600' 
-                        : 'bg-black text-gray-400 border-neutral-800'
+                        ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' 
+                        : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700 hover:text-white'
                       }`}
                     >
                       {categoryLabels[cat] || cat}
@@ -234,12 +234,17 @@ export function Merch() {
                   ))}
                 </div>
               ) : (
-                <div className="py-20 text-center border border-dashed border-neutral-800">
-                  <p className="text-gray-500 text-lg">{t('store.noProductsFound')}</p>
+                <div className="py-32 text-center border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
+                  <iconify-icon icon="solar:box-minimalistic-broken" width="48" height="48" class="text-zinc-600 mb-4 mx-auto block"></iconify-icon>
+                  <h3 className="text-white font-bold text-xl mb-2">{t('store.noProductsFound')}</h3>
+                  <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-6">
+                    {t('store.tryAdjustingFilters')}
+                  </p>
                   <button 
-                    onClick={() => { setMaxPrice(200); setActiveCategory(''); }} 
-                    className="mt-4 text-sm text-red-500 hover:text-red-400 underline"
+                    onClick={() => { setMaxPrice(200); setActiveCategory(''); setStockFilter('all'); setSelectedCollections([]); }} 
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
                   >
+                    <iconify-icon icon="solar:restart-bold" width="14"></iconify-icon>
                     {t('common.resetFilters')}
                   </button>
                 </div>

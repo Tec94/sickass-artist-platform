@@ -1,7 +1,7 @@
 {
   "name": "sickass-artist-platform",
   "private": true,
-  "version": "1.6.08",
+  "version": "1.6.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,17 +17,19 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@google/model-viewer": "^4.1.0",
+    "@gsap/react": "^2.1.0",
     "@types/react-window": "^1.8.8",
     "convex": "^1.31.2",
     "framer-motion": "^12.23.26",
     "gsap": "^3.12.5",
-    "@gsap/react": "^2.1.0",
     "idb": "^7.1.1",
     "lucide-react": "^0.471.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
-    "react-window": "^2.2.3"
+    "react-window": "^2.2.3",
+    "sonner": "^2.0.7",
+    "svgo": "^4.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

@@ -132,6 +132,30 @@ export const es = {
         exploreGallery: 'Explorar Galería',
         viewEvents: 'Ver Eventos',
         followUs: 'Síguenos:',
+        liveSignalScreensTitle: 'Pantallas de Señal en Vivo',
+        liveSignalScreensSubtitle: 'Anuncios, lanzamientos y eventos en un carril ceremonial.',
+        fallbackThreadTitle: 'Nuevo hilo del Wolfpack',
+        fallbackAnnouncementTitle: 'Despacho de señal lunar',
+        fallbackAnnouncementAuthor: 'Heraldo del Wolfpack',
+        hero: {
+            reducedEyebrow: 'Señal Lunar',
+            reducedTitle: 'Entra en la Bóveda Lunar',
+            reducedBody: 'Una cámara ceremonial para que el Wolfpack se reúna, clasifique y ascienda unido.',
+            signalStatusFallback: 'Transmisión Lunar Activa',
+            beat1Title: 'Chatroom Lunar',
+            beat1Body: 'La cámara abovedada donde el Wolfpack mantiene viva la señal nocturna.',
+            beat2Label: 'Acto I',
+            beat2Title: 'Acero Bajo La Luna.',
+            beat2Body: 'Lanzamientos ceremoniales e historias reliquia forjadas bajo luz plateada.',
+            beat3Label: 'Acto II',
+            beat3Title: 'Una Manada. Un Pulso.',
+            beat3Body: 'Eventos, rankings y voces alineados en un solo ritmo noble.',
+            beat4Title: 'Únete al Chatroom',
+            beat4Body: 'Entra en la bóveda en vivo para rankings, drops y señales del Wolfpack.',
+            handoffCue: 'Continúa Al Feed En Vivo',
+            ctaSignedIn: 'Abrir Chatroom',
+            ctaSignedOut: 'Inicia Sesión Para Entrar',
+        },
     },
 
     // Search
@@ -274,7 +298,7 @@ export const es = {
 
     // Footer
     footer: {
-        tagline: 'Ropa deportiva premium para el competidor moderno.',
+        tagline: 'Rituales Wolfpack, lujo caballeresco y señales lunares en un solo reino.',
         copyright: '© 2026 ROA. Todos los derechos reservados.',
     },
 };

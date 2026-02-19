@@ -11,7 +11,7 @@ export function RankingPeriodTabs({ period, onChange }: RankingPeriodTabsProps) 
   const options: LeaderboardPeriod[] = ['weekly', 'monthly', 'allTime']
 
   return (
-    <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1 gap-1 w-full sm:w-auto">
+    <div className="flex bg-[#111A24] border border-[#2A3541] rounded-xl p-1 gap-1 w-full sm:w-auto">
       {options.map((option) => {
         const isActive = option === period
         const label =
@@ -25,10 +25,10 @@ export function RankingPeriodTabs({ period, onChange }: RankingPeriodTabsProps) 
           <button
             key={option}
             onClick={() => onChange(option)}
-            className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition ${
+            className={`flex-1 sm:flex-none px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${
               isActive
-                ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                ? 'bg-[#A62B3A] text-[#E8E1D5] shadow-[0_10px_20px_rgba(166,43,58,0.28)]'
+                : 'text-[#9AA7B5] hover:text-[#E8E1D5] hover:bg-[#1A2531]'
             }`}
           >
             {label}

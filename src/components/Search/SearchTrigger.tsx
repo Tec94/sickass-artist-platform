@@ -22,13 +22,13 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({ onClick, className
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 text-gray-400 hover:text-white hover:bg-slate-800 transition-colors ${className}`}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors ${className}`}
       aria-label="Open search"
     >
-      <iconify-icon icon="solar:magnifer-linear" width="16" height="16"></iconify-icon>
-      <span className="text-sm hidden sm:inline">Search...</span>
-      <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700 text-xs text-gray-500">
-        <iconify-icon icon="solar:command-linear" width="12" height="12"></iconify-icon>
+      <iconify-icon icon="solar:magnifer-linear" width="18" height="18"></iconify-icon>
+      <span className="text-sm hidden sm:inline font-medium">Search...</span>
+      <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] font-bold text-zinc-500">
+        <span className="text-xs">⌘</span>
         K
       </kbd>
     </button>

@@ -114,16 +114,17 @@ export function Events() {
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center border border-dashed border-zinc-800 rounded-lg">
-              <iconify-icon icon="solar:calendar-broken" class="text-6xl text-zinc-700 mb-4"></iconify-icon>
+            <div className="py-32 text-center border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
+              <iconify-icon icon="solar:calendar-broken" class="text-6xl text-zinc-700 mb-4 mx-auto block"></iconify-icon>
               <h3 className="text-white font-bold text-xl mb-2">{t('events.noResults')}</h3>
-              <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+              <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-6">
                 {t('events.noEventsMatch')}
               </p>
               <button
                 onClick={() => setFilters({ sortBy: 'asc' })}
-                className="mt-6 text-red-500 font-bold uppercase text-xs tracking-widest hover:text-red-400 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
               >
+                <iconify-icon icon="solar:restart-bold" width="14"></iconify-icon>
                 {t('common.resetFilters')}
               </button>
             </div>

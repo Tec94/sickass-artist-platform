@@ -4,6 +4,7 @@ export type AnalyticsEventName =
   | 'page_view'
   | 'page_unload'
   | 'cta_click'
+  | 'content_fallback'
   | 'like'
   | 'unlike'
   | 'follow'
@@ -257,6 +258,15 @@ export const trackPageView = (pageName: string) => {
 
 export const trackCTA = (ctaName: string, section: string) => {
   analytics.trackEvent('cta_click', { cta: ctaName, section })
+}
+
+export const trackContentFallback = (section: string, fallbackCounts: Record<string, number>) => {
+  const fallbackTotal = Object.values(fallbackCounts).reduce((sum, count) => sum + count, 0)
+  analytics.trackEvent('content_fallback', {
+    section,
+    fallback_total: fallbackTotal,
+    ...fallbackCounts,
+  })
 }
 
 export const trackLike = (contentType: string, contentId: string) => {

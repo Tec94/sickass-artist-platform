@@ -132,6 +132,30 @@ export const en = {
         exploreGallery: 'Explore Gallery',
         viewEvents: 'View Events',
         followUs: 'Follow us:',
+        liveSignalScreensTitle: 'Live Signal Screens',
+        liveSignalScreensSubtitle: 'Announcements, drops, and events in one ceremonial rail.',
+        fallbackThreadTitle: 'Wolfpack thread incoming',
+        fallbackAnnouncementTitle: 'Moonlit signal dispatch',
+        fallbackAnnouncementAuthor: 'Wolfpack Herald',
+        hero: {
+            reducedEyebrow: 'Moonlit Signal',
+            reducedTitle: 'Enter The Moonlit Vault',
+            reducedBody: 'A ceremonial chamber for the Wolfpack to gather, rank, and rise together.',
+            signalStatusFallback: 'Moonlit Transmission Active',
+            beat1Title: 'Moonlit Chatroom',
+            beat1Body: 'The vaulted chamber where the Wolfpack keeps the night\'s signal alive.',
+            beat2Label: 'Act I',
+            beat2Title: 'Steel In Moonlight.',
+            beat2Body: 'Ceremonial drops and relic stories forged under quiet silver light.',
+            beat3Label: 'Act II',
+            beat3Title: 'One Pack. One Pulse.',
+            beat3Body: 'Events, rankings, and voices aligned in a single noble rhythm.',
+            beat4Title: 'Join The Chatroom',
+            beat4Body: 'Enter the live vault for rankings, drops, and Wolfpack signals.',
+            handoffCue: 'Continue To The Live Feed',
+            ctaSignedIn: 'Open Chatroom',
+            ctaSignedOut: 'Sign In to Enter Chatroom',
+        },
     },
 
     // Search
@@ -274,7 +298,7 @@ export const en = {
 
     // Footer
     footer: {
-        tagline: 'Premium athletic wear for the modern competitor.',
+        tagline: 'Wolfpack rituals, knighted luxury, and moonlit signals in one realm.',
         copyright: '© 2026 ROA. All rights reserved.',
     },
 };

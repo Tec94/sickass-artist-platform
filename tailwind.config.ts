@@ -1,44 +1,90 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./roa-wolves/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}', './roa-wolves/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#e02d75', // ROA Scarlet Red
-          hover: '#c02663', // Darker shade
-          light: '#f180a0', // Primary Accent
+        brand: {
+          500: '#A62B3A',
+          600: '#7F1F2C',
+          700: '#5F1621',
+          light: '#C97A87',
         },
-        surface: {
-          dark: '#121212', // ROA Surface Dark
-          tonal: '#25181b', // ROA Tonal Overlay
+        primary: {
+          DEFAULT: '#A62B3A',
+          hover: '#7F1F2C',
+        },
+        night: {
+          950: '#04070B',
+          900: '#0A1118',
+          800: '#111A24',
+          700: '#1A2531',
+        },
+        steel: {
+          300: '#C5D0DA',
+          400: '#9AA7B5',
+          500: '#7B8999',
+          600: '#5A697A',
+        },
+        crimson: {
+          400: '#C97A87',
+          500: '#A62B3A',
+          600: '#7F1F2C',
+        },
+        bg: {
+          app: '#04070B',
+          base: '#0A1118',
+          surface: '#111A24',
+          elevated: '#1A2531',
+        },
+        border: {
+          subtle: 'rgba(154, 167, 181, 0.25)',
+          DEFAULT: '#2A3541',
+        },
+        text: {
+          primary: '#E8E1D5',
+          secondary: '#9AA7B5',
+          tertiary: '#667789',
+        },
+        success: {
+          DEFAULT: '#5CA38C',
+          dim: 'rgba(92, 163, 140, 0.15)',
+        },
+        warning: {
+          DEFAULT: '#C4A26F',
+          dim: 'rgba(196, 162, 111, 0.14)',
+        },
+        danger: {
+          DEFAULT: '#A95B69',
+          dim: 'rgba(169, 91, 105, 0.14)',
+        },
+        info: {
+          DEFAULT: '#8EA0B3',
+          dim: 'rgba(142, 160, 179, 0.14)',
         },
         neutral: {
-          functional: '#8b8b8b', // ROA Functional Neutral
+          functional: '#8b8b8b',
         },
         background: {
-          dark: '#000000', // Deep Black
-          charcoal: '#121212', // Surface Dark
-          paper: '#1A1A1A', // Slightly lighter
+          dark: '#04070B',
+          charcoal: '#0A1118',
+          paper: '#111A24',
         },
         accent: {
-          gold: '#FFD700',
-          silver: '#E5E7EB',
-          red: '#EF4444',
+          gold: '#C4A26F',
+          silver: '#B9C4D0',
+          red: '#A95B69',
         },
       },
       fontFamily: {
+        sans: ['Manrope', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
-        gothic: ['Morgh Gothic', 'UnifrakturMaguntia', 'MedievalSharp', 'serif'],
+        display: ['Cinzel', 'serif'],
+        gothic: ['Cinzel', 'Cormorant Garamond', 'serif'],
       },
       dropShadow: {
-        'scarlet': '0 0 10px rgba(224, 45, 117, 0.5)',
+        scarlet: '0 0 10px rgba(166, 43, 58, 0.5)',
       },
       animation: {
         'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
@@ -49,12 +95,12 @@ const config: Config = {
       },
       keyframes: {
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 10px rgba(224, 45, 117, 0.3)' },
-          '50%': { boxShadow: '0 0 25px rgba(224, 45, 117, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 10px rgba(166, 43, 58, 0.3)' },
+          '50%': { boxShadow: '0 0 25px rgba(166, 43, 58, 0.55)' },
         },
         'aura-glow': {
-          '0%, 100%': { filter: 'drop-shadow(0 0 5px rgba(224, 45, 117, 0.5))' },
-          '50%': { filter: 'drop-shadow(0 0 20px rgba(224, 45, 117, 0.8))' },
+          '0%, 100%': { filter: 'drop-shadow(0 0 5px rgba(166, 43, 58, 0.45))' },
+          '50%': { filter: 'drop-shadow(0 0 20px rgba(166, 43, 58, 0.75))' },
         },
         'gear-spin': {
           from: { transform: 'rotate(0deg)' },
@@ -70,15 +116,15 @@ const config: Config = {
         },
       },
       screens: {
-        'mobile': '320px',
-        'tablet': '768px',
-        'desktop': '1024px',
+        mobile: '320px',
+        tablet: '768px',
+        desktop: '1024px',
       },
       zIndex: {
         '90': '90',
         '95': '95',
         '100': '100',
-      }
+      },
     },
   },
   plugins: [],

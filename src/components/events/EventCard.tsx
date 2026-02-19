@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import type { EventItem } from '../../types/events'
 import {
   formatEventDate,
-  getSaleStatusBadge,
 } from '../../utils/eventFormatters'
 
 interface EventCardProps {
@@ -43,13 +42,12 @@ export const EventCard = memo(function EventCard({
   }, [])
 
   const handleImageLoad = useCallback(() => setImageLoaded(true), [])
-  const statusBadge = getSaleStatusBadge(event.saleStatus)
 
   return (
     <Link
       to={`/events/${event._id}`}
-      className={`group bg-zinc-950 border border-zinc-900 hover:border-red-900/50 transition-all duration-500 overflow-hidden flex ${
-        compact ? 'flex-row h-40' : 'flex-col'
+      className={`group bg-zinc-900/50 border border-zinc-800/50 hover:border-red-900/50 hover:bg-zinc-900 transition-all duration-500 overflow-hidden flex shadow-lg hover:shadow-red-900/10 ${
+        compact ? 'flex-row h-48' : 'flex-col'
       }`}
     >
       <div className={`relative overflow-hidden bg-zinc-900 ${compact ? 'w-48 h-full' : 'w-full aspect-video'}`}>
@@ -61,7 +59,7 @@ export const EventCard = memo(function EventCard({
           loading="lazy"
           onLoad={handleImageLoad}
           className={`w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
+             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
         <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest shadow-2xl z-10">
@@ -74,14 +72,27 @@ export const EventCard = memo(function EventCard({
           <div className="text-red-500 font-bold text-[10px] uppercase tracking-[0.2em]">
             {formatEventDate(event.startAtUtc, timezone)}
           </div>
-          <span className={`text-[9px] font-bold uppercase px-2 py-0.5 border ${
-            event.saleStatus === 'on_sale' ? 'border-green-900/50 text-green-500' : 'border-zinc-800 text-zinc-500'
-          }`}>
-            {event.saleStatus === 'on_sale' ? 'Available' : statusBadge.text}
-          </span>
         </div>
+        
+        {/* Ticket Progress Bar */}
+        {event.saleStatus === 'on_sale' && (
+          <div className="mb-4">
+             <div className="flex justify-between text-[10px] uppercase font-bold tracking-wider mb-1.5">
+               <span className="text-zinc-500">Tickets Available</span>
+               <span className={event.availablePercent < 20 ? 'text-red-500' : 'text-zinc-400'}>
+                 {event.availablePercent}%
+               </span>
+             </div>
+             <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+               <div 
+                 className={`h-full rounded-full ${event.availablePercent < 20 ? 'bg-red-600' : 'bg-zinc-600'}`} 
+                 style={{ width: `${event.availablePercent}%` }}
+               ></div>
+             </div>
+          </div>
+        )}
 
-        <h3 className="text-xl font-display font-bold text-white mb-3 group-hover:text-red-500 transition-colors line-clamp-1">
+        <h3 className="text-xl font-display font-bold text-white mb-2 group-hover:text-red-500 transition-colors line-clamp-1">
           {event.title}
         </h3>
 

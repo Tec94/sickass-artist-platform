@@ -1,5 +1,17 @@
 import { query } from "./_generated/server"
 
+const DASHBOARD_EXPERIENCE_FLAG_KEYS = {
+    hardeningV1: "dashboard_cinematic_hardening_v1",
+    headerCollapseV1: "dashboard_header_cinematic_collapse_v1",
+    contentHygieneV1: "dashboard_content_hygiene_v1",
+} as const
+
+const DASHBOARD_EXPERIENCE_DEFAULTS = {
+    hardeningV1: false,
+    headerCollapseV1: true,
+    contentHygieneV1: false,
+} as const
+
 /**
  * Optimized dashboard data query
  * Returns all data needed for the dashboard in a single query
@@ -214,6 +226,27 @@ export const getQuickStats = query({
             activeProductCount: products.length,
             activeThreadCount: threads.length,
             totalUserCount: users.length,
+        }
+    },
+})
+
+export const getDashboardExperienceFlags = query({
+    args: {},
+    handler: async (ctx) => {
+        const entries = await Promise.all(
+            Object.entries(DASHBOARD_EXPERIENCE_FLAG_KEYS).map(async ([key, flagKey]) => {
+                const row = await ctx.db
+                    .query("adminFeatureFlags")
+                    .withIndex("by_key", (q) => q.eq("key", flagKey))
+                    .first()
+
+                return [key, Boolean(row?.enabled)] as const
+            }),
+        )
+
+        return {
+            ...DASHBOARD_EXPERIENCE_DEFAULTS,
+            ...Object.fromEntries(entries),
         }
     },
 })

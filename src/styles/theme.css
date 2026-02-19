@@ -1,47 +1,81 @@
 :root {
-  --color-primary: #dc2626; /* Refined scarlet */
-  --color-bg: #050505;
-  --color-card-bg: #0a0a0a;
-  --color-card-border: #171717;
-  --color-text-main: #e5e5e5;
-  --color-text-dim: #737373;
-  --color-red-dim: #450a0a;
-  
-  /* Store-specific monospace font */
-  --font-store: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  
-  --transition-standard: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Hybrid Night + Crimson contract */
+  --color-primary: #A62B3A;
+  --color-primary-hover: #7F1F2C;
+
+  --color-bg: #04070B;
+  --color-bg-base: #0A1118;
+  --color-card-bg: #111A24;
+  --color-card-border: #2A3541;
+
+  --color-text-main: #E8E1D5;
+  --color-text-dim: #9AA7B5;
+  --color-text-muted: #667789;
+
+  --color-red-dim: #2A1017;
+
+  --glass-premium-blur: 14px;
+  --glass-hero-bg: linear-gradient(142deg, rgba(12, 19, 28, 0.8), rgba(4, 9, 14, 0.68));
+  --glass-hero-border: rgba(123, 143, 162, 0.44);
+  --glass-hero-shadow: 0 16px 40px rgba(1, 4, 8, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-hero-text: #afbfce;
+  --glass-promo-shell-bg: linear-gradient(136deg, rgba(15, 24, 35, 0.92), rgba(5, 10, 16, 0.82));
+  --glass-promo-panel-bg: linear-gradient(180deg, rgba(9, 15, 22, 0.86), rgba(5, 9, 14, 0.96));
+
+  /* Backward compatibility aliases */
+  --color-brand-500: var(--color-primary);
+  --color-brand-600: var(--color-primary-hover);
+  --color-bg-app: var(--color-bg);
+  --color-bg-surface: var(--color-card-bg);
+
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-store: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --transition-standard: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   --animation-stagger: 0.1s;
 }
 
-/* Base Styles */
 * {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
   background-color: var(--color-bg);
   color: var(--color-text-main);
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+  font-family: var(--font-body);
+  color-scheme: dark;
 }
 
-h1, h2, h3, h4, h5, h6, .display-text {
-  font-family: 'Space Grotesk', sans-serif;
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scarlet Glow Utilities */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display-text {
+  font-family: var(--font-display);
+}
+
 .glow-text {
-  text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+  text-shadow: 0 0 14px rgba(166, 43, 58, 0.45);
 }
 
 .glow-border {
-  box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 0 18px rgba(166, 43, 58, 0.28);
 }
 
-/* Flashlight Effect Utility */
 .flashlight-container {
   position: relative;
 }
@@ -51,15 +85,14 @@ h1, h2, h3, h4, h5, h6, .display-text {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(220, 38, 38, 0.05),
-    transparent 40%
+    560px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(166, 43, 58, 0.045),
+    transparent 42%
   );
   z-index: 0;
   pointer-events: none;
 }
 
-/* Global Animations */
 [data-animate] {
   opacity: 0;
   filter: blur(10px);
@@ -71,7 +104,7 @@ h1, h2, h3, h4, h5, h6, .display-text {
 
 [data-animate].animate-in {
   opacity: 1;
-  filter: blur(0px);
+  filter: blur(0);
   transform: translateY(0);
 }
 
@@ -99,7 +132,6 @@ h1, h2, h3, h4, h5, h6, .display-text {
   filter: blur(0);
 }
 
-/* Border Beam Effect */
 .border-beam {
   position: relative;
   overflow: hidden;
@@ -129,24 +161,12 @@ h1, h2, h3, h4, h5, h6, .display-text {
 }
 
 @keyframes border-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text-main);
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -156,5 +176,6 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
