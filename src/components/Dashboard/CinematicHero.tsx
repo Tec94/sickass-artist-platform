@@ -82,7 +82,6 @@ const getTimeline = (variant: CinematicHeroVariant): HeroTimeline => {
 export const CinematicHero = ({
   assets,
   onPrimaryCta,
-  signalText,
   isSignedIn = false,
   variant = 'baseline',
   copy,
@@ -345,7 +344,6 @@ export const CinematicHero = ({
           progress={copyProgressMapped}
           reducedMotion={isReduced}
           crest={assets.crest}
-          signalText={signalText}
           copy={mergedCopy}
           ctaLabel={ctaLabel}
           ctaHref={ctaHref}

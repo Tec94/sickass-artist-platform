@@ -27,7 +27,6 @@ type HeroCopyBeatsProps = {
   progress: MotionValue<number>
   reducedMotion: boolean
   crest: string
-  signalText?: string
   copy: HeroNarrativeCopy
   ctaLabel: string
   ctaHref: string
@@ -51,7 +50,6 @@ export const HeroCopyBeats = ({
   progress,
   reducedMotion,
   crest,
-  signalText,
   copy,
   ctaLabel,
   ctaHref,
@@ -107,10 +105,6 @@ export const HeroCopyBeats = ({
       className="dashboard-hero-copy pointer-events-none absolute inset-0 z-[60]"
       data-dashboard-variant={visualVariant || 'forum-ops'}
     >
-      <div className="dashboard-hero-signal-pill absolute top-8 left-1/2 -translate-x-1/2 rounded-full border border-[#2a3541] bg-[#0a1118]/80 px-5 py-2 text-[10px] uppercase tracking-[0.35em] text-[#9aa7b5] backdrop-blur">
-        {signalText || copy.signalStatusFallback}
-      </div>
-
       <motion.div
         style={{ opacity: beat2Opacity, x: beat2X, scale: beat2Scale, filter: beat2Filter }}
         className="absolute inset-0 flex items-center justify-start px-[8%] md:px-[12%]"
