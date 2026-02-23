@@ -115,6 +115,11 @@ describe('dashboard visual variants', () => {
     expect(screen.getByTestId('ranking-period-tabs')).toHaveAttribute('data-variant', 'ranking-nocturne')
     expect(screen.getByRole('link', { name: /dashboard\.joinDiscussion/i })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /dashboard\.viewAllThreads/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /dashboard\.sections\.collapse/i })).toHaveLength(6)
+
+    const overviewHeading = screen.getByText('dashboard.overview.title')
+    const featureCardHeading = screen.getByText('dashboard.nextEvent')
+    expect(Boolean(overviewHeading.compareDocumentPosition(featureCardHeading) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 
   it('shows switcher and propagates selected variant when query params are present', () => {
@@ -128,7 +133,6 @@ describe('dashboard visual variants', () => {
     expect(root).toHaveAttribute('data-dashboard-visual-variant', 'curated-shop')
     expect(root).toHaveAttribute('data-dashboard-design-lab', 'true')
     expect(screen.getByLabelText('Dashboard design review switcher')).toBeInTheDocument()
-    expect(screen.getByTestId('live-leaderboard')).toHaveAttribute('data-variant', 'curated-shop')
     expect(screen.getByTestId('user-rankings-feed')).toHaveAttribute('data-variant', 'curated-shop')
   })
 

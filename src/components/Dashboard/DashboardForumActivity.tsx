@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from '../../hooks/useTranslation'
 import type { DashboardVisualVariant } from './dashboardVisualVariants'
 
-type ForumActivityThread = {
+export type DashboardForumActivityThread = {
   _id: string
   title?: string | null
   replyCount?: number
@@ -12,8 +12,11 @@ type ForumActivityThread = {
 }
 
 type DashboardForumActivityProps = {
-  threads?: ForumActivityThread[] | null
+  threads?: DashboardForumActivityThread[] | null
   variant?: DashboardVisualVariant
+  limit?: number
+  stretch?: boolean
+  className?: string
 }
 
 const compactNumber = (value: unknown): string => {
@@ -35,14 +38,19 @@ const formatDate = (timestamp: unknown): string => {
 export const DashboardForumActivity = ({
   threads,
   variant = 'forum-ops',
+  limit = 4,
+  stretch = false,
+  className,
 }: DashboardForumActivityProps) => {
   const { t } = useTranslation()
-  const rows = (threads || []).slice(0, 4)
+  const rows = (threads || []).slice(0, limit)
+  const rootClassName = ['dashboard-forum-activity', className].filter(Boolean).join(' ')
 
   return (
     <section
-      className="dashboard-forum-activity"
+      className={rootClassName}
       data-dashboard-variant={variant}
+      data-stretch={stretch ? 'true' : 'false'}
       aria-labelledby="dashboard-forum-activity-title"
     >
       <div className="dashboard-forum-activity__shell">

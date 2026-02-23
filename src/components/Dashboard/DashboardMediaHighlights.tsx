@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../../hooks/useTranslation'
 import type { DashboardVisualVariant } from './dashboardVisualVariants'
+import {
+  DashboardCollapsibleBody,
+  DashboardSectionCollapseToggle,
+  type DashboardSectionCollapseControl,
+} from './DashboardSectionCollapsible'
 
 export type MediaHighlightsTab = 'trendingGallery' | 'artistMoments'
 
@@ -26,6 +31,7 @@ type DashboardMediaHighlightsProps = {
   selectedItemKey: string | null
   onSelectItem: (key: string) => void
   itemsByTab: Record<MediaHighlightsTab, DashboardMediaHighlightItem[]>
+  collapseControl?: DashboardSectionCollapseControl
 }
 
 export const DashboardMediaHighlights = ({
@@ -35,6 +41,7 @@ export const DashboardMediaHighlights = ({
   selectedItemKey,
   onSelectItem,
   itemsByTab,
+  collapseControl,
 }: DashboardMediaHighlightsProps) => {
   const { t } = useTranslation()
   const activeItems = itemsByTab[activeTab] || []
@@ -65,27 +72,37 @@ export const DashboardMediaHighlights = ({
               {t('dashboard.mediaHighlights.title')}
             </h3>
           </div>
-
-          <div className="dashboard-media-highlights__tabs" role="tablist" aria-label={t('dashboard.mediaHighlights.title')}>
-            {tabOptions.map((tab) => {
-              const isActive = tab.id === activeTab
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`dashboard-media-highlights__tab ${isActive ? 'dashboard-media-highlights__tab--active' : ''}`}
-                  onClick={() => onTabChange(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              )
-            })}
+          <div className="dashboard-media-highlights__header-actions">
+            <div className="dashboard-media-highlights__tabs" role="tablist" aria-label={t('dashboard.mediaHighlights.title')}>
+              {tabOptions.map((tab) => {
+                const isActive = tab.id === activeTab
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`dashboard-media-highlights__tab ${isActive ? 'dashboard-media-highlights__tab--active' : ''}`}
+                    onClick={() => onTabChange(tab.id)}
+                  >
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
+            {collapseControl ? (
+              <DashboardSectionCollapseToggle
+                expanded={collapseControl.expanded}
+                onToggle={collapseControl.onToggle}
+                contentId={collapseControl.contentId}
+                sectionLabel={t('dashboard.mediaHighlights.title')}
+              />
+            ) : null}
           </div>
         </div>
 
-        <div className="dashboard-media-highlights__layout">
+        <DashboardCollapsibleBody expanded={collapseControl?.expanded ?? true} id={collapseControl?.contentId}>
+          <div className="dashboard-media-highlights__layout">
           <div className="dashboard-media-highlights__mosaic" role="list" aria-label={tabOptions.find((tab) => tab.id === activeTab)?.label}>
             {activeItems.length === 0 ? (
               <div className="dashboard-media-highlights__empty">
@@ -168,9 +185,9 @@ export const DashboardMediaHighlights = ({
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </DashboardCollapsibleBody>
       </div>
     </section>
   )
 }
-

@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../../hooks/useTranslation'
 import type { DashboardVisualVariant } from './dashboardVisualVariants'
+import {
+  DashboardCollapsibleBody,
+  DashboardSectionCollapseToggle,
+  type DashboardSectionCollapseControl,
+} from './DashboardSectionCollapsible'
 
 type DashboardOverviewEvent = {
   _id: string
@@ -78,6 +83,7 @@ export type DashboardOverviewSnapshot = {
 type DashboardOverviewPanelProps = {
   snapshot?: DashboardOverviewSnapshot | null
   variant?: DashboardVisualVariant
+  collapseControl?: DashboardSectionCollapseControl
 }
 
 const formatLastUpdated = (fetchedAt: number | null | undefined): string => {
@@ -86,14 +92,6 @@ const formatLastUpdated = (fetchedAt: number | null | undefined): string => {
   }
 
   return new Date(fetchedAt).toLocaleString()
-}
-
-const formatDate = (timestamp: number | null | undefined): string => {
-  if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
-    return '--'
-  }
-
-  return new Date(timestamp).toLocaleDateString()
 }
 
 const formatRelative = (timestamp: number | undefined): string => {
@@ -111,7 +109,7 @@ const formatRelative = (timestamp: number | undefined): string => {
   const days = Math.floor(hours / 24)
   if (days < 7) return `${days}d`
 
-  return formatDate(timestamp)
+  return new Date(timestamp).toLocaleDateString()
 }
 
 const formatPoints = (value: number | null | undefined): string => {
@@ -122,14 +120,6 @@ const formatPoints = (value: number | null | undefined): string => {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`
   if (value >= 1000) return `${(value / 1000).toFixed(1)}K`
   return new Intl.NumberFormat().format(value)
-}
-
-const formatCurrencyCents = (value: number | null | undefined): string => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return '--'
-  }
-
-  return `$${(value / 100).toFixed(2)}`
 }
 
 const clampText = (value: string | null | undefined, max: number): string => {
@@ -144,13 +134,11 @@ const questProgressLabel = (progress: number, target: number): string => `${Math
 export const DashboardOverviewPanel = ({
   snapshot,
   variant = 'forum-ops',
+  collapseControl,
 }: DashboardOverviewPanelProps) => {
   const { t } = useTranslation()
   const isSignedIn = Boolean(snapshot?.isSignedIn)
   const featuredAnnouncement = snapshot?.featuredAnnouncement ?? null
-  const nextEvent = snapshot?.nextEvent ?? null
-  const topProduct = snapshot?.topProduct ?? null
-  const topForumPost = (snapshot?.forumPosts || [])[0] ?? null
   const fanProgression = snapshot?.fanProgression ?? null
   const questItems = fanProgression?.activeQuests?.slice(0, 3) || []
 
@@ -173,14 +161,25 @@ export const DashboardOverviewPanel = ({
               {t('dashboard.overview.title')}
             </h3>
           </div>
-          <div className="dashboard-overview-panel__sync">
-            <span className="dashboard-overview-panel__sync-label">{t('dashboard.overview.lastUpdated')}</span>
-            <span className="dashboard-overview-panel__sync-value">{formatLastUpdated(snapshot?.fetchedAt)}</span>
+          <div className="dashboard-overview-panel__header-actions">
+            <div className="dashboard-overview-panel__sync">
+              <span className="dashboard-overview-panel__sync-label">{t('dashboard.overview.lastUpdated')}</span>
+              <span className="dashboard-overview-panel__sync-value">{formatLastUpdated(snapshot?.fetchedAt)}</span>
+            </div>
+            {collapseControl ? (
+              <DashboardSectionCollapseToggle
+                expanded={collapseControl.expanded}
+                onToggle={collapseControl.onToggle}
+                contentId={collapseControl.contentId}
+                sectionLabel={t('dashboard.overview.title')}
+              />
+            ) : null}
           </div>
         </div>
 
-        <div className="dashboard-overview-panel__snapshot">
-          <div className="dashboard-overview-panel__signal">
+        <DashboardCollapsibleBody expanded={collapseControl?.expanded ?? true} id={collapseControl?.contentId}>
+          <div className="dashboard-overview-panel__snapshot">
+            <div className="dashboard-overview-panel__signal">
             <div className="dashboard-overview-panel__signal-top">
               <p className="dashboard-overview-panel__signal-kicker">{t('dashboard.overview.tonightTitle')}</p>
               <div className="dashboard-overview-panel__signal-pill">
@@ -212,67 +211,9 @@ export const DashboardOverviewPanel = ({
                 {isSignedIn ? t('dashboard.overview.viewQuests') : t('dashboard.overview.signInToTrack')}
               </Link>
             </div>
-          </div>
-
-          <div className="dashboard-overview-panel__preview-column">
-            <div className="dashboard-overview-panel__preview-grid" role="list" aria-label={t('dashboard.overview.previewGridLabel')}>
-              <Link to="/events" className="dashboard-overview-panel__preview-card" data-tone="amber" role="listitem">
-                <div className="dashboard-overview-panel__preview-head">
-                  <span className="dashboard-overview-panel__preview-label">
-                    <iconify-icon icon="solar:ticket-bold-duotone" width="14" height="14"></iconify-icon>
-                    {t('dashboard.overview.previewEventLabel')}
-                  </span>
-                  <span className="dashboard-overview-panel__preview-cta">{t('dashboard.overview.previewEventCta')}</span>
-                </div>
-                <div className="dashboard-overview-panel__preview-title">
-                  {nextEvent?.title?.trim() || t('dashboard.overview.previewEventEmpty')}
-                </div>
-                <div className="dashboard-overview-panel__preview-meta">
-                  {nextEvent
-                    ? `${formatDate(nextEvent.startAtUtc ?? undefined)} • ${nextEvent.city?.trim() || '--'}`
-                    : t('dashboard.overview.previewEventMetaEmpty')}
-                </div>
-              </Link>
-
-              <Link to="/store" className="dashboard-overview-panel__preview-card" data-tone="crimson" role="listitem">
-                <div className="dashboard-overview-panel__preview-head">
-                  <span className="dashboard-overview-panel__preview-label">
-                    <iconify-icon icon="solar:fire-bold-duotone" width="14" height="14"></iconify-icon>
-                    {t('dashboard.overview.previewMerchLabel')}
-                  </span>
-                  <span className="dashboard-overview-panel__preview-cta">{t('dashboard.overview.previewMerchCta')}</span>
-                </div>
-                <div className="dashboard-overview-panel__preview-title">
-                  {topProduct?.name?.trim() || t('dashboard.overview.previewMerchEmpty')}
-                </div>
-                <div className="dashboard-overview-panel__preview-meta">
-                  {topProduct
-                    ? `${formatCurrencyCents(topProduct.price ?? undefined)} • ${(topProduct.category || t('dashboard.overview.categoryFallback')).toUpperCase()}`
-                    : t('dashboard.overview.previewMerchMetaEmpty')}
-                </div>
-              </Link>
-
-              <Link to="/forum" className="dashboard-overview-panel__preview-card" data-tone="steel" role="listitem">
-                <div className="dashboard-overview-panel__preview-head">
-                  <span className="dashboard-overview-panel__preview-label">
-                    <iconify-icon icon="solar:chat-line-bold-duotone" width="14" height="14"></iconify-icon>
-                    {t('dashboard.overview.previewForumLabel')}
-                  </span>
-                  <span className="dashboard-overview-panel__preview-cta">{t('dashboard.overview.previewForumCta')}</span>
-                </div>
-                <div className="dashboard-overview-panel__preview-title">
-                  {clampText(topForumPost?.title, 60) || t('dashboard.overview.previewForumEmpty')}
-                </div>
-                <div className="dashboard-overview-panel__preview-meta">
-                  {topForumPost
-                    ? `${topForumPost.replyCount || 0} ${t('dashboard.replies')} • ${formatDate(topForumPost.createdAt)}`
-                    : t('dashboard.overview.previewForumMetaEmpty')}
-                </div>
-              </Link>
             </div>
-          </div>
 
-          <div className="dashboard-overview-panel__progression">
+            <div className="dashboard-overview-panel__progression">
             <div className="dashboard-overview-panel__progression-header">
               <div>
                 <p className="dashboard-overview-panel__progression-kicker">{t('dashboard.overview.progressionTitle')}</p>
@@ -358,9 +299,9 @@ export const DashboardOverviewPanel = ({
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </DashboardCollapsibleBody>
       </div>
     </section>
   )
 }
-

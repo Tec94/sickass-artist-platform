@@ -85,9 +85,6 @@ describe('dashboard overview panel', () => {
 
     expect(screen.getByText('dashboard.overview.title')).toBeInTheDocument()
     expect(screen.getByText('dashboard.overview.tonightTitle')).toBeInTheDocument()
-    expect(screen.getByText('Moonlit Arena Show')).toBeInTheDocument()
-    expect(screen.getByText('Crimson Crest Jacket')).toBeInTheDocument()
-    expect(screen.getByText('Setlist predictions')).toBeInTheDocument()
     expect(screen.getByText('Wolf Alpha')).toBeInTheDocument()
     expect(screen.getByText('65%')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /dashboard\.overview\.openChat/i })).toHaveAttribute('href', '/chat')

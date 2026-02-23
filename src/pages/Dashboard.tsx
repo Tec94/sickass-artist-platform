@@ -4,7 +4,6 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { useUser } from '../contexts/UserContext'
-import { LiveLeaderboard } from '../components/Leaderboard/LiveLeaderboard'
 import { SongRankingWidget } from '../components/Leaderboard/SongRankingWidget'
 import { UserRankingsFeed } from '../components/Leaderboard/UserRankingsFeed'
 import { RankingPeriodTabs } from '../components/Leaderboard/RankingPeriodTabs'
@@ -16,11 +15,19 @@ import { DashboardDesignLabSwitcher } from '../components/Dashboard/DashboardDes
 import { DashboardOverviewPanel, type DashboardOverviewSnapshot } from '../components/Dashboard/DashboardOverviewPanel'
 import { DashboardAnnouncementsPanel } from '../components/Dashboard/DashboardAnnouncementsPanel'
 import {
+  DashboardCollapsibleBody,
+  DashboardSectionCollapseToggle,
+  type DashboardSectionCollapseControl,
+} from '../components/Dashboard/DashboardSectionCollapsible'
+import {
+  useDashboardSectionCollapseState,
+  type DashboardCollapsibleSectionId,
+} from '../components/Dashboard/useDashboardSectionCollapseState'
+import {
   DashboardMediaHighlights,
   type DashboardMediaHighlightItem,
   type MediaHighlightsTab,
 } from '../components/Dashboard/DashboardMediaHighlights'
-import { DashboardForumActivity } from '../components/Dashboard/DashboardForumActivity'
 import {
   dashboardHeroAssets,
   dashboardSignalPlaceholders,
@@ -71,6 +78,15 @@ type PromoRailItem = PromoItem & {
   railKey: string
 }
 
+const DASHBOARD_SECTION_CONTENT_IDS: Record<DashboardCollapsibleSectionId, string> = {
+  overview: 'dashboard-section-overview',
+  featureCards: 'dashboard-section-feature-cards',
+  announcements: 'dashboard-section-announcements',
+  promoRail: 'dashboard-section-promo-rail',
+  mediaHighlights: 'dashboard-section-media-highlights',
+  rankingDeck: 'dashboard-section-ranking-deck',
+}
+
 export const Dashboard = () => {
   useAnalytics()
 
@@ -82,6 +98,7 @@ export const Dashboard = () => {
   const [activeMediaHighlightsTab, setActiveMediaHighlightsTab] = useState<MediaHighlightsTab>('trendingGallery')
   const [selectedMediaHighlightKey, setSelectedMediaHighlightKey] = useState<string | null>(null)
   const [promoCopiedAt, setPromoCopiedAt] = useState<number | null>(null)
+  const { collapseState, toggleSectionExpanded } = useDashboardSectionCollapseState()
   const contentFallbackReportRef = useRef<string | null>(null)
   const [persistedVisualVariant, setPersistedVisualVariant] = useState<DashboardVisualVariant>(() => {
     if (typeof window === 'undefined') {
@@ -346,6 +363,11 @@ export const Dashboard = () => {
   }
 
   const heroVariant: CinematicHeroVariant = dashboardExperienceFlags.hardeningV1 ? 'hardened' : 'baseline'
+  const getCollapseControl = (sectionId: DashboardCollapsibleSectionId): DashboardSectionCollapseControl => ({
+    expanded: collapseState[sectionId],
+    onToggle: () => toggleSectionExpanded(sectionId),
+    contentId: DASHBOARD_SECTION_CONTENT_IDS[sectionId],
+  })
   const heroCopy = {
     reducedEyebrow: t('dashboard.hero.reducedEyebrow'),
     reducedTitle: t('dashboard.hero.reducedTitle'),
@@ -381,9 +403,15 @@ export const Dashboard = () => {
         visualVariant={dashboardVisualVariant}
       />
 
-      <div className="dashboard-content-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
+      <div className="dashboard-content-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="dashboard-stage-shell">
-          <section className="dashboard-top-region">
+          <DashboardOverviewPanel
+            snapshot={overviewSnapshot}
+            variant={dashboardVisualVariant}
+            collapseControl={getCollapseControl('overview')}
+          />
+
+          <section className="dashboard-top-region mt-16">
             <div className="dashboard-region-header">
               <div className="dashboard-region-header__cluster">
                 <span className="dashboard-region-chip dashboard-region-chip--primary">Live surfaces</span>
@@ -394,11 +422,17 @@ export const Dashboard = () => {
               <p className="dashboard-region-header__caption">
                 Activity, drops, and community signals tuned for different dashboard moods.
               </p>
+              <DashboardSectionCollapseToggle
+                expanded={collapseState.featureCards}
+                onToggle={() => toggleSectionExpanded('featureCards')}
+                contentId={DASHBOARD_SECTION_CONTENT_IDS.featureCards}
+                sectionLabel={t('dashboard.sections.featureCards')}
+              />
             </div>
-
-            <div className="dashboard-top-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <DashboardCollapsibleBody expanded={collapseState.featureCards} id={DASHBOARD_SECTION_CONTENT_IDS.featureCards}>
+              <div className="dashboard-top-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div
-                className="dashboard-feature-card dashboard-feature-card--event dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm"
+                className="dashboard-feature-card dashboard-feature-card--event dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
                 data-card-tone="amber"
               >
                 <div className="dashboard-feature-card__kicker">Stage Call</div>
@@ -441,7 +475,7 @@ export const Dashboard = () => {
               </div>
 
               <div
-                className="dashboard-feature-card dashboard-feature-card--merch dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm"
+                className="dashboard-feature-card dashboard-feature-card--merch dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
                 data-card-tone="crimson"
               >
                 <div className="dashboard-feature-card__kicker">Curated Drop</div>
@@ -456,7 +490,7 @@ export const Dashboard = () => {
                 </div>
 
                 {topProduct ? (
-                  <div className="dashboard-feature-card__merch-row flex gap-4 items-center">
+                  <div className="dashboard-feature-card__merch-row flex gap-4 items-start">
                     <div className="dashboard-card__media w-24 h-32 bg-[#0A1118] shrink-0 overflow-hidden rounded-xl">
                       {topProduct.image ? (
                         <img src={topProduct.image} alt="Product" className="w-full h-full object-cover" />
@@ -464,7 +498,7 @@ export const Dashboard = () => {
                         <img src={dashboardSignalPlaceholders.store} alt="Merch placeholder" className="w-full h-full object-cover" />
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="dashboard-feature-card__merch-body min-w-0">
                       <h4 className="dashboard-feature-card__title text-[#E8E1D5] font-semibold mb-1 line-clamp-2">{topProduct.name}</h4>
                       <p className="dashboard-feature-card__price text-[#B86A78] font-semibold mb-2">${(topProduct.price / 100).toFixed(2)}</p>
                       <div className="dashboard-feature-card__meta text-xs text-[#9AA7B5] mb-3">{t('dashboard.limitedStock')}</div>
@@ -482,7 +516,7 @@ export const Dashboard = () => {
               </div>
 
               <div
-                className="dashboard-feature-card dashboard-feature-card--forum dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm"
+                className="dashboard-feature-card dashboard-feature-card--forum dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
                 data-card-tone="steel"
               >
                 <div className="dashboard-feature-card__kicker">Forum Ops</div>
@@ -516,17 +550,15 @@ export const Dashboard = () => {
                   {forumCardItems.length === 0 && <div className="text-[#8091A1] text-sm text-center">{t('dashboard.noActiveDiscussions')}</div>}
                 </div>
               </div>
-            </div>
+              </div>
+            </DashboardCollapsibleBody>
           </section>
-
-          <DashboardOverviewPanel
-            snapshot={overviewSnapshot}
-            variant={dashboardVisualVariant}
-          />
 
           <DashboardAnnouncementsPanel
             announcements={dashboardData?.recentAnnouncements}
+            forumThreads={forumPosts}
             variant={dashboardVisualVariant}
+            collapseControl={getCollapseControl('announcements')}
           />
 
           <section className="dashboard-promo-region mt-16">
@@ -539,68 +571,75 @@ export const Dashboard = () => {
               </div>
               <div className="dashboard-region-header__line h-px bg-[#2A3541] flex-1 min-w-[120px]"></div>
               <span className="text-[11px] text-[#8EA0B3]">{t('dashboard.liveSignalScreensSubtitle')}</span>
+              <DashboardSectionCollapseToggle
+                expanded={collapseState.promoRail}
+                onToggle={() => toggleSectionExpanded('promoRail')}
+                contentId={DASHBOARD_SECTION_CONTENT_IDS.promoRail}
+                sectionLabel={t('dashboard.sections.promoRail')}
+              />
             </div>
-            <div className="dashboard-promo-shell bg-[#0b131d]/70 border border-[#2A3541] rounded-2xl p-6">
-              <LogoSlider
-                logos={promoRailItems.map((item) => {
-                  const mediaSrc = item.image || dashboardSignalPlaceholders[item.type]
+            <DashboardCollapsibleBody expanded={collapseState.promoRail} id={DASHBOARD_SECTION_CONTENT_IDS.promoRail}>
+              <div className="dashboard-promo-shell bg-[#0b131d]/70 border border-[#2A3541] rounded-2xl p-6">
+                <LogoSlider
+                  logos={promoRailItems.map((item) => {
+                    const mediaSrc = item.image || dashboardSignalPlaceholders[item.type]
 
-                  const content = (
-                    <div className="promo-screen">
-                      <div className="promo-screen__media">
-                        <img src={mediaSrc} alt={item.title} loading="lazy" />
-                        <div className={`promo-screen__badge promo-eyebrow--${item.tone}`}>{item.eyebrow}</div>
-                        {item.tag && <div className="promo-screen__tag">{item.tag}</div>}
-                        <div className="promo-screen__frame" aria-hidden="true" />
+                    const content = (
+                      <div className="promo-screen">
+                        <div className="promo-screen__media">
+                          <img src={mediaSrc} alt={item.title} loading="lazy" />
+                          <div className={`promo-screen__badge promo-eyebrow--${item.tone}`}>{item.tag || item.eyebrow}</div>
+                          <div className="promo-screen__frame" aria-hidden="true" />
+                        </div>
+                        <div className="promo-screen__content premium-glass-panel">
+                          <div className="promo-title">{item.title}</div>
+                          <div className="promo-meta">{item.meta}</div>
+                          <div className="promo-cta">→ {item.cta}</div>
+                        </div>
                       </div>
-                      <div className="promo-screen__content premium-glass-panel">
-                        <div className="promo-title">{item.title}</div>
-                        <div className="promo-meta">{item.meta}</div>
-                        <div className="promo-cta">→ {item.cta}</div>
-                      </div>
-                    </div>
-                  )
+                    )
 
-                  if (item.onClick) {
+                    if (item.onClick) {
+                      return (
+                        <button
+                          key={item.railKey}
+                          className="promo-card premium-glass-card"
+                          data-tone={item.tone}
+                          data-type={item.type}
+                          data-dashboard-variant={dashboardVisualVariant}
+                          onClick={item.onClick}
+                          type="button"
+                        >
+                          {content}
+                        </button>
+                      )
+                    }
+
+                    if (!item.href) {
+                      return null
+                    }
+
                     return (
-                      <button
+                      <Link
                         key={item.railKey}
+                        to={item.href}
                         className="promo-card premium-glass-card"
                         data-tone={item.tone}
                         data-type={item.type}
                         data-dashboard-variant={dashboardVisualVariant}
-                        onClick={item.onClick}
-                        type="button"
                       >
                         {content}
-                      </button>
+                      </Link>
                     )
-                  }
-
-                  if (!item.href) {
-                    return null
-                  }
-
-                  return (
-                    <Link
-                      key={item.railKey}
-                      to={item.href}
-                      className="promo-card premium-glass-card"
-                      data-tone={item.tone}
-                      data-type={item.type}
-                      data-dashboard-variant={dashboardVisualVariant}
-                    >
-                      {content}
-                    </Link>
-                  )
-                })}
-                speed={48}
-                direction="left"
-                showBlur={false}
-                pauseOnHover
-                className="promo-rail"
-              />
-            </div>
+                  })}
+                  speed={48}
+                  direction="left"
+                  showBlur={false}
+                  pauseOnHover
+                  className="promo-rail"
+                />
+              </div>
+            </DashboardCollapsibleBody>
           </section>
 
           <DashboardMediaHighlights
@@ -610,43 +649,49 @@ export const Dashboard = () => {
             selectedItemKey={selectedMediaHighlightKey}
             onSelectItem={setSelectedMediaHighlightKey}
             itemsByTab={mediaHighlightsItemsByTab}
+            collapseControl={getCollapseControl('mediaHighlights')}
           />
 
           <section className="dashboard-ranking-region mt-16">
-            <div className="dashboard-ranking-shell">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-                <div className="dashboard-ranking-heading flex items-center gap-6 min-w-0">
-                  <div className="min-w-0">
-                    <p className="dashboard-feature-card__kicker mb-2">Ranking Deck</p>
-                    <h2 className="text-3xl font-display font-semibold text-[#E8E1D5] uppercase whitespace-nowrap">
-                      {t('dashboard.songLeaderboard')}
-                    </h2>
-                  </div>
-                  <div className="hidden lg:block h-px bg-[#2A3541] flex-1 min-w-[120px]"></div>
-                </div>
-                <RankingPeriodTabs period={period} onChange={setPeriod} variant={dashboardVisualVariant} />
+            <div className="dashboard-region-header">
+              <div className="dashboard-region-header__cluster">
+                <span className="dashboard-region-chip">Ranking deck</span>
               </div>
-
-              <div className="dashboard-ranking-grid grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="dashboard-ranking-main lg:col-span-2 space-y-8">
-                  <UserRankingsFeed period={period} variant={dashboardVisualVariant} />
-                </div>
-
-                <div className="dashboard-ranking-side space-y-8">
-                  <SongRankingWidget period={period} variant={dashboardVisualVariant} />
-                  <DashboardForumActivity threads={forumPosts} variant={dashboardVisualVariant} />
-                  <div className="h-[600px]">
-                    <LiveLeaderboard
-                      period={period}
-                      onPeriodChange={setPeriod}
-                      showTabs={false}
-                      limit={12}
-                      variant={dashboardVisualVariant}
-                    />
-                  </div>
-                </div>
-              </div>
+              <p className="dashboard-region-header__caption">Standings and community ranking signals in one deck.</p>
+              <DashboardSectionCollapseToggle
+                expanded={collapseState.rankingDeck}
+                onToggle={() => toggleSectionExpanded('rankingDeck')}
+                contentId={DASHBOARD_SECTION_CONTENT_IDS.rankingDeck}
+                sectionLabel={t('dashboard.sections.rankingDeck')}
+              />
             </div>
+
+            <DashboardCollapsibleBody expanded={collapseState.rankingDeck} id={DASHBOARD_SECTION_CONTENT_IDS.rankingDeck}>
+              <div className="dashboard-ranking-shell">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+                  <div className="dashboard-ranking-heading flex items-center gap-6 min-w-0">
+                    <div className="min-w-0">
+                      <p className="dashboard-feature-card__kicker mb-2">Ranking Deck</p>
+                      <h2 className="text-3xl font-display font-semibold text-[#E8E1D5] uppercase whitespace-nowrap">
+                        {t('dashboard.songLeaderboard')}
+                      </h2>
+                    </div>
+                    <div className="hidden lg:block h-px bg-[#2A3541] flex-1 min-w-[120px]"></div>
+                  </div>
+                  <RankingPeriodTabs period={period} onChange={setPeriod} variant={dashboardVisualVariant} />
+                </div>
+
+                <div className="dashboard-ranking-grid grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="dashboard-ranking-main lg:col-span-2 space-y-8">
+                    <UserRankingsFeed period={period} variant={dashboardVisualVariant} />
+                  </div>
+
+                  <div className="dashboard-ranking-side space-y-8">
+                    <SongRankingWidget period={period} variant={dashboardVisualVariant} />
+                  </div>
+                </div>
+              </div>
+            </DashboardCollapsibleBody>
           </section>
         </div>
       </div>
