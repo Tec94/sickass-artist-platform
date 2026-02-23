@@ -1,4 +1,5 @@
 import { query } from "./_generated/server"
+import { getCurrentUserOrNull } from "./helpers"
 
 const DASHBOARD_EXPERIENCE_FLAG_KEYS = {
     hardeningV1: "dashboard_cinematic_hardening_v1",
@@ -21,6 +22,8 @@ export const getDashboardData = query({
     args: {},
     handler: async (ctx) => {
         try {
+            const currentUser = await getCurrentUserOrNull(ctx)
+
             // Run all queries in parallel for performance
             const [
                 products,
@@ -62,6 +65,121 @@ export const getDashboardData = query({
                     .order("asc")
                     .take(5),
             ])
+
+            let fanProgression: {
+                memberName: string | null
+                points: {
+                    totalPoints: number
+                    availablePoints: number
+                    redeemedPoints: number
+                    currentStreak: number
+                    maxStreak: number
+                    lastInteractionDate: number | null
+                    lastLoginDate: string | null
+                }
+                activeQuests: Array<{
+                    progressId: any
+                    questId: string
+                    name: string
+                    description: string
+                    icon: string
+                    category: string
+                    progress: number
+                    target: number
+                    progressPercent: number
+                    isCompleted: boolean
+                    pointsClaimed: boolean
+                    rewardPoints: number
+                    expiresAt: number
+                    type: string
+                }>
+                questSummary: {
+                    activeCount: number
+                    claimableCount: number
+                    dailyCount: number
+                    weeklyCount: number
+                }
+            } | null = null
+
+            if (currentUser) {
+                try {
+                    const [rewards, questProgress] = await Promise.all([
+                        ctx.db
+                            .query("userRewards")
+                            .withIndex("by_userId", (q) => q.eq("userId", currentUser._id))
+                            .first(),
+                        ctx.db
+                            .query("questProgress")
+                            .filter((q) => q.eq(q.field("userId"), currentUser._id))
+                            .collect(),
+                    ])
+
+                    const now = Date.now()
+                    const activeQuestEntries = await Promise.all(
+                        questProgress
+                            .filter((progress) => progress.expiresAt >= now)
+                            .map(async (progress) => {
+                                const quest = await ctx.db.get(progress.questId)
+                                if (!quest || !quest.isActive) return null
+
+                                return {
+                                    progressId: progress._id,
+                                    questId: quest.questId,
+                                    name: quest.name,
+                                    description: quest.description,
+                                    icon: quest.icon,
+                                    category: quest.category,
+                                    progress: progress.currentProgress,
+                                    target: quest.targetValue,
+                                    progressPercent: Math.max(
+                                        0,
+                                        Math.min(100, Math.round((progress.currentProgress / Math.max(1, quest.targetValue)) * 100)),
+                                    ),
+                                    isCompleted: progress.isCompleted,
+                                    pointsClaimed: progress.pointsClaimed,
+                                    rewardPoints: quest.rewardPoints,
+                                    expiresAt: progress.expiresAt,
+                                    type: quest.type,
+                                }
+                            }),
+                    )
+
+                    const activeQuests = activeQuestEntries
+                        .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+                        .sort((a, b) => {
+                            if (a.isCompleted !== b.isCompleted) {
+                                return Number(a.isCompleted) - Number(b.isCompleted)
+                            }
+                            if (a.pointsClaimed !== b.pointsClaimed) {
+                                return Number(a.pointsClaimed) - Number(b.pointsClaimed)
+                            }
+                            return a.expiresAt - b.expiresAt
+                        })
+
+                    fanProgression = {
+                        memberName: currentUser.displayName || currentUser.username || null,
+                        points: {
+                            totalPoints: rewards?.totalPoints || 0,
+                            availablePoints: rewards?.availablePoints || 0,
+                            redeemedPoints: rewards?.redeemedPoints || 0,
+                            currentStreak: rewards?.currentStreak || 0,
+                            maxStreak: rewards?.maxStreak || 0,
+                            lastInteractionDate: typeof rewards?.lastInteractionDate === "number" ? rewards.lastInteractionDate : null,
+                            lastLoginDate: rewards?.lastLoginDate || null,
+                        },
+                        activeQuests: activeQuests.slice(0, 4),
+                        questSummary: {
+                            activeCount: activeQuests.length,
+                            claimableCount: activeQuests.filter((quest) => quest.isCompleted && !quest.pointsClaimed).length,
+                            dailyCount: activeQuests.filter((quest) => quest.type === "daily").length,
+                            weeklyCount: activeQuests.filter((quest) => quest.type === "weekly").length,
+                        },
+                    }
+                } catch (progressionError) {
+                    console.error("Dashboard fan progression fetch error:", progressionError)
+                    fanProgression = null
+                }
+            }
 
             // Process top merch - sort by price as a proxy for popularity
             // (In production, you'd join with orderItems to get actual sales)
@@ -186,6 +304,7 @@ export const getDashboardData = query({
                 trendingGallery,
                 artistMoments,
                 upcomingEvents,
+                fanProgression,
                 // Metadata
                 fetchedAt: Date.now(),
             }
@@ -199,6 +318,7 @@ export const getDashboardData = query({
                 trendingGallery: [],
                 artistMoments: [],
                 upcomingEvents: [],
+                fanProgression: null,
                 fetchedAt: Date.now(),
                 error: "Failed to load some dashboard data",
             }

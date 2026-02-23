@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '../../hooks/useTranslation'
 import { getCurrentLeaderboardId, type LeaderboardPeriod } from '../../utils/leaderboard'
+import type { DashboardVisualVariant } from '../Dashboard/dashboardVisualVariants'
 
 function normalizeFanTier(tier?: string): 'bronze' | 'silver' | 'gold' | 'platinum' {
   switch (tier) {
@@ -21,9 +22,10 @@ function normalizeFanTier(tier?: string): 'bronze' | 'silver' | 'gold' | 'platin
 
 interface UserRankingsFeedProps {
   period: LeaderboardPeriod
+  variant?: DashboardVisualVariant
 }
 
-export const UserRankingsFeed = ({ period }: UserRankingsFeedProps) => {
+export const UserRankingsFeed = ({ period, variant = 'forum-ops' }: UserRankingsFeedProps) => {
   const { user } = useAuth()
   const { t } = useTranslation()
   const leaderboardId = useMemo(() => getCurrentLeaderboardId(period), [period])
@@ -50,11 +52,16 @@ export const UserRankingsFeed = ({ period }: UserRankingsFeedProps) => {
   }
 
   if (!trendingSubmissions) {
-    return <div className="animate-pulse h-40 bg-[#111A24]/88 border border-[#2A3541] rounded-xl" />
+    return (
+      <div
+        className="dashboard-user-rankings-feed animate-pulse h-40 bg-[#111A24]/88 border border-[#2A3541] rounded-xl"
+        data-dashboard-variant={variant}
+      />
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-user-rankings-feed space-y-6" data-dashboard-variant={variant}>
       <div className="flex items-center justify-between gap-4">
         <h3 className="text-lg font-display font-semibold text-[#E8E1D5] flex items-center gap-2 whitespace-nowrap min-w-0">
           <iconify-icon
@@ -89,7 +96,7 @@ export const UserRankingsFeed = ({ period }: UserRankingsFeedProps) => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-[#111A24]/88 border border-[#2A3541] rounded-xl p-5 transition-colors"
+              className="dashboard-user-rankings-feed__card bg-[#111A24]/88 border border-[#2A3541] rounded-xl p-5 transition-colors"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">

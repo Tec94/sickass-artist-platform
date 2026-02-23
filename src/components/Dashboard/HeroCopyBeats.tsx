@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion, useMotionTemplate, useTransform, type MotionValue } from 'framer-motion'
 import type { HeroTimeline } from './heroTimeline'
+import type { DashboardVisualVariant } from './dashboardVisualVariants'
 
 export type HeroNarrativeCopy = {
   reducedEyebrow: string
@@ -32,6 +33,7 @@ type HeroCopyBeatsProps = {
   ctaHref: string
   timeline: HeroTimeline
   onPrimaryCta?: () => void
+  visualVariant?: DashboardVisualVariant
 }
 
 const OVERLAP_FADE_FACTOR = 1.15
@@ -55,6 +57,7 @@ export const HeroCopyBeats = ({
   ctaHref,
   timeline,
   onPrimaryCta,
+  visualVariant,
 }: HeroCopyBeatsProps) => {
   const beat2Opacity = useTransform(progress, timeline.beat2Opacity, [0, 1, 1, 0])
   const beat2X = useTransform(progress, timeline.beat2X, [-40, 0])
@@ -65,7 +68,7 @@ export const HeroCopyBeats = ({
   const beat3OpacityRaw = useTransform(progress, timeline.beat3Opacity, [0, 1, 1, 0])
   const beat4Opacity = useTransform(progress, timeline.beat4Opacity, [0, 1, 1])
   const beat3Opacity = useTransform([beat3OpacityRaw, beat4Opacity], ([beat3Raw, beat4]) =>
-    applyBeatOverlapFade(beat3Raw, beat4),
+    applyBeatOverlapFade(beat3Raw as number, beat4 as number),
   )
   const beat3X = useTransform(progress, timeline.beat3X, [40, 0])
   const beat3Scale = useTransform(progress, timeline.beat3Opacity, [0.985, 1, 1, 0.992])
@@ -77,7 +80,10 @@ export const HeroCopyBeats = ({
 
   if (reducedMotion) {
     return (
-      <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center px-6 text-center">
+      <div
+        className="dashboard-hero-copy dashboard-hero-copy--reduced pointer-events-none absolute inset-0 z-[60] flex items-center justify-center px-6 text-center"
+        data-dashboard-variant={visualVariant || 'forum-ops'}
+      >
         <div className="max-w-3xl space-y-6">
           <p className="text-[11px] uppercase tracking-[0.35em] text-[#9aa7b5]">{copy.reducedEyebrow}</p>
           <h1 className="font-display text-4xl md:text-7xl text-[#e8e1d5] uppercase tracking-[0.08em]">{copy.reducedTitle}</h1>
@@ -86,7 +92,7 @@ export const HeroCopyBeats = ({
             <Link
               to={ctaHref}
               onClick={onPrimaryCta}
-              className="inline-flex items-center gap-3 rounded-full border border-[#A62B3A]/80 bg-[#A62B3A]/25 px-7 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#e8e1d5] transition hover:bg-[#A62B3A]/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8e1d5]"
+              className="dashboard-hero-primary-cta inline-flex items-center gap-3 rounded-full border border-[#A62B3A]/80 bg-[#A62B3A]/25 px-7 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#e8e1d5] transition hover:bg-[#A62B3A]/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8e1d5]"
             >
               {ctaLabel}
             </Link>
@@ -97,8 +103,11 @@ export const HeroCopyBeats = ({
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[60]">
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 rounded-full border border-[#2a3541] bg-[#0a1118]/80 px-5 py-2 text-[10px] uppercase tracking-[0.35em] text-[#9aa7b5] backdrop-blur">
+    <div
+      className="dashboard-hero-copy pointer-events-none absolute inset-0 z-[60]"
+      data-dashboard-variant={visualVariant || 'forum-ops'}
+    >
+      <div className="dashboard-hero-signal-pill absolute top-8 left-1/2 -translate-x-1/2 rounded-full border border-[#2a3541] bg-[#0a1118]/80 px-5 py-2 text-[10px] uppercase tracking-[0.35em] text-[#9aa7b5] backdrop-blur">
         {signalText || copy.signalStatusFallback}
       </div>
 
@@ -127,7 +136,7 @@ export const HeroCopyBeats = ({
       </motion.div>
 
       <motion.div style={{ opacity: beat4Opacity, scale: beat4Scale }} className="absolute inset-0 flex items-center justify-center px-6 text-center">
-        <div className="space-y-6 rounded-2xl border border-[#2a3541]/60 bg-[#04070b]/40 px-7 py-7 backdrop-blur-sm md:px-10 md:py-10">
+        <div className="dashboard-hero-final-shell space-y-6 rounded-2xl border border-[#2a3541]/60 bg-[#04070b]/40 px-7 py-7 backdrop-blur-sm md:px-10 md:py-10">
           <div className="mx-auto h-24 w-24 overflow-hidden md:h-32 md:w-32">
             <img src={crest} alt="Wolf Crest" className="h-full w-full scale-[1.45] object-contain opacity-95 animate-aura-glow" loading="eager" />
           </div>
@@ -139,7 +148,7 @@ export const HeroCopyBeats = ({
             <Link
               to={ctaHref}
               onClick={onPrimaryCta}
-              className="inline-flex items-center gap-3 rounded-full border border-[#A62B3A]/80 bg-[#A62B3A]/25 px-7 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#e8e1d5] transition hover:bg-[#A62B3A]/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8e1d5]"
+              className="dashboard-hero-primary-cta inline-flex items-center gap-3 rounded-full border border-[#A62B3A]/80 bg-[#A62B3A]/25 px-7 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#e8e1d5] transition hover:bg-[#A62B3A]/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8e1d5]"
             >
               {ctaLabel}
             </Link>
@@ -152,7 +161,7 @@ export const HeroCopyBeats = ({
         style={{ opacity: handoffOpacity }}
         className="pointer-events-none absolute inset-x-0 bottom-16 z-[65] flex justify-center px-4"
       >
-        <div className="rounded-full border border-[#2A3541]/80 bg-[#04070B]/75 px-5 py-2 text-[10px] uppercase tracking-[0.24em] text-[#9AA7B5] backdrop-blur-sm">
+        <div className="dashboard-hero-handoff rounded-full border border-[#2A3541]/80 bg-[#04070B]/75 px-5 py-2 text-[10px] uppercase tracking-[0.24em] text-[#9AA7B5] backdrop-blur-sm">
           {copy.handoffCue}
         </div>
       </motion.div>

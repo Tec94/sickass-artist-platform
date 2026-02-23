@@ -4,12 +4,14 @@ import { api } from '../../../convex/_generated/api'
 import { motion } from 'framer-motion'
 import { useTranslation } from '../../hooks/useTranslation'
 import type { LeaderboardPeriod } from '../../utils/leaderboard'
+import type { DashboardVisualVariant } from '../Dashboard/dashboardVisualVariants'
 
 interface LiveLeaderboardProps {
   period?: LeaderboardPeriod
   onPeriodChange?: (period: LeaderboardPeriod) => void
   limit?: number
   showTabs?: boolean
+  variant?: DashboardVisualVariant
 }
 
 export const LiveLeaderboard = ({
@@ -17,6 +19,7 @@ export const LiveLeaderboard = ({
   onPeriodChange,
   limit: limitProp,
   showTabs = true,
+  variant = 'forum-ops',
 }: LiveLeaderboardProps) => {
   const [internalPeriod, setInternalPeriod] = useState<LeaderboardPeriod>('weekly')
   const activePeriod = period ?? internalPeriod
@@ -24,6 +27,12 @@ export const LiveLeaderboard = ({
   const { t } = useTranslation()
   const limit = Math.min(limitProp ?? 10, 50)
   const periodOptions: LeaderboardPeriod[] = ['weekly', 'monthly', 'allTime']
+  const variantRootClass =
+    variant === 'curated-shop'
+      ? 'dashboard-live-leaderboard--curated'
+      : variant === 'ranking-nocturne'
+        ? 'dashboard-live-leaderboard--nocturne'
+        : 'dashboard-live-leaderboard--ops'
   
   const leaderboard = useQuery(api.leaderboard.getLeaderboard, { 
     period: activePeriod,
@@ -41,7 +50,10 @@ export const LiveLeaderboard = ({
   }
 
   return (
-    <div className="bg-[#111A24]/88 border border-[#2A3541] rounded-xl overflow-hidden flex flex-col h-full">
+    <div
+      className={`dashboard-live-leaderboard ${variantRootClass} bg-[#111A24]/88 border border-[#2A3541] rounded-xl overflow-hidden flex flex-col h-full`}
+      data-dashboard-variant={variant}
+    >
       {/* Header */}
       <div className="p-6 border-b border-[#2A3541] bg-[#0D151F]/70">
         <div className="flex flex-col gap-4 mb-4">
@@ -100,7 +112,7 @@ export const LiveLeaderboard = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center gap-4 p-4 transition-colors ${
+                className={`dashboard-live-leaderboard__row flex items-center gap-4 p-4 transition-colors ${
                   index === 0 ? 'bg-gradient-to-r from-[#C7A97A]/12 to-transparent' : ''
                 }`}
               >

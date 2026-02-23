@@ -7,12 +7,14 @@ import { useAuth } from '../../hooks/useAuth'
 
 import { useTranslation } from '../../hooks/useTranslation'
 import type { LeaderboardPeriod } from '../../utils/leaderboard'
+import type { DashboardVisualVariant } from '../Dashboard/dashboardVisualVariants'
 
 interface SongRankingWidgetProps {
   period: LeaderboardPeriod
+  variant?: DashboardVisualVariant
 }
 
-export const SongRankingWidget = ({ period }: SongRankingWidgetProps) => {
+export const SongRankingWidget = ({ period, variant = 'forum-ops' }: SongRankingWidgetProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { user } = useAuth()
   const { t } = useTranslation()
@@ -23,10 +25,19 @@ export const SongRankingWidget = ({ period }: SongRankingWidgetProps) => {
   const hasSubmission = Boolean(userSubmission)
   const lastEditedAt =
     userSubmission?.lastEditedAt ?? userSubmission?.updatedAt ?? userSubmission?.createdAt
+  const variantRootClass =
+    variant === 'curated-shop'
+      ? 'dashboard-ranking-widget--curated'
+      : variant === 'ranking-nocturne'
+        ? 'dashboard-ranking-widget--nocturne'
+        : 'dashboard-ranking-widget--ops'
 
   return (
     <>
-      <div className="bg-[#111A24]/88 border border-[#2A3541] rounded-xl p-6 flex flex-col items-center text-center">
+      <div
+        className={`dashboard-ranking-widget ${variantRootClass} bg-[#111A24]/88 border border-[#2A3541] rounded-xl p-6 flex flex-col items-center text-center`}
+        data-dashboard-variant={variant}
+      >
         <div className="w-12 h-12 bg-[#A62B3A]/20 text-[#C97C88] rounded-full flex items-center justify-center mb-4">
           <iconify-icon icon="solar:music-library-2-bold-duotone" width="24" height="24"></iconify-icon>
         </div>

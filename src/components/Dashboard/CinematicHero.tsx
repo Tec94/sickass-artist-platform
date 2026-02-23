@@ -13,6 +13,7 @@ import {
 } from './heroTimeline'
 import { heroMotionProfile } from './heroMotionProfile'
 import { getHeroScrollPhases, mapToNarrativeProgress } from './heroScrollPhases'
+import type { DashboardVisualVariant } from './dashboardVisualVariants'
 
 export type CinematicHeroVariant = 'baseline' | 'hardened'
 
@@ -23,6 +24,7 @@ export type CinematicHeroProps = {
   isSignedIn?: boolean
   variant?: CinematicHeroVariant
   copy?: Partial<HeroNarrativeCopy>
+  visualVariant?: DashboardVisualVariant
 }
 
 const DEFAULT_HERO_COPY: HeroNarrativeCopy = {
@@ -84,6 +86,7 @@ export const CinematicHero = ({
   isSignedIn = false,
   variant = 'baseline',
   copy,
+  visualVariant,
 }: CinematicHeroProps) => {
   const sectionRef = useRef<HTMLElement>(null)
   const scrollContainerRef = useRef<HTMLElement | null>(null)
@@ -213,7 +216,7 @@ export const CinematicHero = ({
   )
   const grainOpacity = useTransform(
     [grainTargetOpacity, grainRamp],
-    ([targetOpacity, ramp]) => targetOpacity * ramp,
+    ([targetOpacity, ramp]) => (targetOpacity as number) * (ramp as number),
   )
 
   const beamOpacity = useTransform(
@@ -240,6 +243,7 @@ export const CinematicHero = ({
       data-reduced-motion={isReduced ? 'true' : 'false'}
       data-dashboard-hero-root="true"
       data-dashboard-hero-variant={variant}
+      data-dashboard-hero-visual-variant={visualVariant || 'forum-ops'}
       data-mobile-safeguard={safeguardMode ? 'true' : 'false'}
     >
       <div className="sticky top-0 h-screen overflow-hidden bg-[#04070B]">
@@ -347,6 +351,7 @@ export const CinematicHero = ({
           ctaHref={ctaHref}
           timeline={timeline}
           onPrimaryCta={onPrimaryCta}
+          visualVariant={visualVariant}
         />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[70] h-52 bg-gradient-to-t from-[#04070B] via-[#04070B]/65 to-transparent" />
