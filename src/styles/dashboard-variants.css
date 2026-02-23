@@ -2476,3 +2476,51 @@
     flex-wrap: wrap;
   }
 }
+
+/* Shell chrome parity: match announcements outer treatment */
+.dashboard-overview-panel__shell,
+.dashboard-media-highlights__shell,
+.dashboard-ranking-shell {
+  position: relative;
+  isolation: isolate;
+  padding-inline: 0 !important;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-overview-panel__shell::before,
+.dashboard-media-highlights__shell::before,
+.dashboard-ranking-shell::before {
+  content: none;
+}
+
+.dashboard-overview-panel__shell::after,
+.dashboard-media-highlights__shell::after,
+.dashboard-ranking-shell::after {
+  content: none;
+}
+
+.dashboard-media-highlights__empty-stage {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.dashboard-media-highlights__empty-stage .dashboard-media-highlights__empty {
+  width: 100%;
+  max-width: 560px;
+  margin-inline: 0;
+}
+
+/* Force transparent outer shells across visual variants (variant rules are more specific) */
+.dashboard-overview-panel[data-dashboard-variant] .dashboard-overview-panel__shell,
+.dashboard-media-highlights[data-dashboard-variant] .dashboard-media-highlights__shell,
+.dashboard-ranking-region .dashboard-ranking-shell {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
