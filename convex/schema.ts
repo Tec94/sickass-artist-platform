@@ -786,6 +786,18 @@ export default defineSchema({
   })
     .index('by_key', ['key']),
 
+  // Phone overlay scraped content payload (single doc keyed by name)
+  phoneArtistContent: defineTable({
+    key: v.string(), // "default"
+    payload: v.any(), // Raw scraped JSON payload used by phone content adapter
+    source: v.optional(v.string()), // e.g. "public/data/artist-scraped-data.json"
+    artist: v.optional(v.string()),
+    scrapeDate: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_key', ['key']),
+
   // Product variants - Size/color/style combinations
   merchVariants: defineTable({
     productId: v.id('merchProducts'),

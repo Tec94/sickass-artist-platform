@@ -31,6 +31,7 @@ import type * as moderationUtils from "../moderationUtils.js";
 import type * as notifications from "../notifications.js";
 import type * as offlineQueue from "../offlineQueue.js";
 import type * as orders from "../orders.js";
+import type * as phoneContent from "../phoneContent.js";
 import type * as points from "../points.js";
 import type * as quests from "../quests.js";
 import type * as recommendations from "../recommendations.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   offlineQueue: typeof offlineQueue;
   orders: typeof orders;
+  phoneContent: typeof phoneContent;
   points: typeof points;
   quests: typeof quests;
   recommendations: typeof recommendations;

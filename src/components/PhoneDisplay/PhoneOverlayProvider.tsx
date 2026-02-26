@@ -5,13 +5,13 @@ import {
   useMemo,
   useReducer,
   useRef,
-  useState,
   type ReactNode,
 } from 'react'
+import { useQuery } from 'convex/react'
 import { useLocation } from 'react-router-dom'
+import { api } from '../../../convex/_generated/api'
 import { useLanguage } from '../../contexts/LanguageContext'
-import { fetchPhoneArtistContent } from './content/phoneContentAdapter'
-import { FALLBACK_PHONE_ARTIST_CONTENT } from './content/phoneSeedContent'
+import { adaptArtistScrapedData } from './content/phoneContentAdapter'
 import type { PhoneArtistContent } from './content/phoneContentTypes'
 import { createInitialPhoneState, getCurrentPhoneRoute, phoneReducer, type PhoneState } from './phoneStore'
 import type {
@@ -69,18 +69,13 @@ export function PhoneOverlayProvider({
     phoneReducer,
     createInitialPhoneState(toPhoneLocale(language), { open: defaultOpen, locked: defaultLocked }),
   )
-  const [content, setContent] = useState<PhoneArtistContent>(FALLBACK_PHONE_ARTIST_CONTENT)
-  const [isContentLoading, setIsContentLoading] = useState(true)
   const userLocaleOverrideRef = useRef(false)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    setIsContentLoading(true)
-    fetchPhoneArtistContent(controller.signal)
-      .then((next) => setContent(next))
-      .finally(() => setIsContentLoading(false))
-    return () => controller.abort()
-  }, [])
+  const phoneArtistPayload = useQuery(api.phoneContent.getPhoneArtistContentPayload, {})
+  const isContentLoading = phoneArtistPayload === undefined
+  const content = useMemo<PhoneArtistContent>(
+    () => adaptArtistScrapedData(phoneArtistPayload?.payload),
+    [phoneArtistPayload],
+  )
 
   useEffect(() => {
     if (userLocaleOverrideRef.current) return

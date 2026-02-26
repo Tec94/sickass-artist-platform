@@ -1,7 +1,7 @@
 {
   "name": "sickass-artist-platform",
   "private": true,
-  "version": "1.6.15",
+  "version": "1.6.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:phone-content": "node scripts/seedPhoneArtistContent.mjs"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",

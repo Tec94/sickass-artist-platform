@@ -174,14 +174,3 @@ export function adaptArtistScrapedData(raw: unknown): PhoneArtistContent {
     collaborators: relatedArtists.length ? relatedArtists : FALLBACK_PHONE_ARTIST_CONTENT.collaborators,
   }
 }
-
-export async function fetchPhoneArtistContent(signal?: AbortSignal): Promise<PhoneArtistContent> {
-  try {
-    const response = await fetch('/data/artist-scraped-data.json', { signal })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const data = (await response.json()) as unknown
-    return adaptArtistScrapedData(data)
-  } catch {
-    return FALLBACK_PHONE_ARTIST_CONTENT
-  }
-}
