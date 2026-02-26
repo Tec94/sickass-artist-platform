@@ -27,12 +27,14 @@ import { TestErrorPage } from './pages/TestErrorPage'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { ConflictModal } from './components/ConflictModal'
 import { ConsentBanner } from './components/ConsentBanner'
+import { PhoneOverlayRoot } from './components/PhoneDisplay'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { Toaster } from 'sonner'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
 import './styles/events.css'
+import './styles/phone-display.css'
 import './index.css'
 
 // Lazy load dashboard and event pages for code splitting
@@ -288,6 +290,8 @@ function AppContent() {
             </div>
           </FlashlightEffect>
  
+        <PhoneOverlayRoot />
+
         {/* Admin Quick Access Button */}
         <Link 
           to="/admin" 

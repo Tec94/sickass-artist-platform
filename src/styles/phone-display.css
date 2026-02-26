@@ -1,0 +1,37 @@
+.phone-frame-shell {
+  background:
+    radial-gradient(circle at 22% 16%, rgba(59, 130, 246, 0.08), transparent 52%),
+    radial-gradient(circle at 75% 80%, rgba(239, 68, 68, 0.08), transparent 56%),
+    #06090d;
+}
+
+.phone-map-surface {
+  position: absolute;
+  inset: 0;
+}
+
+.phone-map-surface--light {
+  background:
+    linear-gradient(90deg, rgba(45, 123, 192, 0.12) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(rgba(45, 123, 192, 0.12) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(24deg, rgba(16, 185, 129, 0.18) 2px, transparent 2px) 0 0 / 120px 120px,
+    linear-gradient(145deg, rgba(59, 130, 246, 0.12) 2px, transparent 2px) 0 0 / 100px 100px,
+    radial-gradient(circle at 25% 35%, rgba(34, 197, 94, 0.18), transparent 35%),
+    radial-gradient(circle at 75% 68%, rgba(96, 165, 250, 0.2), transparent 38%),
+    #eef5f6;
+}
+
+.phone-map-surface--dark {
+  background:
+    linear-gradient(90deg, rgba(96, 165, 250, 0.1) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(24deg, rgba(16, 185, 129, 0.14) 2px, transparent 2px) 0 0 / 120px 120px,
+    linear-gradient(145deg, rgba(14, 165, 233, 0.1) 2px, transparent 2px) 0 0 / 100px 100px,
+    radial-gradient(circle at 25% 35%, rgba(34, 197, 94, 0.12), transparent 35%),
+    radial-gradient(circle at 75% 68%, rgba(59, 130, 246, 0.14), transparent 38%),
+    #041018;
+}
+
+.phone-card-surface {
+  transform: translateZ(0);
+}
