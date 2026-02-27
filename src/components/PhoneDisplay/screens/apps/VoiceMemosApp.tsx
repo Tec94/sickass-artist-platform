@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePhoneOverlay } from '../../PhoneOverlayProvider'
 
@@ -10,7 +10,7 @@ const MOCK_MEMOS = [
 ]
 
 export default function VoiceMemosApp() {
-  const { locale, popRoute } = usePhoneOverlay()
+  const { popRoute } = usePhoneOverlay()
   const [activeMemo, setActiveMemo] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -36,7 +36,7 @@ export default function VoiceMemosApp() {
     <div className="flex h-full flex-col bg-black text-white">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-12 pb-2">
-         <button className="text-blue-500 font-medium text-lg flex items-center -ml-1">
+         <button className="text-blue-500 font-medium text-lg flex items-center -ml-1" onClick={() => popRoute()}>
             <iconify-icon icon="solar:alt-arrow-left-linear" width="22" />
          </button>
          <button className="text-blue-500 font-medium text-base">Edit</button>
@@ -56,7 +56,7 @@ export default function VoiceMemosApp() {
       </div>
 
       <div className="flex-1 overflow-y-auto w-full">
-        {MOCK_MEMOS.map((memo, index) => {
+        {MOCK_MEMOS.map((memo) => {
           const isActive = activeMemo === memo.id
           
           return (

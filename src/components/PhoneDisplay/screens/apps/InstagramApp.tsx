@@ -1,13 +1,15 @@
-import { useState, useMemo } from 'react'
-import AppScaffold from './AppScaffold'
+import { useMemo } from 'react'
 import { usePhoneOverlay } from '../../PhoneOverlayProvider'
 
 export default function InstagramApp() {
   const { content, setSheet } = usePhoneOverlay()
   
   const images = useMemo(() => {
-    return content.collaborators.flatMap(c => c.images || []).slice(0, 9)
-  }, [content])
+    return content.photos
+      .map((photo) => photo.thumbnailUrl)
+      .filter((src): src is string => Boolean(src))
+      .slice(0, 9)
+  }, [content.photos])
 
   return (
     <div className="flex h-full flex-col bg-black text-white pb-2">
