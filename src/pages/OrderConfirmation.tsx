@@ -13,7 +13,7 @@ export function OrderConfirmation() {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold text-white mb-4">No order found</h1>
         <button
-          onClick={() => navigate('/merch')}
+          onClick={() => navigate('/store')}
           className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Shop
@@ -49,7 +49,7 @@ export function OrderConfirmation() {
   deliveryDate.setDate(deliveryDate.getDate() + (estimatedDeliveryDays || 7))
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="app-surface-page min-h-screen bg-black">
       <div className="fixed inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5 pointer-events-none" />
 
       <div className="relative max-w-2xl mx-auto px-4 py-16 flex flex-col items-center">
@@ -64,7 +64,7 @@ export function OrderConfirmation() {
           Thank you for your purchase. Your order has been received.
         </p>
 
-        <div className="w-full bg-gray-900/50 border border-gray-800 rounded-lg p-8 mb-8 space-y-6">
+        <div className="app-surface-shell w-full rounded-lg p-8 mb-8 space-y-6">
           <div className="text-center space-y-2">
             <p className="text-gray-400 text-sm">Order Number</p>
             <p className="font-mono text-2xl font-bold text-white mb-3">
@@ -142,13 +142,13 @@ export function OrderConfirmation() {
 
         <div className="w-full flex flex-col gap-3 sm:flex-row">
           <button
-            onClick={() => navigate('/merch/orders')}
+            onClick={() => navigate('/store/orders')}
             className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
           >
             View Order Details
           </button>
           <button
-            onClick={() => navigate('/merch')}
+            onClick={() => navigate('/store')}
             className="flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
           >
             Continue Shopping

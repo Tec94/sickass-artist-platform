@@ -47,7 +47,7 @@ export function ProfileUser() {
   }
 
   return (
-    <div className="profile-user-page">
+    <div className="profile-user-page app-surface-page">
       <header ref={animate} data-animate className="profile-user-header">
         <button onClick={() => navigate(-1)} className="back-btn">
           <iconify-icon icon="solar:arrow-left-linear"></iconify-icon>

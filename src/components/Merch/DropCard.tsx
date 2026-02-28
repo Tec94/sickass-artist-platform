@@ -28,7 +28,7 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
 
   const handleViewDrop = () => {
     // Navigate to drops detail or filtered merch page
-    navigate('/merch', {
+    navigate('/store', {
       state: { highlightedDropId: drop._id },
     })
   }

@@ -6,6 +6,25 @@ import {
 
 const HERO_INTERSECTION_THRESHOLD = 0.08
 
+const isHeroVisibleInRoot = (heroNode: Element, rootNode: HTMLElement | null): boolean => {
+  if (!(heroNode instanceof HTMLElement)) {
+    return false
+  }
+
+  const heroRect = heroNode.getBoundingClientRect()
+  const rootRect = rootNode
+    ? rootNode.getBoundingClientRect()
+    : new DOMRect(0, 0, window.innerWidth, window.innerHeight)
+
+  const intersectionWidth = Math.max(0, Math.min(heroRect.right, rootRect.right) - Math.max(heroRect.left, rootRect.left))
+  const intersectionHeight = Math.max(0, Math.min(heroRect.bottom, rootRect.bottom) - Math.max(heroRect.top, rootRect.top))
+  const heroArea = Math.max(heroRect.width * heroRect.height, 1)
+  const intersectionArea = intersectionWidth * intersectionHeight
+  const ratio = intersectionArea / heroArea
+
+  return ratio >= HERO_INTERSECTION_THRESHOLD
+}
+
 type UseDashboardHeroPresenceArgs = {
   enabled?: boolean
   heroSelector?: string
@@ -46,6 +65,7 @@ export const useDashboardHeroPresence = ({
 
       const rootNode = document.querySelector(DASHBOARD_SCROLL_CONTAINER_SELECTOR)
       const root = rootNode instanceof HTMLElement ? rootNode : null
+      setIsHeroVisible(isHeroVisibleInRoot(heroNode, root))
 
       observer = new IntersectionObserver(
         (entries) => {

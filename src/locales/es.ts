@@ -32,6 +32,7 @@ export const es = {
         signInToAccess: 'Necesitas iniciar sesión para acceder a esta página.',
         backHome: 'Volver al Inicio',
         signIn: 'Iniciar Sesión',
+        signOut: 'Cerrar Sesión',
     },
 
     // Navigation
@@ -43,6 +44,8 @@ export const es = {
         forum: 'Foro',
         chat: 'Chat',
         ranking: 'Clasificaciones',
+        profile: 'Perfil',
+        quests: 'Misiones',
     },
 
     // Profile Page
@@ -339,6 +342,7 @@ export const es = {
         loadMoreExperiences: 'Cargar Más Experiencias',
         synchronizing: 'Sincronizando...',
         dateRange: 'Rango de Fechas',
+        allDates: 'Todas las Fechas',
         today: 'Hoy',
         thisWeek: 'Esta Semana',
         thisMonth: 'Este Mes',
@@ -382,6 +386,8 @@ export const es = {
         theVault: 'La Bóveda',
         vinyl: 'Vinilo',
         limitedEdition: 'Edición Limitada',
+        orders: 'Pedidos',
+        tryAdjustingFilters: 'Intenta ajustar tus filtros o limpiar la búsqueda.',
         adminManagement: 'Gestión de Admin',
     },
 

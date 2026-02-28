@@ -126,7 +126,7 @@ export function Merch() {
   }
 
   return (
-    <div className="merch-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
+    <div className="merch-page app-surface-page" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
       {/* Free Shipping Banner */}
       <FreeShippingBanner />
 

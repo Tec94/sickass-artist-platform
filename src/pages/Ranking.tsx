@@ -11,7 +11,7 @@ export const Ranking = () => {
   const [period, setPeriod] = useState<LeaderboardPeriod>('weekly')
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 animate-fade-in">
+    <div className="app-surface-page px-4 sm:px-6 lg:px-8 py-12 lg:py-16 animate-fade-in">
       <div className="max-w-7xl mx-auto space-y-12">
         <section className="grid lg:grid-cols-[minmax(0,1fr)_380px] gap-10 items-start">
           <div>

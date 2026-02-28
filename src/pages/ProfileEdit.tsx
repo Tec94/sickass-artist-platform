@@ -145,7 +145,7 @@ export function ProfileEdit() {
   }
 
   return (
-    <div className="profile-edit-layout">
+    <div className="profile-edit-layout app-surface-page">
       <div ref={animate} data-animate className="profile-edit-container">
         <header className="profile-edit-header">
            <h1 className="form-title">{t('profile.edit.modifyIdentity')}</h1>

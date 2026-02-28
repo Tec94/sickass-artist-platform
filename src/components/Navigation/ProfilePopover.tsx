@@ -8,9 +8,19 @@ interface ProfilePopoverProps {
   isOpen: boolean;
   onClose: () => void;
   triggerRef: React.RefObject<HTMLButtonElement>;
+  canHover?: boolean;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 }
 
-export const ProfilePopover: React.FC<ProfilePopoverProps> = ({ isOpen, onClose, triggerRef }) => {
+export const ProfilePopover: React.FC<ProfilePopoverProps> = ({
+  isOpen,
+  onClose,
+  triggerRef,
+  canHover = false,
+  onHoverStart,
+  onHoverEnd,
+}) => {
   const { userProfile, signOut } = useUser();
   const { t } = useTranslation();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -36,13 +46,32 @@ export const ProfilePopover: React.FC<ProfilePopoverProps> = ({ isOpen, onClose,
     };
   }, [isOpen, onClose, triggerRef]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div
       ref={popoverRef}
-      className="absolute right-0 mt-2 w-64 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800/70 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in z-50 origin-top-right"
+      className="app-surface-modal absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden animate-fade-in z-50 origin-top-right"
       style={{ top: '100%' }}
+      onMouseEnter={() => {
+        if (!canHover) return;
+        onHoverStart?.();
+      }}
+      onMouseLeave={() => {
+        if (!canHover) return;
+        onHoverEnd?.();
+      }}
     >
       <div className="p-4 border-b border-zinc-800/60">
         <div className="flex items-center gap-3">

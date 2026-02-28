@@ -38,7 +38,7 @@ export function ForumThreadDetail() {
   }
 
   return (
-    <div className="thread-detail-container">
+    <div className="thread-detail-container app-surface-page app-surface-shell">
       <header ref={animate} data-animate className="thread-detail-header">
         <button
           type="button"

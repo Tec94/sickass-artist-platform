@@ -32,6 +32,7 @@ export const en = {
         signInToAccess: 'You need to sign in to access this page.',
         backHome: 'Back Home',
         signIn: 'Sign In',
+        signOut: 'Sign Out',
     },
 
     // Navigation
@@ -43,6 +44,8 @@ export const en = {
         forum: 'Forum',
         chat: 'Chat',
         ranking: 'Rankings',
+        profile: 'Profile',
+        quests: 'Quests',
     },
 
     // Profile Page
@@ -339,6 +342,7 @@ export const en = {
         loadMoreExperiences: 'Load More Experiences',
         synchronizing: 'Synchronizing...',
         dateRange: 'Date Range',
+        allDates: 'All Dates',
         today: 'Today',
         thisWeek: 'This Week',
         thisMonth: 'This Month',
@@ -382,6 +386,8 @@ export const en = {
         theVault: 'The Vault',
         vinyl: 'Vinyl',
         limitedEdition: 'Limited Edition',
+        orders: 'Orders',
+        tryAdjustingFilters: 'Try adjusting your filters or clearing your search.',
         adminManagement: 'Admin Management',
     },
 

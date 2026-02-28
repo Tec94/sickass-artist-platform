@@ -77,8 +77,8 @@ export function Forum() {
 
   return (
     <>
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
-      <div className="flex flex-col md:flex-row gap-8 h-full">
+    <div className="app-surface-page w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
+      <div className="app-surface-shell flex flex-col md:flex-row gap-8 h-full p-6">
         {/* Left Sidebar - Categories */}
         <div className={`w-full md:w-64 shrink-0 space-y-8 ${isMobileSidebarOpen ? 'block fixed inset-0 z-50 bg-zinc-950 p-4' : 'hidden md:block'}`}>
           <div className="md:hidden flex justify-end mb-4">

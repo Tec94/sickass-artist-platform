@@ -7,6 +7,9 @@ import { useGlobalSearch } from '../../hooks/useGlobalSearch'
 
 // Mock useGlobalSearch
 vi.mock('../../hooks/useGlobalSearch')
+vi.mock('../../hooks/useTranslation', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
 
 // Mock useNavigate
 const mockNavigate = vi.fn()

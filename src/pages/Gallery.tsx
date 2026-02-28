@@ -121,7 +121,7 @@ export const Gallery = () => {
   }, []);
 
   return (
-    <div className="gallery-layout h-full flex">
+    <div className="gallery-layout app-surface-page h-full flex">
       {/* Desktop filter sidebar */}
       {showFilters && (
         <aside className="hidden md:block">

@@ -1,0 +1,101 @@
+[data-app-visual-variant] {
+  --app-surface-shell-bg:
+    radial-gradient(130% 115% at 15% -5%, rgba(36, 53, 70, 0.26), transparent 62%),
+    linear-gradient(180deg, rgba(9, 14, 21, 0.9), rgba(6, 10, 16, 0.96));
+  --app-surface-card-bg: linear-gradient(180deg, rgba(14, 23, 34, 0.84), rgba(8, 13, 20, 0.94));
+  --app-surface-border: rgba(58, 73, 88, 0.76);
+  --app-surface-soft-border: rgba(58, 73, 88, 0.46);
+  --app-surface-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  --app-surface-pill-bg: rgba(12, 20, 30, 0.86);
+  --app-surface-pill-text: #a7b6c5;
+  --app-surface-pill-border: rgba(70, 85, 103, 0.78);
+}
+
+[data-app-visual-variant='forum-ops'] {
+  --app-surface-shell-bg:
+    radial-gradient(130% 115% at 15% -5%, rgba(43, 66, 84, 0.28), transparent 62%),
+    linear-gradient(180deg, rgba(9, 14, 21, 0.9), rgba(6, 10, 16, 0.96));
+  --app-surface-card-bg: linear-gradient(180deg, rgba(13, 22, 33, 0.88), rgba(8, 13, 20, 0.96));
+}
+
+[data-app-visual-variant='curated-shop'] {
+  --app-surface-shell-bg:
+    radial-gradient(115% 98% at 12% -2%, rgba(192, 145, 121, 0.14), transparent 60%),
+    radial-gradient(100% 90% at 88% 0%, rgba(161, 190, 197, 0.12), transparent 62%),
+    linear-gradient(180deg, rgba(13, 17, 23, 0.9), rgba(7, 11, 16, 0.96));
+  --app-surface-card-bg: linear-gradient(180deg, rgba(24, 30, 38, 0.87), rgba(12, 17, 24, 0.95));
+  --app-surface-border: rgba(122, 135, 150, 0.68);
+  --app-surface-soft-border: rgba(122, 135, 150, 0.42);
+  --app-surface-pill-bg: rgba(18, 24, 30, 0.78);
+  --app-surface-pill-text: #becad5;
+  --app-surface-pill-border: rgba(122, 135, 150, 0.58);
+}
+
+[data-app-visual-variant='ranking-nocturne'] {
+  --app-surface-shell-bg:
+    radial-gradient(108% 102% at 86% -8%, rgba(166, 43, 58, 0.14), transparent 58%),
+    radial-gradient(104% 88% at 12% 0%, rgba(196, 162, 111, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(7, 9, 13, 0.94), rgba(4, 7, 11, 0.98));
+  --app-surface-card-bg: linear-gradient(180deg, rgba(16, 18, 24, 0.9), rgba(8, 10, 14, 0.97));
+  --app-surface-border: rgba(82, 87, 97, 0.75);
+  --app-surface-soft-border: rgba(82, 87, 97, 0.44);
+  --app-surface-pill-bg: rgba(15, 15, 18, 0.92);
+  --app-surface-pill-text: #b7c1cb;
+  --app-surface-pill-border: rgba(82, 87, 97, 0.74);
+}
+
+.app-surface-page {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-surface-shell {
+  border-radius: 26px;
+  border: 1px solid var(--app-surface-border);
+  background: var(--app-surface-shell-bg);
+  box-shadow: var(--app-surface-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.app-surface-card {
+  border-radius: 16px;
+  border: 1px solid var(--app-surface-soft-border);
+  background: var(--app-surface-card-bg);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+}
+
+.app-surface-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--app-surface-pill-border);
+  background: var(--app-surface-pill-bg);
+  color: var(--app-surface-pill-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-surface-input {
+  border: 1px solid var(--app-surface-soft-border) !important;
+  background: rgba(10, 16, 24, 0.72) !important;
+  color: var(--color-text-main) !important;
+}
+
+.app-surface-input:focus {
+  border-color: rgba(166, 43, 58, 0.72) !important;
+}
+
+.app-surface-modal {
+  border: 1px solid var(--app-surface-border) !important;
+  background: var(--app-surface-shell-bg) !important;
+  box-shadow: var(--app-surface-shadow) !important;
+}
+
+.app-surface-drawer {
+  border-left: 1px solid var(--app-surface-border) !important;
+  background: var(--app-surface-shell-bg) !important;
+}

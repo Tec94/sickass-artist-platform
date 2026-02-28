@@ -78,7 +78,7 @@ export function CartDropdown() {
                 </div>
                 <button
                   onClick={() => {
-                    navigate('/merch/cart')
+                    navigate('/store/cart')
                     setIsOpen(false)
                   }}
                   className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded transition-colors"

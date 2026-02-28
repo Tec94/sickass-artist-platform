@@ -70,7 +70,7 @@ export const MerchWidget = ({ onRetry }: MerchWidgetProps) => {
           <iconify-icon icon="solar:bag-linear" width="48" height="48" class="empty-icon"></iconify-icon>
           <h3>No drops available</h3>
           <p>Check back soon for exclusive merchandise!</p>
-          <button className="explore-button" onClick={() => navigate('/2')}>
+          <button className="explore-button" onClick={() => navigate('/store')}>
             Browse Store
           </button>
         </div>
@@ -107,7 +107,7 @@ const WidgetContainer = ({ title, icon, actionLabel, children }: WidgetContainer
           <iconify-icon icon={icon} width="20" height="20"></iconify-icon>
           <h3>{title}</h3>
         </div>
-        <button className="see-all-button" onClick={() => navigate('/2')}>
+        <button className="see-all-button" onClick={() => navigate('/store')}>
           {actionLabel}
           <iconify-icon icon="solar:alt-arrow-right-linear" width="16" height="16"></iconify-icon>
         </button>
@@ -144,7 +144,7 @@ const DropItem = ({ drop, index, navigate }: DropItemProps) => {
   const { status, label } = getDropStatus(drop)
   
   const handleClick = (): void => {
-    navigate(`/merch/drops`)
+    navigate(`/store/drops`)
   }
 
   return (

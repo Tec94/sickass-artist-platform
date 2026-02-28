@@ -28,7 +28,7 @@ export function OrderCard({ order }: OrderCardProps) {
 
   return (
     <button
-      onClick={() => navigate(`/merch/orders/${order.orderNumber}`)}
+      onClick={() => navigate(`/store/orders/${order.orderNumber}`)}
       className="w-full text-left p-4 bg-gray-900/50 border border-gray-800 hover:border-cyan-500/50 rounded-lg transition-colors group"
     >
       <div className="flex items-start justify-between mb-3">

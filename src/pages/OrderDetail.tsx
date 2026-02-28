@@ -21,7 +21,7 @@ export function OrderDetail() {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold text-white mb-4">Order not found</h1>
         <button
-          onClick={() => navigate('/merch/orders')}
+          onClick={() => navigate('/store/orders')}
           className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Orders
@@ -46,7 +46,7 @@ export function OrderDetail() {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold text-white mb-4">Order not found</h1>
         <button
-          onClick={() => navigate('/merch/orders')}
+          onClick={() => navigate('/store/orders')}
           className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
         >
           Back to Orders
@@ -67,11 +67,11 @@ export function OrderDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="app-surface-page min-h-screen bg-black">
       <div className="sticky top-0 z-10 bg-black/80 border-b border-gray-800 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <button
-            onClick={() => navigate('/merch/orders')}
+            onClick={() => navigate('/store/orders')}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-4"
           >
             <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
@@ -81,7 +81,7 @@ export function OrderDetail() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="app-surface-shell max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">

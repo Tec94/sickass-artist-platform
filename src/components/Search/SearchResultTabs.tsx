@@ -26,20 +26,23 @@ export const SearchResultTabs: React.FC<SearchResultTabsProps> = ({
   ]
 
   return (
-    <div className="flex gap-1 border-b border-red-500/20 px-4 py-2 overflow-x-auto">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          className={`px-3 py-1 text-sm whitespace-nowrap rounded transition-colors ${
-            activeTab === tab.id
-              ? 'bg-red-500/30 text-red-300'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          {tab.label} {tab.count > 0 && <span className="ml-1 text-xs">({tab.count})</span>}
-        </button>
-      ))}
+    <div className="border-b border-zinc-800/80 bg-black/20 px-4 py-3">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
+              activeTab === tab.id
+                ? 'border-zinc-100 bg-zinc-100 text-black'
+                : 'border-zinc-700/80 bg-zinc-900/60 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+            }`}
+          >
+            {tab.label}
+            {tab.count > 0 && <span className="ml-1 text-[10px] opacity-75">({tab.count})</span>}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

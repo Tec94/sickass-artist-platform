@@ -63,9 +63,9 @@ export const ConfirmationPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black pt-24 pb-12 px-4 sm:px-6">
+    <div className="app-surface-page min-h-screen bg-black pt-24 pb-12 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="app-surface-shell rounded-3xl overflow-hidden shadow-2xl">
           <div className="bg-green-500/10 border-b border-green-500/20 p-8 text-center">
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

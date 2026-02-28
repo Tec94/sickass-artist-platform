@@ -29,6 +29,7 @@ import { ConflictModal } from './components/ConflictModal'
 import { ConsentBanner } from './components/ConsentBanner'
 import { PhoneOverlayRoot } from './components/PhoneDisplay'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
+import { AppVisualVariantProvider, useAppVisualVariant } from './contexts/AppVisualVariantContext'
 import { Toaster } from 'sonner'
 import './styles/theme.css'
 import './styles/animations.css'
@@ -111,21 +112,31 @@ const PrivateSuite = lazy(() => import('./pages/PrivateSuite').then(m => ({ defa
 
 import Footer from './components/Footer'
 
+function LegacyMerchRedirect() {
+  const location = useLocation()
+  const targetPath = location.pathname.startsWith('/merch')
+    ? location.pathname.replace(/^\/merch/, '/store')
+    : '/store'
+
+  return <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
+}
+
 function AppContent() {
   const { t } = useTranslation()
   const { conflicts, resolveConflict } = useOfflineQueue()
+  const { visualVariant } = useAppVisualVariant()
   const location = useLocation()
   const showFooter = location.pathname === '/dashboard'
 
   return (
-    <>
+    <div className="app-theme-root" data-app-visual-variant={visualVariant}>
       <FlashlightEffect className="app-root">
         <ParallaxBackground />
         <Header />
                 <style>{`
                   .app-root {
                     height: 100vh;
-                    width: 100vw;
+                    width: 100%;
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
@@ -189,6 +200,7 @@ function AppContent() {
                   </Suspense>
                 } />
                 <Route path="/store/drops" element={<DropsPage />} />
+                <Route path="/merch/*" element={<LegacyMerchRedirect />} />
 
                 {/* Events Routes */}
                 <Route path="/events" element={<ErrorBoundary level="section"><Events /></ErrorBoundary>} />
@@ -319,7 +331,7 @@ function AppContent() {
         
         {/* Toast Notifications */}
         <Toaster position="bottom-right" theme="dark" closeButton richColors />
-      </>
+      </div>
     )
 }
 
@@ -330,9 +342,11 @@ function App() {
         <LanguageProvider>
           <ErrorBoundary level="page">
             <BrowserRouter>
-              <GearProvider>
-                <AppContent />
-              </GearProvider>
+              <AppVisualVariantProvider>
+                <GearProvider>
+                  <AppContent />
+                </GearProvider>
+              </AppVisualVariantProvider>
             </BrowserRouter>
           </ErrorBoundary>
         </LanguageProvider>

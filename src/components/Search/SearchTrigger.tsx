@@ -22,12 +22,15 @@ export const SearchTrigger: React.FC<SearchTriggerProps> = ({ onClick, className
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors ${className}`}
+      className={`app-search-trigger group relative inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-950/70 px-3 py-2 text-zinc-300 transition-all hover:border-zinc-600 hover:text-white ${className}`}
       aria-label="Open search"
     >
-      <iconify-icon icon="solar:magnifer-linear" width="18" height="18"></iconify-icon>
-      <span className="text-sm hidden sm:inline font-medium">Search...</span>
-      <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] font-bold text-zinc-500">
+      <span className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-white/[0.08] via-transparent to-transparent opacity-80"></span>
+      <iconify-icon icon="solar:magnifer-linear" width="18" height="18" class="relative z-[1] text-zinc-400 group-hover:text-white"></iconify-icon>
+      <span className="app-search-trigger-label relative z-[1] text-sm hidden sm:inline font-medium tracking-wide text-zinc-300">
+        Search...
+      </span>
+      <kbd className="app-search-trigger-shortcut relative z-[1] hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700/80 text-[10px] font-bold text-zinc-400">
         <span className="text-xs">⌘</span>
         K
       </kbd>

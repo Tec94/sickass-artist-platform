@@ -50,7 +50,7 @@ export function Events() {
   const availableCities = Array.from(new Set(events.map(e => e.city))).sort()
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 animate-fade-in pb-10">
+    <div className="app-surface-page w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 animate-fade-in pb-10">
       <div className="flex flex-col lg:flex-row gap-10">
         
         {/* Sidebar Filters - Preserved */}

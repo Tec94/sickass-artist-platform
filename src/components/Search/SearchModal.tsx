@@ -230,7 +230,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-[#02050b]/80 backdrop-blur-md"
         onClick={handleBackdropClick}
         aria-hidden="true"
       />
@@ -238,32 +238,39 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
       {/* Modal */}
       <div
         ref={modalRef}
-        className="fixed left-1/2 top-1/4 z-50 w-full max-w-2xl -translate-x-1/2 rounded-lg border border-red-500/30 bg-slate-900/95 shadow-2xl"
+        className="app-surface-modal fixed left-1/2 top-20 z-50 w-[min(860px,calc(100%-1.5rem))] -translate-x-1/2 overflow-hidden rounded-3xl"
         onKeyDown={handleKeyDownOnModal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="search-title"
       >
         {/* Header */}
-        <div className="flex items-center border-b border-red-500/20 px-4 py-3">
-          <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="text-red-400"></iconify-icon>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={t('search.placeholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="ml-3 w-full bg-transparent text-white placeholder-gray-400 outline-none"
-            aria-label="Search query"
-          />
-          <button
-            onClick={onClose}
-            className="rounded p-1 hover:bg-red-500/20 transition-colors"
-            aria-label="Close search"
-          >
-            <iconify-icon icon="solar:close-circle-linear" width="20" height="20"></iconify-icon>
-          </button>
+        <div className="border-b border-zinc-800/80 bg-black/25 px-4 py-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p id="search-title" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
+              {t('common.search')}
+            </p>
+            <button
+              onClick={onClose}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/80 text-zinc-400 transition-colors hover:border-zinc-500 hover:text-white"
+              aria-label="Close search"
+            >
+              <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+            </button>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-zinc-700/80 bg-zinc-950/85 px-3 py-2 shadow-inner shadow-black/40">
+            <iconify-icon icon="solar:magnifer-linear" width="18" height="18" class="text-zinc-400"></iconify-icon>
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={t('search.placeholder')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-transparent text-sm text-white placeholder-zinc-500 outline-none"
+              aria-label="Search query"
+            />
+          </div>
         </div>
 
         {/* Tabs (if results exist) */}
@@ -276,21 +283,21 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
         )}
 
         {/* Content */}
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-[26rem] overflow-y-auto bg-black/15">
           {/* Loading state */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-red-400"></iconify-icon>
+              <iconify-icon icon="solar:spinner-linear" class="h-6 w-6 animate-spin text-zinc-300"></iconify-icon>
             </div>
           )}
 
           {/* Error state */}
           {error && (
             <div className="px-4 py-8 text-center">
-              <p className="text-red-400">{error.message}</p>
+              <p className="text-red-300">{error.message}</p>
               <button
                 onClick={() => setQuery(query)}
-                className="mt-2 text-red-400 hover:underline"
+                className="mt-2 text-red-300 hover:underline"
               >
                 {t('search.tryAgain')}
               </button>
@@ -313,9 +320,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
             (hasSearched || navResults.length > 0) &&
             (!combinedResults || !hasAnyResults) && (
               <div className="px-4 py-8 text-center">
-                <p className="text-gray-400">{t('search.noResults')}</p>
+                <p className="text-zinc-300">{t('search.noResults')}</p>
                 {query && (
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-zinc-500">
                     {t('search.tryDifferent')}
                   </p>
                 )}
@@ -335,10 +342,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
         </div>
 
         {/* Footer hint */}
-        <div className="border-t border-red-500/20 px-4 py-2 text-xs text-gray-500">
-          <kbd className="rounded bg-slate-800 px-2 py-1">↑↓</kbd> {t('search.navigate')}
-          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">Enter</kbd> {t('search.select')}
-          <kbd className="ml-2 rounded bg-slate-800 px-2 py-1">ESC</kbd> {t('search.close')}
+        <div className="border-t border-zinc-800/80 bg-black/20 px-4 py-2 text-xs text-zinc-500">
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-1">↑↓</kbd>
+            {t('search.navigate')}
+          </span>
+          <span className="ml-3 inline-flex items-center gap-1">
+            <kbd className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-1">Enter</kbd>
+            {t('search.select')}
+          </span>
+          <span className="ml-3 inline-flex items-center gap-1">
+            <kbd className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-1">ESC</kbd>
+            {t('search.close')}
+          </span>
         </div>
       </div>
     </>

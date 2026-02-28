@@ -98,7 +98,7 @@ describe('header cinematic collapse session behavior', () => {
     })
   })
 
-  it('collapses only on the first hero pass within the same login session', () => {
+  it('collapses only on the first hero pass within the same browser session', () => {
     const { container, rerender } = render(
       <MemoryRouter>
         <Header />
@@ -124,7 +124,7 @@ describe('header cinematic collapse session behavior', () => {
     expect(container.querySelector('header')).toHaveAttribute('data-cinematic-collapse', 'false')
   })
 
-  it('resets collapse eligibility after a logout/login cycle', () => {
+  it('keeps collapse consumed for the rest of the browser session', () => {
     const { container, rerender } = render(
       <MemoryRouter>
         <Header />
@@ -156,6 +156,36 @@ describe('header cinematic collapse session behavior', () => {
       </MemoryRouter>,
     )
 
+    expect(container.querySelector('header')).toHaveAttribute('data-cinematic-collapse', 'false')
+  })
+
+  it('re-enables collapse after a new browser session starts', () => {
+    const { container, rerender, unmount } = render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>,
+    )
+
     expect(container.querySelector('header')).toHaveAttribute('data-cinematic-collapse', 'true')
+
+    heroVisible = false
+    rerender(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>,
+    )
+    expect(container.querySelector('header')).toHaveAttribute('data-cinematic-collapse', 'false')
+
+    window.sessionStorage.clear()
+    heroVisible = true
+    unmount()
+
+    const remount = render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>,
+    )
+
+    expect(remount.container.querySelector('header')).toHaveAttribute('data-cinematic-collapse', 'true')
   })
 })

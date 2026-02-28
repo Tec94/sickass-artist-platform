@@ -42,7 +42,7 @@ export function DropsPage() {
   ] as const
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="app-surface-page min-h-screen bg-black">
       {/* Header */}
       <div className="bg-gradient-to-b from-black to-transparent py-12 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4">
@@ -54,7 +54,7 @@ export function DropsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="app-surface-shell max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4 border-b border-gray-800 mb-8">
           {tabs.map(tab => (
             <button

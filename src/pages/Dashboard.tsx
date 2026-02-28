@@ -36,12 +36,11 @@ import {
 import {
   DASHBOARD_DESIGN_LAB_QUERY_PARAM,
   DASHBOARD_VARIANT_QUERY_PARAM,
-  DASHBOARD_VARIANT_STORAGE_KEY,
-  DEFAULT_DASHBOARD_VISUAL_VARIANT,
   isDashboardDesignLabEnabled,
   parseDashboardVisualVariant,
   type DashboardVisualVariant,
 } from '../components/Dashboard/dashboardVisualVariants'
+import { useAppVisualVariant } from '../contexts/AppVisualVariantContext'
 import { withDashboardExperienceDefaults } from '../constants/dashboardFlags'
 import { sanitizeDisplayText } from '../utils/contentHygiene'
 import { trackContentFallback } from '../utils/analytics'
@@ -99,18 +98,8 @@ export const Dashboard = () => {
   const [selectedMediaHighlightKey, setSelectedMediaHighlightKey] = useState<string | null>(null)
   const [promoCopiedAt, setPromoCopiedAt] = useState<number | null>(null)
   const { collapseState, toggleSectionExpanded } = useDashboardSectionCollapseState()
+  const { visualVariant: appVisualVariant, setVisualVariant: setAppVisualVariant } = useAppVisualVariant()
   const contentFallbackReportRef = useRef<string | null>(null)
-  const [persistedVisualVariant, setPersistedVisualVariant] = useState<DashboardVisualVariant>(() => {
-    if (typeof window === 'undefined') {
-      return DEFAULT_DASHBOARD_VISUAL_VARIANT
-    }
-
-    try {
-      return parseDashboardVisualVariant(window.localStorage.getItem(DASHBOARD_VARIANT_STORAGE_KEY))
-    } catch {
-      return DEFAULT_DASHBOARD_VISUAL_VARIANT
-    }
-  })
 
   const dashboardData = useQuery(api.dashboard.getDashboardData)
   const dashboardExperienceFlags = withDashboardExperienceDefaults(useQuery(api.dashboard.getDashboardExperienceFlags, {}))
@@ -118,7 +107,7 @@ export const Dashboard = () => {
   const searchParams = new URLSearchParams(location.search)
   const rawVariantParam = searchParams.get(DASHBOARD_VARIANT_QUERY_PARAM)
   const dashboardVisualVariant =
-    rawVariantParam !== null ? parseDashboardVisualVariant(rawVariantParam) : persistedVisualVariant
+    rawVariantParam !== null ? parseDashboardVisualVariant(rawVariantParam) : appVisualVariant
   const dashboardDesignLabVisible = isDashboardDesignLabEnabled(searchParams.get(DASHBOARD_DESIGN_LAB_QUERY_PARAM))
 
   const fallbackCounts: Record<FallbackMetricKey, number> = {
@@ -309,16 +298,10 @@ export const Dashboard = () => {
   }, [promoCopiedAt])
 
   useEffect(() => {
-    setPersistedVisualVariant((current) => (current === dashboardVisualVariant ? current : dashboardVisualVariant))
-
-    if (typeof window === 'undefined') return
-
-    try {
-      window.localStorage.setItem(DASHBOARD_VARIANT_STORAGE_KEY, dashboardVisualVariant)
-    } catch {
-      // Ignore storage failures in private browsing or locked environments.
+    if (dashboardVisualVariant !== appVisualVariant) {
+      setAppVisualVariant(dashboardVisualVariant)
     }
-  }, [dashboardVisualVariant])
+  }, [dashboardVisualVariant, appVisualVariant, setAppVisualVariant])
 
   useEffect(() => {
     const activeItems = mediaHighlightsItemsByTab[activeMediaHighlightsTab]
@@ -347,7 +330,7 @@ export const Dashboard = () => {
   }, [contentHygieneEnabled, fallbackSignature, fallbackTotal])
 
   const handleVisualVariantSelect = (variant: DashboardVisualVariant) => {
-    setPersistedVisualVariant(variant)
+    setAppVisualVariant(variant)
 
     const nextParams = new URLSearchParams(location.search)
     nextParams.set(DASHBOARD_DESIGN_LAB_QUERY_PARAM, '1')

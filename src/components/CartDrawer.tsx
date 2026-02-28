@@ -26,7 +26,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
       
       {/* Drawer */}
       <div 
-        className={`fixed top-0 right-0 bottom-0 w-full max-w-md bg-zinc-950 border-l border-zinc-900 z-[1020] shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`app-surface-drawer fixed top-0 right-0 bottom-0 w-full max-w-md z-[1020] shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -58,10 +58,10 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               <div key={`${item.variantId}-${idx}`} className="flex gap-4 group">
                 <div className="w-24 h-32 bg-zinc-900 shrink-0 overflow-hidden relative border border-zinc-900 group-hover:border-zinc-800 transition-colors">
                   <img 
-                    src="/src/public/assets/test-image.jpg" 
+                    src="/images/placeholder.jpg" 
                     alt={item.productName}
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/src/public/assets/test-image.jpg' }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.jpg' }}
                   />
                 </div>
                 <div className="flex-1 flex flex-col">

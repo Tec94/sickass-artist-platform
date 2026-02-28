@@ -31,7 +31,7 @@ export function ShoppingCart() {
 
     setIsProceedingToCheckout(true)
     try {
-      navigate('/merch/checkout')
+      navigate('/store/checkout')
     } catch {
       showToast('Failed to proceed to checkout', { type: 'error' })
     } finally {
@@ -40,12 +40,12 @@ export function ShoppingCart() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="app-surface-page min-h-screen bg-black">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-black/80 border-b border-gray-800 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <button
-            onClick={() => navigate('/merch')}
+            onClick={() => navigate('/store')}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-4"
           >
             <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
@@ -56,7 +56,7 @@ export function ShoppingCart() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="app-surface-shell max-w-7xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="text-center py-12">
             <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-red-500 mx-auto mb-4"></iconify-icon>
@@ -66,7 +66,7 @@ export function ShoppingCart() {
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg mb-4">Your cart is empty</p>
             <button
-              onClick={() => navigate('/merch')}
+              onClick={() => navigate('/store')}
               className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
             >
               Start Shopping
@@ -89,7 +89,7 @@ export function ShoppingCart() {
               {/* Clear cart button */}
               <div className="flex gap-4">
                 <button
-                  onClick={() => navigate('/merch/orders')}
+                  onClick={() => navigate('/store/orders')}
                   className="text-sm text-red-400 hover:text-red-300 transition-colors"
                 >
                   View Order History

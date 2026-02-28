@@ -14,20 +14,14 @@ import { SearchModal } from './Search/SearchModal'
 import { SearchTrigger } from './Search/SearchTrigger'
 import { ProfilePopover } from './Navigation/ProfilePopover'
 
-type HeaderCollapseAuthState = 'in' | 'out'
-
 type HeaderCollapseSessionState = {
-  loginEpoch: number
-  lastAuthState: HeaderCollapseAuthState
-  collapseSeenEpoch: number
+  collapseConsumed: boolean
 }
 
 const HEADER_COLLAPSE_SESSION_KEY = 'dashboard_header_cinematic_session_v1'
 
 const DEFAULT_HEADER_COLLAPSE_SESSION_STATE: HeaderCollapseSessionState = {
-  loginEpoch: 0,
-  lastAuthState: 'out',
-  collapseSeenEpoch: 0,
+  collapseConsumed: false,
 }
 
 let inMemoryHeaderCollapseSessionState: HeaderCollapseSessionState = {
@@ -41,15 +35,10 @@ const normalizeHeaderCollapseSessionState = (value: unknown): HeaderCollapseSess
 
   const draft = value as Partial<HeaderCollapseSessionState>
   const normalized: HeaderCollapseSessionState = {
-    loginEpoch:
-      typeof draft.loginEpoch === 'number' && Number.isFinite(draft.loginEpoch)
-        ? Math.max(0, Number(draft.loginEpoch))
-        : inMemoryHeaderCollapseSessionState.loginEpoch,
-    collapseSeenEpoch:
-      typeof draft.collapseSeenEpoch === 'number' && Number.isFinite(draft.collapseSeenEpoch)
-      ? Math.max(0, Number(draft.collapseSeenEpoch))
-      : inMemoryHeaderCollapseSessionState.collapseSeenEpoch,
-    lastAuthState: draft.lastAuthState === 'in' ? 'in' : 'out',
+    collapseConsumed:
+      typeof draft.collapseConsumed === 'boolean'
+        ? draft.collapseConsumed
+        : inMemoryHeaderCollapseSessionState.collapseConsumed,
   }
 
   return normalized
@@ -98,11 +87,12 @@ const Header: React.FC = () => {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [canHoverProfilePopover, setCanHoverProfilePopover] = useState(false)
   const profileTriggerRef = useRef<HTMLButtonElement>(null)
+  const profileCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [avatarError, setAvatarError] = useState(false)
-  const [collapseSessionEpoch, setCollapseSessionEpoch] = useState(() => readHeaderCollapseSessionState().loginEpoch)
-  const [collapseSeenEpoch, setCollapseSeenEpoch] = useState(() => readHeaderCollapseSessionState().collapseSeenEpoch)
-  const heroSeenInCurrentCollapseCycle = useRef(false)
+  const [collapseConsumed, setCollapseConsumed] = useState(() => readHeaderCollapseSessionState().collapseConsumed)
+  const heroSeenInSessionRef = useRef(false)
   const { isSearchOpen, openSearch, closeSearch } = useSearchModal()
   const { t } = useTranslation()
 
@@ -112,7 +102,7 @@ const Header: React.FC = () => {
   const collapseFeatureEnabled = experienceFlags.headerCollapseV1 !== false
   const collapseRouteEnabled = location.pathname === '/dashboard' && collapseFeatureEnabled
   const isHeroVisible = useDashboardHeroPresence({ enabled: collapseRouteEnabled })
-  const collapseSessionEligible = isSignedIn && collapseSessionEpoch > 0 && collapseSeenEpoch !== collapseSessionEpoch
+  const collapseSessionEligible = !collapseConsumed
   const isCinematicCollapsed = collapseRouteEnabled && collapseSessionEligible && isHeroVisible
 
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
@@ -142,44 +132,64 @@ const Header: React.FC = () => {
   }, [userProfile?.avatar])
 
   useEffect(() => {
-    const sessionState = readHeaderCollapseSessionState()
-    const nextAuthState: HeaderCollapseAuthState = isSignedIn ? 'in' : 'out'
-    const didLogIn = nextAuthState === 'in' && sessionState.lastAuthState !== 'in'
-    const nextState: HeaderCollapseSessionState = {
-      loginEpoch: didLogIn ? sessionState.loginEpoch + 1 : sessionState.loginEpoch,
-      collapseSeenEpoch: didLogIn ? 0 : sessionState.collapseSeenEpoch,
-      lastAuthState: nextAuthState,
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const media = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const update = () => setCanHoverProfilePopover(media.matches)
+    update()
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', update)
+      return () => media.removeEventListener('change', update)
     }
 
-    writeHeaderCollapseSessionState(nextState)
-    heroSeenInCurrentCollapseCycle.current = false
-    setCollapseSessionEpoch(nextState.loginEpoch)
-    setCollapseSeenEpoch(nextState.collapseSeenEpoch)
-  }, [isSignedIn])
+    media.addListener(update)
+    return () => media.removeListener(update)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (profileCloseTimerRef.current) {
+        clearTimeout(profileCloseTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!collapseRouteEnabled || !collapseSessionEligible) {
-      heroSeenInCurrentCollapseCycle.current = false
+      if (!collapseRouteEnabled) {
+        heroSeenInSessionRef.current = false
+      }
       return
     }
 
     if (isHeroVisible) {
-      heroSeenInCurrentCollapseCycle.current = true
+      heroSeenInSessionRef.current = true
       return
     }
 
-    if (!heroSeenInCurrentCollapseCycle.current) {
+    if (!heroSeenInSessionRef.current) {
       return
     }
 
-    heroSeenInCurrentCollapseCycle.current = false
-    const nextState = {
+    heroSeenInSessionRef.current = false
+    const nextState: HeaderCollapseSessionState = {
       ...readHeaderCollapseSessionState(),
-      collapseSeenEpoch: collapseSessionEpoch,
+      collapseConsumed: true,
     }
     writeHeaderCollapseSessionState(nextState)
-    setCollapseSeenEpoch(collapseSessionEpoch)
-  }, [collapseRouteEnabled, collapseSessionEligible, isHeroVisible, collapseSessionEpoch])
+    setCollapseConsumed(true)
+  }, [collapseRouteEnabled, collapseSessionEligible, isHeroVisible])
+
+  const cancelProfileCloseTimer = () => {
+    if (!profileCloseTimerRef.current) return
+    clearTimeout(profileCloseTimerRef.current)
+    profileCloseTimerRef.current = null
+  }
+
+  const scheduleProfileClose = () => {
+    cancelProfileCloseTimer()
+    profileCloseTimerRef.current = setTimeout(() => setIsProfileOpen(false), 120)
+  }
 
   const handleMarkAllRead = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -207,8 +217,8 @@ const Header: React.FC = () => {
   }
 
   const searchTriggerClass = isCinematicCollapsed
-    ? 'hidden md:flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800/80 bg-zinc-900/30 text-zinc-400 hover:text-white hover:border-red-600/60 transition-colors leading-none [&_kbd]:hidden [&_span]:hidden px-0'
-    : 'hidden md:flex h-8 items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-0 text-zinc-400 hover:text-white hover:border-red-600/60 transition-colors leading-none [&_kbd]:hidden [&_span]:text-xs'
+    ? 'hidden md:flex h-8 w-8 justify-center px-0 [&_.app-search-trigger-label]:hidden [&_.app-search-trigger-shortcut]:hidden'
+    : 'hidden md:flex h-9 min-w-[260px] px-4 py-0.5'
 
   return (
     <>
@@ -224,6 +234,7 @@ const Header: React.FC = () => {
           if (isWishlistOpen) setIsWishlistOpen(false)
           if (isNotificationsOpen) setIsNotificationsOpen(false)
           if (isProfileOpen) setIsProfileOpen(false)
+          cancelProfileCloseTimer()
         }}
       >
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-[1020]">
@@ -275,7 +286,7 @@ const Header: React.FC = () => {
 
                 {isNotificationsOpen && (
                   <div
-                    className="absolute right-0 mt-3 w-[320px] bg-zinc-950/95 backdrop-blur-xl border border-zinc-800/70 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in"
+                    className="app-surface-modal absolute right-0 mt-3 w-[320px] rounded-2xl overflow-hidden animate-fade-in"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
@@ -350,8 +361,18 @@ const Header: React.FC = () => {
               <div className="relative pl-2 border-l border-zinc-800">
                 <button
                   ref={profileTriggerRef}
+                  onMouseEnter={() => {
+                    if (!canHoverProfilePopover) return
+                    cancelProfileCloseTimer()
+                    setIsProfileOpen(true)
+                  }}
+                  onMouseLeave={() => {
+                    if (!canHoverProfilePopover) return
+                    scheduleProfileClose()
+                  }}
                   onClick={(e) => {
                     e.stopPropagation()
+                    cancelProfileCloseTimer()
                     setIsProfileOpen(!isProfileOpen)
                   }}
                   className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700 hover:border-red-500 transition-colors"
@@ -372,8 +393,14 @@ const Header: React.FC = () => {
                 </button>
                 <ProfilePopover
                   isOpen={isProfileOpen}
-                  onClose={() => setIsProfileOpen(false)}
+                  onClose={() => {
+                    cancelProfileCloseTimer()
+                    setIsProfileOpen(false)
+                  }}
                   triggerRef={profileTriggerRef}
+                  canHover={canHoverProfilePopover}
+                  onHoverStart={cancelProfileCloseTimer}
+                  onHoverEnd={scheduleProfileClose}
                 />
               </div>
             </div>

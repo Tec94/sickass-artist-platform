@@ -18,6 +18,13 @@ interface SearchResultsProps {
   onSelect: (result: { type: string; [key: string]: unknown }) => void
 }
 
+const getResultItemClass = (isSelected: boolean) =>
+  `w-full flex items-center gap-3 px-4 py-3 text-left border-l-2 transition-colors ${
+    isSelected
+      ? 'border-l-red-400 bg-zinc-100/10'
+      : 'border-l-transparent hover:bg-zinc-900/60'
+  }`
+
 // User result item
 const UserResultItem = ({
   result,
@@ -30,9 +37,7 @@ const UserResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
     <img
       src={result.avatar}
@@ -59,11 +64,9 @@ const ThreadResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
-    <div className="p-2 rounded bg-purple-500/20">
+    <div className="rounded-lg border border-fuchsia-400/30 bg-fuchsia-500/15 p-2">
       <iconify-icon icon="solar:chat-square-dots-linear" width="16" height="16" class="text-purple-400"></iconify-icon>
     </div>
     <div className="flex-1 min-w-0">
@@ -92,9 +95,7 @@ const GalleryResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
     <img
       src={result.thumbnailUrl}
@@ -121,9 +122,7 @@ const UGCResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
     <img
       src={result.thumbnailUrl}
@@ -134,7 +133,7 @@ const UGCResultItem = ({
       <p className="text-white font-medium truncate">{result.title}</p>
       <p className="text-gray-400 text-sm truncate">by {result.creatorDisplayName}</p>
     </div>
-    <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 capitalize">
+    <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-1 text-xs text-emerald-300 capitalize">
       {result.category.replace('-', ' ')}
     </span>
   </button>
@@ -152,11 +151,9 @@ const ChannelResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
-    <div className="p-2 rounded bg-orange-500/20">
+    <div className="rounded-lg border border-amber-400/30 bg-amber-500/15 p-2">
       <iconify-icon icon="solar:hashtag-linear" width="16" height="16" class="text-orange-400"></iconify-icon>
     </div>
     <div className="flex-1 min-w-0">
@@ -179,9 +176,7 @@ const MerchResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
     <img
       src={result.thumbnailUrl}
@@ -193,7 +188,7 @@ const MerchResultItem = ({
       <p className="text-gray-400 text-sm truncate">${(result.price / 100).toFixed(2)} • {result.category}</p>
     </div>
     {!result.inStock && (
-      <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-500">Out of Stock</span>
+      <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-400">Out of Stock</span>
     )}
   </button>
 )
@@ -210,9 +205,7 @@ const EventResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
     <img
       src={result.imageUrl}
@@ -223,8 +216,10 @@ const EventResultItem = ({
       <p className="text-white font-medium truncate">{result.title}</p>
       <p className="text-gray-400 text-sm truncate">{result.city} • {new Date(result.startAtUtc).toLocaleDateString()}</p>
     </div>
-    <span className={`text-xs px-2 py-1 rounded capitalize ${
-      result.saleStatus === 'on_sale' ? 'bg-red-500/20 text-red-400' : 'bg-gray-800 text-gray-500'
+    <span className={`rounded-full border px-2 py-1 text-xs capitalize ${
+      result.saleStatus === 'on_sale'
+        ? 'border-red-500/40 bg-red-500/15 text-red-300'
+        : 'border-zinc-700 bg-zinc-900 text-zinc-400'
     }`}>
       {result.saleStatus.replace('_', ' ')}
     </span>
@@ -243,11 +238,9 @@ const NavResultItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-      isSelected ? 'bg-red-500/20' : 'hover:bg-white/5'
-    }`}
+    className={getResultItemClass(isSelected)}
   >
-    <div className="p-2 rounded bg-slate-500/20">
+    <div className="rounded-lg border border-slate-400/30 bg-slate-500/15 p-2">
       <iconify-icon icon="solar:link-linear" width="16" height="16" class="text-slate-300"></iconify-icon>
     </div>
     <div className="flex-1 min-w-0">
@@ -269,51 +262,107 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   // Render appropriate item based on type
   const renderResultItem = (result: SearchUserResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <UserResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'user' })} />
+    return (
+      <UserResultItem
+        key={`user-${result._id ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'user' })}
+      />
+    )
   }
 
   const renderThreadItem = (result: SearchThreadResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <ThreadResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'thread' })} />
+    return (
+      <ThreadResultItem
+        key={`thread-${result._id ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'thread' })}
+      />
+    )
   }
 
   const renderGalleryItem = (result: SearchGalleryResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <GalleryResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'gallery' })} />
+    return (
+      <GalleryResultItem
+        key={`gallery-${result.contentId ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'gallery' })}
+      />
+    )
   }
 
   const renderUGCItem = (result: SearchUGCResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <UGCResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'ugc' })} />
+    return (
+      <UGCResultItem
+        key={`ugc-${result.ugcId ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'ugc' })}
+      />
+    )
   }
 
   const renderChannelItem = (result: SearchChannelResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <ChannelResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'channel' })} />
+    return (
+      <ChannelResultItem
+        key={`channel-${result._id ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'channel' })}
+      />
+    )
   }
 
   const renderMerchItem = (result: SearchMerchResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <MerchResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'merch' })} />
+    return (
+      <MerchResultItem
+        key={`merch-${result._id ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'merch' })}
+      />
+    )
   }
 
   const renderEventItem = (result: SearchEventResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <EventResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'event' })} />
+    return (
+      <EventResultItem
+        key={`event-${result._id ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'event' })}
+      />
+    )
   }
 
   const renderNavItem = (result: SearchNavResult, index: number): React.ReactNode => {
     const isSelected = index === selectedIndex
-    return <NavResultItem result={result} isSelected={isSelected} onClick={() => onSelect({ ...result, type: 'pages' })} />
+    return (
+      <NavResultItem
+        key={`pages-${result.path ?? index}`}
+        result={result}
+        isSelected={isSelected}
+        onClick={() => onSelect({ ...result, type: 'pages' })}
+      />
+    )
   }
 
   // Group results by type if filter is 'all'
   if (filter === 'all') {
     return (
-      <div className="divide-y divide-red-500/10">
+      <div className="divide-y divide-zinc-800/80">
         {navResults.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Pages
             </div>
             {navResults.slice(0, 4).map((result, index) => renderNavItem(result, index))}
@@ -321,7 +370,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.users.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Users
             </div>
             {results.users.slice(0, 3).map((result, index) => renderResultItem(result, navResults.length + index))}
@@ -329,7 +378,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.threads.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Threads
             </div>
             {results.threads.slice(0, 3).map((result, index) =>
@@ -339,7 +388,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.gallery.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Gallery
             </div>
             {results.gallery.slice(0, 3).map((result, index) =>
@@ -349,7 +398,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.ugc.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               UGC
             </div>
             {results.ugc.slice(0, 3).map((result, index) =>
@@ -362,7 +411,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.channels.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Channels
             </div>
             {results.channels.slice(0, 3).map((result, index) =>
@@ -380,7 +429,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.merch.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Merch
             </div>
             {results.merch.slice(0, 3).map((result, index) =>
@@ -399,7 +448,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         )}
         {results.events.length > 0 && (
           <div>
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="px-4 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">
               Events
             </div>
             {results.events.slice(0, 3).map((result, index) =>
@@ -425,49 +474,49 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   switch (filter) {
     case 'users':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.users.map((result, index) => renderResultItem(result, index))}
         </div>
       )
     case 'threads':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.threads.map((result, index) => renderThreadItem(result, index))}
         </div>
       )
     case 'gallery':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.gallery.map((result, index) => renderGalleryItem(result, index))}
         </div>
       )
     case 'ugc':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.ugc.map((result, index) => renderUGCItem(result, index))}
         </div>
       )
     case 'channels':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.channels.map((result, index) => renderChannelItem(result, index))}
         </div>
       )
     case 'merch':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.merch.map((result, index) => renderMerchItem(result, index))}
         </div>
       )
     case 'events':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {results.events.map((result, index) => renderEventItem(result, index))}
         </div>
       )
     case 'pages':
       return (
-        <div className="divide-y divide-red-500/10">
+        <div className="divide-y divide-zinc-800/80">
           {navResults.map((result, index) => renderNavItem(result, index))}
         </div>
       )

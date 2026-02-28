@@ -238,7 +238,7 @@ export function MerchDetail() {
 
   return (
     <MerchErrorBoundary>
-      <div className="min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
+      <div className="app-surface-page min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
         <FreeShippingBanner />
 
         <div className="animate-fade-in mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

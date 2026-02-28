@@ -124,15 +124,16 @@ export const CinematicHero = ({
   )
   const timeline = getTimeline(variant)
   const mergedCopy = { ...DEFAULT_HERO_COPY, ...(copy || {}) }
+  const cinematicLayerInset = safeguardMode ? '-5%' : '-7%'
 
-  const bgX = useTransform(scrollYProgress, [0, 1], isReduced ? [0, 0] : [-48 * depth, 30 * depth])
+  const bgX = useTransform(scrollYProgress, [0, 1], isReduced ? [0, 0] : [0, 30 * depth])
   const bgY = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
     isReduced
       ? [0, 0, 0]
       : [
-          heroMotionProfile.backgroundY[0] * depth,
+          0,
           heroMotionProfile.backgroundY[1] * depth,
           heroMotionProfile.backgroundY[2] * depth,
         ],
@@ -247,8 +248,9 @@ export const CinematicHero = ({
     >
       <div className="sticky top-0 h-screen overflow-hidden bg-[#04070B]">
         <motion.div
-          className="absolute inset-0 z-0 will-change-transform"
+          className="absolute z-0 will-change-transform"
           style={{
+            inset: cinematicLayerInset,
             x: bgX,
             y: bgY,
             scale: bgScale,
@@ -262,8 +264,9 @@ export const CinematicHero = ({
         />
 
         <motion.div
-          className="absolute inset-0 z-10 will-change-transform"
+          className="absolute z-10 will-change-transform"
           style={{
+            inset: cinematicLayerInset,
             x: midX,
             y: midY,
             scale: midScale,
@@ -278,8 +281,9 @@ export const CinematicHero = ({
         />
 
         <motion.div
-          className="absolute inset-0 z-20 will-change-transform"
+          className="absolute z-20 will-change-transform"
           style={{
+            inset: cinematicLayerInset,
             x: fgX,
             y: fgY,
             scale: fgScale,

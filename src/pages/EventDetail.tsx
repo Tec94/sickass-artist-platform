@@ -66,7 +66,7 @@ export function EventDetail() {
   }
 
   return (
-    <div className="event-detail-layout">
+    <div className="event-detail-layout app-surface-page app-surface-shell">
       {/* Navigation & Status Header */}
       <div className="detail-header-bar">
         <button 
