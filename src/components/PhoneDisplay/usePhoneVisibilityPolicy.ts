@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { PhoneOverlayVisibilityPolicy } from './phoneTypes'
 
-const ROUTE_EXCLUSIONS = ['/sign-in', '/sign-up', '/sso-callback', '/test-errors']
+const ROUTE_EXCLUSIONS = ['/auth', '/sign-in', '/sign-up', '/sso-callback', '/test-errors']
 
 const matchesExcludedRoute = (pathname: string) =>
   ROUTE_EXCLUSIONS.includes(pathname) ||
@@ -88,4 +88,3 @@ export function usePhoneVisibilityPolicy(): PhoneOverlayVisibilityPolicy {
 
   return domPolicy
 }
-

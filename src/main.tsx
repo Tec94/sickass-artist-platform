@@ -5,6 +5,7 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import '@google/model-viewer'
 import { ConvexAuthProvider } from './components/ConvexAuthProvider'
 import App from './App'
+import { sanitizeReturnTo } from './features/auth/authRouting'
 import './index.css'
 import './styles/dashboard-variants.css'
 import './styles/app-surfaces.css'
@@ -48,7 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       cacheLocation="localstorage"
       onRedirectCallback={(appState: unknown) => {
         const returnTo = (appState as { returnTo?: string } | undefined)?.returnTo
-        const target = returnTo && returnTo.startsWith('/') ? returnTo : '/dashboard'
+        const target = sanitizeReturnTo(returnTo)
         // Update URL without full page reload and notify React Router.
         window.history.replaceState({}, document.title, target)
         window.dispatchEvent(new PopStateEvent('popstate'))

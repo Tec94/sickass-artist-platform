@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Lock, Map, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
+import { buildAuthEntryHref } from '../features/auth/authRouting'
 import {
   OUTER_GROUNDS_PATHS,
   OUTER_GROUNDS_REGION_ORDER,
@@ -59,9 +60,6 @@ const getRegionAccentRgb = (hex: string) => {
   return `${r} ${g} ${b}`
 }
 
-const getReturnToHref = (route: string) => `/sign-in?returnTo=${encodeURIComponent(route)}`
-const getSignUpHref = (route: string) => `/sign-up?returnTo=${encodeURIComponent(route)}`
-
 const OUTER_GROUND_REGIONS: OuterGroundRegion[] = OUTER_GROUNDS_REGION_ORDER.map((id) => ({
   id,
   ...OUTER_GROUNDS_PATHS[id],
@@ -82,6 +80,10 @@ export const LandingPage = () => {
 
   const scene = OUTER_GROUNDS_SCENE
   const regions = OUTER_GROUND_REGIONS
+  const overlayRegions = useMemo(
+    () => [...regions].sort((left, right) => left.hitPriority - right.hitPriority),
+    [regions],
+  )
 
   const debugRegions = useMemo(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -241,8 +243,14 @@ export const LandingPage = () => {
               className="castle-landing__scene-overlay"
               viewBox={`0 0 ${scene.width} ${scene.height}`}
               preserveAspectRatio="xMidYMid meet"
-              aria-hidden="true"
+              role="group"
+              aria-labelledby="castle-estate-title castle-estate-description"
             >
+              <title id="castle-estate-title">ROA estate navigation</title>
+              <desc id="castle-estate-description">
+                Explore five estate regions: Store, Events, Ranking, Current Release, and Community.
+                Use pointer, keyboard, or touch preview to move through the estate.
+              </desc>
               <defs>
                 <filter id="castle-region-glow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="22" result="blurred" />
@@ -252,13 +260,13 @@ export const LandingPage = () => {
                   </feMerge>
                 </filter>
 
-                {regions.map((region) => (
+                {overlayRegions.map((region) => (
                   <clipPath id={`castle-clip-${region.id}`} key={`clip-${region.id}`}>
                     <path d={region.d} />
                   </clipPath>
                 ))}
 
-                {regions.map((region) => (
+                {overlayRegions.map((region) => (
                   <linearGradient
                     id={`castle-tint-${region.id}`}
                     key={`tint-${region.id}`}
@@ -282,18 +290,24 @@ export const LandingPage = () => {
                 </linearGradient>
               </defs>
 
-              {regions.map((region) => {
+              {overlayRegions.map((region) => {
                 const isLocked = region.authRequired && !isSignedIn
                 const isActive = visibleRegionId === region.id
                 const accentRgb = getRegionAccentRgb(region.hoverAccent)
                 const fillOpacity = isActive ? (isLocked ? 0.12 : 0.16) : debugRegions ? 0.16 : 0
                 const strokeOpacity = isActive ? (isLocked ? 0.58 : 0.82) : debugRegions ? 0.42 : 0.08
                 const strokeWidth = isActive ? 12 : debugRegions ? 8 : 5
+                const debugAccessState = isLocked ? 'LOCKED' : region.debugAccessLabel
+                const debugLabel = `${region.debugLabel} · ID ${region.id} · ${debugAccessState} · P${region.hitPriority}`
 
                 return (
                   <g key={region.id}>
                     {isActive && (
-                      <g clipPath={`url(#castle-clip-${region.id})`} filter="url(#castle-region-glow)">
+                      <g
+                        aria-hidden="true"
+                        clipPath={`url(#castle-clip-${region.id})`}
+                        filter="url(#castle-region-glow)"
+                      >
                         <rect
                           width={scene.width}
                           height={scene.height}
@@ -316,19 +330,27 @@ export const LandingPage = () => {
                     <path
                       d={region.d}
                       className="castle-landing__outline"
+                      aria-hidden="true"
                       fill={fillOpacity ? `rgb(${accentRgb} / ${fillOpacity})` : 'transparent'}
                       stroke={`rgb(${accentRgb} / ${strokeOpacity})`}
                       strokeWidth={strokeWidth}
                       strokeLinejoin="round"
+                      data-region-id={region.id}
+                      data-hit-priority={region.hitPriority}
                       data-debug={debugRegions ? 'true' : 'false'}
                     />
 
                     <path
                       d={region.d}
                       tabIndex={0}
+                      focusable="true"
                       role="button"
                       aria-label={`${region.label}. ${isLocked ? 'Members only.' : 'Public access.'} ${region.preview}`}
+                      aria-keyshortcuts="Enter Space"
                       className="castle-landing__hit-region"
+                      data-region-id={region.id}
+                      data-hit-priority={region.hitPriority}
+                      data-hit-region="true"
                       fill="rgb(255 255 255 / 0.001)"
                       stroke="transparent"
                       strokeWidth={debugRegions ? 24 : 36}
@@ -347,6 +369,46 @@ export const LandingPage = () => {
                       }}
                       onKeyDown={(event) => handlePathKeyDown(event, region)}
                     />
+
+                    {debugRegions && (
+                      <g
+                        className="castle-landing__debug-layer"
+                        data-debug-region={region.id}
+                        data-debug-access={debugAccessState.toLowerCase()}
+                        aria-hidden="true"
+                      >
+                        <g
+                          className="castle-landing__debug-anchor"
+                          transform={`translate(${region.labelAnchor.x} ${region.labelAnchor.y})`}
+                          data-region-id={region.id}
+                          data-debug-anchor="label"
+                        >
+                          <circle r="10" />
+                          <path d="M -16 0 H 16 M 0 -16 V 16" />
+                          <text x="18" y="-10">LABEL</text>
+                        </g>
+
+                        <g
+                          className="castle-landing__debug-anchor castle-landing__debug-anchor--arrow"
+                          transform={`translate(${region.arrowAnchor.x} ${region.arrowAnchor.y})`}
+                          data-region-id={region.id}
+                          data-debug-anchor="arrow"
+                        >
+                          <circle r="10" />
+                          <path d="M -16 0 H 16 M 0 -16 V 16" />
+                          <text x="18" y="-10">ARROW</text>
+                        </g>
+
+                        <text
+                          className="castle-landing__debug-label"
+                          x={region.labelAnchor.x + 18}
+                          y={region.labelAnchor.y + 22}
+                          data-region-id={region.id}
+                        >
+                          {debugLabel}
+                        </text>
+                      </g>
+                    )}
                   </g>
                 )
               })}
@@ -363,6 +425,8 @@ export const LandingPage = () => {
                     className="castle-landing__arrow"
                     data-active={isActive ? 'true' : 'false'}
                     data-locked={isLocked ? 'true' : 'false'}
+                    data-region-id={region.id}
+                    data-region-cue="true"
                     style={
                       {
                         ...percentStyle(region.arrowAnchor, scene.width, scene.height),
@@ -377,6 +441,8 @@ export const LandingPage = () => {
                     className="castle-landing__label"
                     data-active={isActive ? 'true' : 'false'}
                     data-locked={isLocked ? 'true' : 'false'}
+                    data-region-id={region.id}
+                    data-region-card="true"
                     style={
                       {
                         ...percentStyle(region.labelAnchor, scene.width, scene.height),
@@ -419,11 +485,11 @@ export const LandingPage = () => {
                     'Sign in to continue into this wing.'}
                 </p>
                 <div className="castle-landing__auth-actions">
-                  <a href={getReturnToHref(promptRegion.route)}>
+                  <a href={buildAuthEntryHref('signin', promptRegion.route)}>
                     Sign in
                   </a>
                   <a
-                    href={getSignUpHref(promptRegion.route)}
+                    href={buildAuthEntryHref('signup', promptRegion.route)}
                     className="castle-landing__secondary-action"
                   >
                     Create account

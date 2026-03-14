@@ -1,23 +1,20 @@
 import { useEffect, useMemo } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
-import { sanitizeReturnTo } from './SignInPage'
+import { useNavigate } from 'react-router-dom'
+import {
+  buildAuthEntryHref,
+  sanitizeReturnTo,
+} from '../features/auth/authRouting'
 
 export function SignUpPage() {
-  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0()
+  const navigate = useNavigate()
   const returnTo = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return sanitizeReturnTo(params.get('returnTo'))
   }, [])
 
   useEffect(() => {
-    if (isLoading || isAuthenticated) return
-    loginWithRedirect({
-      appState: { returnTo },
-      authorizationParams: {
-        screen_hint: 'signup',
-      },
-    }).catch((err) => console.error('[Auth0] signup loginWithRedirect failed', err))
-  }, [isLoading, isAuthenticated, loginWithRedirect, returnTo])
+    navigate(buildAuthEntryHref('signup', returnTo), { replace: true })
+  }, [navigate, returnTo])
 
   return (
     <div className="app-surface-page min-h-screen px-4 py-10">

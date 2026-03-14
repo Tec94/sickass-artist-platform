@@ -159,6 +159,41 @@
   transition: fill 180ms ease, stroke 180ms ease, stroke-width 180ms ease;
 }
 
+.castle-landing__debug-layer,
+.castle-landing__debug-anchor,
+.castle-landing__debug-label {
+  pointer-events: none;
+}
+
+.castle-landing__debug-anchor circle,
+.castle-landing__debug-anchor path {
+  fill: rgba(9, 12, 18, 0.86);
+  stroke: rgba(244, 236, 224, 0.92);
+  stroke-width: 2.4px;
+}
+
+.castle-landing__debug-anchor--arrow circle,
+.castle-landing__debug-anchor--arrow path {
+  stroke: rgba(242, 187, 119, 0.96);
+}
+
+.castle-landing__debug-anchor text,
+.castle-landing__debug-label {
+  fill: rgba(245, 239, 226, 0.98);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  paint-order: stroke;
+  stroke: rgba(8, 10, 14, 0.92);
+  stroke-width: 9px;
+  stroke-linejoin: round;
+}
+
+.castle-landing__debug-anchor text {
+  text-transform: uppercase;
+}
+
 .castle-landing__hit-region {
   cursor: pointer;
   pointer-events: all;
@@ -176,6 +211,7 @@
 .castle-landing__label {
   position: absolute;
   z-index: 6;
+  pointer-events: none;
   transform: translate(-50%, -50%);
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }

@@ -15,6 +15,7 @@ import { Chat } from './pages/Chat'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { SSOCallback } from './pages/SSOCallback'
+import { AuthEntryPage } from './pages/AuthEntryPage'
 import { LandingPage } from './pages/LandingPage'
 import { useTranslation } from './hooks/useTranslation'
 import { ParallaxBackground } from './components/ParallaxBackground'
@@ -150,6 +151,7 @@ function AppContent() {
                 <Route path="/" element={<LandingPage />} />
                 
                 {/* Auth Routes */}
+                <Route path="/auth" element={<AuthEntryPage />} />
                 <Route path="/sign-in" element={<SignInPage />} />
                 <Route path="/sign-up" element={<SignUpPage />} />
                 <Route path="/sso-callback" element={<SSOCallback />} />

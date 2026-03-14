@@ -6,6 +6,7 @@ describe('route a11y smoke', () => {
     const appTsx = readFileSync('src/App.tsx', 'utf8')
     const requiredRoutes = [
       '/',
+      '/auth',
       '/dashboard',
       '/community',
       '/campaign',
@@ -28,13 +29,16 @@ describe('route a11y smoke', () => {
   })
 
   it('uses status semantics for auth redirect routes', () => {
+    const authEntry = readFileSync('src/pages/AuthEntryPage.tsx', 'utf8')
     const signIn = readFileSync('src/pages/SignInPage.tsx', 'utf8')
     const signUp = readFileSync('src/pages/SignUpPage.tsx', 'utf8')
     const callback = readFileSync('src/pages/SSOCallback.tsx', 'utf8')
 
+    expect(authEntry).toContain('role="status"')
     expect(signIn).toContain('role="status"')
     expect(signUp).toContain('role="status"')
     expect(callback).toContain('role="status"')
+    expect(authEntry).toContain('aria-live="polite"')
     expect(signIn).toContain('aria-live="polite"')
     expect(signUp).toContain('aria-live="polite"')
     expect(callback).toContain('aria-live="polite"')
