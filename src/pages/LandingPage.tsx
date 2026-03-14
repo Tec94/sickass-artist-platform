@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Lock, Map, X } from 'lucide-react'
+import { Lock, Map, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
 import { buildAuthEntryHref } from '../features/auth/authRouting'
@@ -9,7 +9,6 @@ import {
   OUTER_GROUNDS_PATHS,
   OUTER_GROUNDS_REGION_ORDER,
   OUTER_GROUNDS_SCENE,
-  type CastleArrowDirection,
   type CastlePoint,
   type CastleRegionId,
   type OuterGroundRegionConfig,
@@ -17,13 +16,6 @@ import {
 import '../styles/castle-landing.css'
 
 type OuterGroundRegion = { id: CastleRegionId } & OuterGroundRegionConfig
-
-const arrowIconByDirection: Record<CastleArrowDirection, typeof ArrowLeft> = {
-  up: ArrowUp,
-  right: ArrowRight,
-  down: ArrowDown,
-  left: ArrowLeft,
-}
 
 const directionalRegionByKey: Partial<Record<string, CastleRegionId>> = {
   ArrowLeft: 'store',
@@ -58,6 +50,17 @@ const getRegionAccentRgb = (hex: string) => {
   const g = (value >> 8) & 255
   const b = value & 255
   return `${r} ${g} ${b}`
+}
+
+const getCardAlignmentTransform = (alignment: OuterGroundRegion['cardPlacement']['align']) => {
+  switch (alignment) {
+    case 'left':
+      return '0%'
+    case 'right':
+      return '-100%'
+    default:
+      return '-50%'
+  }
 }
 
 const OUTER_GROUND_REGIONS: OuterGroundRegion[] = OUTER_GROUNDS_REGION_ORDER.map((id) => ({
@@ -203,7 +206,12 @@ export const LandingPage = () => {
   }
 
   return (
-    <main className="castle-landing" onKeyDown={handleSceneKeyDown} data-debug={debugRegions ? 'true' : 'false'}>
+    <main
+      className="castle-landing"
+      onKeyDown={handleSceneKeyDown}
+      data-debug={debugRegions ? 'true' : 'false'}
+      data-reduced-motion={prefersReducedMotion ? 'true' : 'false'}
+    >
       <section className="castle-landing__stage">
         <div className="castle-landing__scene-wrap">
           <div
@@ -294,14 +302,29 @@ export const LandingPage = () => {
                 const isLocked = region.authRequired && !isSignedIn
                 const isActive = visibleRegionId === region.id
                 const accentRgb = getRegionAccentRgb(region.hoverAccent)
-                const fillOpacity = isActive ? (isLocked ? 0.12 : 0.16) : debugRegions ? 0.16 : 0
-                const strokeOpacity = isActive ? (isLocked ? 0.58 : 0.82) : debugRegions ? 0.42 : 0.08
-                const strokeWidth = isActive ? 12 : debugRegions ? 8 : 5
+                const highlightFillOpacity = isActive ? (isLocked ? 0.12 : 0.16) : debugRegions ? 0.13 : 0
+                const highlightStrokeOpacity = isActive ? (isLocked ? 0.42 : 0.66) : debugRegions ? 0.34 : 0
+                const outlineStrokeOpacity = isActive ? (isLocked ? 0.2 : 0.28) : debugRegions ? 0.18 : 0.04
                 const debugAccessState = isLocked ? 'LOCKED' : region.debugAccessLabel
                 const debugLabel = `${region.debugLabel} · ID ${region.id} · ${debugAccessState} · P${region.hitPriority}`
 
                 return (
                   <g key={region.id}>
+                    {(isActive || debugRegions) && (
+                      <path
+                        d={region.d}
+                        className="castle-landing__highlight"
+                        aria-hidden="true"
+                        fill={`rgb(${accentRgb} / ${highlightFillOpacity})`}
+                        stroke={`rgb(${accentRgb} / ${highlightStrokeOpacity})`}
+                        strokeWidth={isActive ? (isLocked ? 8 : 10) : 7}
+                        strokeLinejoin="round"
+                        filter="url(#castle-region-glow)"
+                        data-region-id={region.id}
+                        data-locked={isLocked ? 'true' : 'false'}
+                      />
+                    )}
+
                     {isActive && (
                       <g
                         aria-hidden="true"
@@ -331,13 +354,14 @@ export const LandingPage = () => {
                       d={region.d}
                       className="castle-landing__outline"
                       aria-hidden="true"
-                      fill={fillOpacity ? `rgb(${accentRgb} / ${fillOpacity})` : 'transparent'}
-                      stroke={`rgb(${accentRgb} / ${strokeOpacity})`}
-                      strokeWidth={strokeWidth}
+                      fill="transparent"
+                      stroke={`rgb(${accentRgb} / ${outlineStrokeOpacity})`}
+                      strokeWidth={isActive ? 4 : 3}
                       strokeLinejoin="round"
                       data-region-id={region.id}
                       data-hit-priority={region.hitPriority}
                       data-debug={debugRegions ? 'true' : 'false'}
+                      data-locked={isLocked ? 'true' : 'false'}
                     />
 
                     <path
@@ -415,38 +439,27 @@ export const LandingPage = () => {
             </svg>
 
             {regions.map((region) => {
-              const ArrowIcon = arrowIconByDirection[region.arrowDirection]
               const isLocked = region.authRequired && !isSignedIn
               const isActive = visibleRegionId === region.id
 
               return (
                 <div key={`${region.id}-markers`} aria-hidden="true">
                   <div
-                    className="castle-landing__arrow"
-                    data-active={isActive ? 'true' : 'false'}
-                    data-locked={isLocked ? 'true' : 'false'}
-                    data-region-id={region.id}
-                    data-region-cue="true"
-                    style={
-                      {
-                        ...percentStyle(region.arrowAnchor, scene.width, scene.height),
-                        ['--castle-accent' as string]: region.hoverAccent,
-                      } as CSSProperties
-                    }
-                  >
-                    <ArrowIcon size={isActive ? 24 : 20} />
-                  </div>
-
-                  <div
                     className="castle-landing__label"
                     data-active={isActive ? 'true' : 'false'}
                     data-locked={isLocked ? 'true' : 'false'}
+                    data-align={region.cardPlacement.align}
                     data-region-id={region.id}
                     data-region-card="true"
                     style={
                       {
                         ...percentStyle(region.labelAnchor, scene.width, scene.height),
                         ['--castle-accent' as string]: region.hoverAccent,
+                        ['--castle-card-base-x' as string]: getCardAlignmentTransform(region.cardPlacement.align),
+                        ['--castle-card-offset-x' as string]: `${region.cardPlacement.offsetX ?? 0}px`,
+                        ['--castle-card-offset-y' as string]: `${region.cardPlacement.offsetY ?? 0}px`,
+                        ['--castle-card-mobile-offset-x' as string]: `${region.cardPlacement.mobileOffsetX ?? region.cardPlacement.offsetX ?? 0}px`,
+                        ['--castle-card-mobile-offset-y' as string]: `${region.cardPlacement.mobileOffsetY ?? region.cardPlacement.offsetY ?? 0}px`,
                       } as CSSProperties
                     }
                   >

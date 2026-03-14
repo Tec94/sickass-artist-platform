@@ -2,10 +2,19 @@ export type CastleRegionId = 'store' | 'ranking' | 'campaign' | 'events' | 'comm
 
 export type CastleArrowDirection = 'up' | 'right' | 'down' | 'left'
 export type CastlePopoverDirection = 'top' | 'right' | 'bottom' | 'left' | 'center'
+export type CastleCardAlignment = 'left' | 'center' | 'right'
 
 export interface CastlePoint {
   x: number
   y: number
+}
+
+export interface CastleCardPlacement {
+  align: CastleCardAlignment
+  offsetX?: number
+  offsetY?: number
+  mobileOffsetX?: number
+  mobileOffsetY?: number
 }
 
 export interface OuterGroundRegionConfig {
@@ -23,6 +32,7 @@ export interface OuterGroundRegionConfig {
   labelAnchor: CastlePoint
   arrowAnchor: CastlePoint
   arrowDirection: CastleArrowDirection
+  cardPlacement: CastleCardPlacement
   preview: string
   authPromptTitle?: string
   authPromptDescription?: string
@@ -68,9 +78,16 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 2,
     debugLabel: 'STORE',
     debugAccessLabel: 'PUBLIC',
-    labelAnchor: point(700, 1080),
-    arrowAnchor: point(620, 980),
+    labelAnchor: point(760, 1080),
+    arrowAnchor: point(690, 982),
     arrowDirection: 'left',
+    cardPlacement: {
+      align: 'left',
+      offsetX: 34,
+      offsetY: -18,
+      mobileOffsetX: 30,
+      mobileOffsetY: 4,
+    },
     preview: 'Drops, limited pieces, queue access, and the merch hall.',
   },
   ranking: {
@@ -88,6 +105,13 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1950, 180),
     arrowAnchor: point(2048, 260),
     arrowDirection: 'down',
+    cardPlacement: {
+      align: 'center',
+      offsetX: 0,
+      offsetY: 28,
+      mobileOffsetX: 0,
+      mobileOffsetY: 56,
+    },
     preview: 'Leaderboards, top tracks, elite status, and fan hierarchy.',
   },
   campaign: {
@@ -105,12 +129,19 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1900, 1250),
     arrowAnchor: point(2050, 1320),
     arrowDirection: 'up',
+    cardPlacement: {
+      align: 'center',
+      offsetX: 0,
+      offsetY: -12,
+      mobileOffsetX: 0,
+      mobileOffsetY: 14,
+    },
     preview: 'Featured release, campaign focus, and the live callout axis.',
   },
   events: {
     label: 'Events',
     locationLabel: 'West Hall',
-    subtitle: 'Gathering Court',
+    subtitle: 'Great Hall',
     route: '/events',
     authRequired: false,
     d: 'M 1168.79,523.42 C 1151.57,515.96 1124.96,506.18 1110.00,496.54 1110.00,496.54 1038.98,461.13 1038.98,461.13 1023.50,453.41 947.21,423.85 947.38,409.31 947.61,390.69 959.51,383.08 972.51,373.20 972.51,373.20 1003.99,354.91 1003.99,354.91 1003.99,354.91 1038.98,329.75 1038.98,329.75 1049.87,319.97 1033.38,280.13 1045.26,271.65 1045.26,271.65 1076.67,250.19 1076.67,250.19 1076.67,250.19 1112.78,270.61 1112.78,270.61 1112.78,270.61 1134.24,281.07 1134.24,281.07 1134.24,281.07 1156.75,269.04 1156.75,269.04 1156.75,269.04 1180.30,255.43 1180.30,255.43 1188.88,251.55 1207.34,262.56 1210.66,263.28 1210.66,263.28 1278.70,296.78 1278.70,296.78 1278.70,296.78 1571.54,451.18 1571.54,451.18 1571.54,451.18 1657.89,491.46 1666.28,497.03 1695.07,503.31 1711.99,523.41 1711.99,523.41 1711.99,523.41 1718.12,572.45 1715.82,603.87 1715.88,612.56 1718.87,703.30 1718.88,714.22 1718.88,714.22 1722.72,842.97 1724.25,851.40 1722.72,873.62 1724.01,895.02 1723.48,908.10 1723.48,908.10 1646.08,953.32 1646.08,953.32 1646.08,953.32 1684.35,982.45 1684.35,982.45 1684.35,982.45 1717.85,1046.83 1717.85,1046.83 1717.85,1046.83 1571.94,1124.16 1565.54,1122.20 1560.19,1120.57 1533.07,1101.41 1527.85,1098.13 1527.85,1098.13 1489.64,1079.28 1489.64,1079.28 1482.39,1075.09 1469.88,1064.28 1465.56,1064.63 1458.83,1065.17 1371.35,1116.45 1371.35,1116.45 1371.35,1116.45 1327.13,1142.08 1315.34,1142.09 1315.34,1142.09 1282.37,1145.23 1282.37,1145.23 1282.37,1145.23 1248.35,1126.39 1248.35,1126.39 1229.50,1116.45 1190.51,1101.24 1191.82,1092.89 1191.82,1092.89 1194.96,1016.47 1194.96,1016.47 1194.97,1008.07 1197.23,911.45 1193.91,910.74 1193.91,910.74 1047.90,853.39 1047.88,841.13 1047.88,841.13 962.04,881.96 962.04,881.96 962.02,871.55 962.60,829.29 962.04,822.81 962.04,822.81 963.08,677.30 963.08,677.30 963.10,666.89 959.94,646.42 957.33,633.33 957.33,633.33 965.22,617.79 970.41,607.69 972.79,603.05 982.62,590.09 986.12,586.23 990.17,581.74 1003.39,577.85 1003.39,577.85 1003.39,577.85 1023.80,593.55 1023.80,593.55 1023.80,593.55 1063.58,577.33 1063.58,577.33 1063.58,577.33 1116.00,548.54 1116.00,548.54 1116.00,548.54 1168.79,523.42 1168.79,523.42 Z',
@@ -122,7 +153,14 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1200, 620),
     arrowAnchor: point(1320, 710),
     arrowDirection: 'up',
-    preview: 'Tour dates, appearances, and public gatherings in the west palace block.',
+    cardPlacement: {
+      align: 'left',
+      offsetX: 30,
+      offsetY: -22,
+      mobileOffsetX: 18,
+      mobileOffsetY: 8,
+    },
+    preview: 'Tour dates, appearances, and public gatherings in the upper west palace hall.',
   },
   community: {
     label: 'Community',
@@ -136,9 +174,16 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 3,
     debugLabel: 'COMMUNITY',
     debugAccessLabel: 'MEMBERS',
-    labelAnchor: point(2900, 860),
-    arrowAnchor: point(3050, 940),
+    labelAnchor: point(2840, 860),
+    arrowAnchor: point(2988, 940),
     arrowDirection: 'left',
+    cardPlacement: {
+      align: 'right',
+      offsetX: -36,
+      offsetY: -12,
+      mobileOffsetX: -24,
+      mobileOffsetY: 16,
+    },
     preview: 'Dashboard, gallery, forum, chat, and the private member wing.',
     authPromptTitle: 'Members only',
     authPromptDescription: 'Enter the Inner Keep to reach the dashboard, gallery, forum, and live rooms.',
