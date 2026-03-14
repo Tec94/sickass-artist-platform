@@ -1,33 +1,63 @@
-import { useEffect, useState } from 'react'
-import { useMutation } from 'convex/react'
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import type { Id, Thread, ThreadSortBy } from '../types/forum'
+import type { ForumInsightsPayload, Id, Thread, ThreadSortBy } from '../types/forum'
 import { useAuth } from '../hooks/useAuth'
 import { useForumCategories } from '../hooks/useForumCategories'
 import { useForumThreads } from '../hooks/useForumThreads'
 import { useForumThreadDetail } from '../hooks/useForumThreadDetail'
 import { useCreateReply } from '../hooks/useCreateReply'
 import { useAnalytics } from '../hooks/useAnalytics'
-import { ThreadDetail, ThreadForm } from '../components/Forum'
+import {
+  ForumCommunityTabs,
+  ForumInsightsRail,
+  ForumThreadCard,
+  ThreadDetail,
+  ThreadForm,
+  ForumToolbar,
+} from '../components/Forum'
 import { useTranslation } from '../hooks/useTranslation'
+import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
+
+const FALLBACK_THREADS = [
+  {
+    title: 'Collab call for the spring visual pack',
+    content: 'Drop your strongest references and styleboard ideas. We are locking shortlist picks tonight.',
+    replies: 14,
+    views: 802,
+    votes: 61,
+  },
+  {
+    title: 'Need feedback on the vinyl insert draft',
+    content: 'Focus on readability and hierarchy first. Type treatment options in comments would help.',
+    replies: 9,
+    views: 560,
+    votes: 37,
+  },
+]
+
+type ForumCommunityTab = 'community' | 'profile' | 'answers'
 
 export function Forum() {
-  useAnalytics() // Track page views
+  useAnalytics()
+
   const { user } = useAuth()
   const { t } = useTranslation()
+  const { prefersReducedMotion, motionClassName } = useReducedMotionPreference()
 
   const { categories } = useForumCategories()
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<'categories'> | null>(null)
   const [selectedThreadId, setSelectedThreadId] = useState<Id<'threads'> | null>(null)
   const [sortBy, setSortBy] = useState<ThreadSortBy>('newest')
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  const [bookmarkOnly, setBookmarkOnly] = useState(false)
+  const [activeTab, setActiveTab] = useState<ForumCommunityTab>('community')
   const [isThreadFormOpen, setIsThreadFormOpen] = useState(false)
   const [editingThread, setEditingThread] = useState<Thread | null>(null)
 
-
-
   useEffect(() => {
-    if (categories.length > 0 && !selectedCategoryId) {
+    if (!selectedCategoryId && categories.length > 0) {
       setSelectedCategoryId(categories[0]._id)
     }
   }, [categories, selectedCategoryId])
@@ -40,34 +70,44 @@ export function Forum() {
 
   const { thread, replies, isLoading: isThreadDetailLoading } = useForumThreadDetail(selectedThreadId)
   const { handleCreateReply } = useCreateReply(selectedThreadId)
+
   const createThreadMutation = useMutation(api.forum.createThread)
   const editThreadMutation = useMutation(api.forum.editThread)
   const deleteThreadMutation = useMutation(api.forum.deleteThread)
+  const toggleThreadBookmark = useMutation(api.forum.toggleThreadBookmark)
+
+  const bookmarkedThreadIds = useQuery(api.forum.getBookmarkedThreadIds, user ? {} : 'skip') as
+    | Id<'threads'>[]
+    | undefined
+  const insightsQuery = useQuery(api.forum.getForumInsights, selectedCategoryId ? { categoryId: selectedCategoryId, range: '7d' } : 'skip')
+  const insights = (insightsQuery ?? null) as ForumInsightsPayload | null
 
   if (!user) {
-    return <div className="text-center py-8 text-gray-400">{t('forum.signInToAccess')}</div>
+    return <div className="py-8 text-center text-gray-400">{t('forum.signInToAccess')}</div>
   }
 
   const isModerator = user.role === 'mod' || user.role === 'admin'
 
-  const handleSelectCategory = (categoryId: Id<'categories'>) => {
-    setSelectedCategoryId(categoryId)
-    setSelectedThreadId(null)
-    setIsMobileSidebarOpen(false)
-  }
+  const bookmarkedSet = useMemo(() => {
+    return new Set((bookmarkedThreadIds ?? []).map((id) => String(id)))
+  }, [bookmarkedThreadIds])
 
-  const handleSelectThread = (threadId: Id<'threads'>) => {
-    setSelectedThreadId(threadId)
-  }
+  const filteredThreads = useMemo(() => {
+    const trimmedSearch = searchValue.trim().toLowerCase()
+    return threads.filter((candidate) => {
+      if (bookmarkOnly && !bookmarkedSet.has(String(candidate._id))) return false
+      if (!trimmedSearch) return true
 
-  const openCreateThread = () => {
-    // Ensure a category is selected before opening the form
-    if (!selectedCategoryId && categories.length > 0) {
-      setSelectedCategoryId(categories[0]._id)
-    }
-    setEditingThread(null)
-    setIsThreadFormOpen(true)
-  }
+      const tagHit = candidate.tags.some((tag) => tag.toLowerCase().includes(trimmedSearch))
+      if (tagHit) return true
+
+      return (
+        candidate.title.toLowerCase().includes(trimmedSearch) ||
+        candidate.content.toLowerCase().includes(trimmedSearch) ||
+        (candidate.authorDisplayName || '').toLowerCase().includes(trimmedSearch)
+      )
+    })
+  }, [threads, bookmarkOnly, bookmarkedSet, searchValue])
 
   const handleDeleteThread = async () => {
     if (!selectedThreadId || !selectedCategoryId) return
@@ -76,161 +116,157 @@ export function Forum() {
   }
 
   return (
-    <>
-    <div className="app-surface-page w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in h-full">
-      <div className="app-surface-shell flex flex-col md:flex-row gap-8 h-full p-6">
-        {/* Left Sidebar - Categories */}
-        <div className={`w-full md:w-64 shrink-0 space-y-8 ${isMobileSidebarOpen ? 'block fixed inset-0 z-50 bg-zinc-950 p-4' : 'hidden md:block'}`}>
-          <div className="md:hidden flex justify-end mb-4">
-            <button onClick={() => setIsMobileSidebarOpen(false)} className="text-zinc-400">{t('common.close')}</button>
-          </div>
+    <div className={`app-surface-page mx-auto w-full max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8 ${motionClassName}`}>
+      <div className="forum-surface-shell motion-panel-enter px-4 py-4 sm:px-6 sm:py-6">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-             <button 
-               onClick={openCreateThread}
-               className="w-full bg-red-700 text-white font-bold uppercase tracking-widest py-3 hover:bg-red-600 transition-colors"
-             >
-               {t('forum.newThread')}
-             </button>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Wolfpack Network</p>
+            <h1 className="mt-2 text-3xl font-display font-semibold text-slate-100">{t('forum.title')}</h1>
           </div>
-          
-          <div>
-            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">{t('forum.categories')}</h3>
-            <div className="space-y-1">
-              {/* All Categories Option */}
-               <button 
-                  onClick={() => handleSelectCategory('' as any)} 
-                  className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${!selectedCategoryId ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
-                >
-                  {t('common.all')}
-                </button>
-              {categories.map((cat) => (
-                <button 
-                  key={cat._id} 
-                  onClick={() => handleSelectCategory(cat._id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${selectedCategoryId === cat._id ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEditingThread(null)
+              setIsThreadFormOpen(true)
+            }}
+            className="rounded-full border border-blue-500/60 bg-blue-500/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-blue-400"
+          >
+            {t('forum.newThread')}
+          </button>
+        </header>
+
+        <ForumCommunityTabs activeTab={activeTab} onChange={setActiveTab} />
+
+        {activeTab !== 'community' ? (
+          <div className="forum-surface-card mt-6 p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-100">{t('forum.tabInProgressTitle')}</h2>
+            <p className="mt-2 text-sm text-slate-400">{t('forum.tabInProgressDescription')}</p>
           </div>
-        </div>
+        ) : (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <section className="space-y-4">
+              <ForumToolbar
+                categories={categories}
+                selectedCategoryId={selectedCategoryId}
+                onSelectCategory={(nextCategoryId) => {
+                  setSelectedCategoryId(nextCategoryId)
+                  setSelectedThreadId(null)
+                }}
+                sortBy={sortBy}
+                onSortByChange={setSortBy}
+                bookmarkOnly={bookmarkOnly}
+                onToggleBookmarkOnly={() => setBookmarkOnly((value) => !value)}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                onRefresh={refresh}
+                isLoading={isThreadsLoading}
+              />
 
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-           {/* Mobile Header */}
-           <div className="md:hidden mb-4 flex items-center justify-between">
-              <button 
-                onClick={() => setIsMobileSidebarOpen(true)}
-                className="text-white font-bold uppercase text-sm border border-zinc-700 px-3 py-1 bg-zinc-900"
-              >
-                {t('forum.categories')}
-              </button>
-           </div>
+              {selectedThreadId ? (
+                <div className="forum-surface-card motion-card-enter p-4 sm:p-6">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedThreadId(null)}
+                    className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 transition hover:text-slate-200"
+                  >
+                    <iconify-icon icon="solar:arrow-left-linear"></iconify-icon>
+                    {t('forum.backToThreads')}
+                  </button>
 
-          {selectedThreadId ? (
-             <div className="bg-zinc-900 border border-zinc-800 p-6">
-               <button 
-                 className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 text-sm font-bold uppercase tracking-wider" 
-                 onClick={() => setSelectedThreadId(null)}
-               >
-                 <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> {t('forum.backToThreads')}
-               </button>
-               {isThreadDetailLoading ? <div className="text-center py-8 text-zinc-500">{t('common.loading')}</div> : !thread ? <div className="text-center py-8 text-zinc-500">{t('common.notFound')}</div> : (
-                 <ThreadDetail
-                   thread={thread}
-                   replies={replies}
-                   currentUserId={user._id}
-                   onReply={handleCreateReply}
-                   onEdit={() => { setEditingThread(thread); setIsThreadFormOpen(true); }}
-                   onDelete={handleDeleteThread}
-                   isModerator={isModerator}
-                 />
-               )}
-             </div>
-          ) : (
-            <>
-              {/* Filters */}
-              <div className="flex items-center gap-6 border-b border-zinc-800 pb-4 mb-6">
-                <button 
-                  onClick={() => setSortBy('top')}
-                  className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'top' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
-                >
-                  <iconify-icon icon="solar:flame-bold" /> {t('forum.trending')}
-                </button>
-                <button 
-                  onClick={() => setSortBy('newest')}
-                  className={`flex items-center gap-2 text-sm font-bold pb-4 -mb-4.5 border-b-2 transition-colors ${sortBy === 'newest' ? 'text-white border-red-600' : 'text-zinc-500 border-transparent hover:text-white'}`}
-                >
-                  <iconify-icon icon="solar:clock-circle-bold" /> {t('forum.newest')}
-                </button>
-                <div className="ml-auto">
-                    <button onClick={refresh} className="text-zinc-500 hover:text-white p-2">
-                        <iconify-icon icon="solar:refresh-linear" class={isThreadsLoading ? 'animate-spin' : ''} />
-                    </button>
+                  {isThreadDetailLoading ? (
+                    <div className="py-10 text-center text-slate-500">{t('common.loading')}</div>
+                  ) : !thread ? (
+                    <div className="py-10 text-center text-slate-500">{t('common.notFound')}</div>
+                  ) : (
+                    <ThreadDetail
+                      thread={thread}
+                      replies={replies}
+                      currentUserId={user._id}
+                      onReply={handleCreateReply}
+                      onEdit={() => {
+                        setEditingThread(thread)
+                        setIsThreadFormOpen(true)
+                      }}
+                      onDelete={handleDeleteThread}
+                      isModerator={isModerator}
+                    />
+                  )}
                 </div>
-              </div>
-
-              {/* Threads List */}
-              <div className="space-y-4">
-                {threads.map(post => (
-                  <div key={post._id} onClick={() => handleSelectThread(post._id)} className="bg-zinc-900 border border-zinc-800 p-6 hover:border-red-900/30 transition-all cursor-pointer group">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0 mt-1">
-                          {/* Use author avatar if available, else placeholder */}
-                          <div className="w-full h-full bg-zinc-700 flex items-center justify-center text-zinc-500 font-bold">
-                            {post.authorDisplayName?.[0] || 'U'}
-                          </div>
-                        </div>
-                        <div>
-                          <h3 className="text-white font-bold text-lg group-hover:text-red-500 transition-colors mb-1">{post.title}</h3>
-                          <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
-                            <span className="hidden sm:inline">•</span>
-                            <span>{t('common.postedBy')} <span className="text-zinc-300">{post.authorDisplayName || 'Unknown'}</span></span>
-                            <span className="hidden sm:inline">•</span>
-                            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end gap-1 text-zinc-500 text-xs shrink-0">
-                         <div className="flex items-center gap-1">
-                           <iconify-icon icon="solar:chat-line-linear" /> {post.replyCount || 0}
-                         </div>
-                         <div>{post.viewCount || 0} {t('common.views')}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {threads.length === 0 && !isThreadsLoading && (
-                    <div className="text-center py-12 text-zinc-500">
-                        {t('forum.noThreadsFound')}
-                    </div>
-                )}
-                
-                {hasMore && (
-                    <button 
-                        onClick={fetchMore} 
-                        disabled={isThreadsLoading}
-                        className="w-full py-4 text-center text-zinc-500 hover:text-white text-sm font-bold uppercase tracking-widest"
+              ) : filteredThreads.length > 0 ? (
+                <div className="space-y-0">
+                  {filteredThreads.map((threadRow, index) => (
+                    <div
+                      key={threadRow._id}
+                      className="motion-card-enter"
+                      style={
+                        prefersReducedMotion
+                          ? undefined
+                          : { animationDelay: `${Math.min(index * 30, 180)}ms` }
+                      }
                     >
-                        {isThreadsLoading ? t('common.loading') : t('common.loadMore')}
-                    </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+                      <ForumThreadCard
+                        thread={threadRow}
+                        isBookmarked={bookmarkedSet.has(String(threadRow._id))}
+                        onToggleBookmark={async (threadId) => {
+                          await toggleThreadBookmark({ threadId })
+                        }}
+                        onOpen={(threadId) => setSelectedThreadId(threadId)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="forum-surface-card p-6">
+                  <h2 className="text-lg font-semibold text-slate-200">{t('forum.emptyThreadsTitle')}</h2>
+                  <p className="mt-2 text-sm text-slate-400">{t('forum.emptyThreadsDescription')}</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {FALLBACK_THREADS.map((fallback) => (
+                      <article key={fallback.title} className="rounded-xl border border-slate-700/80 bg-slate-950/70 p-4">
+                        <p className="text-sm font-semibold text-slate-100">{fallback.title}</p>
+                        <p className="mt-2 line-clamp-2 text-xs text-slate-400">{fallback.content}</p>
+                        <p className="mt-3 text-xs text-slate-500">
+                          {fallback.replies} {t('forum.repliesLabel')} · {fallback.views} {t('forum.viewsLabel')} · {fallback.votes} {t('forum.votesLabel')}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-      {isThreadFormOpen && (
+              {hasMore && !selectedThreadId ? (
+                <button
+                  type="button"
+                  onClick={fetchMore}
+                  disabled={isThreadsLoading}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/80 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isThreadsLoading ? t('common.loading') : t('common.loadMore')}
+                </button>
+              ) : null}
+            </section>
+
+            <ForumInsightsRail
+              insights={insights}
+              onSelectHotThread={(threadId) => setSelectedThreadId(threadId as Id<'threads'>)}
+            />
+          </div>
+        )}
+      </div>
+
+      {isThreadFormOpen ? (
         <ThreadForm
           categories={categories}
           initialCategoryId={selectedCategoryId}
-          initialData={editingThread ? { title: editingThread.title, content: editingThread.content, tags: editingThread.tags } : undefined}
+          initialData={
+            editingThread
+              ? {
+                  title: editingThread.title,
+                  content: editingThread.content,
+                  tags: editingThread.tags,
+                }
+              : undefined
+          }
           onCancel={() => setIsThreadFormOpen(false)}
           onSubmit={async (categoryId, title, content, tags) => {
             if (editingThread) {
@@ -238,153 +274,12 @@ export function Forum() {
             } else {
               await createThreadMutation({ categoryId, title, content, tags })
             }
+
             setSelectedCategoryId(categoryId)
             setIsThreadFormOpen(false)
           }}
         />
-      )}
-
-      <style>{`
-        .forum-container {
-          display: flex;
-          width: 100%;
-          max-width: 1400px;
-          margin: 0 auto;
-          height: 100%;
-          background: rgba(10, 10, 10, 0.6);
-          backdrop-filter: blur(20px);
-          border-radius: 16px;
-          border: 1px solid var(--color-card-border);
-          overflow: hidden;
-        }
-
-        .forum-sidebar {
-          width: 280px;
-          border-right: 1px solid var(--color-card-border);
-          background: rgba(5, 5, 5, 0.3);
-        }
-
-        .forum-main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .forum-main-header {
-          padding: 16px 24px;
-          border-bottom: 1px solid var(--color-card-border);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: rgba(10, 10, 10, 0.4);
-        }
-
-        .selected-category-name {
-          font-size: 18px;
-          font-weight: 800;
-          margin: 0;
-          color: white;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .thread-count {
-          font-size: 11px;
-          color: var(--color-text-dim);
-          font-weight: 600;
-        }
-
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .refresh-btn {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--color-card-border);
-          color: var(--color-text-dim);
-          padding: 8px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .refresh-btn:hover {
-          background: rgba(255, 255, 255, 0.08);
-          color: white;
-          border-color: #444;
-        }
-
-        .refresh-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .create-thread-btn {
-          background: var(--color-primary);
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 100px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-          position: relative;
-          z-index: 10;
-        }
-
-        .create-thread-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .create-thread-btn:not(:disabled):hover {
-          filter: brightness(1.1);
-        }
-
-        .forum-content {
-          flex: 1;
-          overflow: hidden;
-        }
-
-        .thread-detail-view {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          padding: 24px;
-          overflow-y: auto;
-        }
-
-        .back-btn {
-          background: transparent;
-          border: none;
-          color: var(--color-text-dim);
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-bottom: 20px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          width: fit-content;
-        }
-
-        .back-btn:hover { color: white; }
-
-        @media (max-width: 768px) {
-          .forum-sidebar { display: none; }
-          .forum-sidebar.mobile-open { display: block; position: fixed; inset: 0; z-index: 1000; }
-        }
-      `}</style>
-    </>
+      ) : null}
+    </div>
   )
 }

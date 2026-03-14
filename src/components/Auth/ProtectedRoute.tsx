@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useTokenAuth } from '../ConvexAuthProvider'
 import { useRole } from '../../hooks/useRole'
@@ -16,9 +17,11 @@ export function ProtectedRoute({
   requiredRole,
   requireConvexAuth = false,
 }: ProtectedRouteProps) {
+  const location = useLocation()
   const { isSignedIn, isLoading } = useAuth()
   const { hasRole } = useRole()
   const { hasValidToken, isTokenLoading } = useTokenAuth()
+  const returnTo = `${location.pathname}${location.search}${location.hash}`
 
   if (isLoading || (requireConvexAuth && isTokenLoading)) {
     return (
@@ -29,7 +32,7 @@ export function ProtectedRoute({
   }
 
   if (!isSignedIn) {
-    return <SignInPrompt />
+    return <SignInPrompt returnTo={returnTo} />
   }
 
   if (requireConvexAuth && !hasValidToken) {

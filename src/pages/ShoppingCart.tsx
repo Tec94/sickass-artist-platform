@@ -56,7 +56,7 @@ export function ShoppingCart() {
       </div>
 
       {/* Content */}
-      <div className="app-surface-shell max-w-7xl mx-auto px-4 py-8">
+      <div className="store-surface-shell max-w-7xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="text-center py-12">
             <iconify-icon icon="solar:spinner-linear" width="48" height="48" class="animate-spin text-red-500 mx-auto mb-4"></iconify-icon>

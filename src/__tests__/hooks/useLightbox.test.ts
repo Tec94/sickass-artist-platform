@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { useLightbox } from '../../hooks/useLightbox'
 import { mockGalleryItems } from '../mocks'
 
@@ -36,6 +36,7 @@ describe('useLightbox', () => {
   })
 
   it('should navigate between items', () => {
+    vi.useFakeTimers()
     const { result } = renderHook(() => useLightbox(mockGalleryItems))
 
     act(() => {
@@ -46,13 +47,18 @@ describe('useLightbox', () => {
     act(() => {
       result.current.next()
     })
-    // Note: useLightbox has a 300ms lock, but in tests we might need to wait or mock timers
     expect(result.current.currentIndex).toBe(1)
+
+    act(() => {
+      vi.advanceTimersByTime(301)
+    })
 
     act(() => {
       result.current.previous()
     })
     expect(result.current.currentIndex).toBe(0)
+
+    vi.useRealTimers()
   })
 
   it('should not navigate past boundaries', () => {

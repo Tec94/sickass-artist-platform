@@ -58,6 +58,7 @@ export const createDrop = mutation({
     startsAt: v.number(),
     endsAt: v.number(),
     products: v.array(v.id('merchProducts')),
+    queueEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx)
@@ -86,6 +87,8 @@ export const createDrop = mutation({
       endsAt: args.endsAt,
       products: args.products,
       priority: 0,
+      queueEnabled: args.queueEnabled ?? true,
+      nextQueueSeq: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       createdBy: user._id,

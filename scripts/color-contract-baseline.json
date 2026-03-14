@@ -1,0 +1,141 @@
+{
+  "trackedFiles": [
+    "src/pages/Dashboard.tsx",
+    "src/pages/Merch.tsx",
+    "src/pages/MerchDetail.tsx",
+    "src/pages/ShoppingCart.tsx",
+    "src/pages/Checkout.tsx",
+    "src/pages/OrderConfirmation.tsx",
+    "src/pages/OrderHistory.tsx",
+    "src/pages/OrderDetail.tsx",
+    "src/pages/DropsPage.tsx",
+    "src/pages/Events.tsx",
+    "src/pages/EventDetail.tsx",
+    "src/pages/ConfirmationPage.tsx",
+    "src/pages/Gallery.tsx",
+    "src/pages/Forum.tsx",
+    "src/pages/ForumThreadDetail.tsx",
+    "src/pages/Chat.tsx",
+    "src/pages/Ranking.tsx",
+    "src/pages/Profile.tsx",
+    "src/pages/ProfileEdit.tsx",
+    "src/pages/ProfileUser.tsx",
+    "src/pages/Quests.tsx",
+    "src/pages/SignInPage.tsx",
+    "src/pages/SignUpPage.tsx",
+    "src/pages/SSOCallback.tsx",
+    "src/pages/TestErrorPage.tsx",
+    "src/components/Leaderboard/SongRankingWidget.tsx",
+    "src/components/Merch/MerchProductCard.tsx"
+  ],
+  "limits": {
+    "src/pages/Dashboard.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Merch.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/MerchDetail.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/ShoppingCart.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Checkout.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/OrderConfirmation.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/OrderHistory.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/OrderDetail.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/DropsPage.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Events.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/EventDetail.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/ConfirmationPage.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Gallery.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Forum.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/ForumThreadDetail.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Chat.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Ranking.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Profile.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/ProfileEdit.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/ProfileUser.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/Quests.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/SignInPage.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/SignUpPage.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/SSOCallback.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/pages/TestErrorPage.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/components/Leaderboard/SongRankingWidget.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    },
+    "src/components/Merch/MerchProductCard.tsx": {
+      "hex": 0,
+      "arbitrary": 0
+    }
+  }
+}

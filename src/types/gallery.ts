@@ -45,3 +45,8 @@ export interface FilterState extends GalleryFilters {
   isLoading: boolean
   error: Error | null
 }
+
+export interface GalleryViewPreferences {
+  activeTab: 'artist' | 'community'
+  layoutMode: 'feed' | 'grid'
+}

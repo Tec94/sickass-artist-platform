@@ -88,7 +88,7 @@ export const Profile = () => {
 
             <h2 className="text-3xl font-bold text-white uppercase tracking-tighter mb-1">{user.displayName}</h2>
             <p className="text-red-500 font-bold text-sm mb-2">@{(user as any).username || 'user'}</p>
-            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.3em] mb-4">{t('profile.wolfpackMember')}</p>
+            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] mb-4">{t('profile.wolfpackMember')}</p>
 
             {/* Bio */}
             {(user as any).bio && (
@@ -120,18 +120,18 @@ export const Profile = () => {
 
             <div className="w-full space-y-4 mb-8">
               <div className="bg-zinc-900/50 p-4 rounded-sm border border-zinc-800">
-                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.totalPoints')}</p>
+                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.totalPoints')}</p>
                  <p className="text-white text-2xl font-bold">{stats.totalPoints}</p>
               </div>
               <div className="bg-zinc-900/50 p-4 rounded-sm border border-zinc-800">
-                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.rank')}</p>
+                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">{t('profile.rank')}</p>
                  <p className="text-red-500 text-2xl font-bold">#{stats.rank}</p>
               </div>
             </div>
 
             {/* Language Switcher */}
             <div className="w-full mb-6">
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-3 text-left">{t('profile.language')}</p>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3 text-left">{t('profile.language')}</p>
               <div className="flex gap-2">
                 {languageOptions.map((option) => (
                   <button
@@ -140,7 +140,7 @@ export const Profile = () => {
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-sm border transition-all ${
                       language === option.code 
                         ? 'bg-red-600/10 border-red-600 text-white' 
-                        : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'
+                        : 'bg-zinc-900/50 border-zinc-800 text-slate-400 hover:border-zinc-600'
                     }`}
                   >
                     <iconify-icon icon={option.code === 'en' ? 'twemoji:flag-united-states' : 'twemoji:flag-spain'} width="18" height="18" style={{ filter: language === option.code ? 'none' : 'grayscale(1)' }}></iconify-icon>
@@ -177,7 +177,7 @@ export const Profile = () => {
              <div className="flex justify-between items-end mb-4">
                 <div>
                    <h3 className="text-white font-bold text-xl uppercase tracking-tighter">{t('profile.currentLevel')}</h3>
-                   <p className="text-zinc-500 text-xs font-medium">{t('profile.progressToNext')}</p>
+                   <p className="text-slate-400 text-xs font-medium">{t('profile.progressToNext')}</p>
                 </div>
                 <div className="text-right">
                    <p className="text-white font-bold text-lg">{t('profile.level')} {stats.level}</p>
@@ -192,7 +192,7 @@ export const Profile = () => {
                    transition={{ duration: 1, ease: 'easeOut' }}
                 />
              </div>
-             <div className="flex justify-between mt-2 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+             <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 <span>{stats.xp} {t('profile.xp')}</span>
                 <span>100 {t('profile.xpToNext')}</span>
              </div>
@@ -206,7 +206,7 @@ export const Profile = () => {
                   {t('profile.activeQuests')}
                </h3>
                <button
-                 className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold tracking-widest"
+                 className="text-[10px] text-slate-400 hover:text-white uppercase font-bold tracking-widest"
                  onClick={() => navigate('/quests')}
                >
                  {t('profile.viewAll')}
@@ -215,12 +215,12 @@ export const Profile = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(isQuestsLoading || activeQuests === undefined) && (
-                <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
+                <div className="col-span-full text-center text-slate-400 border border-dashed border-zinc-800 py-10 rounded-sm">
                   {t('profile.loading')}
                 </div>
               )}
               {!isQuestsLoading && activeQuests !== undefined && activeQuests.length === 0 && (
-                <div className="col-span-full text-center text-zinc-500 border border-dashed border-zinc-800 py-10 rounded-sm">
+                <div className="col-span-full text-center text-slate-400 border border-dashed border-zinc-800 py-10 rounded-sm">
                   {t('profile.noActiveQuests') || 'No active quests right now.'}
                 </div>
               )}
@@ -237,13 +237,13 @@ export const Profile = () => {
                           <span className="text-red-600 text-xl">{quest.icon || '🔥'}</span>
                         )}
                       </div>
-                      <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] border border-zinc-800 px-2 py-1">
                         {quest.isCompleted ? (t('profile.completed') || 'Completed') : t('profile.inProgress')}
                       </span>
                     </div>
                     <h4 className="text-white font-bold uppercase text-xs tracking-wide mb-2">{quest.name}</h4>
-                    <p className="text-zinc-500 text-xs mb-4">{quest.description}</p>
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">
+                    <p className="text-slate-400 text-xs mb-4">{quest.description}</p>
+                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                       <span>
                         {quest.progress}/{quest.target}
                       </span>

@@ -64,7 +64,7 @@ export function OrderConfirmation() {
           Thank you for your purchase. Your order has been received.
         </p>
 
-        <div className="app-surface-shell w-full rounded-lg p-8 mb-8 space-y-6">
+        <div className="store-surface-shell w-full rounded-lg p-8 mb-8 space-y-6">
           <div className="text-center space-y-2">
             <p className="text-gray-400 text-sm">Order Number</p>
             <p className="font-mono text-2xl font-bold text-white mb-3">

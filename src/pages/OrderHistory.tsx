@@ -51,7 +51,7 @@ export function OrderHistory() {
         </div>
       </div>
 
-      <div className="app-surface-shell max-w-7xl mx-auto px-4 py-8">
+      <div className="store-surface-shell max-w-7xl mx-auto px-4 py-8">
         <div className="space-y-4 mb-8">
           <div className="relative">
             <iconify-icon icon="solar:magnifer-linear" width="20" height="20" class="absolute left-3 top-3 text-gray-500"></iconify-icon>

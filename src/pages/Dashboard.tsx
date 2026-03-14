@@ -415,66 +415,66 @@ export const Dashboard = () => {
             <DashboardCollapsibleBody expanded={collapseState.featureCards} id={DASHBOARD_SECTION_CONTENT_IDS.featureCards}>
               <div className="dashboard-top-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div
-                className="dashboard-feature-card dashboard-feature-card--event dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
+                className="dashboard-feature-card dashboard-feature-card--event dashboard-card dashboard-card--interactive flex h-full flex-col rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 backdrop-blur-sm"
                 data-card-tone="amber"
               >
                 <div className="dashboard-feature-card__kicker">Stage Call</div>
                 <div className="flex items-center justify-between mb-4 gap-4">
-                  <h3 className="text-lg font-display font-semibold text-[#E8E1D5] uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
+                  <h3 className="flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-lg font-display font-semibold uppercase text-[var(--color-text-primary)]">
                     <iconify-icon icon="solar:ticket-bold-duotone" width="22" height="22" class="text-amber-300/80 shrink-0"></iconify-icon>
                     <span className="truncate">{t('dashboard.nextEvent')}</span>
                   </h3>
-                  <Link to="/events" className="dashboard-feature-card__header-link text-xs text-[#9AA7B5] hover:text-[#E8E1D5] uppercase tracking-wider">
+                  <Link to="/events" className="dashboard-feature-card__header-link text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                     {t('common.viewAll')}
                   </Link>
                 </div>
 
                 {nextEvent ? (
                   <>
-                    <div className="dashboard-card__media relative aspect-video bg-[#0A1118] mb-4 overflow-hidden rounded-xl">
+                    <div className="dashboard-card__media relative mb-4 aspect-video overflow-hidden rounded-xl bg-[var(--color-bg-base)]">
                       {nextEvent.imageUrl ? (
                         <img src={nextEvent.imageUrl} alt="Event" className="w-full h-full object-cover" />
                       ) : (
                         <img src={dashboardSignalPlaceholders.event} alt="Event placeholder" className="w-full h-full object-cover" />
                       )}
-                      <div className="dashboard-feature-card__status absolute top-2 right-2 rounded-md bg-amber-200/90 text-[#081018] text-[10px] font-semibold px-2 py-1 uppercase tracking-[0.12em]">
+                      <div className="dashboard-feature-card__status absolute right-2 top-2 rounded-md bg-amber-200/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-bg-base)]">
                         {t('dashboard.upcoming')}
                       </div>
                     </div>
-                    <h4 className="dashboard-feature-card__title text-[#E8E1D5] font-semibold text-lg mb-1">{nextEvent.title}</h4>
-                    <p className="dashboard-feature-card__meta text-[#9AA7B5] text-sm mb-4">
+                    <h4 className="dashboard-feature-card__title mb-1 text-lg font-semibold text-[var(--color-text-primary)]">{nextEvent.title}</h4>
+                    <p className="dashboard-feature-card__meta mb-4 text-sm text-[var(--color-text-secondary)]">
                       {new Date(nextEvent.startAtUtc).toLocaleDateString()} • {nextEvent.city}
                     </p>
                     <Link
                       to={`/events/${nextEvent._id}`}
-                      className="dashboard-card__cta dashboard-feature-card__cta mt-auto w-full rounded-full border border-[#405263] text-[#E8E1D5] py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] hover:bg-[#E8E1D5] hover:text-[#091018] transition-colors"
+                      className="dashboard-card__cta dashboard-feature-card__cta mt-auto w-full rounded-full border border-[var(--color-border-strong)] py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg-base)]"
                     >
                       {t('dashboard.details')}
                     </Link>
                   </>
                 ) : (
-                  <div className="text-[#8091A1] text-sm py-10 text-center">{t('dashboard.noUpcomingEvents')}</div>
+                  <div className="py-10 text-center text-sm text-[var(--color-text-tertiary)]">{t('dashboard.noUpcomingEvents')}</div>
                 )}
               </div>
 
               <div
-                className="dashboard-feature-card dashboard-feature-card--merch dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
+                className="dashboard-feature-card dashboard-feature-card--merch dashboard-card dashboard-card--interactive flex h-full flex-col rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 backdrop-blur-sm"
                 data-card-tone="crimson"
               >
                 <div className="dashboard-feature-card__kicker">Curated Drop</div>
                 <div className="flex items-center justify-between mb-4 gap-4">
-                  <h3 className="text-lg font-display font-semibold text-[#E8E1D5] uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
-                    <iconify-icon icon="solar:fire-bold-duotone" width="22" height="22" class="text-[#A95B69] shrink-0"></iconify-icon>
+                  <h3 className="flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-lg font-display font-semibold uppercase text-[var(--color-text-primary)]">
+                    <iconify-icon icon="solar:fire-bold-duotone" width="22" height="22" class="text-[var(--color-state-danger)] shrink-0"></iconify-icon>
                     <span className="truncate">{t('dashboard.hotDrop')}</span>
                   </h3>
-                  <Link to="/store" className="dashboard-feature-card__header-link text-xs text-[#9AA7B5] hover:text-[#E8E1D5] uppercase tracking-wider">
+                  <Link to="/store" className="dashboard-feature-card__header-link text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                     {t('dashboard.shopAll')}
                   </Link>
                 </div>
 
                 {topProduct ? (
                   <div className="dashboard-feature-card__merch-row flex gap-4 items-start">
-                    <div className="dashboard-card__media w-24 h-32 bg-[#0A1118] shrink-0 overflow-hidden rounded-xl">
+                    <div className="dashboard-card__media h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-[var(--color-bg-base)]">
                       {topProduct.image ? (
                         <img src={topProduct.image} alt="Product" className="w-full h-full object-cover" />
                       ) : (
@@ -482,35 +482,35 @@ export const Dashboard = () => {
                       )}
                     </div>
                     <div className="dashboard-feature-card__merch-body min-w-0">
-                      <h4 className="dashboard-feature-card__title text-[#E8E1D5] font-semibold mb-1 line-clamp-2">{topProduct.name}</h4>
-                      <p className="dashboard-feature-card__price text-[#B86A78] font-semibold mb-2">${(topProduct.price / 100).toFixed(2)}</p>
-                      <div className="dashboard-feature-card__meta text-xs text-[#9AA7B5] mb-3">{t('dashboard.limitedStock')}</div>
+                      <h4 className="dashboard-feature-card__title mb-1 line-clamp-2 font-semibold text-[var(--color-text-primary)]">{topProduct.name}</h4>
+                      <p className="dashboard-feature-card__price mb-2 font-semibold text-[var(--color-state-danger)]">${(topProduct.price / 100).toFixed(2)}</p>
+                      <div className="dashboard-feature-card__meta mb-3 text-xs text-[var(--color-text-secondary)]">{t('dashboard.limitedStock')}</div>
                       <Link
                         to={`/store/product/${topProduct._id}`}
-                        className="dashboard-card__cta dashboard-feature-card__cta text-xs font-semibold uppercase tracking-[0.16em] text-[#E8E1D5] border-b border-[#A62B3A]/70 pb-1 hover:text-[#d18b96] transition-colors"
+                        className="dashboard-card__cta dashboard-feature-card__cta border-b border-[var(--color-accent-brand)] pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-primary)] transition-colors hover:text-[var(--color-accent-brand-soft)]"
                       >
                         {t('dashboard.buyNow')}
                       </Link>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[#8091A1] text-sm py-10 text-center">{t('dashboard.noTrendingMerch')}</div>
+                  <div className="py-10 text-center text-sm text-[var(--color-text-tertiary)]">{t('dashboard.noTrendingMerch')}</div>
                 )}
               </div>
 
               <div
-                className="dashboard-feature-card dashboard-feature-card--forum dashboard-card dashboard-card--interactive rounded-2xl bg-[#111A24]/75 border border-[#2A3541] p-6 flex flex-col backdrop-blur-sm h-full"
+                className="dashboard-feature-card dashboard-feature-card--forum dashboard-card dashboard-card--interactive flex h-full flex-col rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 backdrop-blur-sm"
                 data-card-tone="steel"
               >
                 <div className="dashboard-feature-card__kicker">Forum Ops</div>
                 <div className="flex items-center justify-between mb-4 gap-4">
-                  <h3 className="text-lg font-display font-semibold text-[#E8E1D5] uppercase flex items-center gap-2 whitespace-nowrap shrink min-w-0">
-                    <iconify-icon icon="solar:chat-line-bold-duotone" width="22" height="22" class="text-[#8EA0B3] shrink-0"></iconify-icon>
+                  <h3 className="flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-lg font-display font-semibold uppercase text-[var(--color-text-primary)]">
+                    <iconify-icon icon="solar:chat-line-bold-duotone" width="22" height="22" class="text-[var(--color-state-info)] shrink-0"></iconify-icon>
                     <span className="truncate">{t('dashboard.wolfpackChatter')}</span>
                   </h3>
                   <Link
                     to="/forum"
-                    className="dashboard-feature-card__header-link text-xs text-[#9AA7B5] hover:text-[#E8E1D5] uppercase tracking-wider whitespace-nowrap shrink-0"
+                    className="dashboard-feature-card__header-link text-xs uppercase tracking-wider whitespace-nowrap shrink-0 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                   >
                     {t('dashboard.joinDiscussion')}
                   </Link>
@@ -518,10 +518,10 @@ export const Dashboard = () => {
                 <div className="dashboard-feature-card__forum-list">
                   {forumCardItems.map((post) => (
                     <Link key={post._id} to={`/forum/thread/${post._id}`} className="dashboard-feature-card__forum-item block group">
-                      <div className="text-sm font-semibold text-[#D5DDE6] group-hover:text-[#AFC0D1] transition-colors line-clamp-1">
+                      <div className="line-clamp-1 text-sm font-semibold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-text-secondary)]">
                         {post.displayTitle}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-[#8EA0B3] mt-1">
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-tertiary)]">
                         <span>
                           {post.replyCount || 0} {t('dashboard.replies')}
                         </span>
@@ -530,7 +530,7 @@ export const Dashboard = () => {
                       </div>
                     </Link>
                   ))}
-                  {forumCardItems.length === 0 && <div className="text-[#8091A1] text-sm text-center">{t('dashboard.noActiveDiscussions')}</div>}
+                  {forumCardItems.length === 0 && <div className="text-center text-sm text-[var(--color-text-tertiary)]">{t('dashboard.noActiveDiscussions')}</div>}
                 </div>
               </div>
               </div>
@@ -547,13 +547,13 @@ export const Dashboard = () => {
           <section className="dashboard-promo-region mt-16">
             <div className="dashboard-region-header">
               <div className="dashboard-region-header__cluster">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-[#9AA7B5] font-semibold whitespace-nowrap">
+                <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.35em] text-[var(--color-text-secondary)]">
                   {t('dashboard.liveSignalScreensTitle')}
                 </p>
                 <span className="dashboard-region-chip">Adaptive rail</span>
               </div>
-              <div className="dashboard-region-header__line h-px bg-[#2A3541] flex-1 min-w-[120px]"></div>
-              <span className="text-[11px] text-[#8EA0B3]">{t('dashboard.liveSignalScreensSubtitle')}</span>
+              <div className="dashboard-region-header__line h-px min-w-[120px] flex-1 bg-[var(--color-border-subtle)]"></div>
+              <span className="text-[11px] text-[var(--color-text-tertiary)]">{t('dashboard.liveSignalScreensSubtitle')}</span>
               <DashboardSectionCollapseToggle
                 expanded={collapseState.promoRail}
                 onToggle={() => toggleSectionExpanded('promoRail')}
@@ -562,7 +562,7 @@ export const Dashboard = () => {
               />
             </div>
             <DashboardCollapsibleBody expanded={collapseState.promoRail} id={DASHBOARD_SECTION_CONTENT_IDS.promoRail}>
-              <div className="dashboard-promo-shell bg-[#0b131d]/70 border border-[#2A3541] rounded-2xl p-6">
+              <div className="dashboard-promo-shell rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-base)] p-6">
                 <LogoSlider
                   logos={promoRailItems.map((item) => {
                     const mediaSrc = item.image || dashboardSignalPlaceholders[item.type]
@@ -655,11 +655,11 @@ export const Dashboard = () => {
                   <div className="dashboard-ranking-heading flex items-center gap-6 min-w-0">
                     <div className="min-w-0">
                       <p className="dashboard-feature-card__kicker mb-2">Ranking Deck</p>
-                      <h2 className="text-3xl font-display font-semibold text-[#E8E1D5] uppercase whitespace-nowrap">
+                      <h2 className="whitespace-nowrap text-3xl font-display font-semibold uppercase text-[var(--color-text-primary)]">
                         {t('dashboard.songLeaderboard')}
                       </h2>
                     </div>
-                    <div className="hidden lg:block h-px bg-[#2A3541] flex-1 min-w-[120px]"></div>
+                    <div className="hidden h-px min-w-[120px] flex-1 bg-[var(--color-border-subtle)] lg:block"></div>
                   </div>
                   <RankingPeriodTabs period={period} onChange={setPeriod} variant={dashboardVisualVariant} />
                 </div>

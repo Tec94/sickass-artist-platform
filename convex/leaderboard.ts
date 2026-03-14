@@ -897,6 +897,141 @@ export const getTrendingSubmissions = query({
   },
 })
 
+// Get enriched detail-panel data for a specific song in the selected period.
+export const getSongDetailPanelData = query({
+  args: {
+    spotifyTrackId: v.string(),
+    period: v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime')),
+  },
+  handler: async (ctx, args) => {
+    const leaderboardId = getCurrentLeaderboardId(args.period)
+    const leaderboard = await ctx.db
+      .query('songLeaderboard')
+      .withIndex('by_leaderboardId_score', (q) => q.eq('leaderboardId', leaderboardId))
+      .order('desc')
+      .take(200)
+
+    const entryIndex = leaderboard.findIndex((entry) => entry.spotifyTrackId === args.spotifyTrackId)
+    const entry = entryIndex >= 0 ? leaderboard[entryIndex] : null
+
+    const spotifyMeta = await ctx.db
+      .query('spotifySongs')
+      .withIndex('by_spotifyTrackId', (q) => q.eq('spotifyTrackId', args.spotifyTrackId))
+      .first()
+
+    const submissions = await ctx.db
+      .query('songSubmissions')
+      .withIndex('by_leaderboardId_createdAt', (q) => q.eq('leaderboardId', leaderboardId))
+      .order('desc')
+      .take(400)
+
+    const activeSubmissions = submissions.filter((submission) => submission.isActive !== false)
+    const now = Date.now()
+    const sevenDaysAgo = now - 7 * DAY_MS
+
+    let totalMentions = 0
+    let top3Mentions = 0
+    let rankAccumulator = 0
+    let upvoteAccumulator = 0
+    let recentMentions = 0
+    const contributorIds = new Set<string>()
+
+    for (const submission of activeSubmissions) {
+      const song = submission.rankedSongs.find((rankedSong) => rankedSong.spotifyTrackId === args.spotifyTrackId)
+      if (!song) continue
+      totalMentions += 1
+      rankAccumulator += song.rank
+      upvoteAccumulator += submission.upvoteCount || 0
+      contributorIds.add(String(submission.userId))
+      if (song.rank <= 3) top3Mentions += 1
+      if ((submission.lastEditedAt ?? submission.updatedAt ?? submission.createdAt) >= sevenDaysAgo) {
+        recentMentions += 1
+      }
+    }
+
+    const averageRank = totalMentions > 0 ? rankAccumulator / totalMentions : null
+    const ahead = entryIndex > 0 ? leaderboard[entryIndex - 1] : null
+    const behind = entryIndex >= 0 && entryIndex < leaderboard.length - 1 ? leaderboard[entryIndex + 1] : null
+
+    return {
+      spotifyTrackId: args.spotifyTrackId,
+      period: args.period,
+      leaderboardId,
+      rank: entryIndex >= 0 ? entryIndex + 1 : null,
+      totalScore: entry?.totalScore ?? null,
+      uniqueVoters: entry?.uniqueVoters ?? contributorIds.size,
+      songTitle: entry?.songTitle ?? spotifyMeta?.title ?? 'Unknown Track',
+      songArtist: entry?.songArtist ?? spotifyMeta?.artist ?? 'Unknown Artist',
+      albumCover: entry?.albumCover ?? spotifyMeta?.albumCover ?? '',
+      totalMentions,
+      top3Mentions,
+      averageRank,
+      recentMentions,
+      totalSubmissionUpvotes: upvoteAccumulator,
+      contributors: contributorIds.size,
+      aheadTrack: ahead
+        ? {
+            spotifyTrackId: ahead.spotifyTrackId,
+            songTitle: ahead.songTitle,
+            rank: entryIndex,
+            totalScore: ahead.totalScore,
+          }
+        : null,
+      behindTrack: behind
+        ? {
+            spotifyTrackId: behind.spotifyTrackId,
+            songTitle: behind.songTitle,
+            rank: entryIndex + 2,
+            totalScore: behind.totalScore,
+          }
+        : null,
+      updatedAt: entry?.updatedAt ?? now,
+    }
+  },
+})
+
+// Get trend points for a song by scanning historic leaderboard snapshots.
+export const getSongHistory = query({
+  args: {
+    spotifyTrackId: v.string(),
+    period: v.union(v.literal('weekly'), v.literal('monthly'), v.literal('quarterly'), v.literal('allTime')),
+    points: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const points = Math.max(4, Math.min(args.points ?? 12, 40))
+
+    const candidates = await ctx.db
+      .query('songLeaderboard')
+      .withIndex('by_track_updatedAt', (q) => q.eq('spotifyTrackId', args.spotifyTrackId))
+      .order('desc')
+      .take(points * 6)
+
+    const periodFiltered = candidates.filter((candidate) => candidate.period === args.period).slice(0, points)
+
+    const seriesWithRank = await Promise.all(
+      periodFiltered.map(async (point) => {
+        const board = await ctx.db
+          .query('songLeaderboard')
+          .withIndex('by_leaderboardId_score', (q) => q.eq('leaderboardId', point.leaderboardId))
+          .order('desc')
+          .take(120)
+
+        const rankIndex = board.findIndex((entry) => entry.spotifyTrackId === args.spotifyTrackId)
+        return {
+          leaderboardId: point.leaderboardId,
+          period: point.period,
+          timestamp: point.updatedAt,
+          totalScore: point.totalScore,
+          rank: rankIndex >= 0 ? rankIndex + 1 : null,
+          uniqueVoters: point.uniqueVoters,
+        }
+      }),
+    )
+
+    return seriesWithRank.sort((a, b) => a.timestamp - b.timestamp)
+  },
+})
+
 // Seed function for leaderboard testing
 export const seedLeaderboard = mutation({
   args: {},

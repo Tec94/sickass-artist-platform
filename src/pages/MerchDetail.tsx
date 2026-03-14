@@ -12,10 +12,20 @@ import { useUser } from '../contexts/UserContext'
 import { ImageGallery } from '../components/Merch/ImageGallery'
 import { getMerchImagesForVariation, getMerchSlugCandidates, getOrderedColors, getVariationIndexFromColor } from '../utils/merchImages'
 import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
+import { useTranslation } from '../hooks/useTranslation'
+import type { StoreQueueStateViewModel, StoreQueueTargetViewModel } from '../types/store-queue'
+
+function formatClockTime(timestamp: number) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(timestamp)
+}
 
 export function MerchDetail() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const product = useQuery(api.merch.getProductDetail, productId ? { productId: productId as Doc<'merchProducts'>['_id'] } : 'skip')
   const manifestSlugs = useMemo(() => {
@@ -39,10 +49,19 @@ export function MerchDetail() {
   )
   const { isSignedIn, userProfile } = useUser()
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
+  const queueTargetRaw = useQuery(api.merchQueue.getQueueTargetDrop)
+  const queueTarget = (queueTargetRaw ?? null) as StoreQueueTargetViewModel | null
+  const queueDropId = queueTarget?.drop?._id ?? null
+  const myQueueStateRaw = useQuery(api.merchQueue.getMyQueueState, queueDropId ? { dropId: queueDropId } : 'skip')
+  const myQueueState = (myQueueStateRaw ?? null) as StoreQueueStateViewModel | null
 
   const { retryWithBackoff } = useAutoRetry()
   const addToCartMutation = useMutation(api.cart.addToCart)
   const toggleWishlistMutation = useMutation(api.merch.toggleWishlist)
+  const recordRecentlyViewedMutation = useMutation(api.merch.recordRecentlyViewed)
+  const joinQueueMutation = useMutation(api.merchQueue.joinQueue)
+  const claimSlotMutation = useMutation(api.merchQueue.claimSlot)
+  const leaveQueueMutation = useMutation(api.merchQueue.leaveQueue)
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -75,8 +94,59 @@ export function MerchDetail() {
   }, [product, selectedVariantId])
 
   const isInWishlist = wishlist?.some((item) => item._id === productId)
+  const queueNowUtc = queueTarget?.now ?? Date.now()
+  const hasActiveQueueSlot =
+    myQueueState?.status === 'admitted' &&
+    typeof myQueueState.slotExpiresAtUtc === 'number' &&
+    myQueueState.slotExpiresAtUtc > queueNowUtc
+  const isQueueTargetActive = queueTarget?.state === 'active' && Boolean(queueTarget?.drop)
+  const isProductInActiveQueueDrop = Boolean(
+    product &&
+      queueTarget?.drop?.products.some((dropProductId) => String(dropProductId) === String(product._id)),
+  )
+  const isQueueLockedProduct = Boolean(isQueueTargetActive && isProductInActiveQueueDrop && !hasActiveQueueSlot)
+
+  const queueReturnTo = `/store/product/${productId ?? ''}`
+  const openQueueSignIn = useCallback(() => {
+    navigate(`/sign-in?returnTo=${encodeURIComponent(queueReturnTo)}`)
+  }, [navigate, queueReturnTo])
+
+  const runQueueAction = useCallback(async (action: 'join' | 'claim' | 'leave') => {
+    if (!queueDropId) return
+
+    if (!isSignedIn) {
+      openQueueSignIn()
+      return
+    }
+
+    try {
+      if (action === 'join') {
+        await joinQueueMutation({ dropId: queueDropId })
+        showToast(t('store.queueJoined'), { type: 'success' })
+        return
+      }
+
+      if (action === 'leave') {
+        await leaveQueueMutation({ dropId: queueDropId })
+        showToast(t('store.queueLeft'), { type: 'success' })
+        return
+      }
+
+      await claimSlotMutation({ dropId: queueDropId })
+      showToast(t('store.queueAdmitted'), { type: 'success' })
+    } catch (error) {
+      const fallbackMessage = t('store.queueActionFailed')
+      const message = error instanceof Error ? error.message || fallbackMessage : fallbackMessage
+      showToast(message, { type: 'error' })
+    }
+  }, [claimSlotMutation, isSignedIn, joinQueueMutation, leaveQueueMutation, openQueueSignIn, queueDropId, t])
 
   const handleAddToCart = useCallback(async () => {
+    if (isQueueLockedProduct) {
+      showToast(t('store.queueLockedCta'), { type: 'error' })
+      return
+    }
+
     if (!selectedVariant) {
       showToast('Please select an option', { type: 'error' })
       return
@@ -93,7 +163,7 @@ export function MerchDetail() {
     } finally {
       setIsLoading(false)
     }
-  }, [addToCartMutation, productId, quantity, retryWithBackoff, selectedVariant])
+  }, [addToCartMutation, isQueueLockedProduct, productId, quantity, retryWithBackoff, selectedVariant, t])
 
   const handleToggleWishlist = useCallback(async () => {
     if (!productId) return
@@ -155,6 +225,11 @@ export function MerchDetail() {
     if (modelError) setAutoRotateEnabled(false)
   }, [modelError])
 
+  useEffect(() => {
+    if (!productId || !product) return
+    recordRecentlyViewedMutation({ productId: product._id }).catch(() => undefined)
+  }, [product, productId, recordRecentlyViewedMutation])
+
   if (product === null) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
@@ -175,6 +250,86 @@ export function MerchDetail() {
         <iconify-icon icon="solar:spinner-linear" width="32" height="32" className="animate-spin text-red-500" />
         <p className="mt-4 text-zinc-400">Loading...</p>
       </div>
+    )
+  }
+
+  if (isQueueLockedProduct) {
+    const waitingPosition = typeof myQueueState?.position === 'number' ? myQueueState.position + 1 : null
+    const queueDetail =
+      myQueueState?.status === 'admitted' && hasActiveQueueSlot && myQueueState.slotExpiresAtUtc
+        ? `${t('store.queueSlotExpires')} ${formatClockTime(myQueueState.slotExpiresAtUtc)}`
+        : myQueueState?.status === 'waiting' && waitingPosition
+          ? `#${waitingPosition}`
+          : queueTarget?.drop?.name || t('store.queueUnavailableMeta')
+
+    const canClaim =
+      Boolean(isSignedIn) &&
+      myQueueState?.status === 'waiting' &&
+      queueTarget?.state === 'active' &&
+      myQueueState.canClaimSlot
+    const canJoin =
+      !isSignedIn || !myQueueState || myQueueState.status === 'left' || myQueueState.status === 'expired'
+    const waitingOnly = Boolean(isSignedIn && myQueueState?.status === 'waiting' && !myQueueState.canClaimSlot)
+
+    const primaryLabel = !isSignedIn
+      ? t('store.queueSignInToJoin')
+      : canClaim
+        ? t('store.claimQueueSlot')
+        : canJoin
+          ? t('store.joinQueueNow')
+          : t('store.queueWaiting')
+
+    return (
+      <MerchErrorBoundary>
+        <div className="app-surface-page min-h-screen bg-zinc-950">
+          <FreeShippingBanner />
+          <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="store-surface-shell rounded-3xl p-8 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{t('store.queueStatus')}</p>
+              <h1 className="mt-3 font-display text-3xl font-semibold text-slate-100">{t('store.detailLockedTitle')}</h1>
+              <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-200">{t('store.detailLockedBody')}</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">{queueDetail}</p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  className="store-v2-control store-v2-btn-primary"
+                  disabled={waitingOnly}
+                  onClick={() => {
+                    if (!isSignedIn) {
+                      openQueueSignIn()
+                      return
+                    }
+
+                    if (canClaim) {
+                      void runQueueAction('claim')
+                      return
+                    }
+
+                    if (canJoin) {
+                      void runQueueAction('join')
+                    }
+                  }}
+                >
+                  {primaryLabel}
+                </button>
+                {(myQueueState?.status === 'waiting' || myQueueState?.status === 'admitted') ? (
+                  <button
+                    type="button"
+                    className="store-v2-control store-v2-btn-secondary"
+                    onClick={() => void runQueueAction('leave')}
+                  >
+                    {t('store.leaveQueue')}
+                  </button>
+                ) : null}
+                <Link to="/store#store-queue-control" className="store-v2-control store-v2-btn-secondary inline-flex items-center">
+                  {t('store.backToQueueControl')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </MerchErrorBoundary>
     )
   }
 
@@ -242,6 +397,7 @@ export function MerchDetail() {
         <FreeShippingBanner />
 
         <div className="animate-fade-in mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="store-surface-shell p-6 sm:p-8">
           <Link to="/store" className="mb-8 inline-flex items-center gap-2 text-zinc-500 transition-colors hover:text-white">
             <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
             Back to Shop
@@ -429,6 +585,7 @@ export function MerchDetail() {
                 </button>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

@@ -739,6 +739,19 @@
     rgba(255, 255, 255, 0.008);
 }
 
+.dashboard-live-leaderboard[data-dashboard-variant='ranking-nocturne'] .dashboard-live-leaderboard__row--top3 {
+  border-left: 2px solid rgba(205, 176, 117, 0.4);
+  background:
+    linear-gradient(90deg, rgba(205, 176, 117, 0.08), rgba(205, 176, 117, 0)),
+    rgba(255, 255, 255, 0.012);
+}
+
+.dashboard-live-leaderboard[data-dashboard-variant='ranking-nocturne'] .dashboard-live-leaderboard__score-stack {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
 /* Hero visual polish hooks (no motion structure changes) */
 [data-dashboard-hero-root='true'][data-dashboard-hero-visual-variant='forum-ops'] .dashboard-hero-signal-pill {
   border-color: rgba(91, 110, 130, 0.55);

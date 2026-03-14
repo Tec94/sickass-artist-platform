@@ -141,7 +141,7 @@ export function Checkout() {
           </div>
         </div>
 
-        <div className="app-surface-shell max-w-2xl mx-auto px-4 py-12">
+        <div className="store-surface-shell max-w-2xl mx-auto px-4 py-12">
           {checkout.step === 1 && (
             <div className="space-y-6">
               <div>

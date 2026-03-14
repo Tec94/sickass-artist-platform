@@ -419,3 +419,92 @@ export const getWishlist = query({
     return products.filter((product): product is NonNullable<typeof product> => product !== null)
   },
 })
+
+// Mutation: Record a recently viewed merch product for current user.
+export const recordRecentlyViewed = mutation({
+  args: {
+    productId: v.id('merchProducts'),
+  },
+  handler: async (ctx, args) => {
+    let user
+    try {
+      user = await getCurrentUser(ctx)
+    } catch {
+      return { recorded: false }
+    }
+
+    const product = await ctx.db.get(args.productId)
+    if (!product || product.status === 'archived') {
+      throw new ConvexError('Product not found')
+    }
+
+    const existing = await ctx.db
+      .query('merchRecentlyViewed')
+      .withIndex('by_user_product', (q) => q.eq('userId', user._id).eq('productId', args.productId))
+      .first()
+
+    const now = Date.now()
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        viewedAt: now,
+        updatedAt: now,
+      })
+    } else {
+      await ctx.db.insert('merchRecentlyViewed', {
+        userId: user._id,
+        productId: args.productId,
+        viewedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+
+    return { recorded: true, viewedAt: now }
+  },
+})
+
+// Query: Get recently viewed merch products for current user.
+export const getRecentlyViewed = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+      .first()
+    if (!user) return []
+
+    const limit = Math.max(1, Math.min(args.limit ?? 8, 24))
+
+    const rows = await ctx.db
+      .query('merchRecentlyViewed')
+      .withIndex('by_user_viewedAt', (q) => q.eq('userId', user._id))
+      .order('desc')
+      .take(limit)
+
+    const items = await Promise.all(
+      rows.map(async (row) => {
+        const product = await ctx.db.get(row.productId)
+        if (!product || product.status === 'archived') return null
+
+        const variants = await ctx.db
+          .query('merchVariants')
+          .withIndex('by_product', (q) => q.eq('productId', product._id))
+          .collect()
+
+        return {
+          ...product,
+          variants,
+          inStock: variants.some((variant) => variant.stock > 0),
+          viewedAt: row.viewedAt,
+        }
+      }),
+    )
+
+    return items.filter((item): item is NonNullable<typeof item> => item !== null)
+  },
+})

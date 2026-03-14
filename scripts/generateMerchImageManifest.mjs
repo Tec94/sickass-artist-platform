@@ -1,101 +1,106 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+import fs from 'node:fs'
+import path from 'node:path'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../convex/_generated/api.js'
 
-const root = path.resolve('public', 'merch');
-const outputPath = path.resolve('src', 'data', 'merchImageManifest.ts');
-const aliasPath = path.resolve('scripts', 'merchImageAliases.json');
+const rawRoot = path.resolve('public', 'merch')
+const normalizedRoot = path.resolve('public', 'merch-normalized')
+const root = fs.existsSync(normalizedRoot) ? normalizedRoot : rawRoot
+const webRoot = root === normalizedRoot ? 'merch-normalized' : 'merch'
+const outputPath = path.resolve('src', 'data', 'merchImageManifest.ts')
+const aliasPath = path.resolve('scripts', 'merchImageAliases.json')
 
-const fileEntries = [];
+const fileEntries = []
 
 function walk(dir) {
-  if (!fs.existsSync(dir)) return;
+  if (!fs.existsSync(dir)) return
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = path.join(dir, entry.name);
+    const fullPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      walk(fullPath);
+      walk(fullPath)
     } else {
-      fileEntries.push(fullPath);
+      fileEntries.push(fullPath)
     }
   }
 }
 
-walk(root);
+walk(root)
 
-const manifest = {};
-let aliases = {};
+const manifest = {}
+let aliases = {}
 
 if (fs.existsSync(aliasPath)) {
   try {
-    const raw = fs.readFileSync(aliasPath, 'utf8');
-    aliases = JSON.parse(raw);
+    const raw = fs.readFileSync(aliasPath, 'utf8')
+    aliases = JSON.parse(raw)
   } catch (error) {
-    console.warn(`Failed to read ${aliasPath}. Using empty aliases.`);
+    console.warn(`Failed to read ${aliasPath}. Using empty aliases.`)
   }
 }
 
 for (const filePath of fileEntries) {
-  const rel = path.relative(root, filePath).split(path.sep);
-  if (rel.length < 3) continue;
+  const rel = path.relative(root, filePath).split(path.sep)
+  if (rel.length < 3) continue
 
-  const [category, productSlug, fileName] = rel;
-  const match = /^(.+)-(\d+)-(\d+)\.(\w+)$/.exec(fileName);
-  if (!match) continue;
+  const fileName = rel[rel.length - 1]
+  const productSlug = rel[rel.length - 2]
+  const category = rel[rel.length - 3]
+  const match = /^(.+)-(\d+)-(\d+)\.(\w+)$/.exec(fileName)
+  if (!match) continue
 
-  const [, slug, variationRaw, imageRaw] = match;
-  if (slug !== productSlug) continue;
+  const [, slug, variationRaw, imageRaw] = match
+  if (slug !== productSlug) continue
 
-  const imageIndex = Number(variationRaw);
-  if (!Number.isFinite(imageIndex)) continue;
-  const variationIndex = 1;
+  const variationIndex = Number(variationRaw)
+  const imageIndex = Number(imageRaw)
+  if (!Number.isFinite(variationIndex) || !Number.isFinite(imageIndex)) continue
 
-  const webPath = `/${path.posix.join('merch', category, productSlug, fileName)}`;
+  const webPath = `/${path.posix.join(webRoot, category, productSlug, fileName)}`
 
   if (!manifest[productSlug]) {
-    manifest[productSlug] = { category, variations: {} };
+    manifest[productSlug] = { category, variations: {} }
   }
 
-  const variations = manifest[productSlug].variations;
+  const variations = manifest[productSlug].variations
   if (!variations[variationIndex]) {
-    variations[variationIndex] = [];
+    variations[variationIndex] = []
   }
-  variations[variationIndex].push({ imageIndex, url: webPath });
+  variations[variationIndex].push({ imageIndex, url: webPath })
 }
 
 for (const entry of Object.values(manifest)) {
-  const variations = entry.variations;
+  const variations = entry.variations
   for (const [key, images] of Object.entries(variations)) {
     const ordered = images
       .sort((a, b) => a.imageIndex - b.imageIndex)
-      .map((img) => img.url);
-    variations[key] = ordered;
+      .map((img) => img.url)
+    variations[key] = ordered
   }
 }
 
 const output = `export const merchImageManifest = ${JSON.stringify(manifest, null, 2)} as const;\n\n` +
   `export const merchImageAliases = ${JSON.stringify(aliases, null, 2)} as const;\n\n` +
   `export type MerchImageManifest = typeof merchImageManifest;\n` +
-  `export type MerchImageAliases = typeof merchImageAliases;\n`;
+  `export type MerchImageAliases = typeof merchImageAliases;\n`
 
-fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-fs.writeFileSync(outputPath, output, 'utf8');
+fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+fs.writeFileSync(outputPath, output, 'utf8')
 
-console.log(`Wrote ${Object.keys(manifest).length} product entries to ${outputPath}`);
+console.log(`Wrote ${Object.keys(manifest).length} product entries to ${outputPath}`)
 
 const deploymentUrl =
-  process.env.CONVEX_URL || process.env.VITE_CONVEX_DEPLOYMENT_URL;
-const adminKey = process.env.CONVEX_ADMIN_KEY;
-const uploadToken = process.env.MERCH_MANIFEST_TOKEN;
+  process.env.CONVEX_URL || process.env.VITE_CONVEX_DEPLOYMENT_URL
+const adminKey = process.env.CONVEX_ADMIN_KEY
+const uploadToken = process.env.MERCH_MANIFEST_TOKEN
 
 if (!deploymentUrl) {
-  console.log('Skipping Convex upload (set CONVEX_URL or VITE_CONVEX_DEPLOYMENT_URL).');
-  process.exit(0);
+  console.log('Skipping Convex upload (set CONVEX_URL or VITE_CONVEX_DEPLOYMENT_URL).')
+  process.exit(0)
 }
 
-const client = new ConvexHttpClient(deploymentUrl);
+const client = new ConvexHttpClient(deploymentUrl)
 if (adminKey) {
-  client.setAdminAuth(adminKey);
+  client.setAdminAuth(adminKey)
 }
 
 try {
@@ -103,8 +108,8 @@ try {
     manifest,
     aliases,
     token: uploadToken,
-  });
-  console.log('Uploaded manifest to Convex.', result);
+  })
+  console.log('Uploaded manifest to Convex.', result)
 } catch (error) {
-  console.error('Failed to upload manifest to Convex:', error instanceof Error ? error.message : error);
+  console.error('Failed to upload manifest to Convex:', error instanceof Error ? error.message : error)
 }

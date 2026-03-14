@@ -15,6 +15,7 @@ import { Chat } from './pages/Chat'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { SSOCallback } from './pages/SSOCallback'
+import { LandingPage } from './pages/LandingPage'
 import { useTranslation } from './hooks/useTranslation'
 import { ParallaxBackground } from './components/ParallaxBackground'
 import Header from './components/Header'
@@ -106,6 +107,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ 
 const AdminRedemptions = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRedemptions })))
 const AdminRewards = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRewards })))
 const AdminPoints = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminPoints })))
+const Music = lazy(() => import('./pages/Music').then(m => ({ default: m.Music })))
 
 const Ranking = lazy(() => import('./pages/Ranking.tsx').then(m => ({ default: m.Ranking })))
 const PrivateSuite = lazy(() => import('./pages/PrivateSuite').then(m => ({ default: m.PrivateSuite })))
@@ -126,7 +128,7 @@ function AppContent() {
   const { conflicts, resolveConflict } = useOfflineQueue()
   const { visualVariant } = useAppVisualVariant()
   const location = useLocation()
-  const showFooter = location.pathname === '/dashboard'
+  const showFooter = location.pathname === '/dashboard' || location.pathname === '/community'
 
   return (
     <div className="app-theme-root" data-app-visual-variant={visualVariant}>
@@ -145,7 +147,7 @@ function AppContent() {
                 <div className="relative flex-1 flex flex-col overflow-auto" data-scroll-container>
                 <Suspense fallback={<div className="text-white p-8 text-center">Loading...</div>}>
               <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<LandingPage />} />
                 
                 {/* Auth Routes */}
                 <Route path="/sign-in" element={<SignInPage />} />
@@ -169,6 +171,15 @@ function AppContent() {
                       <Dashboard />
                     </ErrorBoundary>
                   </Suspense>
+                } />
+                <Route path="/community" element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<div className="text-white p-8 text-center">Loading Community...</div>}>
+                      <ErrorBoundary level="section">
+                        <Dashboard />
+                      </ErrorBoundary>
+                    </Suspense>
+                  </ProtectedRoute>
                 } />
 
                 {/* Store Routes */}
@@ -200,6 +211,11 @@ function AppContent() {
                   </Suspense>
                 } />
                 <Route path="/store/drops" element={<DropsPage />} />
+                <Route path="/campaign" element={
+                  <Suspense fallback={<div className="text-white p-8 text-center">Loading Campaign...</div>}>
+                    <Music />
+                  </Suspense>
+                } />
                 <Route path="/merch/*" element={<LegacyMerchRedirect />} />
 
                 {/* Events Routes */}
@@ -295,7 +311,7 @@ function AppContent() {
                 } />
                 
                 {/* Fallback */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
             {showFooter && <Footer />}

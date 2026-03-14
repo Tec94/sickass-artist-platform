@@ -358,6 +358,17 @@ export default defineSchema({
   })
     .index('by_slug', ['slug']),
 
+  // Persistent per-user forum bookmarks
+  forumThreadBookmarks: defineTable({
+    userId: v.id('users'),
+    threadId: v.id('threads'),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user_thread', ['userId', 'threadId'])
+    .index('by_user_createdAt', ['userId', 'createdAt'])
+    .index('by_thread_createdAt', ['threadId', 'createdAt']),
+
   // User typing indicators (ephemeral, cleaned by scheduler)
   userTypingIndicators: defineTable({
     channelId: v.id('channels'),
@@ -551,6 +562,16 @@ export default defineSchema({
   })
     .index('by_content_type', ['contentType', 'trendingScore'])
     .index('by_contentId', ['contentId', 'contentType']),
+
+  // Persisted gallery presentation preferences
+  galleryViewPreferences: defineTable({
+    userId: v.id('users'),
+    activeTab: v.union(v.literal('artist'), v.literal('community')),
+    layoutMode: v.union(v.literal('feed'), v.literal('grid')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId']),
 
   // ==================== EVENTS & TICKETING SYSTEM ====================
 
@@ -933,6 +954,8 @@ export default defineSchema({
 
     // Display order
     priority: v.number(),               // For ordering (0 = highest)
+    queueEnabled: v.optional(v.boolean()),
+    nextQueueSeq: v.optional(v.number()),
 
     // Metadata
     createdAt: v.number(),
@@ -941,6 +964,39 @@ export default defineSchema({
   })
     .index('by_starts', ['startsAt'])
     .index('by_status', ['startsAt', 'endsAt']),
+
+  merchDropQueueEntries: defineTable({
+    dropId: v.id('merchDrops'),
+    userId: v.id('users'),
+    seq: v.number(),
+    status: v.union(
+      v.literal('waiting'),
+      v.literal('admitted'),
+      v.literal('expired'),
+      v.literal('left')
+    ),
+    joinedAtUtc: v.number(),
+    expiresAtUtc: v.number(),
+    cooldownUntilUtc: v.optional(v.number()),
+    updatedAtUtc: v.number(),
+    createdAt: v.number(),
+  })
+    .index('by_drop_user', ['dropId', 'userId'])
+    .index('by_drop_status_seq', ['dropId', 'status', 'seq'])
+    .index('by_expires', ['expiresAtUtc'])
+    .index('by_user_drop', ['userId', 'dropId']),
+
+  merchDropQueueSlots: defineTable({
+    dropId: v.id('merchDrops'),
+    userId: v.id('users'),
+    queueEntryId: v.id('merchDropQueueEntries'),
+    grantedAtUtc: v.number(),
+    expiresAtUtc: v.number(),
+    createdAt: v.number(),
+  })
+    .index('by_drop_user', ['dropId', 'userId'])
+    .index('by_drop_expires', ['dropId', 'expiresAtUtc'])
+    .index('by_expires', ['expiresAtUtc']),
 
   // Inventory audit log - Tracks inventory inconsistency checks and issues
   inventoryAuditLog: defineTable({
@@ -1024,6 +1080,18 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_product', ['productId'])
     .index('by_user_product', ['userId', 'productId']),
+
+  // Recently viewed merch products for quick return UX
+  merchRecentlyViewed: defineTable({
+    userId: v.id('users'),
+    productId: v.id('merchProducts'),
+    viewedAt: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user_viewedAt', ['userId', 'viewedAt'])
+    .index('by_user_product', ['userId', 'productId'])
+    .index('by_product_viewedAt', ['productId', 'viewedAt']),
 
   // ==================== GAMIFICATION SYSTEM ====================
 
@@ -1280,7 +1348,8 @@ export default defineSchema({
     expiresAt: v.optional(v.number()), // When this leaderboard period ends (optional)
   })
     .index('by_leaderboardId_score', ['leaderboardId', 'totalScore']) // Main query: get top songs
-    .index('by_period', ['period']), // Filter by period type
+    .index('by_period', ['period']) // Filter by period type
+    .index('by_track_updatedAt', ['spotifyTrackId', 'updatedAt']), // Track-level history lookups
 
   // Leaderboard cache - Serve leaderboard without scanning entries table
   leaderboardCache: defineTable({

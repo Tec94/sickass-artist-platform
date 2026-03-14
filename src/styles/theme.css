@@ -1,18 +1,10 @@
+@import './theme.tokens.css';
+
 :root {
-  /* Hybrid Night + Crimson contract */
-  --color-primary: #A62B3A;
-  --color-primary-hover: #7F1F2C;
-
-  --color-bg: #04070B;
-  --color-bg-base: #0A1118;
-  --color-card-bg: #111A24;
-  --color-card-border: #2A3541;
-
-  --color-text-main: #E8E1D5;
-  --color-text-dim: #9AA7B5;
-  --color-text-muted: #667789;
-
-  --color-red-dim: #2A1017;
+  /* Hybrid Night + Crimson contract + semantic aliases */
+  --color-red-dim: #2a1017;
+  --color-focus-ring-strong: var(--color-focus-ring);
+  --color-brand-text: var(--color-accent-brand-soft);
 
   --glass-premium-blur: 14px;
   --glass-hero-bg: linear-gradient(142deg, rgba(12, 19, 28, 0.8), rgba(4, 9, 14, 0.68));
@@ -22,18 +14,44 @@
   --glass-promo-shell-bg: linear-gradient(136deg, rgba(15, 24, 35, 0.92), rgba(5, 10, 16, 0.82));
   --glass-promo-panel-bg: linear-gradient(180deg, rgba(9, 15, 22, 0.86), rgba(5, 9, 14, 0.96));
 
-  /* Backward compatibility aliases */
-  --color-brand-500: var(--color-primary);
-  --color-brand-600: var(--color-primary-hover);
-  --color-bg-app: var(--color-bg);
-  --color-bg-surface: var(--color-card-bg);
-
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Cinzel', 'Times New Roman', serif;
   --font-store: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
   --transition-standard: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   --animation-stagger: 0.1s;
+  --motion-duration-page-enter: 560ms;
+  --motion-duration-panel-shift: 360ms;
+  --motion-duration-hover: 220ms;
+  --motion-ease-cinematic: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-ui: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --forum-surface-bg:
+    radial-gradient(120% 135% at 10% 0%, rgba(64, 89, 127, 0.22), transparent 62%),
+    linear-gradient(180deg, rgba(8, 14, 24, 0.96), rgba(5, 10, 16, 0.98));
+  --forum-card-bg: linear-gradient(180deg, rgba(14, 21, 33, 0.96), rgba(8, 13, 22, 0.98));
+  --forum-card-border: rgba(79, 102, 133, 0.42);
+
+  --ranking-surface-bg:
+    radial-gradient(120% 125% at 90% 0%, rgba(164, 82, 93, 0.17), transparent 58%),
+    radial-gradient(100% 90% at 4% -4%, rgba(82, 105, 130, 0.2), transparent 56%),
+    linear-gradient(180deg, rgba(9, 11, 16, 0.98), rgba(6, 8, 13, 1));
+  --ranking-row-bg: linear-gradient(180deg, rgba(18, 20, 27, 0.96), rgba(10, 13, 19, 0.98));
+  --ranking-row-border: rgba(88, 93, 107, 0.42);
+
+  --store-surface-bg:
+    radial-gradient(115% 96% at 16% 0%, rgba(157, 132, 102, 0.19), transparent 62%),
+    radial-gradient(110% 110% at 84% 8%, rgba(92, 126, 138, 0.14), transparent 64%),
+    linear-gradient(180deg, rgba(11, 13, 16, 0.98), rgba(7, 8, 11, 1));
+  --store-card-bg: linear-gradient(180deg, rgba(20, 23, 28, 0.96), rgba(12, 15, 20, 0.98));
+  --store-card-border: rgba(132, 142, 153, 0.34);
+
+  --gallery-surface-bg:
+    radial-gradient(110% 130% at 0% -8%, rgba(89, 120, 146, 0.21), transparent 56%),
+    radial-gradient(120% 90% at 100% 0%, rgba(151, 74, 87, 0.16), transparent 56%),
+    linear-gradient(180deg, rgba(8, 11, 16, 0.98), rgba(5, 8, 12, 1));
+  --gallery-card-bg: linear-gradient(180deg, rgba(13, 19, 27, 0.96), rgba(8, 13, 20, 0.98));
+  --gallery-card-border: rgba(88, 104, 123, 0.38);
 }
 
 * {
@@ -58,6 +76,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.motion-safe {
+  --motion-opacity-target: 1;
+}
+
+.motion-reduce {
+  --motion-opacity-target: 1;
+}
+
 h1,
 h2,
 h3,
@@ -69,11 +95,11 @@ h6,
 }
 
 .glow-text {
-  text-shadow: 0 0 14px rgba(166, 43, 58, 0.45);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--color-accent-brand) 45%, transparent);
 }
 
 .glow-border {
-  box-shadow: 0 0 18px rgba(166, 43, 58, 0.28);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-accent-brand) 28%, transparent);
 }
 
 .flashlight-container {
@@ -130,6 +156,17 @@ h6,
 
 .animate-blur.animate-in {
   filter: blur(0);
+}
+
+.focus-ring-brand:focus-visible,
+.focus-ring-brand:focus {
+  outline: 2px solid var(--color-focus-ring-strong);
+  outline-offset: 2px;
+}
+
+:where(button, a, input, select, textarea, [role='button']):focus-visible {
+  outline: 2px solid var(--color-focus-ring-strong);
+  outline-offset: 2px;
 }
 
 .border-beam {

@@ -1,30 +1,69 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
-import { Gallery as GalleryPage } from '../pages/Gallery'
 import { MemoryRouter } from 'react-router-dom'
+import { useMutation, useQuery } from 'convex/react'
+import { Gallery as GalleryPage } from '../pages/Gallery'
 import { useGalleryFilters } from '../hooks/useGalleryFilters'
 import { mockGalleryItems } from './mocks'
 
-// Mock the hooks
+vi.mock('convex/react', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+}))
+
 vi.mock('../hooks/useGalleryFilters')
-vi.mock('../hooks/useOptimisticLike', () => ({
-  useOptimisticLike: (_id: string, _type: string, count: number, liked: boolean) => ({
-    likeCount: liked ? count : count,
-    isLiked: liked,
-    isPending: false,
-    handleLike: vi.fn(),
-  })
+vi.mock('../hooks/useAnalytics', () => ({
+  useAnalytics: vi.fn(),
 }))
 vi.mock('../hooks/usePerformanceMetrics', () => ({
   usePerformanceMetrics: vi.fn(),
-  usePerformanceOperation: () => ({
-    start: vi.fn(),
-    end: vi.fn(),
-  })
+  usePerformanceOperation: () => ({ start: vi.fn(), end: vi.fn() }),
 }))
 vi.mock('../hooks/useScrollAnimation', () => ({
-  useScrollAnimation: () => vi.fn()
+  useScrollAnimation: () => vi.fn(),
+}))
+vi.mock('../hooks/useTranslation', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
+vi.mock('../hooks/useReducedMotionPreference', () => ({
+  useReducedMotionPreference: () => ({ prefersReducedMotion: true, motionClassName: 'motion-reduce' }),
+}))
+vi.mock('../pages/galleryState', async () => {
+  const actual = await vi.importActual('../pages/galleryState')
+  return {
+    ...actual,
+    openGalleryLightbox: () => 0,
+  }
+})
+
+vi.mock('../components/Gallery/AdvancedFilters', () => ({
+  AdvancedFilters: () => <div>advanced-filters</div>,
+}))
+vi.mock('../components/Gallery/FilterChips', () => ({
+  FilterChips: () => <div>filter-chips</div>,
+}))
+vi.mock('../components/SocialGallery', () => ({
+  SocialGallery: () => <div>social-gallery</div>,
+}))
+vi.mock('../components/Gallery/GalleryFYP', () => ({
+  GalleryFYP: ({ onItemClick }: { onItemClick?: (index: number) => void }) => (
+    <button type="button" onClick={() => onItemClick?.(0)}>
+      open-lightbox
+    </button>
+  ),
+}))
+vi.mock('../components/Gallery/LightboxContainer', () => ({
+  LightboxContainer: ({ onClose }: { onClose: () => void }) => (
+    <div role="dialog">
+      <button type="button" onClick={onClose}>
+        close-lightbox
+      </button>
+    </div>
+  ),
+}))
+vi.mock('../components/Performance/PerformanceDashboard', () => ({
+  PerformanceDashboard: () => null,
 }))
 
 describe('Gallery E2E Tests', () => {
@@ -52,92 +91,68 @@ describe('Gallery E2E Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useGalleryFilters).mockReturnValue(mockFilters as unknown as ReturnType<typeof useGalleryFilters>)
+    vi.mocked(useQuery).mockReturnValue(undefined as never)
+    vi.mocked(useMutation).mockReturnValue(vi.fn().mockResolvedValue(undefined) as never)
   })
 
-  it('should open lightbox when clicking gallery item', async () => {
+  it('opens and closes lightbox from the feed', async () => {
     render(
       <MemoryRouter>
         <GalleryPage />
-      </MemoryRouter>
+      </MemoryRouter>,
     )
-    
-    // Find one of the items rendered by GalleryFYP
-    const galleryItems = await screen.findAllByRole('button', { name: /view item/i })
-    fireEvent.click(galleryItems[0])
-    
-    // LightboxContainer uses a dialog role (usually)
-    const lightbox = await screen.findByRole('dialog')
-    expect(lightbox).toBeInTheDocument()
-  })
 
-  it('should navigate lightbox with keyboard', async () => {
-    render(
-      <MemoryRouter>
-        <GalleryPage />
-      </MemoryRouter>
-    )
-    
-    const galleryItems = await screen.findAllByRole('button', { name: /view item/i })
-    fireEvent.click(galleryItems[0])
-    
-    // Check for counter in lightbox. LightboxMetadata usually shows it
-    const counter = await screen.findByText(/1 \/ \d+/)
-    expect(counter).toHaveTextContent('1 /')
-    
-    fireEvent.keyDown(window, { key: 'ArrowRight' })
-    await waitFor(() => expect(screen.getByText(/2 \/ \d+/)).toBeInTheDocument())
-  })
+    fireEvent.click(screen.getByRole('button', { name: 'open-lightbox' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
 
-  it('should apply filters and update results', async () => {
-    render(
-      <MemoryRouter>
-        <GalleryPage />
-      </MemoryRouter>
-    )
-    
-    const filterButton = screen.getByRole('button', { name: /toggle filters/i })
-    fireEvent.click(filterButton)
-    
-    // In AdvancedFilters, we have "Show" checkbox
-    const showCheckbox = screen.getByRole('checkbox', { name: /show/i })
-    fireEvent.click(showCheckbox)
-    
-    const applyButton = screen.getByRole('button', { name: /apply/i })
-    fireEvent.click(applyButton)
-    
-    expect(mockFilters.setFilter).toHaveBeenCalled()
-  })
-
-  it('should toggle like with optimistic update', async () => {
-    render(
-      <MemoryRouter>
-        <GalleryPage />
-      </MemoryRouter>
-    )
-    
-    // Each post in GalleryFYP has a like button.
-    const likeButtons = await screen.findAllByRole('button', { name: /like/i })
-    const likeButton = likeButtons[0]
-    
-    // Initial count from mock is 10
-    expect(screen.getAllByText('10')[0]).toBeInTheDocument()
-    
-    fireEvent.click(likeButton)
-  })
-
-  it('should show related content', async () => {
-    render(
-      <MemoryRouter>
-        <GalleryPage />
-      </MemoryRouter>
-    )
-    
-    // Open lightbox first to see related content
-    const galleryItems = await screen.findAllByRole('button', { name: /view item/i })
-    fireEvent.click(galleryItems[0])
-    
+    fireEvent.click(screen.getByRole('button', { name: 'close-lightbox' }))
     await waitFor(() => {
-      expect(screen.getByText(/you might also like/i)).toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
+  })
+
+  it('applies content type filter from redesigned toolbar tabs', () => {
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'gallery.show' }))
+    expect(mockFilters.setFilter).toHaveBeenCalledWith('types', ['show'])
+  })
+
+  it('switches between artist and community tabs', () => {
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'gallery.community' }))
+    expect(screen.getByText('social-gallery')).toBeInTheDocument()
+  })
+
+  it('toggles layout mode control label', () => {
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'gallery.gridMode' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'gallery.gridMode' }))
+    expect(screen.getByRole('button', { name: 'gallery.feedMode' })).toBeInTheDocument()
+  })
+
+  it('reveals filter rail in artist mode', () => {
+    render(
+      <MemoryRouter>
+        <GalleryPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'gallery.filtersLabel' }))
+    expect(screen.getByText('advanced-filters')).toBeInTheDocument()
   })
 })

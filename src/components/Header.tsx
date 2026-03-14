@@ -239,7 +239,7 @@ const Header: React.FC = () => {
       >
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-[1020]">
           <div className={`flex items-center justify-between transition-all duration-300 ${isCinematicCollapsed ? 'h-14' : 'h-16'}`}>
-            <Link to="/dashboard" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-3 group">
               <div className="hidden sm:block">
                 <h1 className={`font-display font-bold tracking-wider transition-all duration-300 ${isCinematicCollapsed ? 'text-lg text-zinc-100' : 'text-xl text-white'}`}>
                   ROA

@@ -79,3 +79,43 @@ export interface ThreadDetailData {
   replies: Reply[]
   replyCount: number
 }
+
+export interface ForumInsightUser {
+  userId: string
+  displayName: string
+  avatar: string
+  threadCount: number
+  replyCount: number
+  score: number
+}
+
+export interface ForumTopicStat {
+  categoryId: string
+  name: string
+  threadCount: number
+}
+
+export interface ForumInsightHotThread {
+  _id: Id<'threads'>
+  title: string
+  authorDisplayName: string
+  categoryId: Id<'categories'>
+  categoryName: string
+  replyCount: number
+  viewCount: number
+  netVoteCount: number
+  createdAt: number
+}
+
+export interface ForumInsightsPayload {
+  range: '24h' | '7d' | '30d'
+  topUsers: ForumInsightUser[]
+  activeTopics: ForumTopicStat[]
+  hotThreads: ForumInsightHotThread[]
+  stats: {
+    totalThreads: number
+    totalReplies: number
+    uniqueAuthors: number
+  }
+  generatedAt: number
+}

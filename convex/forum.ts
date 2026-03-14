@@ -942,6 +942,199 @@ export const recordOfflineVote = mutation({
   },
 });
 
+// Toggle a bookmark for a thread for the current user.
+export const toggleThreadBookmark = mutation({
+  args: {
+    threadId: v.id("threads"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
+
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread || thread.isDeleted || (thread.moderationStatus ?? "active") !== "active") {
+      throw new ConvexError("Thread not found");
+    }
+
+    const existing = await ctx.db
+      .query("forumThreadBookmarks")
+      .withIndex("by_user_thread", (q) => q.eq("userId", userId).eq("threadId", args.threadId))
+      .first();
+
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { bookmarked: false };
+    }
+
+    const now = Date.now();
+    await ctx.db.insert("forumThreadBookmarks", {
+      userId,
+      threadId: args.threadId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { bookmarked: true };
+  },
+});
+
+// Returns bookmarked thread ids for current user ordered by newest bookmark first.
+export const getBookmarkedThreadIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) return [];
+
+    const bookmarks = await ctx.db
+      .query("forumThreadBookmarks")
+      .withIndex("by_user_createdAt", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(500);
+
+    return bookmarks.map((bookmark) => bookmark.threadId);
+  },
+});
+
+// Aggregate forum insights for the sidebar.
+export const getForumInsights = query({
+  args: {
+    categoryId: v.optional(v.id("categories")),
+    range: v.optional(v.union(v.literal("24h"), v.literal("7d"), v.literal("30d"))),
+  },
+  handler: async (ctx, args) => {
+    const range = args.range ?? "7d";
+    const now = Date.now();
+    const rangeMs =
+      range === "24h" ? 24 * 60 * 60 * 1000 : range === "30d" ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+    const cutoff = now - rangeMs;
+
+    const categories = await ctx.db.query("categories").collect();
+    const categoryNameById = new Map(categories.map((category) => [String(category._id), category.name]));
+
+    const allThreads = await ctx.db.query("threads").collect();
+    const scopedThreads = allThreads.filter((thread) => {
+      if (thread.isDeleted) return false;
+      if ((thread.moderationStatus ?? "active") !== "active") return false;
+      if (args.categoryId && thread.categoryId !== args.categoryId) return false;
+      return thread.createdAt >= cutoff;
+    });
+
+    const scopedThreadIdSet = new Set(scopedThreads.map((thread) => String(thread._id)));
+    const allReplies = await ctx.db.query("replies").collect();
+    const scopedReplies = allReplies.filter((reply) => {
+      if (reply.isDeleted) return false;
+      if ((reply.moderationStatus ?? "active") !== "active") return false;
+      if (!scopedThreadIdSet.has(String(reply.threadId))) return false;
+      return reply.createdAt >= cutoff;
+    });
+
+    const userMetrics = new Map<
+      string,
+      {
+        userId: string;
+        displayName: string;
+        avatar: string;
+        threadCount: number;
+        replyCount: number;
+        score: number;
+      }
+    >();
+
+    const ensureUserMetric = (userId: string, displayName: string, avatar: string) => {
+      const existing = userMetrics.get(userId);
+      if (existing) return existing;
+      const next = {
+        userId,
+        displayName,
+        avatar,
+        threadCount: 0,
+        replyCount: 0,
+        score: 0,
+      };
+      userMetrics.set(userId, next);
+      return next;
+    };
+
+    for (const thread of scopedThreads) {
+      const metric = ensureUserMetric(String(thread.authorId), thread.authorDisplayName, thread.authorAvatar);
+      metric.threadCount += 1;
+      metric.score += (thread.netVoteCount || 0) * 2 + (thread.replyCount || 0);
+    }
+
+    for (const reply of scopedReplies) {
+      const metric = ensureUserMetric(String(reply.authorId), reply.authorDisplayName, reply.authorAvatar);
+      metric.replyCount += 1;
+      metric.score += (reply.upVoteCount || 0) - (reply.downVoteCount || 0) + 1;
+    }
+
+    const topUsers = Array.from(userMetrics.values())
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.threadCount !== a.threadCount) return b.threadCount - a.threadCount;
+        return b.replyCount - a.replyCount;
+      })
+      .slice(0, 8);
+
+    const categoryCounts = new Map<string, number>();
+    for (const thread of scopedThreads) {
+      const key = String(thread.categoryId);
+      categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
+    }
+
+    const activeTopics = Array.from(categoryCounts.entries())
+      .map(([categoryId, threadCount]) => ({
+        categoryId,
+        name: categoryNameById.get(categoryId) ?? "Unknown",
+        threadCount,
+      }))
+      .sort((a, b) => b.threadCount - a.threadCount)
+      .slice(0, 8);
+
+    const hotThreads = [...scopedThreads]
+      .sort((a, b) => {
+        const aScore = (a.netVoteCount || 0) * 2 + (a.replyCount || 0) + Math.floor((a.viewCount || 0) / 25);
+        const bScore = (b.netVoteCount || 0) * 2 + (b.replyCount || 0) + Math.floor((b.viewCount || 0) / 25);
+        return bScore - aScore;
+      })
+      .slice(0, 6)
+      .map((thread) => ({
+        _id: thread._id,
+        title: thread.title,
+        authorDisplayName: thread.authorDisplayName,
+        categoryId: thread.categoryId,
+        categoryName: categoryNameById.get(String(thread.categoryId)) ?? "Unknown",
+        replyCount: thread.replyCount || 0,
+        viewCount: thread.viewCount || 0,
+        netVoteCount: thread.netVoteCount || 0,
+        createdAt: thread.createdAt,
+      }));
+
+    const uniqueAuthors = new Set<string>();
+    for (const thread of scopedThreads) uniqueAuthors.add(String(thread.authorId));
+    for (const reply of scopedReplies) uniqueAuthors.add(String(reply.authorId));
+
+    return {
+      range,
+      topUsers,
+      activeTopics,
+      hotThreads,
+      stats: {
+        totalThreads: scopedThreads.length,
+        totalReplies: scopedReplies.length,
+        uniqueAuthors: uniqueAuthors.size,
+      },
+      generatedAt: now,
+    };
+  },
+});
+
 // Seed default categories (run once to initialize)
 export const seedCategories = mutation({
   args: {},

@@ -1,0 +1,48 @@
+:root {
+  /* Semantic color contract */
+  --color-bg-app: #04070b;
+  --color-bg-base: #0a1118;
+  --color-bg-surface: #111a24;
+  --color-bg-elevated: #1a2531;
+
+  --color-border-subtle: #2a3541;
+  --color-border-strong: #415264;
+
+  --color-text-primary: #e8e1d5;
+  --color-text-secondary: #aebccc;
+  --color-text-tertiary: #8fa1b4;
+
+  --color-accent-brand: #a62b3a;
+  --color-accent-brand-hover: #7f1f2c;
+  --color-accent-brand-soft: #d197a1;
+  --color-accent-brand-foreground: #f5efe4;
+
+  --color-state-info: #9bb4cc;
+  --color-state-success: #78bfa7;
+  --color-state-warning: #d4b27f;
+  --color-state-danger: #c37d8b;
+
+  --color-focus-ring: #e8e1d5;
+
+  /* Legacy aliases for existing components */
+  --color-bg: var(--color-bg-app);
+  --color-card-bg: var(--color-bg-surface);
+  --color-card-border: var(--color-border-subtle);
+  --color-primary: var(--color-accent-brand);
+  --color-primary-hover: var(--color-accent-brand-hover);
+  --color-text-main: var(--color-text-primary);
+  --color-text-dim: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-tertiary);
+
+  /* Compatibility aliases for older CSS modules */
+  --color-brand-500: var(--color-accent-brand);
+  --color-brand-600: var(--color-accent-brand-hover);
+  --color-bg-charcoal: var(--color-bg-base);
+  --color-bg-dark: var(--color-bg-app);
+  --color-secondary: var(--color-text-secondary);
+  --color-accent: var(--color-accent-brand-soft);
+  --color-text: var(--color-text-primary);
+  --color-info: var(--color-state-info);
+  --color-warning: var(--color-state-warning);
+  --transition-fast: 0.2s ease;
+}

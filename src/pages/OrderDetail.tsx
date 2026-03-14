@@ -81,7 +81,7 @@ export function OrderDetail() {
         </div>
       </div>
 
-      <div className="app-surface-shell max-w-4xl mx-auto px-4 py-8">
+      <div className="store-surface-shell max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">

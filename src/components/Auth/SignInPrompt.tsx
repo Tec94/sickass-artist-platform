@@ -1,11 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
 import { useTranslation } from '../../hooks/useTranslation'
 
-export function SignInPrompt() {
+interface SignInPromptProps {
+  returnTo?: string
+}
+
+export function SignInPrompt({ returnTo = '/dashboard' }: SignInPromptProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { loginWithRedirect, isLoading } = useAuth0()
+  const signInHref = `/sign-in?returnTo=${encodeURIComponent(returnTo)}`
+  const signUpHref = `/sign-up?returnTo=${encodeURIComponent(returnTo)}`
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-950 p-4">
@@ -19,24 +23,13 @@ export function SignInPrompt() {
 
         <div className="flex gap-4 flex-col">
           <button
-            disabled={isLoading}
-            onClick={() => {
-              loginWithRedirect({ appState: { returnTo: '/dashboard' } }).catch((err: unknown) =>
-                console.error('[Auth0] loginWithRedirect failed', err)
-              )
-            }}
+            onClick={() => navigate(signInHref)}
             className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition disabled:opacity-60"
           >
             {t('auth.signIn')}
           </button>
           <button
-            disabled={isLoading}
-            onClick={() => {
-              loginWithRedirect({
-                appState: { returnTo: '/dashboard' },
-                authorizationParams: { screen_hint: 'signup' },
-              }).catch((err: unknown) => console.error('[Auth0] signup loginWithRedirect failed', err))
-            }}
+            onClick={() => navigate(signUpHref)}
             className="w-full px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition disabled:opacity-60"
           >
             {t('common.createAccount')}

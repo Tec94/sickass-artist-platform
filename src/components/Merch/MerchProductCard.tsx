@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -7,6 +7,7 @@ import { showToast } from '../../lib/toast'
 import { useUser } from '../../contexts/UserContext'
 import { getMerchPrimaryImages } from '../../utils/merchImages'
 import type { MerchImageManifest } from '../../types/merch'
+import type { UiTone } from '../../types/ui-color'
 
 interface MerchProductCardProps {
   product: {
@@ -20,365 +21,310 @@ interface MerchProductCardProps {
     totalStock?: number
     category?: Doc<'merchProducts'>['category']
     tags?: string[]
-    variants?: any[]
+    variants?: Array<{ _id?: Id<'merchVariants'>; stock?: number; size?: string; color?: string }> | any[]
   }
   manifest?: MerchImageManifest | null
+  onQuickView?: (productId: string) => void
+  onOpenProduct?: (productId: string) => void
+  tone?: UiTone
+  isLocked?: boolean
+  lockLabel?: string
+  onQueueAction?: () => void
 }
 
-export const MerchProductCard = ({ product, manifest }: MerchProductCardProps) => {
+const FALLBACK_IMAGE = '/images/placeholder.jpg'
+
+const toneToCtaClasses: Record<UiTone, string> = {
+  brand:
+    'border-rose-300/70 bg-rose-500/20 text-rose-100 hover:bg-rose-500/80 hover:text-white focus-visible:outline-rose-200',
+  neutral:
+    'border-slate-500/75 bg-slate-900/80 text-slate-100 hover:border-slate-300 hover:bg-slate-800 focus-visible:outline-slate-100',
+  info:
+    'border-sky-300/70 bg-sky-500/15 text-sky-100 hover:bg-sky-500/80 hover:text-white focus-visible:outline-sky-200',
+  success:
+    'border-emerald-300/70 bg-emerald-500/15 text-emerald-100 hover:bg-emerald-500/80 hover:text-white focus-visible:outline-emerald-200',
+  warning:
+    'border-amber-300/70 bg-amber-500/15 text-amber-100 hover:bg-amber-500/80 hover:text-white focus-visible:outline-amber-200',
+  danger:
+    'border-rose-300/70 bg-rose-500/15 text-rose-100 hover:bg-rose-500/80 hover:text-white focus-visible:outline-rose-200',
+}
+
+const badgeClassName =
+  'rounded-[10px] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md'
+
+export const MerchProductCard = ({
+  product,
+  manifest,
+  onQuickView,
+  onOpenProduct,
+  tone = 'brand',
+  isLocked = false,
+  lockLabel = 'Queue locked',
+  onQueueAction,
+}: MerchProductCardProps) => {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
-  const isOutOfStock = product.totalStock === 0
 
-  const merchImages = getMerchPrimaryImages({
-    name: product.name,
-    imageUrls: product.imageUrls,
-    thumbnailUrl: product.thumbnailUrl ?? product.imageUrls?.[0] ?? null,
-    category: product.category ?? 'other',
-    tags: product.tags ?? [],
-    variants: product.variants ?? [],
-  }, manifest)
+  const variants = Array.isArray(product.variants) ? product.variants : []
+  const inStockVariantCount = variants.filter((variant) => (variant?.stock ?? 0) > 0).length
+  const variantCount = variants.length
+  const isOutOfStock = typeof product.totalStock === 'number' ? product.totalStock === 0 : inStockVariantCount === 0
+  const hasMultipleVariants = variantCount > 1
+  const availableSizes = Array.from(new Set(variants.map((variant) => variant?.size).filter(Boolean))).slice(0, 3)
+  const isLimited = product.category === 'limited' || product.tags?.some((tag) => tag.toLowerCase().includes('limited')) || false
+
+  const merchImages = getMerchPrimaryImages(
+    {
+      name: product.name,
+      imageUrls: product.imageUrls,
+      thumbnailUrl: product.thumbnailUrl ?? product.imageUrls?.[0] ?? null,
+      category: product.category ?? 'other',
+      tags: product.tags ?? [],
+      variants,
+    },
+    manifest,
+  )
+
+  const primaryCandidate = merchImages[0] || product.thumbnailUrl || product.imageUrls[0] || FALLBACK_IMAGE
+  const secondaryCandidate = merchImages[1] || ''
+
+  const [primarySrc, setPrimarySrc] = useState(primaryCandidate)
+  const [secondarySrc, setSecondarySrc] = useState(secondaryCandidate)
+  const [isPrimaryLoading, setIsPrimaryLoading] = useState(true)
+  const [isSecondaryLoading, setIsSecondaryLoading] = useState(Boolean(secondaryCandidate))
+
+  useEffect(() => {
+    setPrimarySrc(primaryCandidate)
+    setSecondarySrc(secondaryCandidate)
+    setIsPrimaryLoading(true)
+    setIsSecondaryLoading(Boolean(secondaryCandidate))
+  }, [primaryCandidate, secondaryCandidate])
 
   const toggleWishlist = useMutation(api.merch.toggleWishlist)
   const addToCart = useMutation(api.cart.addToCart)
   const { isSignedIn, userProfile } = useUser()
   const wishlist = useQuery(api.merch.getWishlist, isSignedIn && userProfile ? {} : 'skip')
-  
-  const isWishlisted = wishlist?.some(item => item._id === product._id)
 
-  const handleClick = () => {
+  const isWishlisted = wishlist?.some((item) => item._id === product._id)
+  const priceLabel = `$${(product.price / 100).toFixed(2)}`
+
+  const variantSummary = useMemo(() => {
+    if (isOutOfStock) return 'Sold out'
+    if (hasMultipleVariants) return `${inStockVariantCount} variants available`
+    if (availableSizes.length) return `Sizes: ${availableSizes.join(', ')}`
+    return 'In stock'
+  }, [availableSizes, hasMultipleVariants, inStockVariantCount, isOutOfStock])
+
+  const primaryCtaLabel = isOutOfStock ? 'Sold Out' : hasMultipleVariants ? 'Choose Options' : 'Add to Cart'
+  const wishlistLabel = isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'
+
+  const openProduct = () => {
+    if (onOpenProduct) {
+      onOpenProduct(product._id)
+      return
+    }
     navigate(`/store/product/${product._id}`)
   }
 
-  const handleWishlist = async (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleWishlist = async (event: React.MouseEvent) => {
+    event.stopPropagation()
     try {
       await toggleWishlist({ productId: product._id as Id<'merchProducts'> })
       showToast(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', { type: 'success' })
-    } catch (err) {
+    } catch {
       showToast('Login to wishlist items', { type: 'error' })
     }
   }
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (isOutOfStock) return
+  const handleAddToCart = async (event: React.MouseEvent) => {
+    event.stopPropagation()
+    if (isOutOfStock || isLocked) return
 
-    // If product has variants, we should probably navigate to detail to let them choose
-    if (product.variants && product.variants.length > 1) {
-      navigate(`/store/product/${product._id}`)
+    if (hasMultipleVariants) {
+      openProduct()
       return
     }
 
-    // Default to first variant if available
-    const variantId = product.variants?.[0]?._id
+    const variantId = variants?.[0]?._id
     if (!variantId) {
-      navigate(`/store/product/${product._id}`)
+      openProduct()
       return
     }
 
     try {
       await addToCart({ variantId, quantity: 1 })
       showToast('Added to cart', { type: 'success' })
-    } catch (err) {
+    } catch {
       showToast('Failed to add to cart', { type: 'error' })
     }
   }
 
   return (
-    <div 
-      className="merch-product-card"
-      onClick={handleClick}
+    <article
+      className="group relative flex h-full cursor-pointer flex-col rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100"
+      role="button"
+      tabIndex={0}
+      onClick={openProduct}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openProduct()
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="card-image-container">
-        <img 
-          src={merchImages[0] || product.thumbnailUrl || product.imageUrls[0] || '/images/placeholder.jpg'} 
+      <div className="relative mb-3 aspect-[4/5] overflow-hidden rounded-2xl border border-slate-700/28 bg-slate-950 transition group-hover:border-slate-300/62">
+        {isPrimaryLoading ? (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90" />
+        ) : null}
+
+        <img
+          src={primarySrc}
           alt={product.name}
-          className={`card-image primary ${isHovered && merchImages[1] ? 'hidden' : ''}`}
+          loading="lazy"
+          onLoad={() => setIsPrimaryLoading(false)}
+          onError={() => {
+            if (primarySrc !== FALLBACK_IMAGE) {
+              setPrimarySrc(FALLBACK_IMAGE)
+              return
+            }
+            setIsPrimaryLoading(false)
+          }}
+          className={`absolute inset-0 h-full w-full object-cover transition duration-500 ${
+            isHovered && secondarySrc ? 'opacity-0 scale-[1.03]' : 'opacity-100 scale-100'
+          }`}
         />
-        {merchImages[1] && (
-          <img 
-            src={merchImages[1]} 
+
+        {secondarySrc ? (
+          <img
+            src={secondarySrc}
             alt={product.name}
-            className={`card-image secondary ${isHovered ? 'visible' : ''}`}
+            loading="lazy"
+            onLoad={() => setIsSecondaryLoading(false)}
+            onError={() => {
+              setSecondarySrc('')
+              setIsSecondaryLoading(false)
+            }}
+            className={`absolute inset-0 h-full w-full object-cover transition duration-500 ${
+              isHovered && !isSecondaryLoading ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.03]'
+            }`}
           />
-        )}
-        
-        {/* Badges */}
-        <div className="card-badges">
-          {product.isNew && (
-            <span className="badge new">New</span>
-          )}
-          {isOutOfStock && (
-            <span className="badge sold-out">Sold Out</span>
-          )}
+        ) : null}
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-transparent" />
+
+        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+          {product.isNew ? (
+            <span className={`${badgeClassName} border border-red-300/60 bg-red-500/55 text-red-50`}>New</span>
+          ) : null}
+          {isLimited ? (
+            <span className={`${badgeClassName} border border-amber-200/70 bg-amber-500/55 text-amber-50`}>Limited</span>
+          ) : null}
+          {isOutOfStock ? (
+            <span className={`${badgeClassName} border border-slate-400/60 bg-slate-900/75 text-slate-100`}>Sold Out</span>
+          ) : null}
         </div>
 
-        {/* Wishlist Button */}
-        <button 
-          className={`wishlist-btn ${isHovered || isWishlisted ? 'visible' : ''} ${isWishlisted ? 'active' : ''}`}
-          onClick={handleWishlist}
+        <button
           type="button"
+          onClick={handleWishlist}
+          aria-label={wishlistLabel}
+          title={wishlistLabel}
+          className={`absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100 ${
+            isWishlisted
+              ? 'border-red-300/80 bg-red-500/25 text-red-200'
+              : 'border-slate-300/35 bg-slate-950/70 text-slate-100 hover:border-slate-200/80'
+          }`}
         >
-          <iconify-icon 
-            icon={isWishlisted ? "solar:heart-bold" : "solar:heart-linear"} 
-            width="16" 
-            height="16"
-          ></iconify-icon>
+          <iconify-icon icon={isWishlisted ? 'solar:heart-bold' : 'solar:heart-linear'}></iconify-icon>
         </button>
 
-        {/* Quick View Overlay */}
-        <div className={`quick-view-overlay ${isHovered ? 'visible' : ''}`}>
-          <span>Quick View</span>
-        </div>
+        {isLocked ? (
+          <div className="absolute inset-x-3 bottom-3">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onQueueAction?.()
+              }}
+              className="flex min-h-10 w-full items-center justify-center rounded-[10px] border border-amber-200/70 bg-black/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-100 backdrop-blur-md transition hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+            >
+              {lockLabel}
+            </button>
+          </div>
+        ) : (
+          <div className="absolute inset-x-3 bottom-3 hidden translate-y-4 gap-2 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 lg:grid">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onQuickView?.(product._id)
+              }}
+              className="min-h-10 rounded-[10px] border border-slate-300/55 bg-black/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-50 backdrop-blur-sm transition hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-50"
+            >
+              Quick View
+            </button>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              className={`min-h-10 rounded-[10px] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${toneToCtaClasses[tone]}`}
+            >
+              {primaryCtaLabel}
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="card-content">
-        <h3 className="card-title">{product.name}</h3>
-        <div className="card-price">
-          <span className="current-price">${(product.price / 100).toFixed(2)}</span>
-          {product.originalPrice && (
-            <span className="original-price">${(product.originalPrice / 100).toFixed(2)}</span>
+      <div className="mt-auto space-y-1.5">
+        <h3 className="line-clamp-1 text-[15px] font-semibold text-slate-100 transition group-hover:text-white">{product.name}</h3>
+        <div className="flex items-end gap-2">
+          <span className="text-xl font-bold leading-none text-emerald-300">{priceLabel}</span>
+          {product.originalPrice ? (
+            <span className="text-xs text-slate-400 line-through">${(product.originalPrice / 100).toFixed(2)}</span>
+          ) : null}
+        </div>
+        <p className="line-clamp-1 text-xs font-medium text-slate-300">{isLocked ? 'Queue-gated product' : variantSummary}</p>
+
+        <div className="flex items-center gap-2 pt-1 lg:hidden">
+          {isLocked ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onQueueAction?.()
+              }}
+              className="min-h-10 flex-1 rounded-[10px] border border-amber-300/70 bg-amber-500/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-100 transition hover:bg-amber-500/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+            >
+              {lockLabel}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isOutOfStock}
+                aria-label={`Mobile ${primaryCtaLabel}`}
+                className={`min-h-10 flex-1 rounded-[10px] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${toneToCtaClasses[tone]}`}
+              >
+                {primaryCtaLabel}
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onQuickView?.(product._id)
+                }}
+                aria-label="Mobile Quick View"
+                className="min-h-10 rounded-[10px] border border-slate-500/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100"
+              >
+                Quick View
+              </button>
+            </>
           )}
         </div>
-        
-        {/* Mobile Quick Add */}
-        <button 
-          className="mobile-add-btn"
-          onClick={handleAddToCart}
-          disabled={isOutOfStock}
-        >
-          {isOutOfStock ? 'Sold Out' : (product.variants && product.variants.length > 1 ? 'Select Options' : 'Add to Cart')}
-        </button>
       </div>
-
-      <style>{`
-        .merch-product-card {
-          display: flex;
-          flex-direction: column;
-          cursor: pointer;
-          height: 100%;
-        }
-
-        .card-image-container {
-          position: relative;
-          aspect-ratio: 4/5;
-          background: #111;
-          margin-bottom: 1rem;
-          overflow: hidden;
-          border: 1px solid #1a1a1a;
-          transition: border-color 0.3s;
-        }
-
-        .merch-product-card:hover .card-image-container {
-          border-color: rgba(220, 38, 38, 0.4);
-        }
-
-        .card-image {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: opacity 0.5s, transform 0.7s;
-        }
-
-        .card-image.primary {
-          opacity: 1;
-        }
-
-        .card-image.primary.hidden {
-          opacity: 0;
-        }
-
-        .card-image.secondary {
-          opacity: 0;
-        }
-
-        .card-image.secondary.visible {
-          opacity: 1;
-        }
-
-        .merch-product-card:hover .card-image {
-          transform: scale(1.05);
-        }
-
-        .card-badges {
-          position: absolute;
-          top: 0.75rem;
-          left: 0.75rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          z-index: 5;
-        }
-
-        .badge {
-          padding: 0.35rem 0.6rem;
-          font-size: 10px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-        }
-
-        .badge.new {
-          background: #dc2626;
-          color: white;
-          box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .badge.sold-out {
-          background: #0a0a0a;
-          color: #737373;
-          border: 1px solid #262626;
-        }
-
-        .wishlist-btn {
-          position: absolute;
-          top: 0.75rem;
-          right: 0.75rem;
-          padding: 0.5rem;
-          background: rgba(5, 5, 5, 0.7);
-          backdrop-filter: blur(4px);
-          border: 1px solid #262626;
-          color: white;
-          cursor: pointer;
-          opacity: 0;
-          transition: all 0.3s;
-          z-index: 5;
-        }
-
-        .wishlist-btn.visible {
-          opacity: 1;
-        }
-
-        .wishlist-btn.active {
-          color: #dc2626;
-          border-color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-        }
-
-        .wishlist-btn:hover {
-          background: #dc2626;
-          border-color: #dc2626;
-          color: white;
-          box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
-        }
-
-        .quick-view-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding: 0.75rem 1rem;
-          background: #dc2626;
-          display: flex;
-          justify-content: center;
-          transform: translateY(100%);
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 -5px 20px rgba(220, 38, 38, 0.4);
-        }
-
-        .quick-view-overlay.visible {
-          transform: translateY(0);
-        }
-
-        .quick-view-overlay span {
-          font-size: 11px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.2em;
-          color: white;
-        }
-
-        .card-content {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          padding-top: 0.5rem;
-        }
-
-        .card-title {
-          font-family: 'Space Grotesk', sans-serif;
-          font-size: 16px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: -0.01em;
-          color: white;
-          margin-bottom: 0.25rem;
-          transition: all 0.2s;
-        }
-
-        .merch-product-card:hover .card-title {
-          color: #dc2626;
-          text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
-        }
-
-        .card-price {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .current-price {
-          font-size: 14px;
-          font-family: monospace;
-          color: #dc2626;
-          font-weight: 700;
-        }
-
-        .original-price {
-          font-size: 12px;
-          font-family: monospace;
-          color: #525252;
-          text-decoration: line-through;
-        }
-
-        .mobile-add-btn {
-          display: none;
-          width: 100%;
-          padding: 0.85rem;
-          margin-top: auto;
-          background: #171717;
-          border: 1px solid #262626;
-          color: white;
-          font-size: 11px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .mobile-add-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 768px) {
-          .quick-view-overlay {
-            display: none;
-          }
-
-          .mobile-add-btn {
-            display: block;
-          }
-
-          .merch-product-card:hover .mobile-add-btn {
-            opacity: 1;
-          }
-        }
-
-        @media (min-width: 769px) {
-          .mobile-add-btn {
-            display: none;
-          }
-        }
-      `}</style>
-    </div>
+    </article>
   )
 }

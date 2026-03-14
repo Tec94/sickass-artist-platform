@@ -24,6 +24,12 @@ crons.interval(
   internal.drops.cleanupExpiredPreOrders
 )
 
+crons.interval(
+  'cleanup-merch-drop-queue',
+  { minutes: 1 },
+  internal.merchQueue.cleanupExpiredQueueAndSlots
+)
+
 // Quest system crons
 crons.daily(
   'daily-quest-assignment',

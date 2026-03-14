@@ -1005,3 +1005,81 @@ export const getAvailableTags = query({
     return Array.from(tagSet).slice(0, args.limit)
   },
 })
+
+// Get persisted gallery presentation preferences for the current user.
+export const getGalleryViewPreferences = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      return {
+        activeTab: 'artist' as const,
+        layoutMode: 'feed' as const,
+      }
+    }
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+      .first()
+
+    if (!user) {
+      return {
+        activeTab: 'artist' as const,
+        layoutMode: 'feed' as const,
+      }
+    }
+
+    const preference = await ctx.db
+      .query('galleryViewPreferences')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .first()
+
+    if (!preference) {
+      return {
+        activeTab: 'artist' as const,
+        layoutMode: 'feed' as const,
+      }
+    }
+
+    return {
+      activeTab: preference.activeTab,
+      layoutMode: preference.layoutMode,
+    }
+  },
+})
+
+// Upsert gallery presentation preferences for the current user.
+export const upsertGalleryViewPreferences = mutation({
+  args: {
+    activeTab: v.union(v.literal('artist'), v.literal('community')),
+    layoutMode: v.union(v.literal('feed'), v.literal('grid')),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    const now = Date.now()
+
+    const existing = await ctx.db
+      .query('galleryViewPreferences')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .first()
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        activeTab: args.activeTab,
+        layoutMode: args.layoutMode,
+        updatedAt: now,
+      })
+      return { updated: true }
+    }
+
+    await ctx.db.insert('galleryViewPreferences', {
+      userId: user._id,
+      activeTab: args.activeTab,
+      layoutMode: args.layoutMode,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return { updated: false }
+  },
+})

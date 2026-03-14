@@ -7,6 +7,8 @@ import { CreatorPortfolio } from './CreatorPortfolio'
 import type { GalleryContentItem } from '../../types/gallery'
 import { useRef, useEffect, useState } from 'react'
 import { perfMonitor } from '../../utils/performanceMonitor'
+import { motion } from 'framer-motion'
+import { useReducedMotionPreference } from '../../hooks/useReducedMotionPreference'
 
 interface LightboxContainerProps {
   items: GalleryContentItem[]
@@ -21,6 +23,7 @@ export const LightboxContainer = ({
   currentIndex: initialIndex,
   onClose,
 }: LightboxContainerProps) => {
+  const { prefersReducedMotion } = useReducedMotionPreference()
   const {
     isOpen,
     currentIndex,
@@ -158,11 +161,16 @@ export const LightboxContainer = ({
   }
 
   if (!isOpen || !currentItem) return null
+  const indicatorStart = items.length <= 9 ? 0 : Math.max(0, Math.min(currentIndex - 4, items.length - 9))
+  const indicatorItems = items.slice(indicatorStart, indicatorStart + 9)
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] bg-black/95 flex flex-col lg:flex-row transition-opacity duration-300 outline-none"
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
+      animate={prefersReducedMotion ? undefined : { opacity: 1 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.24 }}
+      className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col lg:flex-row transition-opacity duration-300 outline-none"
       onClick={handleClose}
       tabIndex={-1}
       role="dialog"
@@ -170,9 +178,12 @@ export const LightboxContainer = ({
       aria-label={`${currentItem.title} - Lightbox`}
     >
       {/* Main content area */}
-      <div
+      <motion.div
         className="flex-1 flex items-center justify-center relative min-h-0"
         onClick={e => e.stopPropagation()}
+        initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
+        animate={prefersReducedMotion ? undefined : { scale: 1, opacity: 1 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 20, mass: 0.9 }}
       >
         <LightboxImage
           src={currentItem.imageUrl}
@@ -199,7 +210,16 @@ export const LightboxContainer = ({
           onZoomOut={() => setZoom(prev => ({ ...prev, scale: Math.max(1, prev.scale - 0.5) }))}
           onResetZoom={() => setZoom({ scale: 1, offsetX: 0, offsetY: 0 })}
         />
-      </div>
+        <div className="pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-slate-700/70 bg-black/55 px-3 py-1">
+          {indicatorItems.map((item, idx) => (
+            <span
+              key={item.contentId}
+              className={`h-1.5 w-1.5 rounded-full ${indicatorStart + idx === currentIndex ? 'bg-slate-100' : 'bg-slate-500'}`}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      </motion.div>
 
       {/* Metadata sidebar (desktop) */}
         <div
@@ -267,6 +287,6 @@ export const LightboxContainer = ({
           }}
         />
       </div>
-    </div>
+    </motion.div>
   )
 }
