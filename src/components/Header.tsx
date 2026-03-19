@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -13,6 +13,8 @@ import { WishlistDrawer } from './WishlistDrawer'
 import { SearchModal } from './Search/SearchModal'
 import { SearchTrigger } from './Search/SearchTrigger'
 import { ProfilePopover } from './Navigation/ProfilePopover'
+import { buildAuthEntryHref } from '../features/auth/authRouting'
+import { buildTopLevelNavLinks, getActiveTopLevelNavId, type TopLevelNavLink } from '../features/navigation/topLevelNav'
 
 type HeaderCollapseSessionState = {
   collapseConsumed: boolean
@@ -92,6 +94,7 @@ const Header: React.FC = () => {
   const profileCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [avatarError, setAvatarError] = useState(false)
   const [collapseConsumed, setCollapseConsumed] = useState(() => readHeaderCollapseSessionState().collapseConsumed)
+  const [authPromptNavId, setAuthPromptNavId] = useState<TopLevelNavLink['id'] | null>(null)
   const heroSeenInSessionRef = useRef(false)
   const { isSearchOpen, openSearch, closeSearch } = useSearchModal()
   const { t } = useTranslation()
@@ -116,15 +119,9 @@ const Header: React.FC = () => {
   const markAllRead = useMutation(api.notifications.markAllRead)
   const markNotificationRead = useMutation(api.notifications.markNotificationRead)
 
-  const navLinks = [
-    { name: t('nav.dashboard'), path: '/dashboard', keywords: ['home'] },
-    { name: t('nav.store'), path: '/store', keywords: ['shop', 'merch', 'products'] },
-    { name: t('nav.events'), path: '/events', keywords: ['tour', 'tickets'] },
-    { name: t('nav.gallery'), path: '/gallery', keywords: ['media', 'photos', 'videos'] },
-    { name: t('nav.forum'), path: '/forum', keywords: ['threads', 'community'] },
-    { name: t('nav.chat'), path: '/chat', keywords: ['messages', 'channels'] },
-    { name: t('nav.ranking'), path: '/ranking', keywords: ['leaderboard', 'songs'] },
-  ]
+  const navLinks = useMemo(() => buildTopLevelNavLinks(t), [t])
+  const activeNavId = getActiveTopLevelNavId(location.pathname)
+  const authPromptLink = navLinks.find((link) => link.id === authPromptNavId) ?? null
   const iconButtonClass = 'relative inline-flex h-8 w-8 items-center justify-center text-zinc-400 transition-colors'
 
   useEffect(() => {
@@ -153,6 +150,10 @@ const Header: React.FC = () => {
       }
     }
   }, [])
+
+  useEffect(() => {
+    setAuthPromptNavId(null)
+  }, [location.pathname])
 
   useEffect(() => {
     if (!collapseRouteEnabled || !collapseSessionEligible) {
@@ -220,6 +221,16 @@ const Header: React.FC = () => {
     ? 'hidden md:flex h-8 w-8 justify-center px-0 [&_.app-search-trigger-label]:hidden [&_.app-search-trigger-shortcut]:hidden'
     : 'hidden md:flex h-9 min-w-[260px] px-4 py-0.5'
 
+  const handlePrimaryNavClick = (event: React.MouseEvent<HTMLAnchorElement>, link: TopLevelNavLink) => {
+    if (link.authRequired && !isSignedIn) {
+      event.preventDefault()
+      setAuthPromptNavId(link.id)
+      return
+    }
+
+    setAuthPromptNavId(null)
+  }
+
   return (
     <>
       <header
@@ -234,6 +245,7 @@ const Header: React.FC = () => {
           if (isWishlistOpen) setIsWishlistOpen(false)
           if (isNotificationsOpen) setIsNotificationsOpen(false)
           if (isProfileOpen) setIsProfileOpen(false)
+          if (authPromptNavId) setAuthPromptNavId(null)
           cancelProfileCloseTimer()
         }}
       >
@@ -255,9 +267,10 @@ const Header: React.FC = () => {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={(event) => handlePrimaryNavClick(event, link)}
                   className={`font-display uppercase tracking-wider transition-colors hover:text-red-500 ${
                     isCinematicCollapsed ? 'text-[11px]' : 'text-xs'
-                  } ${location.pathname.startsWith(link.path) ? 'text-white border-b-2 border-red-600' : 'text-zinc-400'}`}
+                  } ${activeNavId === link.id ? 'text-white border-b-2 border-red-600' : 'text-zinc-400'}`}
                 >
                   {link.name}
                 </Link>
@@ -416,14 +429,46 @@ const Header: React.FC = () => {
             <Link
               key={link.path}
               to={link.path}
+              onClick={(event) => handlePrimaryNavClick(event, link)}
               className={`font-display uppercase tracking-wider px-3 py-1 whitespace-nowrap ${
                 isCinematicCollapsed ? 'text-[10px]' : 'text-xs'
-              } ${location.pathname.startsWith(link.path) ? 'text-white' : 'text-zinc-500'}`}
+              } ${activeNavId === link.id ? 'text-white' : 'text-zinc-500'}`}
             >
               {link.name}
             </Link>
           ))}
         </div>
+
+        {authPromptLink ? (
+          <div className="absolute right-4 top-full z-[1035] mt-3 w-[min(92vw,340px)] rounded-[24px] border border-zinc-700/80 bg-zinc-950/96 p-4 text-left shadow-2xl backdrop-blur-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Threshold Locked</p>
+            <h2 className="mt-2 font-display text-xl font-semibold text-white">{authPromptLink.name}</h2>
+            <p className="mt-2 text-sm text-zinc-300">
+              Sign in to continue into the private wing and keep your place in the estate.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                href={buildAuthEntryHref('signin', authPromptLink.path)}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-red-500/70 bg-red-500/20 px-4 text-sm font-semibold text-red-50 transition hover:bg-red-500/35"
+              >
+                Sign in
+              </a>
+              <a
+                href={buildAuthEntryHref('signup', authPromptLink.path)}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-zinc-600/80 bg-zinc-900/80 px-4 text-sm font-semibold text-zinc-100 transition hover:border-zinc-400"
+              >
+                Create account
+              </a>
+              <button
+                type="button"
+                onClick={() => setAuthPromptNavId(null)}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-transparent px-3 text-sm font-semibold text-zinc-400 transition hover:text-white"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        ) : null}
       </header>
 
       <SearchModal isOpen={isSearchOpen} onClose={closeSearch} navLinks={navLinks} />

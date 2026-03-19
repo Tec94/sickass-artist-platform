@@ -1,15 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../hooks/useTranslation'
+import { buildAuthEntryHref } from '../../features/auth/authRouting'
 
 interface SignInPromptProps {
   returnTo?: string
 }
 
-export function SignInPrompt({ returnTo = '/dashboard' }: SignInPromptProps) {
+export function SignInPrompt({ returnTo = '/community' }: SignInPromptProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const signInHref = `/sign-in?returnTo=${encodeURIComponent(returnTo)}`
-  const signUpHref = `/sign-up?returnTo=${encodeURIComponent(returnTo)}`
+  const signInHref = buildAuthEntryHref('signin', returnTo)
+  const signUpHref = buildAuthEntryHref('signup', returnTo)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-950 p-4">

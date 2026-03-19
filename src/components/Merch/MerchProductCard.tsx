@@ -50,7 +50,7 @@ const toneToCtaClasses: Record<UiTone, string> = {
 }
 
 const badgeClassName =
-  'rounded-[10px] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md'
+  'rounded-[7px] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md'
 
 export const MerchProductCard = ({
   product,
@@ -115,6 +115,52 @@ export const MerchProductCard = ({
     return 'In stock'
   }, [availableSizes, hasMultipleVariants, inStockVariantCount, isOutOfStock])
 
+  const dominantState = useMemo<'sold-out' | 'queue-locked' | 'limited' | 'new' | null>(() => {
+    if (isOutOfStock) return 'sold-out'
+    if (isLocked) return 'queue-locked'
+    if (isLimited) return 'limited'
+    if (product.isNew) return 'new'
+    return null
+  }, [isLimited, isLocked, isOutOfStock, product.isNew])
+
+  const dominantBadge = useMemo(() => {
+    switch (dominantState) {
+      case 'sold-out':
+        return {
+          label: 'Sold Out',
+          className: `${badgeClassName} border border-slate-400/45 bg-slate-950/80 text-slate-100`,
+        }
+      case 'queue-locked':
+        return {
+          label: lockLabel,
+          className: `${badgeClassName} border border-amber-200/45 bg-amber-950/60 text-amber-100`,
+        }
+      case 'limited':
+        return {
+          label: 'Limited',
+          className: `${badgeClassName} border border-amber-200/60 bg-[rgba(160,96,52,0.5)] text-amber-50`,
+        }
+      case 'new':
+        return {
+          label: 'New',
+          className: `${badgeClassName} border border-stone-200/40 bg-[rgba(237,224,220,0.22)] text-stone-100`,
+        }
+      default:
+        return null
+    }
+  }, [dominantState, lockLabel])
+
+  const supportingMeta = useMemo(() => {
+    if (isLocked) return 'Join the live queue to unlock this piece'
+    if (isOutOfStock) {
+      return isLimited ? 'Limited edition archive' : 'Currently unavailable'
+    }
+    if (isLimited && product.isNew) return 'Limited edition · New arrival'
+    if (isLimited) return 'Limited edition'
+    if (product.isNew) return 'New arrival'
+    return variantSummary
+  }, [isLimited, isLocked, isOutOfStock, product.isNew, variantSummary])
+
   const primaryCtaLabel = isOutOfStock ? 'Sold Out' : hasMultipleVariants ? 'Choose Options' : 'Add to Cart'
   const wishlistLabel = isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'
 
@@ -161,7 +207,7 @@ export const MerchProductCard = ({
 
   return (
     <article
-      className="group relative flex h-full cursor-pointer flex-col rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100"
+      className="store-v2-product-card group relative flex h-full cursor-pointer flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-50"
       role="button"
       tabIndex={0}
       onClick={openProduct}
@@ -174,9 +220,9 @@ export const MerchProductCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative mb-3 aspect-[4/5] overflow-hidden rounded-2xl border border-slate-700/28 bg-slate-950 transition group-hover:border-slate-300/62">
+      <div className="store-v2-product-media relative mb-4 aspect-[4/5] overflow-hidden transition duration-300">
         {isPrimaryLoading ? (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90" />
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[rgba(18,14,12,0.96)] via-[rgba(33,25,20,0.84)] to-[rgba(15,11,10,0.98)]" />
         ) : null}
 
         <img
@@ -212,17 +258,11 @@ export const MerchProductCard = ({
           />
         ) : null}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(9,7,6,0.76)] via-transparent to-transparent" />
 
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-          {product.isNew ? (
-            <span className={`${badgeClassName} border border-red-300/60 bg-red-500/55 text-red-50`}>New</span>
-          ) : null}
-          {isLimited ? (
-            <span className={`${badgeClassName} border border-amber-200/70 bg-amber-500/55 text-amber-50`}>Limited</span>
-          ) : null}
-          {isOutOfStock ? (
-            <span className={`${badgeClassName} border border-slate-400/60 bg-slate-900/75 text-slate-100`}>Sold Out</span>
+          {dominantBadge ? (
+            <span className={dominantBadge.className}>{dominantBadge.label}</span>
           ) : null}
         </div>
 
@@ -231,10 +271,10 @@ export const MerchProductCard = ({
           onClick={handleWishlist}
           aria-label={wishlistLabel}
           title={wishlistLabel}
-          className={`absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100 ${
+          className={`store-v2-product-wishlist absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-50 ${
             isWishlisted
-              ? 'border-red-300/80 bg-red-500/25 text-red-200'
-              : 'border-slate-300/35 bg-slate-950/70 text-slate-100 hover:border-slate-200/80'
+              ? 'border-red-300/65 bg-[rgba(160,32,48,0.24)] text-red-100'
+              : 'border-[rgba(216,184,152,0.22)] bg-[rgba(14,11,9,0.78)] text-stone-200 hover:border-[rgba(216,184,152,0.42)]'
           }`}
         >
           <iconify-icon icon={isWishlisted ? 'solar:heart-bold' : 'solar:heart-linear'}></iconify-icon>
@@ -248,20 +288,20 @@ export const MerchProductCard = ({
                 event.stopPropagation()
                 onQueueAction?.()
               }}
-              className="flex min-h-10 w-full items-center justify-center rounded-[10px] border border-amber-200/70 bg-black/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-100 backdrop-blur-md transition hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+              className="flex min-h-10 w-full items-center justify-center rounded-[8px] border border-amber-200/60 bg-[rgba(18,14,11,0.9)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-100 backdrop-blur-md transition hover:bg-[rgba(24,18,14,0.96)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
             >
               {lockLabel}
             </button>
           </div>
         ) : (
-          <div className="absolute inset-x-3 bottom-3 hidden translate-y-4 gap-2 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 lg:grid">
+          <div className="store-v2-product-actions absolute inset-x-4 bottom-4 hidden translate-y-4 gap-2 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 lg:grid">
             <button
               type="button"
               onClick={(event) => {
                 event.stopPropagation()
                 onQuickView?.(product._id)
               }}
-              className="min-h-10 rounded-[10px] border border-slate-300/55 bg-black/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-50 backdrop-blur-sm transition hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-50"
+              className="min-h-10 rounded-[8px] border border-[rgba(216,184,152,0.28)] bg-[rgba(19,15,12,0.88)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-100 backdrop-blur-sm transition hover:border-[rgba(216,184,152,0.48)] hover:bg-[rgba(27,21,17,0.95)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-50"
             >
               Quick View
             </button>
@@ -277,17 +317,17 @@ export const MerchProductCard = ({
         )}
       </div>
 
-      <div className="mt-auto space-y-1.5">
-        <h3 className="line-clamp-1 text-[15px] font-semibold text-slate-100 transition group-hover:text-white">{product.name}</h3>
+      <div className="store-v2-product-meta mt-auto">
+        <h3 className="store-v2-product-title line-clamp-1 transition group-hover:text-white">{product.name}</h3>
         <div className="flex items-end gap-2">
-          <span className="text-xl font-bold leading-none text-emerald-300">{priceLabel}</span>
+          <span className="store-v2-product-price">{priceLabel}</span>
           {product.originalPrice ? (
-            <span className="text-xs text-slate-400 line-through">${(product.originalPrice / 100).toFixed(2)}</span>
+            <span className="text-xs text-stone-500 line-through">${(product.originalPrice / 100).toFixed(2)}</span>
           ) : null}
         </div>
-        <p className="line-clamp-1 text-xs font-medium text-slate-300">{isLocked ? 'Queue-gated product' : variantSummary}</p>
+        <p className="store-v2-product-support line-clamp-2">{supportingMeta}</p>
 
-        <div className="flex items-center gap-2 pt-1 lg:hidden">
+        <div className="store-v2-product-mobile-actions lg:hidden">
           {isLocked ? (
             <button
               type="button"
@@ -295,10 +335,10 @@ export const MerchProductCard = ({
                 event.stopPropagation()
                 onQueueAction?.()
               }}
-              className="min-h-10 flex-1 rounded-[10px] border border-amber-300/70 bg-amber-500/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-100 transition hover:bg-amber-500/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
-            >
-              {lockLabel}
-            </button>
+                className="min-h-10 flex-1 rounded-[8px] border border-amber-300/60 bg-[rgba(160,96,52,0.2)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-100 transition hover:bg-[rgba(160,96,52,0.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+              >
+                {lockLabel}
+              </button>
           ) : (
             <>
               <button
@@ -317,7 +357,7 @@ export const MerchProductCard = ({
                   onQuickView?.(product._id)
                 }}
                 aria-label="Mobile Quick View"
-                className="min-h-10 rounded-[10px] border border-slate-500/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100"
+                className="min-h-10 rounded-[8px] border border-[rgba(216,184,152,0.22)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-100 transition hover:border-[rgba(216,184,152,0.44)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-100"
               >
                 Quick View
               </button>

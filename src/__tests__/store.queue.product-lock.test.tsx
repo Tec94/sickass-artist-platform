@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { getFunctionName } from 'convex/server'
 import { Merch } from '../pages/Merch'
@@ -16,7 +17,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
-    useLocation: () => ({ pathname: '/store', search: '', hash: '' }),
+    useLocation: () => ({ pathname: '/store/browse', search: '', hash: '' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
@@ -143,7 +144,11 @@ describe('store queue product lock behavior', () => {
   })
 
   it('locks only active-drop products when user is not admitted', () => {
-    render(<Merch />)
+    render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     const lockStates = screen.getAllByText(/LOCKED|OPEN/)
     expect(lockStates[0]).toHaveTextContent('LOCKED')

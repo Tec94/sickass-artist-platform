@@ -7,6 +7,7 @@ import { SearchResults } from './SearchResults'
 import { RecentSearches } from './RecentSearches'
 import { SearchResultTabs } from './SearchResultTabs'
 import { useTranslation } from '../../hooks/useTranslation'
+import { buildTopLevelNavLinks } from '../../features/navigation/topLevelNav'
 
 type ResultFilter = 'all' | 'pages' | 'users' | 'threads' | 'gallery' | 'ugc' | 'channels' | 'merch' | 'events'
 
@@ -55,15 +56,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, navLi
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all')
   const inputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
-  const defaultNavLinks: SearchNavResult[] = useMemo(() => ([
-    { name: t('nav.dashboard'), path: '/dashboard', keywords: ['home'] },
-    { name: t('nav.store'), path: '/store', keywords: ['shop', 'merch', 'products'] },
-    { name: t('nav.events'), path: '/events', keywords: ['tour', 'tickets'] },
-    { name: t('nav.gallery'), path: '/gallery', keywords: ['media', 'photos', 'videos'] },
-    { name: t('nav.forum'), path: '/forum', keywords: ['threads', 'community'] },
-    { name: t('nav.chat'), path: '/chat', keywords: ['messages', 'channels'] },
-    { name: t('nav.ranking'), path: '/ranking', keywords: ['leaderboard', 'songs'] },
-  ]), [t])
+  const defaultNavLinks: SearchNavResult[] = useMemo(
+    () =>
+      buildTopLevelNavLinks(t).map((link) => ({
+        name: link.name,
+        path: link.path,
+        keywords: link.keywords,
+      })),
+    [t],
+  )
   const resolvedNavLinks = navLinks ?? defaultNavLinks
   const normalizedQuery = query.trim().toLowerCase()
   const navResults = useMemo(

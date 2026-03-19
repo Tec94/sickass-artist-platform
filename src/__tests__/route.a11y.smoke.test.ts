@@ -11,6 +11,7 @@ describe('route a11y smoke', () => {
       '/community',
       '/campaign',
       '/store',
+      '/store/browse',
       '/events',
       '/gallery',
       '/forum',

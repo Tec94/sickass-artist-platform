@@ -1,174 +1,164 @@
-# Current State
+# Current state
 
-This file describes the present implementation state and what is already decided.
+This file records the live implementation state of the estate-navigation
+product. It reflects the code that is currently in the repo, not the older
+path-wiring milestone that has already been completed.
 
----
+## Product architecture
 
-## Current scene status
+The app now follows one information architecture with two entry modes.
 
-The project currently has a provisional outer-grounds estate scene that is good enough for interaction prototyping.
+- **Explore mode** is the scenic estate layer. It is used on the outer-grounds
+  homepage and on scenic destination-entry pages where the world adds branded
+  wayfinding value.
+- **App mode** is the normal working shell. It is used for routine browsing,
+  shopping, and deeper task flows.
 
-The scene is now at the stage where:
-- the overall composition is usable
-- major architectural masses are readable
-- the center court is clear
-- left / top / right / center destination zoning is viable
+These are not separate products. They are two ways to enter the same top-level
+destinations and routes.
 
-The scene is not yet the final art lock. It still contains some AI-generated micro-detail issues, but those are now secondary to interaction validation.
+## Locked navigation model
 
----
+The canonical top-level navigation now matches the scenic estate map and is
+shared across the global header, mobile drawer, search, and scenic entry
+points.
 
-## Current implementation status
+- **Explore Estate** routes to `/`
+- **Store** routes to `/store`
+- **Events** routes to `/events`
+- **Ranking** routes to `/ranking`
+- **Campaign** routes to `/campaign`
+- **Community** routes to `/community`
 
-The homepage currently includes:
-- the estate scene rendered on the page
-- early top navigation
-- at least one working highlighted region treatment
-- proof that a mapped hover state can visually work on the scene
+Community remains the only auth-gated primary region on the landing scene. Deep
+community pages such as Gallery, Forum, Chat, Profile, and Quests now belong to
+the Community top-level scope instead of behaving like separate global
+destinations.
 
-This means the project has moved beyond concept planning and into system implementation.
+## Scenic landing status
 
----
+The homepage at `/` is the live outer-grounds estate scene. It already uses the
+path-driven region system and the current production interaction model.
 
-## Region mapping status
+The landing implementation includes:
 
-The initial guessed polygon overlays were not accurate enough.
+- inline SVG path data as the only geometry source of truth
+- shared top-level navigation in the normal app header
+- hover, focus, and coarse-pointer preview behavior
+- compact auth prompt behavior for locked access
+- reduced-motion support
+- a working debug mode for region calibration
+- no visible production direction arrows
 
-Because of that, manual region tracing work was started.
+The landing scene is past the core interaction milestone. Remaining work is
+polish and expansion, not basic region wiring.
 
-The current path workflow is:
-- colored region overlays were created manually
-- those colored regions were converted into traced path shapes
-- at least one region SVG path has already been exported and verified as structurally usable
-- the system should now move from guessed polygons to **SVG path-driven mapping**
+## Scenic Store status
 
-This is a major implementation milestone.
+The first destination-scene proof now exists at `/store`.
 
----
+This page is the scenic Store entry and currently includes:
 
-## Current intended primary region map
+- the store scene image from `public/nav_scenes/store-scene.png`
+- inline SVG product-slot paths from the traced `public/nav_scenes/paths/`
+  assets
+- curated fixed SKU mapping for the eight scenic Store product hits
+- direct routing from scenic product hit to `/store/product/:productId`
+- an **Open Store UI** control that routes to `/store/browse`
+- a **Return to Grounds** control that routes back to `/`
+- the same hover, focus, touch-preview, and reduced-motion model used on the
+  estate landing
 
-The current intended landing regions are:
+This is the first working proof that scenic entry and normal app navigation can
+share one IA without adding click tax.
 
-- **Store** — left wing
-- **Events** — upper-left central palace block
-- **Ranking** — top rear palace mass
-- **Campaign** — center fountain court
-- **Community** — right wing / tower mass
+## Store app-mode status
 
-Profile is still nested under Community and is not a primary landing region in v1.
+The normal Store shell now lives at `/store/browse`.
 
-This mapping should now be treated as the working IA unless explicitly changed.
+The existing merch experience has already been moved into that route, and the
+core store flows still work inside the new structure:
 
----
+- search
+- sort
+- filters
+- queue state and queue gating
+- cart access
+- recently viewed
+- quick view
+- product detail at `/store/product/:productId`
 
-## Current technical direction
+Store-local navigation has been added for the working shell:
 
-The correct technical approach is now:
+- **Products**
+- **Drops / Queue**
+- **Cart**
+- **Orders**
 
-- scene image as background
-- full-size SVG overlay above the image
-- one SVG path per mapped region
-- region data stored in config
-- debug mode for inspecting paths and anchors
-- hover / active / locked states driven by path data
-- locked click behavior routed through auth prompt then `/auth`
+The store shell also includes explicit scenic return controls so the user can
+move between scenic entry and normal operation without losing orientation.
 
-Do not go back to rough polygon approximation.
+## Auth and routing status
 
----
+Auth-gated entry now uses a shared `/auth` contract from scenic and normal
+navigation.
 
-## Current highest-priority task
+The repo currently supports:
 
-The current highest-priority task is:
+- compact auth prompt behavior for gated entry
+- `/auth` as the canonical auth threshold
+- preserved `returnTo` targets
+- compatibility handling for older sign-in and sign-up entry points
+- legacy `/merch/*` redirects into the new `/store/*` structure
 
-### Build the complete multi-region navigation system
+The default auth return target is Community, not the old dashboard home path.
 
-That means:
-- wire all region SVG paths
-- render them in one overlay system
-- support hover states for every region
-- support active state
-- support locked state for auth-gated regions
-- support region cards / labels
-- support arrow anchors / directional cues
-- support debug mode
+## Current milestone
 
-This must be finished before advanced polish.
+The active milestone is the Store-first shared-IA expansion.
 
----
+That means the current focus is:
 
-## What is not done yet
+1. keep the shared navigation model stable across scenic and app surfaces
+2. finish the Store app-mode redesign contract
+3. prove the scenic-entry-plus-working-shell pattern in Store before scaling it
+   to Events, Ranking, and Community
 
-The following are not yet complete:
+This is no longer a "finish wiring landing paths" project phase.
 
-- all region paths fully wired into the live page
-- final anchor placement tuning
-- full locked-state treatment
-- compact auth prompt flow
-- mobile touch / pan behavior
-- consistent region-card behavior across all mapped zones
-- debug overlay mode
-- final scene polish
-- final sound and shimmer effects
-- cinematic transitions
+## Active blocker
 
----
+The only major blocker in the Store-first milestone is the Pencil editor bridge.
+
+The Store App Mode board has not been created in Pencil yet because Pencil's
+editor-backed actions still fail with "A file needs to be open in the editor,"
+even after `open_document('new')` and direct file-path opens. The implementation
+spec for that board must remain explicit in repo docs until the editor bridge is
+working again.
 
 ## Current risks
 
-### 1. Region accuracy
-The main current risk is not concept direction. It is implementation precision.
+The main risks have shifted from region wiring to system coherence.
 
-The mapped regions must:
-- feel intuitive
-- align with the visual scene
-- not overlap in confusing ways
-- not swallow each other during hover
-
-### 2. Mobile scenic interaction
-The desktop concept is clearer than the mobile version right now.
-
-The mobile version still needs:
-- tap logic
-- pan logic
-- fallback menu logic
-- touch-friendly discoverability
-
-### 3. Locked-state usability
-The locked region treatment must be visible enough to communicate gating, but not so aggressive that it feels broken or hostile.
-
-### 4. Over-polishing too early
-The project is at risk if polish is prioritized before core interaction stability.
-
-That means:
-- no advanced scene transitions yet
-- no final audio polish yet
-- no over-styled nav treatment yet
-
----
-
-## Current implementation success criteria
-
-The current milestone is successful when:
-
-- all five regions render from SVG path data
-- each region can be hovered or focused
-- each region has a consistent card / label system
-- public regions route correctly
-- locked regions open the auth prompt correctly
-- debug mode works
-- mobile interaction is at least testable
-
-Once that milestone is reached, then the project can move into:
-- polish
-- transitions
-- final asset refinement
-
----
+- **Navigation drift:** Scenic entry and normal app navigation must keep sharing
+  the same IA and current-section highlighting.
+- **Store shell drift:** The normal Store shell can regress into a generic merch
+  page if the Pencil redesign contract is not locked before more ad hoc UI
+  changes land.
+- **Premature scene sprawl:** Events, Ranking, and Community scenic entry pages
+  should not begin until the Store pattern is stable.
+- **Pencil dependency:** The Store board creation step is blocked by tooling,
+  not by product uncertainty.
 
 ## Immediate next step
 
-The immediate next step is to finish wiring the region-path system into the live page and validate the full landing navigation layer.
+The immediate next step is to lock the Store App Mode redesign contract and then
+implement it at `/store/browse`.
 
-That is the current build focus.
+In practice, that means:
+
+1. keep the shared IA and Store scenic entry stable
+2. create or recover the Pencil Store board
+3. apply the approved board to the working Store shell
+4. only then extend the same two-mode pattern to Events, Ranking, and
+   Community

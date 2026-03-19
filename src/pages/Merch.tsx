@@ -6,7 +6,10 @@ import { api } from '../../convex/_generated/api'
 import { Id, type Doc } from '../../convex/_generated/dataModel'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { StoreReminderModal } from '../components/Merch/StoreReminderModal'
+import { StoreSectionNav } from '../components/Merch/StoreSectionNav'
 import { useTranslation } from '../hooks/useTranslation'
+import { buildAuthEntryHref } from '../features/auth/authRouting'
+import { STORE_SCENE } from '../features/castleNavigation/storeSceneConfig'
 import { getMerchSlugCandidates } from '../utils/merchImages'
 import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
@@ -91,9 +94,9 @@ const STOCK_OPTIONS: Array<{ value: StockFilterOption; labelKey: string }> = [
 
 const INITIAL_COLLAPSED_STATE: Record<FilterSectionKey, boolean> = {
   category: false,
-  availability: false,
+  availability: true,
   collection: false,
-  price: false,
+  price: true,
 }
 
 function formatClockTime(timestamp: number) {
@@ -478,7 +481,7 @@ export function Merch() {
   const queueReturnTo = `${location.pathname}${location.search}${location.hash}`
 
   const openQueueSignIn = useCallback(() => {
-    navigate(`/sign-in?returnTo=${encodeURIComponent(queueReturnTo)}`)
+    navigate(buildAuthEntryHref('signin', queueReturnTo))
   }, [navigate, queueReturnTo])
 
   const runQueueAction = useCallback(
@@ -752,39 +755,6 @@ export function Merch() {
         <button
           type="button"
           className="store-v2-filter-section-trigger"
-          onClick={() => toggleSection('availability')}
-          aria-expanded={!collapsedSections.availability}
-        >
-          <span className="store-v2-label">{t('store.filterAvailability')}</span>
-          <span className="flex items-center gap-2">
-            {sectionCounts.availability > 0 ? <span className="store-v2-count-badge">{sectionCounts.availability}</span> : null}
-            <iconify-icon icon={collapsedSections.availability ? 'solar:alt-arrow-down-linear' : 'solar:alt-arrow-up-linear'} width="16" height="16"></iconify-icon>
-          </span>
-        </button>
-        {!collapsedSections.availability ? (
-          <div className="mt-2 grid gap-1">
-            {STOCK_OPTIONS.map((option) => {
-              const active = filters.stock === option.value
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setFilters((current) => ({ ...current, stock: option.value }))}
-                  className={`store-v2-sidebar-row ${active ? 'store-v2-sidebar-row--active' : ''}`}
-                >
-                  {t(option.labelKey)}
-                </button>
-              )
-            })}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="store-v2-filter-section">
-        <button
-          type="button"
-          className="store-v2-filter-section-trigger"
           onClick={() => toggleSection('collection')}
           aria-expanded={!collapsedSections.collection}
         >
@@ -896,6 +866,39 @@ export function Merch() {
           </div>
         ) : null}
       </section>
+
+      <section className="store-v2-filter-section">
+        <button
+          type="button"
+          className="store-v2-filter-section-trigger"
+          onClick={() => toggleSection('availability')}
+          aria-expanded={!collapsedSections.availability}
+        >
+          <span className="store-v2-label">{t('store.filterAvailability')}</span>
+          <span className="flex items-center gap-2">
+            {sectionCounts.availability > 0 ? <span className="store-v2-count-badge">{sectionCounts.availability}</span> : null}
+            <iconify-icon icon={collapsedSections.availability ? 'solar:alt-arrow-down-linear' : 'solar:alt-arrow-up-linear'} width="16" height="16"></iconify-icon>
+          </span>
+        </button>
+        {!collapsedSections.availability ? (
+          <div className="mt-2 grid gap-1">
+            {STOCK_OPTIONS.map((option) => {
+              const active = filters.stock === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setFilters((current) => ({ ...current, stock: option.value }))}
+                  className={`store-v2-sidebar-row ${active ? 'store-v2-sidebar-row--active' : ''}`}
+                >
+                  {t(option.labelKey)}
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
+      </section>
     </div>
   )
 
@@ -903,13 +906,59 @@ export function Merch() {
     <div className={`app-surface-page store-v2-root ${motionClassName}`}>
       <div className="mx-auto w-full max-w-[1700px] px-4 py-4 sm:px-6 lg:px-8">
         <section className="store-surface-shell store-v2-shell motion-panel-enter p-4 lg:p-5">
-          <header className="space-y-3">
-            <section className="store-hero-banner store-v2-hero p-4 lg:p-5">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
-                <div className="space-y-3">
-                  <p className="store-v2-label">{t('store.curatedCommerce')}</p>
-                  <h1 className="store-v2-display">{t('store.collectionTitle')}</h1>
-                  <p className="store-v2-body max-w-3xl">{t('store.collectionSubtitle')}</p>
+          <header className="space-y-4">
+            <div className="space-y-3">
+              <p className="store-v2-shell-kicker">Store App Mode</p>
+              <div className="store-v2-browse-rail">
+                <StoreSectionNav activeId="browse" className="w-full xl:w-auto" />
+                <div className="store-v2-rail-actions">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/store')}
+                    className="store-v2-scene-pill"
+                  >
+                    <iconify-icon icon="solar:buildings-3-linear" width="16" height="16"></iconify-icon>
+                    View Store Scene
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="store-v2-shell-link"
+                  >
+                    <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
+                    Return to Grounds
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <section className="store-hero-banner store-v2-hero relative overflow-hidden p-5 lg:p-7">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-55"
+                style={{
+                  backgroundImage: `url(${STORE_SCENE.image})`,
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover',
+                }}
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute inset-0 bg-[linear-gradient(126deg,rgba(9,6,6,0.18),rgba(9,6,6,0.74)),radial-gradient(circle_at_top_left,rgba(216,184,152,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(88,61,74,0.22),transparent_46%),radial-gradient(circle_at_bottom_left,rgba(208,96,32,0.12),transparent_34%)]"
+                aria-hidden="true"
+              />
+
+              <div className="store-v2-hero-grid relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,372px)] lg:items-stretch">
+                <div className="store-v2-hero-copy">
+                  <div className="store-v2-hero-copy-panel">
+                    <div className="store-v2-hero-body space-y-4">
+                      <p className="store-v2-label">{t('store.curatedCommerce')}</p>
+                      <h1 className="store-v2-display">{t('store.collectionTitle')}</h1>
+                      <p className="store-v2-body max-w-3xl">{t('store.collectionSubtitle')}</p>
+                    </div>
+                    <div className="store-v2-hero-support">
+                      <span className="store-v2-hero-note">Merchant wing browse with live queue access below, built for direct product entry rather than a second scenic step.</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="store-v2-drop-module">
@@ -920,12 +969,21 @@ export function Merch() {
                       <p className="store-v2-meta mt-1">
                         {upcomingDrop.localDateTime} ({upcomingDrop.timezone})
                       </p>
+                      {upcomingDrop.description ? <p className="store-v2-drop-description">{upcomingDrop.description}</p> : null}
                     </>
                   ) : (
-                    <p className="store-v2-meta mt-2">{t('store.noUpcomingDropGeneric')}</p>
+                    <>
+                      <p className="store-v2-meta mt-2">{t('store.noUpcomingDropGeneric')}</p>
+                      <p className="store-v2-drop-description">Browse the current floor while the next release is staged in the wing.</p>
+                    </>
                   )}
 
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="store-v2-drop-status">
+                    <iconify-icon icon="solar:flash-circle-linear" width="16" height="16"></iconify-icon>
+                    {queueControl.statusLabel}
+                  </div>
+
+                  <div className="store-v2-drop-actions">
                     <button
                       type="button"
                       onClick={() => setIsReminderModalOpen(true)}
@@ -944,14 +1002,9 @@ export function Merch() {
                 </div>
               </div>
             </section>
-
-            <div className="store-announcement-strip store-v2-promo-strip">
-              <iconify-icon icon="solar:truck-linear" width="14" height="14"></iconify-icon>
-              {t('store.freeShippingPromo')}
-            </div>
           </header>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[252px_minmax(0,1fr)]">
+          <div className="mt-4 grid gap-6 lg:grid-cols-[286px_minmax(0,1fr)]">
             <aside className="hidden lg:sticky lg:top-24 lg:block lg:h-fit" aria-label={t('store.filtersLabel')}>
               {filterPanel}
             </aside>
@@ -963,7 +1016,7 @@ export function Merch() {
               ) : null}
 
               <div ref={utilityRowRef} className="store-utility-row store-v2-utility sticky top-16 z-40" data-sticky={isUtilitySticky ? 'true' : 'false'}>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="store-v2-utility-top">
                   <button
                     type="button"
                     onClick={() => setShowMobileFilters(true)}
@@ -1015,42 +1068,46 @@ export function Merch() {
                     {t('store.cartButton')}
                     <span className="store-v2-count-badge">{itemCount}</span>
                   </button>
+
+                  <p className="store-v2-results" aria-live="polite">
+                    {resultsLabel}
+                  </p>
                 </div>
 
                 <div id="store-queue-control" className="store-v2-queue-row">
-                  <span className="store-v2-pill">{t('store.queueStatus')}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="store-v2-label truncate">{queueControl.statusLabel}</p>
-                    <p className="store-v2-meta truncate">{queueControl.detailLabel}</p>
+                  <div className="store-v2-queue-copy">
+                    <span className="store-v2-pill">{t('store.queueStatus')}</span>
+                    <div className="store-v2-queue-text">
+                      <p className="store-v2-label truncate">{queueControl.statusLabel}</p>
+                      <p className="store-v2-meta truncate">{queueControl.detailLabel}</p>
+                    </div>
+                    <span className="store-v2-shipping-note">{t('store.freeShippingPromo')}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleQueuePrimaryAction}
-                    disabled={queueControl.primaryDisabled}
-                    className="store-v2-control store-v2-btn-primary"
-                  >
-                    {queueControl.primaryLabel}
-                  </button>
-                  {queueControl.secondaryAction === 'leave' ? (
+
+                  <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
                     <button
                       type="button"
-                      onClick={handleQueueSecondaryAction}
-                      className="store-v2-control store-v2-btn-secondary"
+                      onClick={handleQueuePrimaryAction}
+                      disabled={queueControl.primaryDisabled}
+                      className="store-v2-control store-v2-btn-primary"
                     >
-                      {queueControl.secondaryLabel}
+                      {queueControl.primaryLabel}
                     </button>
-                  ) : null}
+                    {queueControl.secondaryAction === 'leave' ? (
+                      <button
+                        type="button"
+                        onClick={handleQueueSecondaryAction}
+                        className="store-v2-control store-v2-btn-secondary"
+                      >
+                        {queueControl.secondaryLabel}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between border-b border-slate-700/55 pb-2">
-                <p className="store-v2-meta" aria-live="polite">
-                  {resultsLabel}
-                </p>
-              </div>
-
               {activeFilterChips.length > 0 ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2 border-b border-slate-700/45 pb-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   {activeFilterChips.map((chip) => (
                     <button
                       key={chip.id}
@@ -1066,7 +1123,7 @@ export function Merch() {
                   <button
                     type="button"
                     onClick={resetStoreFilters}
-                    className="ml-auto text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 underline decoration-slate-500 underline-offset-4 transition hover:text-white"
+                    className="ml-auto store-v2-shell-link"
                   >
                     {t('store.clearAllFilters')}
                   </button>
@@ -1074,7 +1131,7 @@ export function Merch() {
               ) : null}
 
               {filteredProducts.length ? (
-                <div id="store-product-grid" className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                <div id="store-product-grid" className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredProducts.map((product) => {
                     const isLocked = queueGateEnabled && lockableProductIds.has(product._id)
                     return (
@@ -1105,10 +1162,10 @@ export function Merch() {
                 </div>
               )}
 
-              <section className="mt-8 border-t border-slate-700/55 pt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="store-v2-label text-slate-100">{t('store.recentlyViewed')}</h2>
-                </div>
+                <section className="mt-10 border-t border-[rgba(216,184,152,0.14)] pt-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="store-v2-label text-slate-100">{t('store.recentlyViewed')}</h2>
+                  </div>
 
                 {!recentlyViewed ? (
                   <div className="h-24 animate-pulse rounded-2xl bg-slate-900/60" />
@@ -1129,7 +1186,7 @@ export function Merch() {
                           className="store-v2-recent-image"
                         />
                         <p className="mt-2 line-clamp-1 text-sm font-semibold text-slate-100">{item.name}</p>
-                        <p className="text-sm font-semibold text-emerald-300">${(item.price / 100).toFixed(2)}</p>
+                        <p className="text-sm font-semibold text-[var(--store-v2-tone-accent)]">${(item.price / 100).toFixed(2)}</p>
                       </button>
                     ))}
                   </div>
@@ -1141,9 +1198,9 @@ export function Merch() {
       </div>
 
       {showMobileFilters ? (
-        <div className="fixed inset-0 z-[120] bg-black/78 p-4 lg:hidden" onClick={() => setShowMobileFilters(false)}>
+        <div className="fixed inset-0 z-[120] bg-black/82 p-4 lg:hidden" onClick={() => setShowMobileFilters(false)}>
           <div
-            className="ml-auto mt-10 h-[calc(100%-2.5rem)] w-full max-w-sm overflow-y-auto rounded-[24px] border border-slate-600/60 bg-slate-950/96 p-4"
+            className="store-v2-mobile-drawer ml-auto mt-10 h-[calc(100%-2.5rem)] w-full max-w-sm overflow-y-auto p-4"
             role="dialog"
             aria-modal="true"
             aria-label={t('store.filtersLabel')}
@@ -1161,19 +1218,23 @@ export function Merch() {
       ) : null}
 
       {quickViewProduct ? (
-        <div className="fixed inset-0 z-[130] flex items-end justify-center bg-black/80 p-4 sm:items-center" onClick={() => setQuickViewProductId(null)}>
-          <div className="store-surface-card w-full max-w-3xl p-4 sm:p-6" onClick={(event) => event.stopPropagation()}>
-            <div className="grid gap-4 sm:grid-cols-[280px_minmax(0,1fr)]">
-              <img
-                src={quickViewProduct.thumbnailUrl || quickViewProduct.imageUrls?.[0] || '/images/placeholder.jpg'}
-                alt={quickViewProduct.name}
-                className="h-72 w-full rounded-xl object-cover"
-              />
-              <div>
-                <p className="store-v2-label text-slate-300">{quickViewProduct.category}</p>
-                <h2 className="store-v2-display mt-2 text-3xl text-slate-100">{quickViewProduct.name}</h2>
-                <p className="mt-3 store-v2-meta">{quickViewProduct.description}</p>
-                <p className="mt-4 text-xl font-semibold text-emerald-300">${(quickViewProduct.price / 100).toFixed(2)}</p>
+        <div className="fixed inset-0 z-[130] flex items-end justify-center bg-black/84 p-4 sm:items-center" onClick={() => setQuickViewProductId(null)}>
+          <div className="store-v2-quickview-shell w-full max-w-3xl p-4 sm:p-6" onClick={(event) => event.stopPropagation()}>
+            <div className="grid gap-5 sm:grid-cols-[280px_minmax(0,1fr)]">
+              <div className="store-v2-quickview-media">
+                <img
+                  src={quickViewProduct.thumbnailUrl || quickViewProduct.imageUrls?.[0] || '/images/placeholder.jpg'}
+                  alt={quickViewProduct.name}
+                  className="h-72 w-full object-cover"
+                />
+              </div>
+              <div className="flex min-w-0 flex-col justify-between">
+                <div>
+                  <p className="store-v2-label">{quickViewProduct.category}</p>
+                  <h2 className="store-v2-display mt-2 text-3xl">{quickViewProduct.name}</h2>
+                  <p className="mt-3 store-v2-meta">{quickViewProduct.description}</p>
+                  <p className="store-v2-quickview-price mt-5">${(quickViewProduct.price / 100).toFixed(2)}</p>
+                </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
                   {quickViewLocked ? (
@@ -1199,6 +1260,13 @@ export function Merch() {
                     className="store-v2-control store-v2-btn-secondary"
                   >
                     {t('store.viewDetails')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickViewProductId(null)}
+                    className="store-v2-control store-v2-btn-secondary"
+                  >
+                    {t('common.close')}
                   </button>
                 </div>
               </div>

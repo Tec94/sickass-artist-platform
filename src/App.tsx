@@ -109,6 +109,7 @@ const AdminRedemptions = lazy(() => import('./components/Admin').then(m => ({ de
 const AdminRewards = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminRewards })))
 const AdminPoints = lazy(() => import('./components/Admin').then(m => ({ default: m.AdminPoints })))
 const Music = lazy(() => import('./pages/Music').then(m => ({ default: m.Music })))
+const StoreScenePage = lazy(() => import('./pages/StoreScenePage').then(m => ({ default: m.StoreScenePage })))
 
 const Ranking = lazy(() => import('./pages/Ranking.tsx').then(m => ({ default: m.Ranking })))
 const PrivateSuite = lazy(() => import('./pages/PrivateSuite').then(m => ({ default: m.PrivateSuite })))
@@ -117,9 +118,14 @@ import Footer from './components/Footer'
 
 function LegacyMerchRedirect() {
   const location = useLocation()
-  const targetPath = location.pathname.startsWith('/merch')
+  const normalizedPath = location.pathname.startsWith('/merch')
     ? location.pathname.replace(/^\/merch/, '/store')
-    : '/store'
+    : '/store/browse'
+
+  const targetPath =
+    normalizedPath === '/store'
+      ? '/store/browse'
+      : normalizedPath
 
   return <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
 }
@@ -185,7 +191,8 @@ function AppContent() {
                 } />
 
                 {/* Store Routes */}
-                <Route path="/store" element={<Merch />} />
+                <Route path="/store" element={<StoreScenePage />} />
+                <Route path="/store/browse" element={<Merch />} />
                 <Route path="/store/product/:productId" element={
                   <Suspense fallback={<div className="text-white p-8 text-center">Loading product...</div>}>
                     <MerchDetail />

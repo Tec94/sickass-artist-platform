@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { getFunctionName } from 'convex/server'
 import { Merch } from '../pages/Merch'
@@ -11,7 +12,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
-    useLocation: () => ({ pathname: '/store', search: '', hash: '' }),
+    useLocation: () => ({ pathname: '/store/browse', search: '', hash: '' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
@@ -135,7 +136,11 @@ describe('store reminder and drop scheduling', () => {
 
   it('shows concrete upcoming drop details and executes calendar actions', () => {
     mockStoreQueries(true)
-    render(<Merch />)
+    render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
     expect(screen.getByText('Vault Night Drop')).toBeInTheDocument()
@@ -157,7 +162,11 @@ describe('store reminder and drop scheduling', () => {
 
   it('shows generic fallback copy and keeps reminder CTA available when no upcoming drop exists', () => {
     mockStoreQueries(false)
-    render(<Merch />)
+    render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('store.noUpcomingDropGeneric')).toBeInTheDocument()
     const noDropReminderButton = screen.getByRole('button', { name: 'store.notifyNextDrop' })

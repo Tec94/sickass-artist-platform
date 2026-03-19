@@ -137,7 +137,8 @@ describe('header cinematic collapse', () => {
     const header = container.querySelector('header')
     expect(header).toHaveAttribute('data-cinematic-collapse', 'false')
     expect(container.querySelectorAll('span.bg-red-600').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('nav.dashboard').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Explore Estate').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Community').length).toBeGreaterThan(0)
   })
 
   it('respects explicit kill-switch when header collapse flag is false', () => {

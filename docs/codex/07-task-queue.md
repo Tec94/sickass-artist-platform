@@ -1,220 +1,191 @@
-# Task Queue
+# Task queue
 
-This file is the active implementation queue.
+This file is the active implementation queue for the estate-navigation product.
+It reflects the Store-first shared-IA roadmap that is already partially live in
+code.
 
-Work top to bottom.
+Work from top to bottom. Do not reopen completed path-wiring work unless a real
+regression forces it.
 
-Do not skip ahead unless explicitly instructed.
+## Phase 1 - Shared IA foundation
 
----
+This phase is complete in the codebase. It established one information
+architecture with two entry modes instead of two separate navigation systems.
 
-## Phase 1 — Core region system
+Completed outcomes:
 
-### Task 1.1 — Collect final SVG path data
-- gather all exported region SVGs
-- confirm they all share the same viewBox
-- extract the `d` path strings
-- store them in one region config file
+- shared top-level nav for Explore Estate, Store, Events, Ranking, Campaign,
+  and Community
+- consistent current-section highlighting across scenic and app surfaces
+- `/auth` return flow shared by scenic and standard navigation
+- legacy `/merch/*` compatibility redirected into the new Store route model
 
-### Task 1.2 — Build region config
-Create a single source of truth for:
-- id
-- label
-- route
-- authRequired
-- SVG path string
-- label anchor
-- arrow anchor
-- hover accent
-- lock style
-- hit priority
+Do not reintroduce a split between scenic navigation and normal UI navigation.
 
-### Task 1.3 — Render full SVG overlay
-- render the estate image
-- render an SVG overlay on top
-- render one `<path>` per region
-- wire pointer interactions
+## Phase 2 - Scenic landing and scenic Store entry
 
-### Task 1.4 — Add debug overlay mode
-Debug mode should show:
-- path fills
-- path outlines
-- region ids
-- label anchors
-- arrow anchors
-- lock/public state
+This phase is also complete enough for current product work.
 
-### Task 1.5 — Add hit priority handling
-- prevent larger regions from swallowing smaller ones
-- keep center / focal interactions reliable
+Completed outcomes:
 
----
+- path-driven estate landing at `/`
+- debug mode and reduced-motion support for the landing scene
+- scenic Store entry at `/store`
+- curated scenic Store product-slot routing into product detail
+- direct scenic-to-app Store handoff through `/store/browse`
 
-## Phase 2 — Region interaction behavior
+Do not spend the next sprint rebuilding path geometry or restoring production
+direction arrows.
 
-### Task 2.1 — Hover state
-For every region:
-- add hover entry
-- add hover exit
-- add consistent visual feedback
-- prevent noisy visual mismatch across regions
+## Phase 3 - Store App Mode redesign
 
-### Task 2.2 — Active / selected state
-- define selected region behavior
-- define whether selection persists after hover exit
-- support clicked or keyboard-focused state
+This is the active implementation phase.
 
-### Task 2.3 — Region card system
-Implement a consistent region card for all mapped areas.
+The goal is to make `/store/browse` the first polished proof of "scenic entry,
+normal operation, optional scenic return."
 
-The card system should define:
-- eyebrow / sublabel
-- title
-- optional supporting line
-- lock messaging where relevant
-- positioning rules relative to region anchors
+### Task 3.1 - Lock the Store App Mode board
 
-### Task 2.4 — Directional cues
-- render directional arrows or directional hints
-- anchor them consistently
-- support hover / active state changes
+Create the Store App Mode v1 design board in Pencil with these required frames:
 
----
+- desktop browse default
+- desktop browse with filters active
+- queue-active state
+- mobile browse with drawer and filter access
+- optional component references for product card and utility row
 
-## Phase 3 — Auth lock behavior
+If Pencil remains blocked, keep the board contract explicit in repo docs until
+the editor bridge is working again.
 
-### Task 3.1 — Locked visual state
-For auth-gated regions:
-- subdued base state
-- lock messaging
-- optional chain overlay
-- reduced or altered hover behavior when logged out
+Use `/docs/codex/08-store-app-mode-board-spec.md` as the current contract for
+that board, and use `designs/store-app-mode-v1-blueprint.md` for the actual
+frame composition.
 
-### Task 3.2 — Auth prompt
-- clicking a locked region opens compact auth prompt
-- auth prompt does not destroy public navigation flow
-- prompt CTA routes to `/auth`
+### Task 3.2 - Implement the approved Store board
 
-### Task 3.3 — Return-to handling
-- preserve intended destination
-- restore user to intended destination after auth
+Apply the approved Store App Mode design to `/store/browse` while preserving the
+existing merch logic.
 
----
+The implementation must keep:
 
-## Phase 4 — Mobile behavior
+- search
+- sort
+- filters
+- queue state
+- cart access
+- recently viewed
+- quick view, if retained by the approved board
 
-### Task 4.1 — Touch interaction model
-Decide and implement:
-- single tap = focus
-- second tap = enter
-or
-- single tap = enter after card reveal
+### Task 3.3 - Tighten Store-local wayfinding
 
-This must be deliberate and consistent.
+Finish the local Store navigation and return paths so users can move cleanly
+between:
 
-### Task 4.2 — Scenic pan model
-- support horizontal pan where needed
-- keep the same estate world on mobile
-- avoid making touch interaction frustrating
+- scenic Store entry at `/store`
+- browse shell at `/store/browse`
+- product detail at `/store/product/:productId`
+- queue and cart flows
 
-### Task 4.3 — Mobile fallback nav
-- add clear fallback menu access
-- preserve major destination discoverability
-- do not depend entirely on scenic precision taps
+This phase is complete when scenic entry and normal Store operation feel like
+one section instead of two separate experiences.
 
----
+## Phase 4 - Extend the shared pattern to other destinations
 
-## Phase 5 — Visual polish
+Start this phase only after the Store pattern is stable.
 
-Only start these after Phases 1–4 are working.
+### Task 4.1 - Events
 
-### Task 5.1 — Hover sheen / shimmer
-- clipped to SVG paths
-- subtle and premium
-- not game-loot style
+Create the Events scenic entry and pair it with the normal Events page using the
+same two-mode model.
 
-### Task 5.2 — Lock overlay polish
-- chains or equivalent restrained lock treatment
-- region-specific clipping
-- no broken-looking overlay behavior
+### Task 4.2 - Ranking
 
-### Task 5.3 — Card polish
-- improve card lighting
-- improve spacing
-- refine typography hierarchy
-- align with design-system rules
+Create the Ranking scenic entry and pair it with the normal Ranking page using
+the same two-mode model.
 
-### Task 5.4 — Nav polish
-- refine top nav
-- optionally introduce parchment / scroll-inspired treatment later
-- do not let ornament reduce usability
+### Task 4.3 - Community
 
-### Task 5.5 — Sound polish
-- add region hover / pop feedback
-- keep subtle
-- do not overwhelm interaction
+Create the Community scenic entry and pair it with the normal Community shell
+using the same shared auth and return-flow behavior.
 
----
+### Task 4.4 - Community-local navigation
 
-## Phase 6 — Transitions and scene choreography
+Reinforce Gallery, Forum, Chat, Profile, and related pages as Community-local
+navigation instead of top-level global navigation.
 
-Only start after the navigation system is stable.
+## Phase 5 - Sensory and shell polish
 
-### Task 6.1 — Establishing shot to outer-grounds transition
-- optional intro
-- gate opening
-- camera move inward
+Start this phase only after Store proves the shared pattern.
 
-### Task 6.2 — Destination transitions
-- leaving landing scene into destination pages
-- keeping the world coherent
-- avoiding slow or gimmicky motion
+### Task 5.1 - Scenic audio registry
 
-### Task 6.3 — Back-navigation choreography
-- return motion if appropriate
-- route-aware back behavior
-- no broken history logic
+Add subtle region-entry and product-entry cues behind mute and reduced-sensory
+preferences.
 
----
+### Task 5.2 - Shell consistency
 
-## Acceptance criteria for current milestone
+Refine shared shell behavior across scenic and app surfaces:
 
-The current milestone is complete when:
+- top nav behavior
+- mobile drawer ordering
+- auth prompt consistency
+- scenic return controls
 
-- all 5 primary regions are wired from SVG path data
-- debug overlay mode exists
-- region hover works on all regions
-- cards / labels render consistently
-- locked Community flow works
-- `/auth` route is integrated into locked access flow
-- mobile interaction is testable
-- no rough polygon fallback remains in the main implementation
+### Task 5.3 - Comfort preferences
 
----
+Add shared scenic comfort preferences:
+
+- reduced motion
+- muted sound
+- optional lower-fidelity scenic mode only if performance later requires it
+
+## Phase 6 - Scene choreography
+
+Start this phase only after the shared Store model is stable.
+
+### Task 6.1 - Intro sequence
+
+Build the optional establishing exterior and gate transition into the current
+outer-grounds landing scene.
+
+### Task 6.2 - Destination transitions
+
+Add restrained route-aware transitions from scenic entry into destination pages.
+
+### Task 6.3 - Scenic return behavior
+
+Add route-aware return motion only where it strengthens orientation and does not
+add friction.
+
+## Acceptance criteria for the current phase
+
+The active Store-first phase is complete when:
+
+- `/store` is the scenic Store entry
+- `/store/browse` is the normal Store shell
+- scenic Store paths route directly to the correct product details
+- the global nav and mobile drawer expose the same top-level IA
+- Store-local navigation is stable across browse, drops, cart, and orders
+- the Store App Mode redesign contract is locked and implemented
 
 ## Explicitly deferred
 
-These are not current priority items:
+These items remain deferred until the Store-first phase is stable:
 
-- perfect final scene art
-- final cinematic intro
-- elaborate sound design
-- full room-scene generation for all pages
-- advanced ornamentation on nav components
-- deeper community interior page polish
-
-Those come later.
-
----
+- destination-scene rollout for every top-level section
+- final audio design
+- elaborate cinematic choreography
+- WebGL or heavier scene technology
+- ornamental nav treatments that reduce usability
 
 ## If blocked
 
-If implementation gets blocked, do not invent a new design direction.
+If the current work is blocked, do not invent a new product direction.
 
-First check:
-1. is the region path data correct
-2. is the anchor config correct
-3. is the interaction state model correct
-4. is the locked/public logic correct
+Check these layers in order:
 
-Most current blockers should be solved in those layers, not by redesigning the product.
+1. shared route model
+2. top-level current-section highlighting
+3. scenic-to-app handoff
+4. auth return-flow consistency
+5. Pencil/editor integration for the Store board

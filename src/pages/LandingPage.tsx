@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Lock, Map, X } from 'lucide-react'
+import { Lock, Map, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
 import { buildAuthEntryHref } from '../features/auth/authRouting'
@@ -9,7 +9,7 @@ import {
   OUTER_GROUNDS_PATHS,
   OUTER_GROUNDS_REGION_ORDER,
   OUTER_GROUNDS_SCENE,
-  type CastleArrowDirection,
+  type CastleCardPlacement,
   type CastlePoint,
   type CastleRegionId,
   type OuterGroundRegionConfig,
@@ -17,13 +17,6 @@ import {
 import '../styles/castle-landing.css'
 
 type OuterGroundRegion = { id: CastleRegionId } & OuterGroundRegionConfig
-
-const arrowIconByDirection: Record<CastleArrowDirection, typeof ArrowLeft> = {
-  up: ArrowUp,
-  right: ArrowRight,
-  down: ArrowDown,
-  left: ArrowLeft,
-}
 
 const directionalRegionByKey: Partial<Record<string, CastleRegionId>> = {
   ArrowLeft: 'store',
@@ -42,6 +35,20 @@ const percentStyle = (
   left: `${(point.x / width) * 100}%`,
   top: `${(point.y / height) * 100}%`,
   ...extra,
+})
+
+const cardStyle = (
+  point: CastlePoint,
+  placement: CastleCardPlacement,
+  width: number,
+  height: number,
+): CSSProperties => ({
+  ...percentStyle(point, width, height),
+  ['--castle-card-offset-x' as string]: `${placement.offsetX ?? 0}px`,
+  ['--castle-card-offset-y' as string]: `${placement.offsetY ?? 0}px`,
+  ['--castle-card-mobile-offset-x' as string]: `${placement.mobileOffsetX ?? placement.offsetX ?? 0}px`,
+  ['--castle-card-mobile-offset-y' as string]: `${placement.mobileOffsetY ?? placement.offsetY ?? 0}px`,
+  ['--castle-card-max-width' as string]: placement.maxWidth ? `${placement.maxWidth}px` : undefined,
 })
 
 const getRegionAccentRgb = (hex: string) => {
@@ -205,6 +212,20 @@ export const LandingPage = () => {
   return (
     <main className="castle-landing" onKeyDown={handleSceneKeyDown} data-debug={debugRegions ? 'true' : 'false'}>
       <section className="castle-landing__stage">
+        <div className="castle-landing__scene-controls">
+          <button
+            type="button"
+            className="castle-landing__map-button"
+            onClick={() => setIsMapOpen((current) => !current)}
+            aria-expanded={isMapOpen}
+            aria-controls="castle-estate-map"
+          >
+            <Map size={17} />
+            <span>Explore the estate</span>
+          </button>
+          {isCoarsePointer && <p className="castle-landing__mobile-hint">{scene.mobileHint}</p>}
+        </div>
+
         <div className="castle-landing__scene-wrap">
           <div
             className="castle-landing__scene"
@@ -224,20 +245,6 @@ export const LandingPage = () => {
             <div className="castle-landing__vignette" aria-hidden="true" />
             <div className="castle-landing__grain" aria-hidden="true" />
             <div className="castle-landing__moon-haze" aria-hidden="true" />
-
-            <div className="castle-landing__scene-controls">
-              <button
-                type="button"
-                className="castle-landing__map-button"
-                onClick={() => setIsMapOpen((current) => !current)}
-                aria-expanded={isMapOpen}
-                aria-controls="castle-estate-map"
-              >
-                <Map size={17} />
-                <span>Explore the estate</span>
-              </button>
-              {isCoarsePointer && <p className="castle-landing__mobile-hint">{scene.mobileHint}</p>}
-            </div>
 
             <svg
               className="castle-landing__scene-overlay"
@@ -267,18 +274,30 @@ export const LandingPage = () => {
                 ))}
 
                 {overlayRegions.map((region) => (
-                  <linearGradient
-                    id={`castle-tint-${region.id}`}
-                    key={`tint-${region.id}`}
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor={region.hoverAccent} stopOpacity="0.38" />
-                    <stop offset="54%" stopColor={region.hoverAccent} stopOpacity="0.12" />
-                    <stop offset="100%" stopColor={region.hoverAccent} stopOpacity="0.02" />
-                  </linearGradient>
+                  <Fragment key={`tint-${region.id}`}>
+                    <linearGradient
+                      id={`castle-tint-${region.id}`}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop offset="0%" stopColor={region.hoverAccent} stopOpacity="0.38" />
+                      <stop offset="54%" stopColor={region.hoverAccent} stopOpacity="0.12" />
+                      <stop offset="100%" stopColor={region.hoverAccent} stopOpacity="0.02" />
+                    </linearGradient>
+                    <linearGradient
+                      id={`castle-tint-${region.id}-locked`}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop offset="0%" stopColor="#8ea7b4" stopOpacity="0.3" />
+                      <stop offset="54%" stopColor="#8ea7b4" stopOpacity="0.1" />
+                      <stop offset="100%" stopColor="#8ea7b4" stopOpacity="0.02" />
+                    </linearGradient>
+                  </Fragment>
                 ))}
 
                 <linearGradient id="castle-sheen-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -293,7 +312,8 @@ export const LandingPage = () => {
               {overlayRegions.map((region) => {
                 const isLocked = region.authRequired && !isSignedIn
                 const isActive = visibleRegionId === region.id
-                const accentRgb = getRegionAccentRgb(region.hoverAccent)
+                const accentHex = isLocked ? '#8ea7b4' : region.hoverAccent
+                const accentRgb = getRegionAccentRgb(accentHex)
                 const fillOpacity = isActive ? (isLocked ? 0.12 : 0.16) : debugRegions ? 0.16 : 0
                 const strokeOpacity = isActive ? (isLocked ? 0.58 : 0.82) : debugRegions ? 0.42 : 0.08
                 const strokeWidth = isActive ? 12 : debugRegions ? 8 : 5
@@ -311,7 +331,7 @@ export const LandingPage = () => {
                         <rect
                           width={scene.width}
                           height={scene.height}
-                          fill={`url(#castle-tint-${region.id})`}
+                          fill={`url(#castle-tint-${region.id}${isLocked ? '-locked' : ''})`}
                           opacity={isLocked ? 0.48 : 0.76}
                         />
                         {!prefersReducedMotion && (
@@ -415,45 +435,41 @@ export const LandingPage = () => {
             </svg>
 
             {regions.map((region) => {
-              const ArrowIcon = arrowIconByDirection[region.arrowDirection]
               const isLocked = region.authRequired && !isSignedIn
               const isActive = visibleRegionId === region.id
+              const accentHex = isLocked ? '#8ea7b4' : region.hoverAccent
 
               return (
                 <div key={`${region.id}-markers`} aria-hidden="true">
                   <div
-                    className="castle-landing__arrow"
-                    data-active={isActive ? 'true' : 'false'}
-                    data-locked={isLocked ? 'true' : 'false'}
-                    data-region-id={region.id}
-                    data-region-cue="true"
-                    style={
-                      {
-                        ...percentStyle(region.arrowAnchor, scene.width, scene.height),
-                        ['--castle-accent' as string]: region.hoverAccent,
-                      } as CSSProperties
-                    }
-                  >
-                    <ArrowIcon size={isActive ? 24 : 20} />
-                  </div>
-
-                  <div
                     className="castle-landing__label"
                     data-active={isActive ? 'true' : 'false'}
                     data-locked={isLocked ? 'true' : 'false'}
+                    data-locked-style={region.lockedStyle}
                     data-region-id={region.id}
                     data-region-card="true"
+                    data-card-align-x={region.cardPlacement.alignX}
+                    data-card-align-y={region.cardPlacement.alignY}
                     style={
                       {
-                        ...percentStyle(region.labelAnchor, scene.width, scene.height),
-                        ['--castle-accent' as string]: region.hoverAccent,
+                        ...cardStyle(region.labelAnchor, region.cardPlacement, scene.width, scene.height),
+                        ['--castle-accent' as string]: accentHex,
                       } as CSSProperties
                     }
                   >
-                    <span className="castle-landing__label-direction">{region.locationLabel}</span>
+                    <div className="castle-landing__label-header">
+                      <span className="castle-landing__label-direction">{region.locationLabel}</span>
+                      {isLocked && (
+                        <span className="castle-landing__label-badge">
+                          <Lock size={12} />
+                          Members
+                        </span>
+                      )}
+                    </div>
                     <strong>{region.label}</strong>
-                    <span>{isLocked ? 'Members only' : region.subtitle}</span>
-                    {isLocked && <Lock size={14} />}
+                    <span className="castle-landing__label-copy">
+                      {isLocked ? 'Private rooms, live channels, and member activity.' : region.subtitle}
+                    </span>
                   </div>
                 </div>
               )

@@ -66,7 +66,7 @@ describe('MerchProductCard resilience', () => {
     })
   })
 
-  it('renders deterministic badges and sold-out action state', () => {
+  it('prioritizes sold-out state over limited and new merchandising badges', () => {
     render(
       <MerchProductCard
         product={{
@@ -83,11 +83,36 @@ describe('MerchProductCard resilience', () => {
       />,
     )
 
-    expect(screen.getByText('New')).toBeInTheDocument()
-    expect(screen.getByText('Limited')).toBeInTheDocument()
+    expect(screen.queryByText('New')).not.toBeInTheDocument()
+    expect(screen.queryByText('Limited')).not.toBeInTheDocument()
     expect(screen.getAllByText('Sold Out')).toHaveLength(3)
-    expect(screen.getByText((value) => value.includes('Sold out'))).toBeInTheDocument()
+    expect(screen.getByText('Limited edition archive')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sold Out' })).toBeDisabled()
+  })
+
+  it('prioritizes queue locked over limited and new card labels', () => {
+    render(
+      <MerchProductCard
+        isLocked
+        lockLabel="Queue locked"
+        product={{
+          _id: 'product-locked',
+          name: 'Queue Locked Hoodie',
+          price: 8900,
+          imageUrls: ['/queue-locked.jpg'],
+          category: 'limited',
+          isNew: true,
+          totalStock: 4,
+          variants: [{ _id: 'variant-locked', stock: 4, size: 'M' }],
+          tags: ['limited release'],
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Queue locked')).toBeInTheDocument()
+    expect(screen.queryByText('Limited')).not.toBeInTheDocument()
+    expect(screen.queryByText('New')).not.toBeInTheDocument()
+    expect(screen.getByText('Join the live queue to unlock this piece')).toBeInTheDocument()
   })
 
   it('keeps quick actions available and adds to cart for single in-stock variant', async () => {

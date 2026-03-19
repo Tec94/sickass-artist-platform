@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { getFunctionName } from 'convex/server'
 import { Merch } from '../pages/Merch'
@@ -10,7 +11,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
-    useLocation: () => ({ pathname: '/store', search: '', hash: '' }),
+    useLocation: () => ({ pathname: '/store/browse', search: '', hash: '' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
@@ -115,13 +116,19 @@ describe('store IA controls', () => {
     vi.mocked(useMutation).mockImplementation(() => vi.fn() as never)
   })
 
-  it('keeps category as list-row navigation and keeps queue/search/sort as top utility controls', () => {
-    const { container } = render(<Merch />)
+  it('keeps category and collection visible while queue/search/sort remain in the top utility layer', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     expect(screen.queryAllByRole('button', { name: 'store.allProducts' })).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'store.tourCollection' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'store.sortBestSellers' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'store.sortNewest' })).toBeInTheDocument()
     expect(screen.getByText('store.queueStatus')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'store.inStock' })).not.toBeInTheDocument()
 
     expect(container.querySelectorAll('.store-surface-card.store-utility-row')).toHaveLength(0)
     expect(container.querySelectorAll('.store-announcement-strip.store-surface-card')).toHaveLength(0)

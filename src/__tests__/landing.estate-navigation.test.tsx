@@ -37,10 +37,12 @@ const renderLanding = ({
   initialEntry = '/',
   isSignedIn = false,
   coarsePointer = false,
+  prefersReducedMotion = true,
 }: {
   initialEntry?: string
   isSignedIn?: boolean
   coarsePointer?: boolean
+  prefersReducedMotion?: boolean
 } = {}) => {
   mockedUseAuth.mockReturnValue({
     user: isSignedIn ? ({} as ReturnType<typeof useAuth>['user']) : null,
@@ -49,8 +51,8 @@ const renderLanding = ({
     signOut: vi.fn(),
   } as ReturnType<typeof useAuth>)
   mockedUseReducedMotionPreference.mockReturnValue({
-    prefersReducedMotion: true,
-    motionClassName: 'motion-reduce',
+    prefersReducedMotion,
+    motionClassName: prefersReducedMotion ? 'motion-reduce' : 'motion-safe',
   })
   installMatchMedia(coarsePointer)
 
@@ -76,6 +78,7 @@ describe('landing estate navigation', () => {
 
     const hitRegions = container.querySelectorAll('[data-hit-region="true"]')
     expect(hitRegions).toHaveLength(5)
+    expect(container.querySelector('[data-region-cue="true"]')).not.toBeInTheDocument()
     expect(container.querySelector('[data-region-id="store"][data-hit-region="true"]')).toBeInTheDocument()
     expect(container.querySelector('[data-region-id="events"][data-hit-region="true"]')).toBeInTheDocument()
     expect(container.querySelector('[data-region-id="ranking"][data-hit-region="true"]')).toBeInTheDocument()
@@ -125,6 +128,22 @@ describe('landing estate navigation', () => {
     expect(rankingCard).toHaveAttribute('data-active', 'true')
   })
 
+  it('keeps the active region visible when pointer movement reaches the plaque', () => {
+    const { container } = renderLanding()
+    const eventsPath = container.querySelector('[data-region-id="events"][data-hit-region="true"]')
+    const eventsCard = container.querySelector('[data-region-id="events"][data-region-card="true"]')
+
+    expect(eventsPath).toBeTruthy()
+    expect(eventsCard).toBeTruthy()
+
+    fireEvent.pointerEnter(eventsPath as Element)
+    expect(eventsCard).toHaveAttribute('data-active', 'true')
+
+    fireEvent.pointerEnter(eventsCard as Element)
+    fireEvent.pointerMove(eventsCard as Element)
+    expect(eventsCard).toHaveAttribute('data-active', 'true')
+  })
+
   it('uses first tap preview and second tap entry on coarse-pointer devices', () => {
     const { container } = renderLanding({ coarsePointer: true })
     const storePath = container.querySelector('[data-region-id="store"][data-hit-region="true"]')
@@ -139,5 +158,31 @@ describe('landing estate navigation', () => {
 
     fireEvent.click(storePath as Element)
     expect(screen.getByText('Store page')).toBeInTheDocument()
+  })
+
+  it('keeps a static active highlight when reduced motion is preferred', () => {
+    const { container } = renderLanding({ prefersReducedMotion: true })
+    const campaignPath = container.querySelector('[data-region-id="campaign"][data-hit-region="true"]')
+
+    expect(campaignPath).toBeTruthy()
+
+    fireEvent.focus(campaignPath as Element)
+
+    expect(container.querySelector('.castle-landing__sheen')).not.toBeInTheDocument()
+    expect(container.querySelector('[data-region-id="campaign"][data-region-card="true"]')).toHaveAttribute(
+      'data-active',
+      'true',
+    )
+  })
+
+  it('renders the animated sheen only when motion is allowed and a region is active', () => {
+    const { container } = renderLanding({ prefersReducedMotion: false })
+    const storePath = container.querySelector('[data-region-id="store"][data-hit-region="true"]')
+
+    expect(storePath).toBeTruthy()
+
+    fireEvent.focus(storePath as Element)
+
+    expect(container.querySelector('.castle-landing__sheen')).toBeInTheDocument()
   })
 })

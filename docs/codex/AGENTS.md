@@ -1,6 +1,7 @@
 # AGENTS.md
 
-This repository contains a scenic estate-navigation music artist web app.
+This repository contains a scenic estate-navigation artist platform with one
+information architecture and two entry modes.
 
 The repo includes canonical implementation context under `/docs/codex/`.
 
@@ -13,216 +14,241 @@ Before changing code, read:
 5. `/docs/codex/03-design-system.md`
 6. `/docs/codex/06-current-state.md`
 7. `/docs/codex/07-task-queue.md`
+8. `/docs/codex/08-store-app-mode-board-spec.md` when the task touches the
+   Store browse shell or Pencil redesign work
+9. `designs/store-app-mode-v1-blueprint.md` when the task needs the concrete
+   Store frame composition
 
 Do not skip this.
 
----
-
 ## Project summary
 
-The landing page is a scenic, slightly elevated isometric estate / outer-grounds view that acts as a primary navigation layer.
+The product does not treat scenic navigation and standard UI navigation as two
+separate systems.
 
-Users navigate by interacting with mapped architectural regions.
+- **Explore mode** is the scenic estate layer used on the homepage and on
+  scenic destination-entry pages where the world adds branded wayfinding value.
+- **App mode** is the standard working shell used for routine browsing,
+  shopping, and deep task flows.
 
-This is not a standard homepage with decorative art in the background. The scene is part of the product architecture.
-
----
+Both modes must route into the same destinations without adding extra click
+tax.
 
 ## Locked product decisions
 
-Do not change these without explicit instruction:
+Do not change these without explicit instruction.
 
-- The landing scene is the outer grounds / estate courtyard
-- The camera is slightly elevated isometric
-- Region mapping uses SVG path data, not rough polygons
-- Community is auth-gated
+- The homepage remains the outer-grounds estate courtyard at `/`
+- The camera remains slightly elevated isometric
+- Region mapping uses traced SVG path data, not guessed polygons
+- The landing scene remains a real navigation layer, not decorative art
+- The top-level IA is shared across scenic and app navigation
+- Community remains auth-gated
 - Auth uses a dedicated `/auth` route
-- Profile is not a primary landing region in v1
-- Mobile keeps the same scenic world
-- Advanced transitions are deferred until after stable interaction
+- Mobile keeps the same scenic world and the same top-level destination order
+- Visible production direction arrows remain removed unless explicitly restored
 
-Current working primary map:
+The current canonical top-level IA is:
+
+- **Explore Estate** = `/`
+- **Store** = `/store`
+- **Events** = `/events`
+- **Ranking** = `/ranking`
+- **Campaign** = `/campaign`
+- **Community** = `/community`
+
+The current scenic landing region map is:
+
 - Store = left wing
 - Events = upper-left central palace block
 - Ranking = top rear palace mass
 - Campaign = center fountain court
 - Community = right wing / tower mass
 
----
+Profile remains nested under Community and is not a primary landing region in
+v1.
 
 ## Current implementation priority
 
-The current task is to build the full multi-region estate navigation system.
+The current priority is the Store-first shared-IA expansion.
 
-Priority order:
-1. full SVG region overlay
-2. debug overlay mode
-3. hover / active / locked states
-4. auth prompt flow
-5. card and anchor refinement
-6. mobile touch + pan behavior
-7. polish
-8. transitions
+The current sequence is:
 
-Do not jump directly into polish or cinematic motion.
+1. keep the shared top-level IA stable
+2. use `/store` as scenic Store entry
+3. use `/store/browse` as the normal Store shell
+4. lock and implement the Store App Mode redesign
+5. only then extend the same pattern to Events, Ranking, and Community
 
----
+Do not revert the repo back to a "finish the landing path system" milestone.
 
 ## Technical guidance
 
-### Region mapping
-Use SVG path data from traced region assets.
+### Shared IA
+
+Treat scenic and standard navigation as two entry modes into the same section
+tree.
+
+That means:
+
+- every major destination must be directly reachable from the global nav
+- scenic entry must route directly into a destination page
+- users must not be forced to re-enter the estate for routine movement
+- current-section highlighting must resolve the same way in scenic and app mode
+
+### Route model
+
+Preserve this route structure unless explicitly asked to change it:
+
+- `/` = scenic estate homepage
+- `/store` = scenic Store entry
+- `/store/browse` = normal Store shell
+- `/store/product/:productId` = product detail
+- `/merch/*` = compatibility redirects into `/store/*`
+
+Deep community pages can stay addressable, but they belong to the Community
+top-level scope.
+
+### Scenic config
+
+Use config-driven scene data.
 
 Do not:
-- replace traced paths with guessed polygons
-- hardcode scattered magic coordinates without config
-- bury region definitions inside rendering components
 
-Preferred structure:
-- region config file
-- one source of truth for paths and anchors
-- reusable path data for hit area, hover, locked overlay, and debug rendering
+- fetch traced SVG paths at runtime
+- scatter scene anchors or path ownership across unrelated files
+- duplicate IA definitions between scenic and app code
 
-### Overlay system
-The landing scene should render:
-- base scene image
-- SVG overlay above it
-- path-driven regions
-- optional debug overlay
-- label/arrow/card layers
+Prefer:
 
-### Debug mode
-A debug mode is required and should show:
-- region outlines
-- fill overlays
-- ids
-- label anchors
-- directional cue anchors
-- lock/public state
-
-This is not optional during path tuning.
+- one config source for scenic region or slot geometry
+- one shared source for top-level navigation
+- explicit auth return behavior
 
 ### Auth flow
-Locked region click behavior:
-- show compact auth prompt
-- CTA routes to `/auth`
-- preserve destination intent
-- restore return target after auth
 
-Do not hard-block the whole scenic page when encountering a locked region.
+Locked access must behave consistently across scenic and app surfaces.
 
-### Mobile
-Mobile should keep the same estate scene.
+Required behavior:
 
-Support:
-- focus/tap behavior
-- horizontal pan if needed
-- fallback nav access for constrained viewports
+- show a compact auth prompt
+- route auth CTAs to `/auth`
+- preserve `returnTo`
+- restore the intended destination after auth
 
-Do not replace the scenic landing with a generic mobile-only dashboard.
+### Store-first scenic expansion
 
----
+The Store is the first destination-scene proof of the shared-IA model.
+
+Keep these rules:
+
+- `/store` is a premium scenic entry, not a catalog replacement
+- scenic product hits route directly into real product detail
+- `/store/browse` is the workhorse shell
+- Store-local navigation handles routine movement within Store scope
 
 ## Design guidance
 
 The product should feel:
+
 - nocturnal
 - luxurious
 - restrained
 - editorial
-- premium
 - immersive
 
 It should not feel:
+
 - like a fantasy game HUD
 - like a generic dashboard
-- like a tech startup landing page
-- like a cartoon
-- like overstyled concept art
+- like a startup landing page
+- like disconnected concept art
 
-When in doubt, preserve:
-- scene legibility
-- premium restraint
-- architectural realism
-- low-noise interface hierarchy
-
----
+Preserve scene legibility and premium restraint over novelty.
 
 ## Implementation constraints
 
-### Do not redesign the IA unless explicitly asked
-The region map is currently a locked product decision.
+### Do not split the IA
 
-### Do not overcomplicate technology prematurely
-Avoid escalating to WebGL or more complex scene tech unless there is a strong need that cannot be solved with the existing SVG/React architecture.
+Do not create one navigation system for scenic pages and another for app pages.
 
-### Do not over-polish early
-No elaborate transitions, audio design, or major nav ornament until the path-driven region system is stable.
+If a change affects routing, current-location cues, or auth behavior, verify
+that the behavior stays consistent in both modes.
+
+### Do not overcomplicate scene tech
+
+Avoid WebGL or heavier scene rendering unless the current React and SVG
+architecture becomes insufficient.
+
+### Do not expand scenes before Store proves the pattern
+
+Do not fan out to scenic Events, Ranking, or Community work until the Store
+scenic entry and Store shell relationship is stable.
 
 ### Do not make silent structural changes
+
 If you need to change:
-- routing model
-- region ownership
-- auth gating logic
-- camera assumptions
-- mobile behavior model
+
+- top-level route ownership
+- auth gating behavior
+- current-section highlighting
+- scenic-to-app handoff rules
+- mobile navigation model
 
 surface the change clearly instead of quietly implementing it.
-
----
 
 ## Expected code style
 
 Prefer:
+
 - modular React components
-- config-driven region data
-- readable and inspectable code
-- motion values and timings exposed as constants where useful
+- config-driven scenic data
+- explicit route ownership
 - minimal duplication
-- explicit naming
+- readable state models
 
 Avoid:
-- dumping everything into one homepage file
-- spreading anchor values and path logic across many unrelated files
-- hidden one-off behaviors per region unless documented
 
----
+- burying route contracts inside view components
+- duplicating navigation definitions across files
+- letting scenic-only assumptions leak into app-mode code
 
 ## Suggested file organization
 
-A good organization pattern is something like:
+A good organization pattern looks like this:
 
-- `src/features/estate-navigation/`
-  - `EstateScene.tsx`
-  - `EstateOverlay.tsx`
-  - `EstateRegionCard.tsx`
-  - `EstateRegionCue.tsx`
-  - `estateRegions.ts`
-  - `estateDebug.ts`
-- `src/assets/estate-paths/` or `public/estate-paths/`
+- `src/features/navigation/`
+  - `topLevelNav.ts`
+- `src/features/castleNavigation/`
+  - `sceneConfig.ts`
+  - `storeSceneConfig.ts`
+- `src/pages/`
+  - `LandingPage.tsx`
+  - `StoreScenePage.tsx`
+  - `Merch.tsx`
+  - `MerchDetail.tsx`
 
 This is guidance, not a strict requirement.
 
----
-
 ## If asked to make changes
 
-When making changes, preserve the currently locked product direction.
+When making changes, preserve the locked shared-IA direction.
 
-If a request conflicts with the docs, prefer the docs unless the new request explicitly overrides them.
+If a request conflicts with the docs, prefer the docs unless the new request
+explicitly overrides them.
 
-If context seems incomplete, inspect the files in `/docs/codex/` before proceeding.
-
----
+If context seems incomplete, inspect the files in `/docs/codex/` before
+proceeding.
 
 ## Current success criteria
 
 The current milestone is complete when:
-- all 5 primary regions are wired from SVG path data
-- debug mode exists
-- hover works across all regions
-- locked/public behavior works
-- auth prompt flow is implemented
-- mobile scenic interaction is testable
+
+- the shared top-level IA is stable across scenic and app pages
+- `/store` works as scenic entry
+- `/store/browse` works as the normal Store shell
+- scenic Store hits route into real product detail
+- auth and return behavior stay consistent
+- the Store App Mode redesign contract is locked and implemented
 
 Anything beyond that is secondary right now.

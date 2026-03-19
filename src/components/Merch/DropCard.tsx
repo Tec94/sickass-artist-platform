@@ -27,8 +27,8 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
   }
 
   const handleViewDrop = () => {
-    // Navigate to drops detail or filtered merch page
-    navigate('/store', {
+    // Route directly into app-mode browse instead of bouncing users back through scenic mode.
+    navigate('/store/browse', {
       state: { highlightedDropId: drop._id },
     })
   }
@@ -37,42 +37,42 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative overflow-hidden rounded-lg border transition-colors ${
+      className={`store-v2-surface-card store-v2-record-card relative overflow-hidden p-0 text-left transition-colors ${
         isActive
-          ? 'border-green-500/50 bg-green-500/5'
+          ? 'border-[rgba(216,184,152,0.34)]'
           : isUpcoming
-            ? 'border-cyan-500/50 bg-cyan-500/5'
-            : 'border-gray-800 bg-gray-900/50'
+            ? 'border-[rgba(160,32,48,0.3)]'
+            : 'border-[rgba(216,184,152,0.12)]'
       }`}
     >
       {/* Background image */}
       {drop.imageUrl && (
-        <div className="absolute inset-0 z-0 opacity-30">
+        <div className="absolute inset-0 z-0 opacity-40">
           <img
-            src="/src/public/assets/test-image.jpg"
+            src={drop.imageUrl}
             alt={drop.name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(14,10,8,0.35)] to-[rgba(10,8,7,0.94)]" />
         </div>
       )}
 
       {/* Content */}
-      <div className="relative z-10 p-6 space-y-4">
+      <div className="relative z-10 space-y-4 p-6">
         {/* Status badge */}
         <div className="flex items-center gap-2">
           {isActive && (
-            <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full animate-pulse">
+            <span className="store-v2-pill animate-pulse">
               LIVE NOW
             </span>
           )}
           {isUpcoming && (
-            <span className="px-3 py-1 bg-cyan-600 text-white text-xs font-bold rounded-full">
+            <span className="store-v2-pill border-[rgba(160,32,48,0.42)] bg-[rgba(76,42,49,0.72)] text-[var(--store-v2-tone-text-main)]">
               UPCOMING
             </span>
           )}
           {isEnded && (
-            <span className="px-3 py-1 bg-gray-700 text-gray-300 text-xs font-bold rounded-full">
+            <span className="store-v2-pill border-[rgba(216,184,152,0.18)] bg-[rgba(20,16,12,0.82)] text-[var(--store-v2-tone-text-meta)]">
               ENDED
             </span>
           )}
@@ -80,21 +80,21 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
 
         {/* Title */}
         <div>
-          <h3 className="text-2xl font-bold text-white mb-1">{drop.name}</h3>
+          <h3 className="store-v2-h2 text-[var(--store-v2-tone-text-main)]">{drop.name}</h3>
           {drop.description && (
-            <p className="text-gray-400 text-sm">{drop.description}</p>
+            <p className="mt-2 store-v2-meta">{drop.description}</p>
           )}
         </div>
 
         {/* Product count */}
         {drop.productCount !== undefined && (
-          <p className="text-cyan-400 text-sm font-semibold">
+          <p className="store-v2-label">
             {drop.productCount} product{drop.productCount !== 1 ? 's' : ''} available
           </p>
         )}
 
         {/* Countdown or status */}
-        <div className="py-3 px-3 bg-black/40 rounded border border-gray-800">
+        <div className="rounded-[14px] border border-[rgba(216,184,152,0.14)] bg-[rgba(11,9,8,0.72)] px-3 py-3">
           <DropCountdown
             startsAt={drop.startsAt}
             endsAt={drop.endsAt}
@@ -107,10 +107,10 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
         {isUpcoming && (
           <button
             onClick={handleNotify}
-            className={`w-full py-2 px-4 rounded flex items-center justify-center gap-2 transition-colors ${
+            className={`store-v2-control w-full justify-center gap-2 ${
               isNotifyChecked
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                ? 'store-v2-btn-primary'
+                : 'store-v2-btn-secondary'
             }`}
           >
             <iconify-icon icon="solar:bell-linear" width="16" height="16"></iconify-icon>
@@ -122,12 +122,12 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
         <button
           onClick={handleViewDrop}
           disabled={isEnded}
-          className={`w-full py-3 px-4 font-semibold rounded transition-colors ${
+          className={`store-v2-control w-full justify-center ${
             isActive
-              ? 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'store-v2-btn-primary'
               : isUpcoming
-                ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
-                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                ? 'store-v2-btn-secondary'
+                : 'store-v2-btn-secondary cursor-not-allowed opacity-55'
           }`}
         >
           {isActive ? 'Shop Drop Now' : isUpcoming ? 'View Products' : 'Drop Ended'}

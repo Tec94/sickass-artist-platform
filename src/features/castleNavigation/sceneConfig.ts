@@ -2,10 +2,21 @@ export type CastleRegionId = 'store' | 'ranking' | 'campaign' | 'events' | 'comm
 
 export type CastleArrowDirection = 'up' | 'right' | 'down' | 'left'
 export type CastlePopoverDirection = 'top' | 'right' | 'bottom' | 'left' | 'center'
+export type CastleCardAlign = 'start' | 'center' | 'end'
 
 export interface CastlePoint {
   x: number
   y: number
+}
+
+export interface CastleCardPlacement {
+  alignX: CastleCardAlign
+  alignY: CastleCardAlign
+  offsetX?: number
+  offsetY?: number
+  mobileOffsetX?: number
+  mobileOffsetY?: number
+  maxWidth?: number
 }
 
 export interface OuterGroundRegionConfig {
@@ -23,6 +34,7 @@ export interface OuterGroundRegionConfig {
   labelAnchor: CastlePoint
   arrowAnchor: CastlePoint
   arrowDirection: CastleArrowDirection
+  cardPlacement: CastleCardPlacement
   preview: string
   authPromptTitle?: string
   authPromptDescription?: string
@@ -71,6 +83,15 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(700, 1080),
     arrowAnchor: point(620, 980),
     arrowDirection: 'left',
+    cardPlacement: {
+      alignX: 'end',
+      alignY: 'center',
+      offsetX: -28,
+      offsetY: 10,
+      mobileOffsetX: -18,
+      mobileOffsetY: 18,
+      maxWidth: 226,
+    },
     preview: 'Drops, limited pieces, queue access, and the merch hall.',
   },
   ranking: {
@@ -88,6 +109,14 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1950, 180),
     arrowAnchor: point(2048, 260),
     arrowDirection: 'down',
+    cardPlacement: {
+      alignX: 'center',
+      alignY: 'start',
+      offsetX: 0,
+      offsetY: 18,
+      mobileOffsetY: 12,
+      maxWidth: 238,
+    },
     preview: 'Leaderboards, top tracks, elite status, and fan hierarchy.',
   },
   campaign: {
@@ -105,6 +134,15 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1900, 1250),
     arrowAnchor: point(2050, 1320),
     arrowDirection: 'up',
+    cardPlacement: {
+      alignX: 'start',
+      alignY: 'center',
+      offsetX: 28,
+      offsetY: 8,
+      mobileOffsetX: 18,
+      mobileOffsetY: 18,
+      maxWidth: 244,
+    },
     preview: 'Featured release, campaign focus, and the live callout axis.',
   },
   events: {
@@ -122,6 +160,15 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(1200, 620),
     arrowAnchor: point(1320, 710),
     arrowDirection: 'up',
+    cardPlacement: {
+      alignX: 'end',
+      alignY: 'end',
+      offsetX: -18,
+      offsetY: -18,
+      mobileOffsetX: -12,
+      mobileOffsetY: -8,
+      maxWidth: 228,
+    },
     preview: 'Tour dates, appearances, and public gatherings in the west palace block.',
   },
   community: {
@@ -139,6 +186,15 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     labelAnchor: point(2900, 860),
     arrowAnchor: point(3050, 940),
     arrowDirection: 'left',
+    cardPlacement: {
+      alignX: 'end',
+      alignY: 'center',
+      offsetX: -26,
+      offsetY: 6,
+      mobileOffsetX: -16,
+      mobileOffsetY: 18,
+      maxWidth: 246,
+    },
     preview: 'Dashboard, gallery, forum, chat, and the private member wing.',
     authPromptTitle: 'Members only',
     authPromptDescription: 'Enter the Inner Keep to reach the dashboard, gallery, forum, and live rooms.',

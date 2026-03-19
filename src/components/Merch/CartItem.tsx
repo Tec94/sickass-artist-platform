@@ -57,18 +57,18 @@ export function CartItem({
   const itemSubtotal = item.currentPrice * item.quantity
 
   return (
-    <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-lg space-y-3">
+    <div className="store-v2-surface-card store-v2-record-card space-y-4 p-5">
       {/* Product info */}
       <div className="flex justify-between items-start">
         <div>
-          <h4 className="font-semibold text-white">{item.productName}</h4>
-          <p className="text-sm text-gray-400">{item.variantName}</p>
+          <h4 className="font-[var(--font-display)] text-lg font-semibold text-[var(--store-v2-tone-text-main)]">{item.productName}</h4>
+          <p className="text-sm text-[var(--store-v2-tone-text-meta)]">{item.variantName}</p>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-cyan-400">
+          <p className="font-semibold text-[var(--store-v2-tone-accent)]">
             ${(itemSubtotal / 100).toFixed(2)}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[var(--store-v2-tone-text-muted)]">
             ${(item.currentPrice / 100).toFixed(2)} each
           </p>
         </div>
@@ -76,7 +76,7 @@ export function CartItem({
 
       {/* Price change warning */}
       {item.priceChanged && (
-        <div className="flex items-center gap-2 p-2 bg-orange-500/10 border border-orange-500/30 rounded text-orange-400 text-xs">
+        <div className="flex items-center gap-2 rounded-[12px] border border-[rgba(216,184,152,0.22)] bg-[rgba(52,33,28,0.48)] p-3 text-xs text-[var(--store-v2-tone-accent)]">
           <iconify-icon icon="solar:info-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
           <span>
             Price {item.priceChangePercentage > 0 ? 'increased' : 'decreased'} {Math.abs(item.priceChangePercentage)}%
@@ -86,7 +86,7 @@ export function CartItem({
 
       {/* Stock warning */}
       {!item.available && (
-        <div className="flex items-center gap-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+        <div className="flex items-center gap-2 rounded-[12px] border border-[rgba(160,32,48,0.32)] bg-[rgba(76,42,49,0.34)] p-3 text-xs text-[#f4c5c7]">
           <iconify-icon icon="solar:danger-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
           <span>Out of stock - Please remove or contact support</span>
         </div>
@@ -98,7 +98,7 @@ export function CartItem({
           <button
             onClick={() => handleQuantityChange(item.quantity - 1)}
             disabled={isUpdating || item.quantity <= 1}
-            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 rounded text-sm text-white transition-colors"
+            className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
           >
             −
           </button>
@@ -109,12 +109,12 @@ export function CartItem({
             value={item.quantity}
             onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
             disabled={isUpdating}
-            className="w-12 text-center px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+            className="store-v2-control w-12 text-center text-sm"
           />
           <button
             onClick={() => handleQuantityChange(item.quantity + 1)}
             disabled={isUpdating || item.quantity >= 100}
-            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 rounded text-sm text-white transition-colors"
+            className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
           >
             +
           </button>
@@ -124,7 +124,7 @@ export function CartItem({
         <button
           onClick={handleRemove}
           disabled={isRemoving || loading}
-          className="p-2 text-gray-400 hover:text-red-400 transition-colors disabled:text-gray-600"
+          className="store-v2-detail-icon-button min-h-9 min-w-9 p-2 disabled:opacity-50"
         >
           <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
         </button>
@@ -132,7 +132,7 @@ export function CartItem({
 
       {/* Error message */}
       {error && (
-        <p className="text-xs text-red-400">{error}</p>
+        <p className="text-xs text-[#f4c5c7]">{error}</p>
       )}
     </div>
   )

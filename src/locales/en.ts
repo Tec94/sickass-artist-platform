@@ -37,9 +37,12 @@ export const en = {
 
     // Navigation
     nav: {
+        exploreEstate: 'Explore Estate',
         dashboard: 'Dashboard',
         store: 'Store',
         events: 'Events',
+        campaign: 'Campaign',
+        community: 'Community',
         gallery: 'Gallery',
         forum: 'Forum',
         chat: 'Chat',

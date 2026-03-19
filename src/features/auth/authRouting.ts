@@ -1,7 +1,7 @@
 export type AuthEntryMode = 'signin' | 'signup'
 
 export const AUTH_ENTRY_PATH = '/auth'
-export const DEFAULT_AUTH_RETURN_PATH = '/dashboard'
+export const DEFAULT_AUTH_RETURN_PATH = '/community'
 
 export const sanitizeReturnTo = (returnToRaw: string | null | undefined): string => {
   if (!returnToRaw) return DEFAULT_AUTH_RETURN_PATH

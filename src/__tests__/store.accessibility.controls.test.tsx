@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { getFunctionName } from 'convex/server'
 import { Merch } from '../pages/Merch'
@@ -10,7 +11,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
-    useLocation: () => ({ pathname: '/store', search: '', hash: '' }),
+    useLocation: () => ({ pathname: '/store/browse', search: '', hash: '' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
@@ -113,7 +114,11 @@ describe('store accessibility controls', () => {
   })
 
   it('exposes labelled search/sort controls, queue control, and filters drawer dialog', () => {
-    render(<Merch />)
+    render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     const searchInput = screen.getByRole('searchbox', { name: 'store.searchProducts' })
     expect(searchInput).toBeInTheDocument()

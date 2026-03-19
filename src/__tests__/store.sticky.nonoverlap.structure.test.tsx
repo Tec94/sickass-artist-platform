@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, afterEach, afterAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { getFunctionName } from 'convex/server'
 import { Merch } from '../pages/Merch'
@@ -10,7 +11,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
-    useLocation: () => ({ pathname: '/store', search: '', hash: '' }),
+    useLocation: () => ({ pathname: '/store/browse', search: '', hash: '' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
@@ -143,7 +144,11 @@ describe('store sticky non-overlap structure', () => {
   })
 
   it('renders sticky sentinel and spacer structure when utility row enters sticky mode', () => {
-    render(<Merch />)
+    render(
+      <MemoryRouter>
+        <Merch />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByTestId('store-sticky-sentinel')).toBeInTheDocument()
     expect(screen.getByTestId('store-sticky-spacer')).toBeInTheDocument()

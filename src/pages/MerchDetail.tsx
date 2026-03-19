@@ -8,7 +8,9 @@ import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
+import { StoreSectionNav } from '../components/Merch/StoreSectionNav'
 import { useUser } from '../contexts/UserContext'
+import { buildAuthEntryHref } from '../features/auth/authRouting'
 import { ImageGallery } from '../components/Merch/ImageGallery'
 import { getMerchImagesForVariation, getMerchSlugCandidates, getOrderedColors, getVariationIndexFromColor } from '../utils/merchImages'
 import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
@@ -108,7 +110,7 @@ export function MerchDetail() {
 
   const queueReturnTo = `/store/product/${productId ?? ''}`
   const openQueueSignIn = useCallback(() => {
-    navigate(`/sign-in?returnTo=${encodeURIComponent(queueReturnTo)}`)
+    navigate(buildAuthEntryHref('signin', queueReturnTo))
   }, [navigate, queueReturnTo])
 
   const runQueueAction = useCallback(async (action: 'join' | 'claim' | 'leave') => {
@@ -232,13 +234,13 @@ export function MerchDetail() {
 
   if (product === null) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
+      <div className="store-v2-root flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
         <h1 className="mb-4 text-2xl font-bold uppercase tracking-widest">Product Not Found</h1>
         <button
-          onClick={() => navigate('/store')}
-          className="bg-red-600 px-6 py-3 text-sm font-bold uppercase tracking-widest transition-colors hover:bg-red-700"
+          onClick={() => navigate('/store/browse')}
+          className="store-v2-control store-v2-btn-primary px-6"
         >
-          Back to Shop
+          Back to Collection
         </button>
       </div>
     )
@@ -246,7 +248,7 @@ export function MerchDetail() {
 
   if (product === undefined) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
+      <div className="store-v2-root flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white">
         <iconify-icon icon="solar:spinner-linear" width="32" height="32" className="animate-spin text-red-500" />
         <p className="mt-4 text-zinc-400">Loading...</p>
       </div>
@@ -281,14 +283,14 @@ export function MerchDetail() {
 
     return (
       <MerchErrorBoundary>
-        <div className="app-surface-page min-h-screen bg-zinc-950">
+        <div className="app-surface-page store-v2-root min-h-screen bg-zinc-950">
           <FreeShippingBanner />
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="store-surface-shell rounded-3xl p-8 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{t('store.queueStatus')}</p>
-              <h1 className="mt-3 font-display text-3xl font-semibold text-slate-100">{t('store.detailLockedTitle')}</h1>
-              <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-200">{t('store.detailLockedBody')}</p>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">{queueDetail}</p>
+            <div className="store-surface-shell store-v2-detail-shell rounded-3xl p-8 text-center">
+              <p className="store-v2-label justify-center">{t('store.queueStatus')}</p>
+              <h1 className="store-v2-display mt-3 text-3xl">{t('store.detailLockedTitle')}</h1>
+              <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--store-v2-tone-text-meta)]">{t('store.detailLockedBody')}</p>
+              <p className="store-v2-detail-option-label mt-4 mb-0">{queueDetail}</p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <button
@@ -322,7 +324,7 @@ export function MerchDetail() {
                     {t('store.leaveQueue')}
                   </button>
                 ) : null}
-                <Link to="/store#store-queue-control" className="store-v2-control store-v2-btn-secondary inline-flex items-center">
+                <Link to="/store/browse#store-queue-control" className="store-v2-control store-v2-btn-secondary inline-flex items-center">
                   {t('store.backToQueueControl')}
                 </Link>
               </div>
@@ -393,18 +395,36 @@ export function MerchDetail() {
 
   return (
     <MerchErrorBoundary>
-      <div className="app-surface-page min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
+      <div className="app-surface-page store-v2-root min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
         <FreeShippingBanner />
 
         <div className="animate-fade-in mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="store-surface-shell p-6 sm:p-8">
-          <Link to="/store" className="mb-8 inline-flex items-center gap-2 text-zinc-500 transition-colors hover:text-white">
-            <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
-            Back to Shop
-          </Link>
+          <div className="store-surface-shell store-v2-detail-shell p-6 sm:p-8">
+            <div className="mb-8 flex flex-col gap-4">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div className="min-w-0">
+                  <p className="store-v2-shell-kicker">Store Detail</p>
+                  <StoreSectionNav activeId="browse" className="w-full xl:w-auto" />
+                </div>
+                <div className="store-v2-rail-actions">
+                  <Link to="/store" className="store-v2-scene-pill">
+                    <iconify-icon icon="solar:buildings-3-linear" width="16" height="16" />
+                    View Store Scene
+                  </Link>
+                  <Link to="/" className="store-v2-shell-link inline-flex items-center justify-center">
+                    Return to Grounds
+                  </Link>
+                </div>
+              </div>
 
-          <div className="flex flex-col gap-12 md:flex-row">
-            <div className="relative flex min-h-[520px] w-full items-center justify-center overflow-hidden border border-zinc-800 bg-zinc-900 p-6 md:w-3/5">
+              <Link to="/store/browse" className="store-v2-back-link">
+                <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
+                Back to Collection
+              </Link>
+            </div>
+
+            <div className="flex flex-col gap-12 md:flex-row">
+              <div className="store-v2-detail-media relative flex min-h-[520px] w-full items-center justify-center overflow-hidden p-6 md:w-3/5">
               {has3dModel ? (
                 <div className="relative flex h-full w-full max-w-[640px] flex-col">
                   <div className="absolute left-4 top-4 z-10 rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
@@ -452,140 +472,132 @@ export function MerchDetail() {
               )}
             </div>
 
-            <div className="flex w-full flex-col md:w-2/5">
-              <div className="mb-4 flex items-start justify-between">
-                <h1 className="font-display text-3xl font-bold uppercase tracking-wider leading-tight text-white md:text-5xl">
-                  {product.name}
-                </h1>
-              </div>
-
-              <div className="mb-6 flex items-center gap-2">
-                <div className="flex text-yellow-500">
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" />
-                  <iconify-icon icon="solar:star-bold" width="16" height="16" className="opacity-50" />
+              <div className="store-v2-detail-panel flex w-full flex-col md:w-2/5">
+                <div className="mb-4 flex items-start justify-between">
+                  <h1 className="font-display text-3xl font-semibold leading-tight text-[var(--store-v2-tone-text-main)] md:text-5xl">
+                    {product.name}
+                  </h1>
                 </div>
-                <span className="text-sm font-medium text-zinc-400">4.5 (500 Reviews)</span>
-              </div>
 
-              <div className="mb-8 flex items-baseline gap-4">
-                <span className="font-display text-3xl font-bold text-red-500">${(product.price / 100).toFixed(2)}</span>
-              </div>
-
-              <p className="mb-8 border-b border-zinc-800 pb-8 text-sm leading-relaxed text-zinc-400">{description}</p>
-
-              {colors.length > 0 && (
-                <div className="mb-6">
-                  <span className="mb-3 block text-xs font-bold uppercase tracking-widest text-zinc-500">
-                    Color: <span className="text-white">{selectedColor}</span>
-                  </span>
-                  <div className="flex gap-3">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => {
-                          const variant = product.variants.find((item) => item.color === color)
-                          if (variant) setSelectedVariantId(variant._id)
-                        }}
-                        className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all ${
-                          selectedColor === color ? 'border-red-600' : 'border-zinc-800 hover:border-zinc-500'
-                        }`}
-                      >
-                        <div
-                          className={`h-9 w-9 rounded-full ${
-                            color === 'Black'
-                              ? 'bg-black'
-                              : color === 'White'
-                                ? 'bg-white'
-                                : color === 'Scarlet' || color === 'Red'
-                                  ? 'bg-red-600'
-                                  : 'bg-zinc-400'
-                          }`}
-                        />
-                      </button>
-                    ))}
+                <div className="store-v2-detail-rating mb-6 flex items-center gap-2">
+                  <div className="flex text-[var(--store-v2-tone-accent-strong)]">
+                    <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                    <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                    <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                    <iconify-icon icon="solar:star-bold" width="16" height="16" />
+                    <iconify-icon icon="solar:star-bold" width="16" height="16" className="opacity-45" />
                   </div>
+                  <span className="text-sm font-medium">4.5 (500 Reviews)</span>
                 </div>
-              )}
 
-              {sizes.length > 0 && (
-                <div className="mb-8">
-                  <div className="mb-3 flex justify-between">
-                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Select Size</span>
-                    <button type="button" className="text-xs text-zinc-500 underline transition-colors hover:text-white">
-                      Size Guide
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          const variant = product.variants.find((item) => item.size === size)
-                          if (variant) setSelectedVariantId(variant._id)
-                        }}
-                        className={`border py-3 text-sm font-bold transition-all ${
-                          selectedSize === size
-                            ? 'border-white bg-white text-black'
-                            : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
+                <div className="mb-8 flex items-baseline gap-4">
+                  <span className="store-v2-detail-price">${(product.price / 100).toFixed(2)}</span>
                 </div>
-              )}
 
-              <div className="mb-8 flex items-end gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Quantity</label>
-                  <div className="flex items-center border border-zinc-800 bg-zinc-950">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="flex h-12 w-12 items-center justify-center text-lg font-light text-zinc-500 transition-colors hover:text-white"
-                    >
-                      -
-                    </button>
-                    <div className="flex h-12 w-12 items-center justify-center border-x border-zinc-800 text-base font-medium text-white">
-                      {quantity}
+                <p className="store-v2-detail-divider mb-8 border-b pb-8 text-sm leading-relaxed text-[var(--store-v2-tone-text-meta)]">{description}</p>
+
+                {colors.length > 0 && (
+                  <div className="mb-6">
+                    <span className="store-v2-detail-option-label">
+                      Color: <strong>{selectedColor}</strong>
+                    </span>
+                    <div className="flex gap-3">
+                      {colors.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => {
+                            const variant = product.variants.find((item) => item.color === color)
+                            if (variant) setSelectedVariantId(variant._id)
+                          }}
+                          className={`store-v2-detail-color-option ${selectedColor === color ? 'store-v2-detail-color-option--active' : ''}`}
+                        >
+                          <div
+                            className={`h-8 w-8 rounded-full ${
+                              color === 'Black'
+                                ? 'bg-black'
+                                : color === 'White'
+                                  ? 'bg-white'
+                                  : color === 'Scarlet' || color === 'Red'
+                                    ? 'bg-red-600'
+                                    : 'bg-zinc-400'
+                            }`}
+                          />
+                        </button>
+                      ))}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="flex h-12 w-12 items-center justify-center text-lg font-light text-zinc-500 transition-colors hover:text-white"
-                    >
-                      +
-                    </button>
                   </div>
+                )}
+
+                {sizes.length > 0 && (
+                  <div className="mb-8">
+                    <div className="mb-3 flex justify-between gap-3">
+                      <span className="store-v2-detail-option-label mb-0">
+                        Size: <strong>{selectedSize}</strong>
+                      </span>
+                      <button type="button" className="store-v2-shell-link">
+                        Size Guide
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {sizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => {
+                            const variant = product.variants.find((item) => item.size === size)
+                            if (variant) setSelectedVariantId(variant._id)
+                          }}
+                          className={`store-v2-detail-size-option py-3 text-sm font-semibold ${
+                            selectedSize === size ? 'store-v2-detail-size-option--active' : ''
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-8 flex items-end gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="store-v2-detail-option-label mb-0">Quantity</label>
+                    <div className="store-v2-detail-quantity-shell">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="store-v2-detail-quantity-button"
+                      >
+                        -
+                      </button>
+                      <div className="store-v2-detail-quantity-value">{quantity}</div>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="store-v2-detail-quantity-button"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isLoading || selectedVariant?.stock === 0}
+                    className="store-v2-control store-v2-btn-primary h-12 flex-1"
+                  >
+                    {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToggleWishlist}
+                    className={`store-v2-detail-icon-button ${isInWishlist ? 'store-v2-detail-icon-button--active' : ''}`}
+                  >
+                    <iconify-icon icon={isInWishlist ? 'solar:heart-bold' : 'solar:heart-linear'} width="20" height="20" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isLoading || selectedVariant?.stock === 0}
-                  className="h-12 flex-1 border border-zinc-700 bg-zinc-900 text-xs font-bold uppercase tracking-[0.2em] text-white transition-all hover:border-zinc-600 hover:bg-zinc-800 disabled:border-zinc-800 disabled:bg-zinc-800 disabled:text-zinc-500"
-                >
-                  {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleToggleWishlist}
-                  className={`flex h-12 w-12 items-center justify-center border transition-colors ${
-                    isInWishlist
-                      ? 'border-red-900 bg-red-900/10 text-red-600'
-                      : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white'
-                  }`}
-                >
-                  <iconify-icon icon={isInWishlist ? 'solar:heart-bold' : 'solar:heart-linear'} width="20" height="20" />
-                </button>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
