@@ -42839,7 +42839,7 @@
       "type": "frame",
       "id": "8gPx1",
       "x": 4860,
-      "y": 0,
+      "y": -179,
       "name": "Store / Desktop / Product Detail",
       "width": 1440,
       "fill": "#090807",
@@ -42850,41 +42850,6 @@
         34
       ],
       "children": [
-        {
-          "type": "frame",
-          "id": "2SFGf",
-          "name": "detailShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "F4Ve3",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "pMgd4",
-              "fill": "#a89f95",
-              "content": "Search / Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "OBZwn",
@@ -43184,7 +43149,7 @@
       "type": "frame",
       "id": "YtPjn",
       "x": 6480,
-      "y": 0,
+      "y": -179,
       "name": "Store / Desktop / Drops",
       "width": 1440,
       "fill": "#090807",
@@ -43195,41 +43160,6 @@
         34
       ],
       "children": [
-        {
-          "type": "frame",
-          "id": "AaFvU",
-          "name": "dropsShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "ckXVe",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "vHVXB",
-              "fill": "#a89f95",
-              "content": "Queue state / App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "rLWVV",
@@ -43583,41 +43513,6 @@
       "children": [
         {
           "type": "frame",
-          "id": "wPSvh",
-          "name": "cartShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "8ONvI",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "d4L8B",
-              "fill": "#a89f95",
-              "content": "Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "IN8DM",
           "name": "cartRail",
           "width": "fill_container",
@@ -43903,43 +43798,6 @@
         34
       ],
       "children": [
-        {
-          "type": "frame",
-          "id": "hrwjQ",
-          "name": "ordersShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "OkTbI",
-              "name": "ordersShellLeft",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "hapt6",
-              "name": "ordersShellRight",
-              "fill": "#a89f95",
-              "content": "Orders / Archive   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "KcPMr",
@@ -44484,43 +44342,6 @@
       "children": [
         {
           "type": "frame",
-          "id": "POPDE",
-          "name": "orderDetailShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "pDE46",
-              "name": "detailShellLeft",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "TQJ01",
-              "name": "detailShellRight",
-              "fill": "#a89f95",
-              "content": "Order #04731   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "UCC0X",
           "name": "orderDetailRail",
           "width": "fill_container",
@@ -45009,1096 +44830,9 @@
     },
     {
       "type": "frame",
-      "id": "MAe5z",
-      "x": 9720,
-      "y": 0,
-      "name": "Store / Desktop / Browse Default A",
-      "width": 1440,
-      "fill": "#090807",
-      "layout": "vertical",
-      "gap": 24,
-      "padding": [
-        30,
-        34
-      ],
-      "children": [
-        {
-          "type": "frame",
-          "id": "tQpgH",
-          "name": "browseShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "mBCE5",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "6dr9g",
-              "fill": "#a89f95",
-              "content": "Search / Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "dlgPE",
-          "name": "browseRail",
-          "width": "fill_container",
-          "height": 44,
-          "fill": "#090807",
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "56r81",
-              "name": "navBrowseA",
-              "gap": 18,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "1dEvd",
-                  "layout": "vertical",
-                  "gap": 6,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "Kuk3y",
-                      "fill": "#f4efe6",
-                      "content": "Products",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "GEO5G",
-                      "width": "fill_container",
-                      "height": 2,
-                      "fill": "#8a3040",
-                      "cornerRadius": 999
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "UTJj8",
-                  "fill": "#cab9aa",
-                  "content": "Drops / Queue",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "AZQyv",
-                  "fill": "#cab9aa",
-                  "content": "Cart",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "d0JMn",
-                  "fill": "#cab9aa",
-                  "content": "Orders",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "lU7fp",
-              "fill": "#cdbcae",
-              "content": "Curated collection   Store browse",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "pTvQ8",
-          "name": "browseHero",
-          "width": "fill_container",
-          "height": 330,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "./images/generated-1773896624768.png",
-            "mode": "fill"
-          },
-          "cornerRadius": 18,
-          "gap": 22,
-          "padding": 24,
-          "children": [
-            {
-              "type": "frame",
-              "id": "1UK4f",
-              "width": "fill_container",
-              "fill": "#100c0bd6",
-              "cornerRadius": 16,
-              "layout": "vertical",
-              "gap": 12,
-              "padding": [
-                16,
-                18
-              ],
-              "justifyContent": "end",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "vqQOZ",
-                  "fill": "#d8b898",
-                  "content": "Store / Curated collection",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "bCoCp",
-                  "fill": "#f4efe6",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Enter a private ROA collection that still shops like a real store.",
-                  "fontFamily": "Cormorant Garamond",
-                  "fontSize": 56,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "DoVTQ",
-                  "fill": "#ddd0c0",
-                  "textGrowth": "fixed-width",
-                  "width": 560,
-                  "content": "Gallery-like browsing, quieter controls, and a visible scene transition keep the page premium without adding click tax.",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "500"
-                },
-                {
-                  "type": "text",
-                  "id": "wcQRv",
-                  "fill": "#d8b898",
-                  "content": "View Store Scene",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "1hkkZ",
-              "width": 320,
-              "fill": "#130f0deb",
-              "cornerRadius": 16,
-              "layout": "vertical",
-              "gap": 12,
-              "padding": 18,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "GP9xo",
-                  "fill": "#d8b898",
-                  "content": "Featured drop",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "700"
-                },
-                {
-                  "type": "text",
-                  "id": "dacu7",
-                  "fill": "#f4efe6",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Private Suit capsule",
-                  "fontFamily": "Cormorant Garamond",
-                  "fontSize": 32,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "0cg8N",
-                  "fill": "#ddd0c0",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Queue window 8 PM CT · Priority access for reminders already entered.",
-                  "fontFamily": "Inter",
-                  "fontSize": 13,
-                  "fontWeight": "500"
-                },
-                {
-                  "type": "frame",
-                  "id": "wWnmT",
-                  "fill": "#7a2e35",
-                  "cornerRadius": 10,
-                  "padding": [
-                    10,
-                    14
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "uYdRT",
-                      "fill": "#f9efe3",
-                      "content": "Join queue",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "hL5UB",
-                  "fill": "#e2c1a0",
-                  "content": "Drop notes →",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "3mmcL",
-          "name": "browseUtility",
-          "width": "fill_container",
-          "height": 58,
-          "fill": "#100d0c",
-          "cornerRadius": 14,
-          "gap": 16,
-          "padding": [
-            12,
-            14
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "KDm18",
-              "gap": 12,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "paOIe",
-                  "width": 260,
-                  "fill": "#14100f",
-                  "cornerRadius": 10,
-                  "padding": [
-                    10,
-                    12
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "97OUe",
-                      "fill": "#8e8378",
-                      "content": "Search collection",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "STnyx",
-                  "fill": "#d3c4b4",
-                  "content": "32 pieces · Sort: Featured",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "OncHT",
-              "fill": "#d8b898",
-              "content": "Free shipping on qualifying orders · Reminder access preserved",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "600"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "UWOXq",
-          "name": "browseContent",
-          "width": "fill_container",
-          "gap": 24,
-          "children": [
-            {
-              "type": "frame",
-              "id": "So12G",
-              "name": "filterRail",
-              "width": 286,
-              "layout": "vertical",
-              "gap": 14,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "byTXl",
-                  "fill": "#d8b898",
-                  "content": "Filters",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "700"
-                },
-                {
-                  "type": "frame",
-                  "id": "EzHeP",
-                  "width": "fill_container",
-                  "fill": "#110f0e",
-                  "cornerRadius": 14,
-                  "layout": "vertical",
-                  "gap": 8,
-                  "padding": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "iEUHk",
-                      "fill": "#f2ece1",
-                      "content": "Category",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "QSabn",
-                      "fill": "#cdbcae",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Outerwear\nTops\nAccessories",
-                      "lineHeight": 1.5,
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "je0tF",
-                  "width": "fill_container",
-                  "fill": "#110f0e",
-                  "cornerRadius": 14,
-                  "layout": "vertical",
-                  "gap": 8,
-                  "padding": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "lL18s",
-                      "fill": "#f2ece1",
-                      "content": "Collection",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "xGKef",
-                      "fill": "#cdbcae",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Private Suit\nArchive Core",
-                      "lineHeight": 1.5,
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "oP5i8",
-                  "width": "fill_container",
-                  "fill": "#0d0b0a",
-                  "cornerRadius": 14,
-                  "layout": "vertical",
-                  "gap": 8,
-                  "padding": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "1JPdD",
-                      "fill": "#d8b898",
-                      "content": "Availability",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "Vl5gd",
-                      "fill": "#9f9487",
-                      "content": "Collapsed by default",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "CyQG2",
-                  "width": "fill_container",
-                  "fill": "#0d0b0a",
-                  "cornerRadius": 14,
-                  "layout": "vertical",
-                  "gap": 8,
-                  "padding": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "TfZ1C",
-                      "fill": "#d8b898",
-                      "content": "Price",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "Y5UYd",
-                      "fill": "#9f9487",
-                      "content": "Collapsed by default",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "MXNiJ",
-              "name": "productsArea",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": 16,
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "lY3Wq",
-                  "name": "rowOne",
-                  "width": "fill_container",
-                  "gap": 16,
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "r7FFk",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "unDXb",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896644095.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "da9L1",
-                          "fill": "#d8b898",
-                          "content": "Limited release",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "LhPrZ",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Private Suit Varsity Jacket",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "5WiBJ",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Outerwear · Candlelit ivory trim",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "joQZb",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "njvf0",
-                              "fill": "#f1d2b2",
-                              "content": "$284",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "eOsxN",
-                              "fill": "#a89f95",
-                              "content": "Quick view",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "yAOS3",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "JsvKQ",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896660228.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "MAriU",
-                          "fill": "#d8b898",
-                          "content": "New arrival",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "bycno",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Archive Core Vinyl Set",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "zByEX",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Objects · Black lacquer sleeve",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "eAA1D",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Dqxhi",
-                              "fill": "#f1d2b2",
-                              "content": "$142",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "teKCq",
-                              "fill": "#a89f95",
-                              "content": "Quick view",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "OQac2",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "GlPcc",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896673245.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "IS6Bv",
-                          "fill": "#d8b898",
-                          "content": "Collection piece",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "8Kc4s",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Candlelit Tee",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "9K4Ld",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Tops · Garment dyed black",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "V6xxJ",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "PWSNs",
-                              "fill": "#f1d2b2",
-                              "content": "$96",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "qsRSl",
-                              "fill": "#a89f95",
-                              "content": "Quick view",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "NY6NP",
-                  "name": "rowTwo",
-                  "width": "fill_container",
-                  "gap": 16,
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "rfD5d",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "mkqrH",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896644095.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "L99fa",
-                          "fill": "#c9b39a",
-                          "content": "Sold out",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "FWPni",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Private Suit Trouser",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "0hrrN",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Tailoring · Velvet side stripe",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "4gpVl",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ToeTr",
-                              "fill": "#f1d2b2",
-                              "content": "$188",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "mSlEV",
-                              "fill": "#a89f95",
-                              "content": "Notify me",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "uanYz",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "V9wVV",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896660228.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "CeNU6",
-                          "fill": "#d8b898",
-                          "content": "Queue locked",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "4P3PN",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Sigil Varsity Cap",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "HgKxM",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Accessories · Queue opens with drop",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Z3x9s",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Rknjh",
-                              "fill": "#f1d2b2",
-                              "content": "$62",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "KSjm1",
-                              "fill": "#a89f95",
-                              "content": "Set reminder",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "uYLGH",
-                      "width": "fill_container",
-                      "fill": "#0d0b0a",
-                      "cornerRadius": 16,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#221917"
-                      },
-                      "layout": "vertical",
-                      "gap": 12,
-                      "padding": [
-                        10,
-                        10,
-                        12,
-                        10
-                      ],
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "Tf80c",
-                          "width": "fill_container",
-                          "height": 360,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "./images/generated-1773896673245.png",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": 14
-                        },
-                        {
-                          "type": "text",
-                          "id": "yasLO",
-                          "fill": "#d8b898",
-                          "content": "Archive core",
-                          "fontFamily": "Inter",
-                          "fontSize": 11,
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "KAvr8",
-                          "fill": "#f4efe6",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Embroidered Veil Scarf",
-                          "fontFamily": "Cormorant Garamond",
-                          "fontSize": 30,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "Gt1IJ",
-                          "fill": "#cdbcae",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Accessories · Smoked charcoal weave",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "8i3fI",
-                          "width": "fill_container",
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "u1nR0",
-                              "fill": "#f1d2b2",
-                              "content": "$118",
-                              "fontFamily": "Inter",
-                              "fontSize": 14,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "LvaAb",
-                              "fill": "#a89f95",
-                              "content": "Quick view",
-                              "fontFamily": "Inter",
-                              "fontSize": 12,
-                              "fontWeight": "600"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "xWOMe",
-      "x": 12960,
-      "y": 0,
+      "x": 9720,
+      "y": -179,
       "name": "Store / Mobile / Browse",
       "width": 430,
       "fill": "#090807",
@@ -46109,41 +44843,6 @@
         18
       ],
       "children": [
-        {
-          "type": "frame",
-          "id": "wy1UX",
-          "name": "mobileShell",
-          "width": "fill_container",
-          "height": 56,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            12,
-            14
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "kp4j9",
-              "fill": "#f2ece1",
-              "content": "ROA   Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "600"
-            },
-            {
-              "type": "text",
-              "id": "fKTMe",
-              "fill": "#a89f95",
-              "content": "Cart · 3",
-              "fontFamily": "Inter",
-              "fontSize": 11,
-              "fontWeight": "600"
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "7lmAg",
@@ -46242,7 +44941,7 @@
           "layout": "vertical",
           "gap": 8,
           "padding": 18,
-          "justifyContent": "end",
+          "justifyContent": "space_around",
           "children": [
             {
               "type": "text",
@@ -46589,8 +45288,8 @@
     {
       "type": "frame",
       "id": "08BTB",
-      "x": 11340,
-      "y": 0,
+      "x": 8100,
+      "y": -179,
       "name": "Store / Desktop / Browse Default B",
       "width": 1440,
       "fill": "#090807",
@@ -46601,41 +45300,6 @@
         34
       ],
       "children": [
-        {
-          "type": "frame",
-          "id": "c8F9W",
-          "name": "browseShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "xnnfF",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "PJd8N",
-              "fill": "#a89f95",
-              "content": "Search / Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "tffBA",
@@ -46755,6 +45419,7 @@
               "type": "frame",
               "id": "ZHkxq",
               "width": "fill_container",
+              "height": "fill_container",
               "fill": "#100c0bd6",
               "cornerRadius": 16,
               "layout": "vertical",
@@ -46763,7 +45428,7 @@
                 16,
                 18
               ],
-              "justifyContent": "end",
+              "justifyContent": "center",
               "children": [
                 {
                   "type": "text",
@@ -46814,11 +45479,13 @@
               "type": "frame",
               "id": "YknQ1",
               "width": 320,
+              "height": 282,
               "fill": "#130f0deb",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 12,
               "padding": 18,
+              "justifyContent": "center",
               "children": [
                 {
                   "type": "text",
@@ -47710,41 +46377,6 @@
       "children": [
         {
           "type": "frame",
-          "id": "h4lru",
-          "name": "browseShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "oHWlW",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "oBbaO",
-              "fill": "#a89f95",
-              "content": "Search / Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "1jJIA",
           "name": "browseRail",
           "width": "fill_container",
@@ -47840,11 +46472,13 @@
           "cornerRadius": 18,
           "gap": 22,
           "padding": 24,
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
               "id": "BRO95",
               "width": "fill_container",
+              "height": 282,
               "fill": "#100c0bd6",
               "cornerRadius": 16,
               "layout": "vertical",
@@ -47853,16 +46487,31 @@
                 16,
                 18
               ],
-              "justifyContent": "end",
               "children": [
                 {
-                  "type": "text",
-                  "id": "mBiLJ",
-                  "fill": "#d8b898",
-                  "content": "Store / Curated collection",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
+                  "type": "frame",
+                  "id": "EjOIb",
+                  "name": "Frame 2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#ffffff00",
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mBiLJ",
+                      "x": 0,
+                      "y": 0,
+                      "fill": "#d8b898",
+                      "textGrowth": "fixed-width",
+                      "width": "fit_content(182)",
+                      "content": "Store / Curated collection",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
                 },
                 {
                   "type": "text",
@@ -47870,7 +46519,7 @@
                   "fill": "#f4efe6",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Enter a private ROA collection that still shops like a real store.",
+                  "content": "A private collection that shops \nlike a real store.",
                   "fontFamily": "Cormorant Garamond",
                   "fontSize": 56,
                   "fontWeight": "600"
@@ -47901,20 +46550,38 @@
               "type": "frame",
               "id": "jJHpF",
               "width": 320,
+              "height": "fill_container",
               "fill": "#130f0deb",
               "cornerRadius": 16,
               "layout": "vertical",
               "gap": 12,
               "padding": 18,
+              "justifyContent": "space_between",
               "children": [
                 {
-                  "type": "text",
-                  "id": "qws6u",
-                  "fill": "#d8b898",
-                  "content": "Featured drop",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "700"
+                  "type": "frame",
+                  "id": "ByblV",
+                  "name": "Frame 2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 29,
+                  "fill": "#ffffff00",
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "pIt4N",
+                      "x": 5,
+                      "y": 0.5,
+                      "fill": "#d8b898",
+                      "textGrowth": "fixed-width",
+                      "width": "fit_content(148)",
+                      "content": "Featured drop",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
                 },
                 {
                   "type": "text",
@@ -47960,13 +46627,31 @@
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "BgqLE",
-                  "fill": "#e2c1a0",
-                  "content": "Drop notes →",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
+                  "type": "frame",
+                  "id": "F61dP",
+                  "name": "Frame 2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 21,
+                  "fill": "#ffffff00",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BgqLE",
+                      "fill": "#e2c1a0",
+                      "textGrowth": "fixed-width-height",
+                      "width": 103,
+                      "height": "fill_container",
+                      "content": "Drop notes →",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -48803,41 +47488,6 @@
       "children": [
         {
           "type": "frame",
-          "id": "Hdyk6",
-          "name": "browseShell",
-          "width": "fill_container",
-          "height": 68,
-          "fill": "#0f0d0c",
-          "cornerRadius": 12,
-          "padding": [
-            14,
-            22
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "pFbJs",
-              "fill": "#f2ece1",
-              "content": "ROA   Explore Estate   Store   Events   Ranking   Campaign   Community",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "500"
-            },
-            {
-              "type": "text",
-              "id": "8Ov6n",
-              "fill": "#a89f95",
-              "content": "Search / Cart · 3   App Mode / Store",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "NNGIm",
           "name": "browseRail",
           "width": "fill_container",
@@ -48938,6 +47588,7 @@
               "type": "frame",
               "id": "7wStn",
               "width": "fill_container",
+              "height": "fill_container",
               "fill": "#100c0bd6",
               "cornerRadius": 16,
               "layout": "vertical",
@@ -48994,6 +47645,7 @@
               "type": "frame",
               "id": "AoOqD",
               "width": 320,
+              "height": "fill_container",
               "fill": "#1b0f12ef",
               "cornerRadius": 16,
               "layout": "vertical",

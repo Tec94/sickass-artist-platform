@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DropCountdown } from './DropCountdown'
 import { Doc, Id } from '../../../convex/_generated/dataModel'
 import { useState } from 'react'
+import { getStoreDesignImage } from '../../features/store/storeDesignAssets'
 
 interface DropCardProps {
   drop: Doc<'merchDrops'> & {
@@ -20,6 +21,10 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
   const isUpcoming = drop.startsAt > now
   const isActive = now >= drop.startsAt && now < drop.endsAt
   const isEnded = now >= drop.endsAt
+  const fallbackImageIndex = Math.abs(
+    Array.from(`${drop._id}${drop.name}`).reduce((sum, character) => sum + character.charCodeAt(0), 0),
+  )
+  const imageSrc = drop.imageUrl || getStoreDesignImage(fallbackImageIndex)
 
   const handleNotify = () => {
     setIsNotifyChecked(!isNotifyChecked)
@@ -45,17 +50,14 @@ export function DropCard({ drop, serverTime }: DropCardProps) {
             : 'border-[rgba(216,184,152,0.12)]'
       }`}
     >
-      {/* Background image */}
-      {drop.imageUrl && (
-        <div className="absolute inset-0 z-0 opacity-40">
-          <img
-            src={drop.imageUrl}
-            alt={drop.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(14,10,8,0.35)] to-[rgba(10,8,7,0.94)]" />
-        </div>
-      )}
+      <div className="absolute inset-0 z-0 opacity-45">
+        <img
+          src={imageSrc}
+          alt={drop.name}
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(14,10,8,0.35)] to-[rgba(10,8,7,0.94)]" />
+      </div>
 
       {/* Content */}
       <div className="relative z-10 space-y-4 p-6">

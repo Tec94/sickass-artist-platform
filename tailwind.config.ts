@@ -7,6 +7,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        ink: {
+          DEFAULT: '#1C1B1A',
+          soft: 'rgba(28, 27, 26, 0.15)',
+        },
+        parchment: {
+          DEFAULT: '#F4EFE6',
+        },
+        vellum: {
+          DEFAULT: '#FCFBF9',
+        },
+        muted: {
+          DEFAULT: '#8E7D72',
+        },
         brand: {
           500: cssVar('--color-accent-brand'),
           600: cssVar('--color-accent-brand-hover'),

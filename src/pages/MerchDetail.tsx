@@ -8,10 +8,11 @@ import { useAutoRetry } from '../hooks/useAutoRetry'
 import { parseConvexError, logError } from '../utils/convexErrorHandler'
 import { showToast } from '../lib/toast'
 import { FreeShippingBanner } from '../components/Merch/FreeShippingBanner'
-import { StoreSectionNav } from '../components/Merch/StoreSectionNav'
+import { StoreTopRail } from '../components/Merch/StoreTopRail'
 import { useUser } from '../contexts/UserContext'
 import { buildAuthEntryHref } from '../features/auth/authRouting'
 import { ImageGallery } from '../components/Merch/ImageGallery'
+import { STORE_DESIGN_HERO_IMAGE } from '../features/store/storeDesignAssets'
 import { getMerchImagesForVariation, getMerchSlugCandidates, getOrderedColors, getVariationIndexFromColor } from '../utils/merchImages'
 import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
 import { useTranslation } from '../hooks/useTranslation'
@@ -398,33 +399,44 @@ export function MerchDetail() {
       <div className="app-surface-page store-v2-root min-h-screen bg-zinc-950" style={{ fontFamily: 'var(--font-store, ui-monospace, monospace)' }}>
         <FreeShippingBanner />
 
-        <div className="animate-fade-in mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="store-surface-shell store-v2-detail-shell p-6 sm:p-8">
-            <div className="mb-8 flex flex-col gap-4">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                <div className="min-w-0">
-                  <p className="store-v2-shell-kicker">Store Detail</p>
-                  <StoreSectionNav activeId="browse" className="w-full xl:w-auto" />
-                </div>
-                <div className="store-v2-rail-actions">
-                  <Link to="/store" className="store-v2-scene-pill">
-                    <iconify-icon icon="solar:buildings-3-linear" width="16" height="16" />
-                    View Store Scene
-                  </Link>
-                  <Link to="/" className="store-v2-shell-link inline-flex items-center justify-center">
-                    Return to Grounds
-                  </Link>
-                </div>
-              </div>
+        <div className="store-v2-page-frame animate-fade-in">
+          <StoreTopRail
+            activeId="browse"
+            actions={[
+              {
+                label: 'View Store Scene',
+                to: '/store',
+                icon: 'solar:buildings-3-linear',
+                variant: 'pill',
+              },
+              {
+                label: 'Return to Grounds',
+                to: '/',
+              },
+            ]}
+          />
 
-              <Link to="/store/browse" className="store-v2-back-link">
+          <section
+            className="store-v2-route-hero store-v2-route-hero--compact"
+            style={{
+              backgroundImage: `linear-gradient(118deg, rgba(9,7,6,0.18), rgba(9,7,6,0.74)), url(${STORE_DESIGN_HERO_IMAGE})`,
+            }}
+          >
+            <div className="store-v2-route-hero__content">
+              <Link to="/store/browse" className="store-v2-back-link mb-4">
                 <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
                 Back to Collection
               </Link>
+              <p className="store-v2-label">Product detail / {product.category}</p>
+              <h1 className="store-v2-route-title store-v2-route-title--compact">{product.name}</h1>
+              <p className="store-v2-route-copy">
+                Gallery-led purchasing keeps large imagery first, then size, stock, and action without burying the collection context.
+              </p>
             </div>
+          </section>
 
-            <div className="flex flex-col gap-12 md:flex-row">
-              <div className="store-v2-detail-media relative flex min-h-[520px] w-full items-center justify-center overflow-hidden p-6 md:w-3/5">
+          <div className="store-v2-page-columns store-v2-page-columns--detail">
+            <div className="store-v2-detail-media relative flex min-h-[520px] w-full items-center justify-center overflow-hidden p-6">
               {has3dModel ? (
                 <div className="relative flex h-full w-full max-w-[640px] flex-col">
                   <div className="absolute left-4 top-4 z-10 rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
@@ -472,14 +484,17 @@ export function MerchDetail() {
               )}
             </div>
 
-              <div className="store-v2-detail-panel flex w-full flex-col md:w-2/5">
-                <div className="mb-4 flex items-start justify-between">
-                  <h1 className="font-display text-3xl font-semibold leading-tight text-[var(--store-v2-tone-text-main)] md:text-5xl">
+            <aside className="store-v2-detail-panel store-v2-surface-card store-v2-detail-purchase-card">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="store-v2-label">{product.category}</p>
+                  <h2 className="font-display mt-2 text-3xl font-semibold leading-tight text-[var(--store-v2-tone-text-main)] md:text-5xl">
                     {product.name}
-                  </h1>
+                  </h2>
                 </div>
+              </div>
 
-                <div className="store-v2-detail-rating mb-6 flex items-center gap-2">
+              <div className="store-v2-detail-rating mb-6 flex items-center gap-2">
                   <div className="flex text-[var(--store-v2-tone-accent-strong)]">
                     <iconify-icon icon="solar:star-bold" width="16" height="16" />
                     <iconify-icon icon="solar:star-bold" width="16" height="16" />
@@ -490,114 +505,122 @@ export function MerchDetail() {
                   <span className="text-sm font-medium">4.5 (500 Reviews)</span>
                 </div>
 
-                <div className="mb-8 flex items-baseline gap-4">
-                  <span className="store-v2-detail-price">${(product.price / 100).toFixed(2)}</span>
-                </div>
-
-                <p className="store-v2-detail-divider mb-8 border-b pb-8 text-sm leading-relaxed text-[var(--store-v2-tone-text-meta)]">{description}</p>
-
-                {colors.length > 0 && (
-                  <div className="mb-6">
-                    <span className="store-v2-detail-option-label">
-                      Color: <strong>{selectedColor}</strong>
-                    </span>
-                    <div className="flex gap-3">
-                      {colors.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => {
-                            const variant = product.variants.find((item) => item.color === color)
-                            if (variant) setSelectedVariantId(variant._id)
-                          }}
-                          className={`store-v2-detail-color-option ${selectedColor === color ? 'store-v2-detail-color-option--active' : ''}`}
-                        >
-                          <div
-                            className={`h-8 w-8 rounded-full ${
-                              color === 'Black'
-                                ? 'bg-black'
-                                : color === 'White'
-                                  ? 'bg-white'
-                                  : color === 'Scarlet' || color === 'Red'
-                                    ? 'bg-red-600'
-                                    : 'bg-zinc-400'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {sizes.length > 0 && (
-                  <div className="mb-8">
-                    <div className="mb-3 flex justify-between gap-3">
-                      <span className="store-v2-detail-option-label mb-0">
-                        Size: <strong>{selectedSize}</strong>
-                      </span>
-                      <button type="button" className="store-v2-shell-link">
-                        Size Guide
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {sizes.map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => {
-                            const variant = product.variants.find((item) => item.size === size)
-                            if (variant) setSelectedVariantId(variant._id)
-                          }}
-                          className={`store-v2-detail-size-option py-3 text-sm font-semibold ${
-                            selectedSize === size ? 'store-v2-detail-size-option--active' : ''
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mb-8 flex items-end gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="store-v2-detail-option-label mb-0">Quantity</label>
-                    <div className="store-v2-detail-quantity-shell">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="store-v2-detail-quantity-button"
-                      >
-                        -
-                      </button>
-                      <div className="store-v2-detail-quantity-value">{quantity}</div>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(quantity + 1)}
-                        className="store-v2-detail-quantity-button"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    disabled={isLoading || selectedVariant?.stock === 0}
-                    className="store-v2-control store-v2-btn-primary h-12 flex-1"
-                  >
-                    {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleToggleWishlist}
-                    className={`store-v2-detail-icon-button ${isInWishlist ? 'store-v2-detail-icon-button--active' : ''}`}
-                  >
-                    <iconify-icon icon={isInWishlist ? 'solar:heart-bold' : 'solar:heart-linear'} width="20" height="20" />
-                  </button>
-                </div>
+              <div className="mb-8 flex items-baseline gap-4">
+                <span className="store-v2-detail-price">${(product.price / 100).toFixed(2)}</span>
               </div>
-            </div>
+
+              <p className="store-v2-detail-divider mb-8 border-b pb-8 text-sm leading-relaxed text-[var(--store-v2-tone-text-meta)]">{description}</p>
+
+              {colors.length > 0 ? (
+                <div className="mb-6">
+                  <span className="store-v2-detail-option-label">
+                    Color: <strong>{selectedColor}</strong>
+                  </span>
+                  <div className="flex gap-3">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => {
+                          const variant = product.variants.find((item) => item.color === color)
+                          if (variant) setSelectedVariantId(variant._id)
+                        }}
+                        className={`store-v2-detail-color-option ${selectedColor === color ? 'store-v2-detail-color-option--active' : ''}`}
+                      >
+                        <div
+                          className={`h-8 w-8 rounded-full ${
+                            color === 'Black'
+                              ? 'bg-black'
+                              : color === 'White'
+                                ? 'bg-white'
+                                : color === 'Scarlet' || color === 'Red'
+                                  ? 'bg-red-600'
+                                  : 'bg-zinc-400'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {sizes.length > 0 ? (
+                <div className="mb-8">
+                  <div className="mb-3 flex justify-between gap-3">
+                    <span className="store-v2-detail-option-label mb-0">
+                      Size: <strong>{selectedSize}</strong>
+                    </span>
+                    <button type="button" className="store-v2-shell-link">
+                      Size Guide
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          const variant = product.variants.find((item) => item.size === size)
+                          if (variant) setSelectedVariantId(variant._id)
+                        }}
+                        className={`store-v2-detail-size-option py-3 text-sm font-semibold ${
+                          selectedSize === size ? 'store-v2-detail-size-option--active' : ''
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mb-6 flex items-end gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="store-v2-detail-option-label mb-0">Quantity</label>
+                  <div className="store-v2-detail-quantity-shell">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="store-v2-detail-quantity-button"
+                    >
+                      -
+                    </button>
+                    <div className="store-v2-detail-quantity-value">{quantity}</div>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="store-v2-detail-quantity-button"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={isLoading || selectedVariant?.stock === 0}
+                  className="store-v2-control store-v2-btn-primary h-12 flex-1"
+                >
+                  {isLoading ? 'Adding...' : selectedVariant?.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToggleWishlist}
+                  className={`store-v2-detail-icon-button ${isInWishlist ? 'store-v2-detail-icon-button--active' : ''}`}
+                >
+                  <iconify-icon icon={isInWishlist ? 'solar:heart-bold' : 'solar:heart-linear'} width="20" height="20" />
+                </button>
+              </div>
+
+              <div className="store-v2-detail-links">
+                <Link to="/store" className="store-v2-shell-link">
+                  View Store Scene
+                </Link>
+                <Link to="/store/drops" className="store-v2-shell-link">
+                  Drop Notes
+                </Link>
+              </div>
+            </aside>
           </div>
         </div>
       </div>

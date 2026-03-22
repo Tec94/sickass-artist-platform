@@ -53,7 +53,7 @@ const point = (x: number, y: number): CastlePoint => ({ x, y })
 
 export const OUTER_GROUNDS_SCENE: CastleSceneConfig = {
   id: 'outer-grounds',
-  image: '/outergrounds-base.png',
+  image: '/nav_scenes/outergrounds-base.png',
   mobileHint: 'Swipe across the grounds or open the estate map.',
   width: 4096,
   height: 2304,

@@ -3,7 +3,8 @@ import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useState, useEffect } from 'react'
 import { DropCard } from '../components/Merch/DropCard'
-import { StoreSectionNav } from '../components/Merch/StoreSectionNav'
+import { StoreTopRail } from '../components/Merch/StoreTopRail'
+import { STORE_DESIGN_HERO_IMAGE } from '../features/store/storeDesignAssets'
 import { motion } from 'framer-motion'
 
 export function DropsPage() {
@@ -29,7 +30,7 @@ export function DropsPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const now = Date.now()
+  const now = serverTime ?? Date.now()
 
   const displayDrops = {
     active: activeDrops?.filter(d => now >= d.startsAt && now < d.endsAt) || [],
@@ -45,92 +46,78 @@ export function DropsPage() {
 
   return (
     <div className="app-surface-page store-v2-root min-h-screen bg-black">
-      <div className="mx-auto w-full max-w-[1700px] px-4 py-4 sm:px-6 lg:px-8">
-        <section className="store-surface-shell store-v2-shell motion-panel-enter p-4 lg:p-5">
-          <header className="space-y-4">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-              <div className="min-w-0">
-                <p className="store-v2-shell-kicker">Store App Mode</p>
-                <StoreSectionNav activeId="drops" className="w-full xl:w-auto" />
-              </div>
-              <div className="store-v2-rail-actions">
-                <button type="button" onClick={() => navigate('/store')} className="store-v2-scene-pill">
-                  <iconify-icon icon="solar:buildings-3-linear" width="16" height="16"></iconify-icon>
-                  View Store Scene
-                </button>
-                <button type="button" onClick={() => navigate('/store/browse')} className="store-v2-shell-link">
-                  Browse Collection
-                </button>
-              </div>
-            </div>
+      <div className="store-v2-page-frame">
+        <StoreTopRail
+          activeId="drops"
+          actions={[
+            {
+              label: 'View Store Scene',
+              onClick: () => navigate('/store'),
+              icon: 'solar:buildings-3-linear',
+              variant: 'pill',
+            },
+            {
+              label: 'Browse Collection',
+              onClick: () => navigate('/store/browse'),
+            },
+          ]}
+        />
 
-            <section className="store-v2-page-hero p-5 lg:p-6">
-              <div className="store-v2-page-hero-grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
-                <div className="store-v2-page-hero-copy">
-                  <div className="store-v2-hero-copy-panel">
-                    <p className="store-v2-label">Drop calendar</p>
-                    <h1 className="store-v2-page-title">Timed releases, queue windows, and limited collection staging.</h1>
-                    <p className="store-v2-page-copy">
-                      Browse the release calendar without leaving the Store system. Active drops stay operational, upcoming drops stay editorial, and every path still routes directly back into the working collection.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="store-v2-page-hero-panel">
-                  <p className="store-v2-label">Current floor status</p>
-                  <div className="store-v2-page-stats mt-4">
-                    <div className="store-v2-page-stat">
-                      <span className="store-v2-label">Live now</span>
-                      <span className="store-v2-page-stat-value">{displayDrops.active.length}</span>
-                      <p className="store-v2-page-stat-copy">Drops currently accepting entry.</p>
-                    </div>
-                    <div className="store-v2-page-stat">
-                      <span className="store-v2-label">Upcoming</span>
-                      <span className="store-v2-page-stat-value">{displayDrops.upcoming.length}</span>
-                      <p className="store-v2-page-stat-copy">Scheduled releases waiting in the wing.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </header>
-
-          <div className="mt-5 space-y-6">
-            <div className="store-v2-segmented-filter">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`store-v2-segmented-filter-button ${activeTab === tab.id ? 'store-v2-segmented-filter-button--active' : ''}`}
-                >
-                  <span>{tab.label}</span>
-                  {tab.count > 0 ? <span className="store-v2-pill">{tab.count}</span> : null}
-                </button>
-              ))}
-            </div>
-
-            {displayDrops[activeTab].length === 0 ? (
-              <div className="store-v2-surface-card store-v2-empty-state">
-                <p className="store-v2-page-title text-center !text-[1.8rem]">No {activeTab} drops right now.</p>
-                <p className="store-v2-page-copy text-center">Check back soon for more exclusive staging and timed collection releases.</p>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
-              >
-                {displayDrops[activeTab].map(drop => (
-                  <DropCard
-                    key={drop._id}
-                    drop={drop}
-                    serverTime={serverTime}
-                  />
-                ))}
-              </motion.div>
-            )}
+        <section
+          className="store-v2-route-hero"
+          style={{
+            backgroundImage: `linear-gradient(118deg, rgba(9,7,6,0.24), rgba(9,7,6,0.8)), url(${STORE_DESIGN_HERO_IMAGE})`,
+          }}
+        >
+          <div className="store-v2-route-hero__content">
+            <p className="store-v2-label">Drops / Queue window</p>
+            <h1 className="store-v2-route-title">
+              Private releases stay premium, not chaotic.
+            </h1>
+            <p className="store-v2-route-copy">
+              One featured panel carries urgency. Tabs and release cards keep the rest of the page legible for real shopping decisions.
+            </p>
           </div>
         </section>
+
+        <section className="store-v2-status-strip">
+          <div className="store-v2-status-strip__group">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`store-v2-segmented-filter-button ${activeTab === tab.id ? 'store-v2-segmented-filter-button--active' : ''}`}
+              >
+                <span>{tab.label}</span>
+                {tab.count > 0 ? <span className="store-v2-pill">{tab.count}</span> : null}
+              </button>
+            ))}
+          </div>
+          <span className="store-v2-meta">
+            Queue admission, reminder entry, and release timing stay in one predictable layer.
+          </span>
+        </section>
+
+        {displayDrops[activeTab].length === 0 ? (
+          <div className="store-v2-surface-card store-v2-empty-state">
+            <p className="store-v2-page-title text-center !text-[1.8rem]">No {activeTab} drops right now.</p>
+            <p className="store-v2-page-copy text-center">Check back soon for more exclusive staging and timed collection releases.</p>
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {displayDrops[activeTab].map((drop) => (
+              <DropCard
+                key={drop._id}
+                drop={drop}
+                serverTime={serverTime}
+              />
+            ))}
+          </motion.div>
+        )}
       </div>
     </div>
   )

@@ -6,10 +6,10 @@ import { api } from '../../convex/_generated/api'
 import { Id, type Doc } from '../../convex/_generated/dataModel'
 import { MerchProductCard } from '../components/Merch/MerchProductCard'
 import { StoreReminderModal } from '../components/Merch/StoreReminderModal'
-import { StoreSectionNav } from '../components/Merch/StoreSectionNav'
+import { StoreTopRail } from '../components/Merch/StoreTopRail'
 import { useTranslation } from '../hooks/useTranslation'
 import { buildAuthEntryHref } from '../features/auth/authRouting'
-import { STORE_SCENE } from '../features/castleNavigation/storeSceneConfig'
+import { STORE_DESIGN_HERO_IMAGE } from '../features/store/storeDesignAssets'
 import { getMerchSlugCandidates } from '../utils/merchImages'
 import { resolveMerchManifestEntries } from '../utils/merchManifestClient'
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
@@ -96,7 +96,7 @@ const INITIAL_COLLAPSED_STATE: Record<FilterSectionKey, boolean> = {
   category: false,
   availability: true,
   collection: false,
-  price: true,
+  price: false,
 }
 
 function formatClockTime(timestamp: number) {
@@ -715,6 +715,9 @@ export function Merch() {
 
   const reminderCtaLabel = upcomingDrop ? t('store.setReminder') : t('store.notifyNextDrop')
   const resultsLabel = `${filteredProducts.length} ${t('store.results')}`
+  const featuredDropSummary = upcomingDrop
+    ? `Queue opens ${upcomingDrop.localDateTime}.`
+    : 'No drop is scheduled yet. Get notified as soon as the next drop is announced.'
 
   const filterPanel = (
     <div className="store-v2-sidebar" data-testid="store-sidebar-panel">
@@ -812,7 +815,7 @@ export function Merch() {
                 step={PRICE_STEP}
                 value={filters.minPrice}
                 onChange={(event) => setPriceRange(Number(event.target.value), filters.maxPrice)}
-                className="store-v2-range-input"
+                className="store-v2-range-input store-v2-range-input--min"
                 aria-label={t('store.minPriceLabel')}
               />
               <input
@@ -822,7 +825,7 @@ export function Merch() {
                 step={PRICE_STEP}
                 value={filters.maxPrice}
                 onChange={(event) => setPriceRange(filters.minPrice, Number(event.target.value))}
-                className="store-v2-range-input"
+                className="store-v2-range-input store-v2-range-input--max"
                 aria-label={t('store.maxPriceLabel')}
               />
             </div>
@@ -904,297 +907,279 @@ export function Merch() {
 
   return (
     <div className={`app-surface-page store-v2-root ${motionClassName}`}>
-      <div className="mx-auto w-full max-w-[1700px] px-4 py-4 sm:px-6 lg:px-8">
-        <section className="store-surface-shell store-v2-shell motion-panel-enter p-4 lg:p-5">
-          <header className="space-y-4">
-            <div className="space-y-3">
-              <p className="store-v2-shell-kicker">Store App Mode</p>
-              <div className="store-v2-browse-rail">
-                <StoreSectionNav activeId="browse" className="w-full xl:w-auto" />
-                <div className="store-v2-rail-actions">
+      <div className="store-v2-page-frame">
+        <StoreTopRail
+          activeId="browse"
+          actions={[
+            {
+              label: 'View Store Scene',
+              onClick: () => navigate('/store'),
+              icon: 'solar:buildings-3-linear',
+              variant: 'pill',
+            },
+            {
+              label: 'Return to Grounds',
+              onClick: () => navigate('/'),
+              icon: 'solar:alt-arrow-left-linear',
+            },
+          ]}
+        />
+
+        <section
+          className="store-v2-browse-hero"
+          style={{
+            backgroundImage: `linear-gradient(118deg, rgba(7,8,9,0.24), rgba(7,8,9,0.72)), url(${STORE_DESIGN_HERO_IMAGE})`,
+          }}
+        >
+          <div className="store-v2-browse-hero__grid">
+            <div className="store-v2-showcase-panel">
+              <p className="store-v2-label">Store / Curated collection</p>
+              <h1 className="store-v2-route-title">Enter a private ROA collection that still shops like a real store.</h1>
+              <p className="store-v2-route-copy">
+                Gallery-like browsing and quieter controls keep the collection premium without adding click tax.
+              </p>
+            </div>
+
+            <aside className="store-v2-drop-module">
+              <p className="store-v2-label">Featured drop</p>
+              {upcomingDrop ? (
+                <>
+                  <h2 className="store-v2-feature-heading">{upcomingDrop.name}</h2>
+                  <p className="sr-only">
+                    {upcomingDrop.localDateTime} ({upcomingDrop.timezone})
+                  </p>
+                  <p className="store-v2-drop-description">{featuredDropSummary}</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="store-v2-feature-heading">Private Suit capsule</h2>
+                  <p className="sr-only">{t('store.noUpcomingDropGeneric')}</p>
+                  <p className="store-v2-drop-description">{featuredDropSummary}</p>
+                </>
+              )}
+
+              <div className="store-v2-drop-status">
+                <iconify-icon icon="solar:flash-circle-linear" width="16" height="16"></iconify-icon>
+                {queueControl.statusLabel}
+              </div>
+
+              <div className="store-v2-drop-actions">
+                <button
+                  type="button"
+                  onClick={() => setIsReminderModalOpen(true)}
+                  className="store-v2-control store-v2-btn-primary"
+                >
+                  {reminderCtaLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/store/drops')}
+                  className="store-v2-control store-v2-btn-secondary"
+                >
+                  {t('store.learnAboutDrop')}
+                </button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <div className="store-v2-page-columns store-v2-page-columns--browse">
+          <aside className="hidden lg:sticky lg:top-24 lg:block lg:h-fit" aria-label={t('store.filtersLabel')}>
+            {filterPanel}
+          </aside>
+
+          <main className="min-w-0">
+            <div ref={stickySentinelRef} className="h-px w-full" data-testid="store-sticky-sentinel" aria-hidden="true" />
+            {isUtilitySticky && utilityHeight > 0 ? (
+              <div style={{ height: utilityHeight }} data-testid="store-sticky-spacer" aria-hidden="true" />
+            ) : null}
+
+            <div
+              ref={utilityRowRef}
+              className="store-utility-row store-v2-utility sticky top-0 z-50"
+              data-sticky={isUtilitySticky ? 'true' : 'false'}
+            >
+              <div className="store-v2-utility-top">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileFilters(true)}
+                  className="store-v2-control store-v2-btn-secondary lg:hidden"
+                >
+                  {t('store.filtersLabel')}
+                </button>
+
+                <label className="store-v2-search-wrap">
+                  <span className="sr-only">{t('store.searchProducts')}</span>
+                  <iconify-icon
+                    icon="solar:magnifer-linear"
+                    class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"
+                  ></iconify-icon>
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder={t('store.searchProducts')}
+                    className="store-v2-control store-v2-search"
+                    aria-label={t('store.searchProducts')}
+                  />
+                </label>
+
+                <label className="store-v2-sort-wrap">
+                  <span className="store-v2-sort-label">{t('store.sortBy')}:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(event) => setSortBy(event.target.value as StoreSortOption)}
+                    className="store-v2-control store-v2-select"
+                    aria-label={t('store.sortBy')}
+                  >
+                    {SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </option>
+                    ))}
+                  </select>
+                  <iconify-icon
+                    icon="solar:alt-arrow-down-linear"
+                    class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"
+                  ></iconify-icon>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/store/cart')}
+                  className="store-v2-control store-v2-cart-button"
+                  aria-label={`${t('store.cartButton')} (${itemCount})`}
+                >
+                  <iconify-icon icon="solar:bag-3-linear" width="18" height="18"></iconify-icon>
+                  {t('store.cartButton')}
+                  <span className="store-v2-count-badge">{itemCount}</span>
+                </button>
+
+                <p className="store-v2-results" aria-live="polite">
+                  {resultsLabel}
+                </p>
+              </div>
+
+              <div id="store-queue-control" className="store-v2-queue-row">
+                <div className="store-v2-queue-copy">
+                  <span className="store-v2-pill">{t('store.queueStatus')}</span>
+                  <div className="store-v2-queue-text">
+                    <p className="store-v2-label truncate">{queueControl.statusLabel}</p>
+                    <p className="store-v2-meta truncate">{queueControl.detailLabel}</p>
+                  </div>
+                  <span className="store-v2-shipping-note">{t('store.freeShippingPromo')}</span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
                   <button
                     type="button"
-                    onClick={() => navigate('/store')}
-                    className="store-v2-scene-pill"
+                    onClick={handleQueuePrimaryAction}
+                    disabled={queueControl.primaryDisabled}
+                    className="store-v2-control store-v2-btn-primary"
                   >
-                    <iconify-icon icon="solar:buildings-3-linear" width="16" height="16"></iconify-icon>
-                    View Store Scene
+                    {queueControl.primaryLabel}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/')}
-                    className="store-v2-shell-link"
-                  >
-                    <iconify-icon icon="solar:alt-arrow-left-linear" width="16" height="16"></iconify-icon>
-                    Return to Grounds
-                  </button>
+                  {queueControl.secondaryAction === 'leave' ? (
+                    <button
+                      type="button"
+                      onClick={handleQueueSecondaryAction}
+                      className="store-v2-control store-v2-btn-secondary"
+                    >
+                      {queueControl.secondaryLabel}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
 
-            <section className="store-hero-banner store-v2-hero relative overflow-hidden p-5 lg:p-7">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-55"
-                style={{
-                  backgroundImage: `url(${STORE_SCENE.image})`,
-                  backgroundPosition: 'center',
-                  backgroundSize: 'cover',
-                }}
-                aria-hidden="true"
-              />
-              <div
-                className="pointer-events-none absolute inset-0 bg-[linear-gradient(126deg,rgba(9,6,6,0.18),rgba(9,6,6,0.74)),radial-gradient(circle_at_top_left,rgba(216,184,152,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(88,61,74,0.22),transparent_46%),radial-gradient(circle_at_bottom_left,rgba(208,96,32,0.12),transparent_34%)]"
-                aria-hidden="true"
-              />
-
-              <div className="store-v2-hero-grid relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,372px)] lg:items-stretch">
-                <div className="store-v2-hero-copy">
-                  <div className="store-v2-hero-copy-panel">
-                    <div className="store-v2-hero-body space-y-4">
-                      <p className="store-v2-label">{t('store.curatedCommerce')}</p>
-                      <h1 className="store-v2-display">{t('store.collectionTitle')}</h1>
-                      <p className="store-v2-body max-w-3xl">{t('store.collectionSubtitle')}</p>
-                    </div>
-                    <div className="store-v2-hero-support">
-                      <span className="store-v2-hero-note">Merchant wing browse with live queue access below, built for direct product entry rather than a second scenic step.</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="store-v2-drop-module">
-                  <p className="store-v2-label">{t('store.upcomingDrop')}</p>
-                  {upcomingDrop ? (
-                    <>
-                      <p className="store-v2-h2 mt-2">{upcomingDrop.name}</p>
-                      <p className="store-v2-meta mt-1">
-                        {upcomingDrop.localDateTime} ({upcomingDrop.timezone})
-                      </p>
-                      {upcomingDrop.description ? <p className="store-v2-drop-description">{upcomingDrop.description}</p> : null}
-                    </>
-                  ) : (
-                    <>
-                      <p className="store-v2-meta mt-2">{t('store.noUpcomingDropGeneric')}</p>
-                      <p className="store-v2-drop-description">Browse the current floor while the next release is staged in the wing.</p>
-                    </>
-                  )}
-
-                  <div className="store-v2-drop-status">
-                    <iconify-icon icon="solar:flash-circle-linear" width="16" height="16"></iconify-icon>
-                    {queueControl.statusLabel}
-                  </div>
-
-                  <div className="store-v2-drop-actions">
-                    <button
-                      type="button"
-                      onClick={() => setIsReminderModalOpen(true)}
-                      className="store-v2-control store-v2-btn-primary"
-                    >
-                      {reminderCtaLabel}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/store/drops')}
-                      className="store-v2-control store-v2-btn-secondary"
-                    >
-                      {t('store.learnAboutDrop')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </header>
-
-          <div className="mt-4 grid gap-6 lg:grid-cols-[286px_minmax(0,1fr)]">
-            <aside className="hidden lg:sticky lg:top-24 lg:block lg:h-fit" aria-label={t('store.filtersLabel')}>
-              {filterPanel}
-            </aside>
-
-            <main className="min-w-0">
-              <div ref={stickySentinelRef} className="h-px w-full" data-testid="store-sticky-sentinel" aria-hidden="true" />
-              {isUtilitySticky && utilityHeight > 0 ? (
-                <div style={{ height: utilityHeight }} data-testid="store-sticky-spacer" aria-hidden="true" />
-              ) : null}
-
-              <div ref={utilityRowRef} className="store-utility-row store-v2-utility sticky top-16 z-40" data-sticky={isUtilitySticky ? 'true' : 'false'}>
-                <div className="store-v2-utility-top">
+            {activeFilterChips.length > 0 ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {activeFilterChips.map((chip) => (
                   <button
+                    key={chip.id}
                     type="button"
-                    onClick={() => setShowMobileFilters(true)}
-                    className="store-v2-control store-v2-btn-secondary lg:hidden"
+                    onClick={() => removeActiveChip(chip.id)}
+                    className="store-v2-filter-chip"
+                    aria-label={`${t('common.remove')} ${chip.label}`}
                   >
-                    {t('store.filtersLabel')}
+                    <span>{chip.label}</span>
+                    <iconify-icon icon="solar:close-circle-linear" width="14" height="14"></iconify-icon>
                   </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={resetStoreFilters}
+                  className="ml-auto store-v2-shell-link"
+                >
+                  {t('store.clearAllFilters')}
+                </button>
+              </div>
+            ) : null}
 
-                  <label className="store-v2-search-wrap">
-                    <span className="sr-only">{t('store.searchProducts')}</span>
-                    <iconify-icon
-                      icon="solar:magnifer-linear"
-                      class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"
-                    ></iconify-icon>
-                    <input
-                      type="search"
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder={t('store.searchProducts')}
-                      className="store-v2-control store-v2-search"
-                      aria-label={t('store.searchProducts')}
+            {filteredProducts.length ? (
+              <div id="store-product-grid" className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredProducts.map((product) => {
+                  const isLocked = queueGateEnabled && lockableProductIds.has(product._id)
+                  return (
+                    <MerchProductCard
+                      key={product._id}
+                      product={product}
+                      manifest={resolvedManifest}
+                      onOpenProduct={openProduct}
+                      onQuickView={(productId) => setQuickViewProductId(productId)}
+                      isLocked={isLocked}
+                      lockLabel={t('store.queueLockedCta')}
+                      onQueueAction={handleQueueLockAction}
                     />
-                  </label>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="store-v2-empty-state store-v2-surface-card mt-6">
+                <h2 className="store-v2-h2 text-slate-100">{t('store.noProductsFound')}</h2>
+                <p className="store-v2-meta">{t('store.tryAdjustingFilters')}</p>
+                <button
+                  type="button"
+                  onClick={resetStoreFilters}
+                  className="store-v2-control store-v2-btn-secondary mt-2"
+                >
+                  {t('store.clearAllFilters')}
+                </button>
+              </div>
+            )}
 
-                  <label className="store-v2-sort-wrap">
-                    <span className="store-v2-sort-label">{t('store.sortBy')}:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(event) => setSortBy(event.target.value as StoreSortOption)}
-                      className="store-v2-control store-v2-select"
-                      aria-label={t('store.sortBy')}
-                    >
-                      {SORT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {t(option.labelKey)}
-                        </option>
-                      ))}
-                    </select>
-                    <iconify-icon icon="solar:alt-arrow-down-linear" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"></iconify-icon>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => navigate('/store/cart')}
-                    className="store-v2-control store-v2-cart-button"
-                    aria-label={`${t('store.cartButton')} (${itemCount})`}
-                  >
-                    <iconify-icon icon="solar:bag-3-linear" width="18" height="18"></iconify-icon>
-                    {t('store.cartButton')}
-                    <span className="store-v2-count-badge">{itemCount}</span>
-                  </button>
-
-                  <p className="store-v2-results" aria-live="polite">
-                    {resultsLabel}
-                  </p>
-                </div>
-
-                <div id="store-queue-control" className="store-v2-queue-row">
-                  <div className="store-v2-queue-copy">
-                    <span className="store-v2-pill">{t('store.queueStatus')}</span>
-                    <div className="store-v2-queue-text">
-                      <p className="store-v2-label truncate">{queueControl.statusLabel}</p>
-                      <p className="store-v2-meta truncate">{queueControl.detailLabel}</p>
-                    </div>
-                    <span className="store-v2-shipping-note">{t('store.freeShippingPromo')}</span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={handleQueuePrimaryAction}
-                      disabled={queueControl.primaryDisabled}
-                      className="store-v2-control store-v2-btn-primary"
-                    >
-                      {queueControl.primaryLabel}
-                    </button>
-                    {queueControl.secondaryAction === 'leave' ? (
-                      <button
-                        type="button"
-                        onClick={handleQueueSecondaryAction}
-                        className="store-v2-control store-v2-btn-secondary"
-                      >
-                        {queueControl.secondaryLabel}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
+            <section className="store-v2-section mt-10">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="store-v2-label text-slate-100">{t('store.recentlyViewed')}</h2>
               </div>
 
-              {activeFilterChips.length > 0 ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {activeFilterChips.map((chip) => (
+              {!recentlyViewed ? (
+                <div className="h-24 animate-pulse rounded-2xl bg-slate-900/60" />
+              ) : recentlyViewed.length === 0 ? (
+                <p className="store-v2-meta">{t('store.recentlyViewedEmpty')}</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {recentlyViewed.slice(0, 4).map((item) => (
                     <button
-                      key={chip.id}
+                      key={item._id}
                       type="button"
-                      onClick={() => removeActiveChip(chip.id)}
-                      className="store-v2-filter-chip"
-                      aria-label={`${t('common.remove')} ${chip.label}`}
+                      onClick={() => navigate(`/store/product/${item._id}`)}
+                      className="store-v2-recent-item"
                     >
-                      <span>{chip.label}</span>
-                      <iconify-icon icon="solar:close-circle-linear" width="14" height="14"></iconify-icon>
+                      <img
+                        src={item.thumbnailUrl || item.imageUrls?.[0] || '/images/placeholder.jpg'}
+                        alt={item.name}
+                        className="store-v2-recent-image"
+                      />
+                      <p className="mt-2 line-clamp-1 text-sm font-semibold text-slate-100">{item.name}</p>
+                      <p className="text-sm font-semibold text-[var(--store-v2-tone-accent)]">${(item.price / 100).toFixed(2)}</p>
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={resetStoreFilters}
-                    className="ml-auto store-v2-shell-link"
-                  >
-                    {t('store.clearAllFilters')}
-                  </button>
-                </div>
-              ) : null}
-
-              {filteredProducts.length ? (
-                <div id="store-product-grid" className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {filteredProducts.map((product) => {
-                    const isLocked = queueGateEnabled && lockableProductIds.has(product._id)
-                    return (
-                      <MerchProductCard
-                        key={product._id}
-                        product={product}
-                        manifest={resolvedManifest}
-                        onOpenProduct={openProduct}
-                        onQuickView={(productId) => setQuickViewProductId(productId)}
-                        isLocked={isLocked}
-                        lockLabel={t('store.queueLockedCta')}
-                        onQueueAction={handleQueueLockAction}
-                      />
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="py-12 text-center">
-                  <h2 className="store-v2-h2 text-slate-100">{t('store.noProductsFound')}</h2>
-                  <p className="mt-2 store-v2-meta">{t('store.tryAdjustingFilters')}</p>
-                  <button
-                    type="button"
-                    onClick={resetStoreFilters}
-                    className="store-v2-control store-v2-btn-secondary mt-4"
-                  >
-                    {t('store.clearAllFilters')}
-                  </button>
                 </div>
               )}
-
-                <section className="mt-10 border-t border-[rgba(216,184,152,0.14)] pt-6">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="store-v2-label text-slate-100">{t('store.recentlyViewed')}</h2>
-                  </div>
-
-                {!recentlyViewed ? (
-                  <div className="h-24 animate-pulse rounded-2xl bg-slate-900/60" />
-                ) : recentlyViewed.length === 0 ? (
-                  <p className="store-v2-meta">{t('store.recentlyViewedEmpty')}</p>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    {recentlyViewed.slice(0, 4).map((item) => (
-                      <button
-                        key={item._id}
-                        type="button"
-                        onClick={() => navigate(`/store/product/${item._id}`)}
-                        className="store-v2-recent-item"
-                      >
-                        <img
-                          src={item.thumbnailUrl || item.imageUrls?.[0] || '/images/placeholder.jpg'}
-                          alt={item.name}
-                          className="store-v2-recent-image"
-                        />
-                        <p className="mt-2 line-clamp-1 text-sm font-semibold text-slate-100">{item.name}</p>
-                        <p className="text-sm font-semibold text-[var(--store-v2-tone-accent)]">${(item.price / 100).toFixed(2)}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </main>
-          </div>
-        </section>
+            </section>
+          </main>
+        </div>
       </div>
 
       {showMobileFilters ? (

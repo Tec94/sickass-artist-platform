@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Identity - The Estate Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;700&amp;family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#C36B42", "background-light": "#f6f7f8", "background-dark": "#101c22", ink: "#1C1B1A", vellum: "rgba(252, 251, 249, 0.95)", muted: "#8E8982", "on-secondary-fixed-variant": "#3C2A21", "on-surface": "#3C2A21", "primary-fixed": "#FBE9E1", "on-secondary-container": "#3C2A21", "surface-variant": "#FAF7F2", "inverse-surface": "#3C2A21", "on-secondary-fixed": "#251A14", "on-tertiary": "#FFFFFF", "on-background": "#3C2A21", "on-primary-fixed": "#3E1504", "surface-container-lowest": "#FFFFFF", "on-error-container": "#410E0B", "surface-tint": "#C36B42", "on-tertiary-fixed-variant": "#8E7D72", background: "#F4EFE6", "surface-container-low": "#FAF7F2", "surface-container-highest": "#D1C7BC", "on-tertiary-container": "#3C2A21", surface: "#F4EFE6", "outline-variant": "rgba(60, 42, 33, 0.15)", "on-error": "#FFFFFF", "on-surface-variant": "#8E7D72", "primary-container": "#EADECF", "inverse-primary": "#F4EFE6", "on-secondary": "#FAF7F2", "secondary-fixed": "#EADECF", "on-primary": "#FFFFFF", "secondary-fixed-dim": "#D1C7BC", error: "#B00020", "tertiary-container": "#FAF7F2", "tertiary-fixed-dim": "#E2D9D2", "on-primary-container": "#3C2A21", "on-tertiary-fixed": "#1C1917", "tertiary-fixed": "#F2EDE8", "primary-fixed-dim": "#F4D2C5", "surface-container-high": "#EADECF", tertiary: "#8E7D72", secondary: "#3C2A21", "on-primary-fixed-variant": "#924C2D", "error-container": "#F9DEDC", "surface-dim": "#D1C7BC", "surface-bright": "#FAF7F2", "secondary-container": "#EADECF", "surface-container": "#F4EFE6", outline: "#3C2A21", "inverse-on-surface": "#FAF7F2"}, fontFamily: {display: "Newsreader", headline: ["Newsreader"], body: ["Manrope"], label: ["Manrope"]}, borderRadius: {DEFAULT: "0px", lg: "0px", xl: "0px", full: "0px"}}}};</script>
+<style>body {
+    font-family: "Manrope", sans-serif;
+    background-color: #f6f7f8;
+    color: #1C1B1A;
+    margin: 0;
+    overflow: hidden;
+    /* Prevent scrolling on the main view */
+    }
+.scenic-bg {
+    /* Background image simulation */
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCVqxkYkDbKyk0pohFpah1w0qZqxoYv8p9ThWnkKBwO4dg4MsuFvzoaV1J594d3lWGZaXXadJSXs7lxMis_ziqbE4xlGKUexZcIqweDI9LJoBiO03-FNcXWqowPUAZtKZToXelcA7ysAwANFeNOc1B225nsWvRc8jDmY9Nv6PYzzKNwT31HzoTyJJ1Tujnw-lo_Olx_S-v8bDV_u6ooTmg-kOqGvs6Yn7aYVUQK8-4XYqa8bN1mhWW_SCbdLczcnXeFRZPS6YnNbS72);
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease-in-out
+    }
+/* State when panel is open */
+.panel-open .scenic-bg {
+    filter: grayscale(40%) blur(4px);
+    transform: scale(1.02)
+    }
+.utility-panel {
+    transform: translatex(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)
+    }
+.panel-open .utility-panel {
+    transform: translatex(0)
+    }
+/* Strict 1px borders */
+.border-ink {
+    border-color: #1C1B1A
+    }
+/* Custom Scrollbar for Panel */
+.utility-panel::-webkit-scrollbar {
+    width: 4px
+    }
+.utility-panel::-webkit-scrollbar-track {
+    background: transparent
+    }
+.utility-panel::-webkit-scrollbar-thumb {
+    background: #8E8982;
+    border-radius: 2px
+    }
+.nav-fab:hover .material-symbols-outlined {
+    font-variation-settings: "FILL" 1;
+    color: #0f83bd
+    }</style>
+</head>
+<body class="panel-open text-ink antialiased bg-background-light dark:bg-background-dark">
+<!-- Scenic Viewport Background -->
+<div class="fixed inset-0 w-full h-full scenic-bg z-0 pointer-events-none" data-alt="A curated, minimalist architectural interior representing the user's digital room."></div>
+<!-- Persistent Navigation & Toggles (Overlaid on Scenic View) -->
+<div class="fixed top-8 left-8 z-20 flex flex-col gap-4">
+<!-- Back to Main (Exception Rule) -->
+<a aria-label="Back to Dashboard" class="nav-fab flex items-center justify-center w-12 h-12 bg-vellum border border-ink rounded-sm shadow-sm transition-all hover:border-primary group cursor-pointer" href="#">
+<span class="material-symbols-outlined text-ink group-hover:text-primary transition-colors duration-200" style="font-size: 24px;">arrow_back</span>
+</a>
+</div>
+<!-- Toggle Panel FAB (Right side, visible when panel closed, hidden when open for simplicity in this static state, but conceptualized here) -->
+<!-- 
+    <div class="fixed top-8 right-8 z-20 hidden">
+        <button class="nav-fab flex items-center justify-center w-12 h-12 bg-vellum border border-ink rounded-sm shadow-sm transition-all hover:border-primary group">
+            <span class="material-symbols-outlined text-ink group-hover:text-primary transition-colors duration-200">tune</span>
+        </button>
+    </div> 
+    -->
+<!-- App-Mode Utility Panel -->
+<aside class="utility-panel fixed top-0 right-0 w-[400px] h-screen bg-vellum border-l border-ink z-30 flex flex-col overflow-y-auto backdrop-blur-md">
+<!-- Panel Header -->
+<header class="sticky top-0 bg-vellum z-40 flex items-center justify-between px-6 py-6 border-b border-ink">
+<div>
+<h1 class="font-display font-semibold text-2xl tracking-tight text-ink uppercase">Identity</h1>
+<p class="text-xs font-medium text-muted tracking-widest uppercase mt-1">Configure Archive</p>
+</div>
+<!-- Close Toggle -->
+<button aria-label="Close Panel" class="nav-fab w-10 h-10 flex items-center justify-center border border-transparent hover:border-ink rounded-sm transition-all" onclick="document.body.classList.toggle('panel-open')">
+<span class="material-symbols-outlined text-ink">close</span>
+</button>
+</header>
+<!-- Panel Content -->
+<div class="flex-1 flex flex-col">
+<!-- User Meta Section -->
+<section class="p-6 border-b border-ink flex items-start gap-4">
+<div class="w-16 h-16 bg-background-light border border-ink rounded-sm overflow-hidden flex-shrink-0">
+<img alt="User Avatar" class="w-full h-full object-cover grayscale" data-alt="Black and white portrait of the user avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFtvjfctxDOknYmYqKnGkq0OSJCzVotNPCyRW1GdCscM0JKpBKLXZnsnlrseXm8ZgSuUKHkeCUZjfHOMVskOZI5_b6cp28ZD6VXEUGUlLjMhzuzovQqhiEIDa7Uxsxb-aBPUuFWeWlaeLGnYWJNrnFZneYixa_T2bYb4um82sME2SFjhUvjyQnubPsfheiYu9VGWGBzFJysGzFR1PTbDCVlTJboPS8Vn9fyGq2oGQR5IiOEHnQMMtYeEgGmgfsw3aqVYV8M3onjTjz"/>
+</div>
+<div class="flex flex-col justify-center">
+<h2 class="font-display font-semibold text-lg leading-tight">ARCHIVIST_09</h2>
+<div class="flex items-center gap-3 mt-2 text-xs font-medium uppercase tracking-wider text-muted">
+<span>Joined '22</span>
+<span class="w-1 h-1 bg-ink rounded-full"></span>
+<span>Rank: Initiate</span>
+</div>
+</div>
+</section>
+<!-- Navigation Tabs (Internal Panel) -->
+<nav class="flex border-b border-ink sticky top-[89px] bg-vellum z-30">
+<button class="flex-1 py-4 text-xs font-bold uppercase tracking-widest text-primary border-b-2 border-primary relative">
+                    Avatar
+                </button>
+<button class="flex-1 py-4 text-xs font-bold uppercase tracking-widest text-muted hover:text-ink transition-colors border-b-2 border-transparent">
+                    Artifacts
+                </button>
+<button class="flex-1 py-4 text-xs font-bold uppercase tracking-widest text-muted hover:text-ink transition-colors border-b-2 border-transparent">
+                    Settings
+                </button>
+</nav>
+<!-- Avatar Configurator Area -->
+<section class="flex-1 p-6 flex flex-col gap-8">
+<!-- Garments Toggle -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-xs font-bold uppercase tracking-widest text-ink">Garments</h3>
+<span class="text-xs font-medium text-muted">3/12 Unlocked</span>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<!-- Active Item -->
+<button class="aspect-square border border-primary bg-primary/5 rounded-sm flex items-center justify-center relative group">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">checkroom</span>
+<div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-primary/20 to-transparent pointer-events-none"></div>
+</button>
+<!-- Available Item -->
+<button class="aspect-square border border-ink/20 hover:border-ink bg-background-light rounded-sm flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-ink">apparel</span>
+</button>
+<!-- Locked Item -->
+<button class="aspect-square border border-ink/10 bg-background-light/50 rounded-sm flex items-center justify-center cursor-not-allowed" title="Locked">
+<span class="material-symbols-outlined text-muted/50">lock</span>
+</button>
+</div>
+</div>
+<!-- Room Atmosphere -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-xs font-bold uppercase tracking-widest text-ink">Atmosphere</h3>
+</div>
+<div class="flex flex-col gap-2">
+<label class="flex items-center justify-between p-3 border border-ink rounded-sm cursor-pointer hover:bg-background-light transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-ink group-hover:text-primary transition-colors">light_mode</span>
+<span class="text-sm font-medium">Midday Studio</span>
+</div>
+<div class="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</label>
+<label class="flex items-center justify-between p-3 border border-ink/20 rounded-sm cursor-pointer hover:bg-background-light transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-muted group-hover:text-ink transition-colors">dark_mode</span>
+<span class="text-sm font-medium text-muted group-hover:text-ink">Midnight Gallery</span>
+</div>
+<div class="w-4 h-4 rounded-full border-2 border-ink/20 group-hover:border-ink"></div>
+</label>
+</div>
+</div>
+<!-- Badges / The Archive Preview -->
+<div class="space-y-4 mt-4 pt-6 border-t border-ink/20">
+<div class="flex items-center justify-between">
+<h3 class="text-xs font-bold uppercase tracking-widest text-ink">Recent Accolades</h3>
+<a class="text-xs font-bold uppercase tracking-widest text-primary hover:underline" href="#">View All</a>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-12 h-12 rounded-full border border-ink flex items-center justify-center bg-background-light group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-ink group-hover:text-primary">military_tech</span>
+</div>
+<span class="text-[10px] uppercase tracking-wider font-semibold text-center leading-tight">First<br/>Drop</span>
+</div>
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-12 h-12 rounded-full border border-ink flex items-center justify-center bg-background-light group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-ink group-hover:text-primary">explore</span>
+</div>
+<span class="text-[10px] uppercase tracking-wider font-semibold text-center leading-tight">Outer<br/>Bounds</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Panel Footer Action -->
+<footer class="p-6 border-t border-ink sticky bottom-0 bg-vellum z-40">
+<button class="w-full py-4 bg-primary text-background-light font-bold text-xs uppercase tracking-widest rounded-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 16px;">save</span>
+                    Apply Configurations
+                </button>
+</footer>
+</div>
+</aside>
+</body></html>

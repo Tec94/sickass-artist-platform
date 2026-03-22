@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-type StoreSectionNavId = 'browse' | 'drops' | 'cart' | 'orders'
+export type StoreSectionNavId = 'browse' | 'drops' | 'cart' | 'orders'
 
 interface StoreSectionNavProps {
   activeId: StoreSectionNavId

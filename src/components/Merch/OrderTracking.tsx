@@ -38,39 +38,36 @@ export function OrderTracking({ order }: OrderTrackingProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="store-v2-tracking-stack">
         {stages.map((stage, index) => {
           const isLast = index === stages.length - 1
 
           return (
-            <div key={stage.status} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                    stage.completed
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-800 text-gray-400'
-                  }`}
-                >
+            <div key={stage.status} className="store-v2-tracking-step">
+              <div className="store-v2-tracking-marker">
+                <div className={`store-v2-tracking-dot ${stage.completed ? 'store-v2-tracking-dot--complete' : ''}`}>
                   <iconify-icon icon={stage.icon} width="20" height="20"></iconify-icon>
                 </div>
-                {!isLast && (
-                  <div
-                    className={`w-1 h-8 mt-2 transition-colors ${
-                      stage.completed ? 'bg-green-600' : 'bg-gray-800'
-                    }`}
-                  />
-                )}
+                {!isLast ? (
+                  <div className={`store-v2-tracking-line ${stage.completed ? 'store-v2-tracking-line--complete' : ''}`} />
+                ) : null}
               </div>
 
-              <div className="pt-2 pb-4">
-                <h4 className={`font-semibold ${
-                  stage.completed ? 'text-white' : 'text-gray-400'
-                }`}>
-                  {stage.label}
-                </h4>
-                {stage.date && (
-                  <p className="text-sm text-gray-500">
+              <div className="store-v2-tracking-body">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="store-v2-label">Stage {index + 1}</p>
+                    <h4 className="store-v2-h2 mt-2 text-[var(--store-v2-tone-text-main)]">
+                      {stage.label}
+                    </h4>
+                  </div>
+                  <span className={`store-v2-status-copy ${stage.completed ? 'store-v2-status-copy--paid' : 'store-v2-status-copy--pending'}`}>
+                    {stage.completed ? 'Complete' : 'Pending'}
+                  </span>
+                </div>
+
+                {stage.date ? (
+                  <p className="mt-2 text-sm text-[var(--store-v2-tone-text-meta)]">
                     {new Date(stage.date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -79,36 +76,37 @@ export function OrderTracking({ order }: OrderTrackingProps) {
                       minute: '2-digit',
                     })}
                   </p>
-                )}
-                {stage.status === 'shipped' && order.trackingNumber && (
-                  <div className="mt-2 p-2 bg-gray-900/50 border border-gray-800 rounded">
-                    <p className="text-xs text-gray-500">Tracking Number</p>
-                    <p className="text-sm text-cyan-400 font-mono">
+                ) : null}
+
+                {stage.status === 'shipped' && order.trackingNumber ? (
+                  <div className="store-v2-tracking-box">
+                    <p className="store-v2-label">Tracking number</p>
+                    <p className="mt-2 font-mono text-sm text-[var(--store-v2-tone-text-main)]">
                       {order.trackingNumber}
                     </p>
-                    {order.trackingUrl && (
+                    {order.trackingUrl ? (
                       <a
                         href={order.trackingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-cyan-400 hover:text-cyan-300 mt-1 block"
+                        className="store-v2-shell-link mt-3"
                       >
-                        Track package →
+                        Track package
                       </a>
-                    )}
+                    ) : null}
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           )
         })}
       </div>
 
-      {order.status === 'processing' && Date.now() - order.updatedAt > 24 * 60 * 60 * 1000 && (
-        <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-400 text-sm">
-          ⚠️ This order is taking longer than expected. Please contact support if you have concerns.
+      {order.status === 'processing' && Date.now() - order.updatedAt > 24 * 60 * 60 * 1000 ? (
+        <div className="store-v2-tracking-alert">
+          This order is taking longer than expected. Contact support if you need a manual status check.
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Salon - New Dispatch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-dim": "#D1C7BC",
+              "on-background": "#3C2A21",
+              "outline": "#3C2A21",
+              "on-primary-fixed": "#3E1504",
+              "on-primary-container": "#3C2A21",
+              "surface-container-low": "#FAF7F2",
+              "surface-bright": "#FAF7F2",
+              "primary-fixed-dim": "#F4D2C5",
+              "surface-variant": "#FAF7F2",
+              "on-primary": "#FFFFFF",
+              "secondary": "#3C2A21",
+              "primary-fixed": "#FBE9E1",
+              "on-surface": "#3C2A21",
+              "secondary-fixed-dim": "#D1C7BC",
+              "secondary-fixed": "#EADECF",
+              "tertiary-fixed": "#F2EDE8",
+              "primary": "#C36B42",
+              "on-secondary-fixed-variant": "#3C2A21",
+              "inverse-on-surface": "#FAF7F2",
+              "background": "#F4EFE6",
+              "primary-container": "#EADECF",
+              "on-secondary": "#FAF7F2",
+              "surface-container-lowest": "#FFFFFF",
+              "tertiary-container": "#FAF7F2",
+              "on-surface-variant": "#8E7D72",
+              "on-error": "#FFFFFF",
+              "on-tertiary-fixed": "#1C1917",
+              "on-error-container": "#410E0B",
+              "tertiary": "#8E7D72",
+              "on-tertiary-container": "#3C2A21",
+              "surface": "#F4EFE6",
+              "inverse-primary": "#F4EFE6",
+              "on-tertiary": "#FFFFFF",
+              "on-secondary-container": "#3C2A21",
+              "inverse-surface": "#3C2A21",
+              "secondary-container": "#EADECF",
+              "on-tertiary-fixed-variant": "#8E7D72",
+              "on-primary-fixed-variant": "#924C2D",
+              "surface-container-highest": "#D1C7BC",
+              "error-container": "#F9DEDC",
+              "tertiary-fixed-dim": "#E2D9D2",
+              "surface-container-high": "#EADECF",
+              "surface-container": "#F4EFE6",
+              "error": "#B00020",
+              "on-secondary-fixed": "#251A14",
+              "surface-tint": "#C36B42",
+              "outline-variant": "rgba(60, 42, 33, 0.15)"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .ledger-line {
+        background-image: linear-gradient(to bottom, transparent 31px, rgba(60, 42, 33, 0.1) 31px);
+        background-size: 100% 32px;
+      }
+      .ink-border { border: 1px solid #3C2A21; }
+      .ink-border-b { border-bottom: 1px solid #3C2A21; }
+      .ink-border-r { border-right: 1px solid #3C2A21; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-[#F4EFE6] border-b-2 border-[#3C2A21] flex justify-between items-center w-full px-8 py-4">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-headline italic text-[#3C2A21] font-bold">The Salon</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-[#8E7D72] hover:bg-[#C36B42]/5 transition-colors duration-200 font-label text-[11px] uppercase tracking-widest" href="#">The Archive</a>
+<a class="text-[#8E7D72] hover:bg-[#C36B42]/5 transition-colors duration-200 font-label text-[11px] uppercase tracking-widest" href="#">Curated Collections</a>
+<a class="text-[#8E7D72] hover:bg-[#C36B42]/5 transition-colors duration-200 font-label text-[11px] uppercase tracking-widest" href="#">Directory</a>
+<a class="text-[#8E7D72] hover:bg-[#C36B42]/5 transition-colors duration-200 font-label text-[11px] uppercase tracking-widest" href="#">About</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#3C2A21]" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-[74px] h-[calc(100vh-74px)] w-72 bg-[#FAF7F2] border-r border-[#3C2A21]/15 flex flex-col p-6 overflow-y-auto hidden lg:flex">
+<div class="mb-10">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 bg-surface-dim ink-border flex items-center justify-center">
+<span class="material-symbols-outlined text-on-background" data-icon="history_edu">history_edu</span>
+</div>
+<div>
+<h2 class="font-headline text-lg font-bold text-[#3C2A21]">The Estate Directory</h2>
+<p class="font-label text-[10px] uppercase font-bold text-[#8E7D72]">Archival Access v1.0</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span>
+<span class="font-label text-[10px] font-bold uppercase">Artists Index</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="public">public</span>
+<span class="font-label text-[10px] font-bold uppercase">Regional Guilds</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="palette">palette</span>
+<span class="font-label text-[10px] font-bold uppercase">Mediums &amp; Methods</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 bg-[#C36B42]/10 text-[#C36B42] border-r-4 border-[#C36B42] font-semibold transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="history_edu">history_edu</span>
+<span class="font-label text-[10px] font-bold uppercase">Provenance Records</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="museum">museum</span>
+<span class="font-label text-[10px] font-bold uppercase">Exhibition History</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 space-y-4">
+<button class="w-full py-3 ink-border hover:bg-primary hover:text-white transition-colors duration-200 font-label text-[11px] uppercase tracking-widest">
+                Submit For Review
+            </button>
+<div class="flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" href="#">
+<span class="material-symbols-outlined text-xs" data-icon="gavel">gavel</span>
+<span class="text-[10px] uppercase font-bold">Legal</span>
+</a>
+<a class="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" href="#">
+<span class="material-symbols-outlined text-xs" data-icon="help_outline">help_outline</span>
+<span class="text-[10px] uppercase font-bold">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="lg:ml-72 pt-[74px] min-h-screen">
+<div class="max-w-5xl mx-auto p-8 md:p-12">
+<!-- Header Section -->
+<div class="mb-12 border-b-2 border-on-background pb-6 flex justify-between items-end">
+<div>
+<span class="font-label text-[11px] uppercase tracking-[0.2em] text-primary mb-2 block">Archive Entry No. 882-C</span>
+<h1 class="font-headline text-5xl md:text-6xl font-light">New Dispatch</h1>
+</div>
+<div class="text-right hidden md:block">
+<p class="font-label text-[10px] uppercase font-bold text-on-surface-variant">Location: The Central Atelier</p>
+<p class="font-headline italic text-lg text-on-background">October 24th, 1924</p>
+</div>
+</div>
+<!-- Editor Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 ink-border">
+<!-- Metadata Sidebar -->
+<div class="md:col-span-3 ink-border-r bg-surface-container-low p-6 space-y-8">
+<div>
+<label class="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-3 block">Classification</label>
+<select class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 font-body text-sm py-2 px-0 italic">
+<option>General Correspondence</option>
+<option>Technical Method</option>
+<option>Exhibition Critique</option>
+<option>Provenance Inquiry</option>
+</select>
+</div>
+<div>
+<label class="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-3 block">Access Tier</label>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm cursor-pointer">
+<input checked="" class="text-primary focus:ring-0 border-outline" name="access" type="radio"/>
+<span>Public Archive</span>
+</label>
+<label class="flex items-center gap-2 text-sm cursor-pointer opacity-50">
+<input class="text-primary focus:ring-0 border-outline" disabled="" name="access" type="radio"/>
+<span>Fellows Only</span>
+</label>
+</div>
+</div>
+<div class="pt-8">
+<div class="p-4 border border-dashed border-outline-variant text-center">
+<span class="material-symbols-outlined text-on-surface-variant block mb-2" data-icon="upload_file">upload_file</span>
+<span class="font-label text-[9px] uppercase font-bold text-on-surface-variant">Attach Physical<br/>Reference (Max 5MB)</span>
+</div>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="md:col-span-9 bg-surface-container-lowest">
+<!-- Title Input -->
+<div class="ink-border-b p-8">
+<label class="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-4 block" for="title">Dispatch Title</label>
+<input class="w-full bg-transparent border-0 focus:ring-0 font-headline text-3xl italic p-0 placeholder:text-surface-dim placeholder:italic" id="title" placeholder="Enter subject header..." type="text"/>
+</div>
+<!-- Body Input -->
+<div class="p-8 min-h-[400px] ledger-line">
+<label class="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-4 block" for="content">Narrative Content</label>
+<textarea class="w-full bg-transparent border-0 focus:ring-0 font-body text-lg leading-[32px] p-0 resize-none placeholder:text-surface-dim" id="content" placeholder="Commence documentation here..." rows="12"></textarea>
+</div>
+<!-- Footer / Actions -->
+<div class="ink-border-t border-t border-on-background p-6 flex flex-col md:flex-row justify-between items-center bg-surface-container-low gap-4">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1 text-[10px] font-bold uppercase text-on-surface-variant">
+<span class="material-symbols-outlined text-xs" data-icon="spellcheck">spellcheck</span>
+                                Orthography Check
+                            </span>
+<span class="flex items-center gap-1 text-[10px] font-bold uppercase text-on-surface-variant">
+<span class="material-symbols-outlined text-xs" data-icon="history">history</span>
+                                Autosaved 2m ago
+                            </span>
+</div>
+<div class="flex gap-4 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-8 py-3 bg-transparent ink-border text-on-background hover:bg-surface-dim transition-colors font-label text-[11px] uppercase tracking-widest">
+                                Save Draft
+                            </button>
+<button class="flex-1 md:flex-none px-12 py-3 bg-primary text-white hover:bg-[#A85A35] transition-colors font-label text-[11px] uppercase tracking-widest flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                                Log Entry
+                            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Supplemental Info -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="p-6 bg-surface-container-low border-l-4 border-primary">
+<h4 class="font-label text-[11px] uppercase font-bold mb-2">Editorial Notice</h4>
+<p class="font-body text-xs leading-relaxed text-tertiary italic">
+                        "Each dispatch remains part of the permanent estate ledger. Ensure clarity of intent and historical accuracy before finalizing your log entry."
+                    </p>
+</div>
+<div class="md:col-span-2 flex items-center justify-end gap-12 opacity-40 grayscale pointer-events-none">
+<img alt="Ink Stamp" class="h-16 w-16 object-contain" data-alt="Vintage rubber ink stamp on parchment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2Lp84eKuJLPJOuet5LUanPN9UkCsowQCHNd254RdyrZ62sduikfypNEnbcL3uI34BTaEeJrMr_gU9RXUDOkBIcueIZhFp8pwEkYo6z0-hgBjIRrh777uaLmZIYn1g1f8WFTBc3KhK-xclKsnnnlHs_8uzM-zB6monVLi3uOwtbqNSdO9t39i_0LTAhFDz3oSUSRpeTcqG-ySIpv9REcDlabn2NsX56aiJRSyGg0u5_KeddLa1DwozhXvF528isWM5teRMNLTcv0JL"/>
+<img alt="Seal" class="h-16 w-16 object-contain" data-alt="Red wax seal with intricate coat of arms" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE7cVLnoAjBRZLN_vsnzZCdrKXjIM47Y9VI-uYv4YKaG8CT8w6pUKVH1mY87GlOjIZ_-JIvAcDy_ES_gYwAvMzL0waPAyeA8iwr9LwsV8R5FvTMNxSM6vnMZGBa1I5E_Wt6y16L8ikL4-KJfX1C4VCNdf1SRaOUon2mb-QMB0pvAOtR_Pc3rM_1gCHM4UjXXrfExt1LEDzNxs1_KBotcijKSznWdSisfENT6hDP_PMqnXaBF9RXqp2UGOs4GjL7z8LsB4B2-Xmk7Yn"/>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation (as per rules) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#F4EFE6] border-t-2 border-[#3C2A21] flex justify-around p-4 z-50">
+<span class="material-symbols-outlined text-[#3C2A21]" data-icon="menu_book">menu_book</span>
+<span class="material-symbols-outlined text-primary" data-icon="history_edu" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+<span class="material-symbols-outlined text-[#3C2A21]" data-icon="palette">palette</span>
+<span class="material-symbols-outlined text-[#3C2A21]" data-icon="account_circle">account_circle</span>
+</nav>
+</body></html>

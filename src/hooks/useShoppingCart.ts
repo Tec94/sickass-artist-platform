@@ -10,6 +10,8 @@ export interface CartItem {
   variantId: Id<'merchVariants'>
   productName: string
   variantName: string
+  productThumbnailUrl?: string
+  productImageUrls: string[]
   quantity: number
   currentPrice: number
   priceAtAddTime: number
@@ -104,6 +106,8 @@ export function useShoppingCart() {
       variantId: item.variantId,
       productName: item.product.name,
       variantName,
+      productThumbnailUrl: item.product.thumbnailUrl || item.product.imageUrls?.[0],
+      productImageUrls: item.product.imageUrls || [],
       quantity: item.quantity,
       currentPrice: item.currentPrice,
       priceAtAddTime: item.priceAtAddTime,

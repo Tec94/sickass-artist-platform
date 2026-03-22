@@ -6,6 +6,8 @@ interface CartItemProps {
     variantId: Id<'merchVariants'>
     productName: string
     variantName: string
+    productThumbnailUrl?: string
+    productImageUrls: string[]
     quantity: number
     currentPrice: number
     priceAtAddTime: number
@@ -30,7 +32,7 @@ export function CartItem({
   const [error, setError] = useState<string | null>(null)
 
   const handleQuantityChange = async (newQuantity: number) => {
-    if (newQuantity < 1 || newQuantity > 100) return
+    if (Number.isNaN(newQuantity) || newQuantity < 1 || newQuantity > 100) return
     setIsUpdating(true)
     setError(null)
     try {
@@ -55,85 +57,95 @@ export function CartItem({
   }
 
   const itemSubtotal = item.currentPrice * item.quantity
+  const imageSrc = item.productThumbnailUrl || item.productImageUrls[0] || '/images/placeholder.jpg'
 
   return (
-    <div className="store-v2-surface-card store-v2-record-card space-y-4 p-5">
-      {/* Product info */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h4 className="font-[var(--font-display)] text-lg font-semibold text-[var(--store-v2-tone-text-main)]">{item.productName}</h4>
-          <p className="text-sm text-[var(--store-v2-tone-text-meta)]">{item.variantName}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-semibold text-[var(--store-v2-tone-accent)]">
-            ${(itemSubtotal / 100).toFixed(2)}
-          </p>
-          <p className="text-xs text-[var(--store-v2-tone-text-muted)]">
-            ${(item.currentPrice / 100).toFixed(2)} each
-          </p>
-        </div>
+    <article className="store-v2-surface-card store-v2-record-card store-v2-cart-record">
+      <div className="store-v2-cart-record__media">
+        <img
+          src={imageSrc}
+          alt={item.productName}
+          className="store-v2-cart-record__image"
+          onError={(event) => {
+            const target = event.currentTarget
+            if (target.src.endsWith('/images/placeholder.jpg')) return
+            target.src = '/images/placeholder.jpg'
+          }}
+        />
       </div>
 
-      {/* Price change warning */}
-      {item.priceChanged && (
-        <div className="flex items-center gap-2 rounded-[12px] border border-[rgba(216,184,152,0.22)] bg-[rgba(52,33,28,0.48)] p-3 text-xs text-[var(--store-v2-tone-accent)]">
-          <iconify-icon icon="solar:info-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
-          <span>
-            Price {item.priceChangePercentage > 0 ? 'increased' : 'decreased'} {Math.abs(item.priceChangePercentage)}%
-          </span>
-        </div>
-      )}
+      <div className="store-v2-cart-record__content">
+        <div className="store-v2-cart-record__header">
+          <div>
+            <p className="store-v2-label">{item.variantName || 'Default selection'}</p>
+            <h4 className="store-v2-h2 mt-2 text-[var(--store-v2-tone-text-main)]">{item.productName}</h4>
+            <p className="mt-2 text-sm text-[var(--store-v2-tone-text-meta)]">
+              ${(item.currentPrice / 100).toFixed(2)} each
+            </p>
+          </div>
 
-      {/* Stock warning */}
-      {!item.available && (
-        <div className="flex items-center gap-2 rounded-[12px] border border-[rgba(160,32,48,0.32)] bg-[rgba(76,42,49,0.34)] p-3 text-xs text-[#f4c5c7]">
-          <iconify-icon icon="solar:danger-circle-linear" width="12" height="12" class="flex-shrink-0"></iconify-icon>
-          <span>Out of stock - Please remove or contact support</span>
+          <div className="text-right">
+            <p className="store-v2-product-price">${(itemSubtotal / 100).toFixed(2)}</p>
+            <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[var(--store-v2-tone-text-muted)]">
+              Qty {item.quantity}
+            </p>
+          </div>
         </div>
-      )}
 
-      {/* Quantity selector */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        {item.priceChanged ? (
+          <div className="store-v2-cart-record__flag">
+            <iconify-icon icon="solar:info-circle-linear" width="12" height="12" class="flex-shrink-0" />
+            <span>
+              Price {item.priceChangePercentage > 0 ? 'increased' : 'decreased'} {Math.abs(item.priceChangePercentage)}%
+            </span>
+          </div>
+        ) : null}
+
+        {!item.available ? (
+          <div className="store-v2-cart-record__flag store-v2-cart-record__flag--danger">
+            <iconify-icon icon="solar:danger-circle-linear" width="12" height="12" class="flex-shrink-0" />
+            <span>Out of stock. Remove this item or contact support.</span>
+          </div>
+        ) : null}
+
+        <div className="store-v2-cart-record__footer">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleQuantityChange(item.quantity - 1)}
+              disabled={isUpdating || item.quantity <= 1}
+              className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min="1"
+              max={item.availableQuantity}
+              value={item.quantity}
+              onChange={(event) => handleQuantityChange(Number.parseInt(event.target.value, 10))}
+              disabled={isUpdating}
+              className="store-v2-control w-14 text-center text-sm"
+            />
+            <button
+              onClick={() => handleQuantityChange(item.quantity + 1)}
+              disabled={isUpdating || item.quantity >= 100}
+              className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
+            >
+              +
+            </button>
+          </div>
+
           <button
-            onClick={() => handleQuantityChange(item.quantity - 1)}
-            disabled={isUpdating || item.quantity <= 1}
-            className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
+            onClick={handleRemove}
+            disabled={isRemoving || loading}
+            className="store-v2-shell-link"
           >
-            −
-          </button>
-          <input
-            type="number"
-            min="1"
-            max={item.availableQuantity}
-            value={item.quantity}
-            onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
-            disabled={isUpdating}
-            className="store-v2-control w-12 text-center text-sm"
-          />
-          <button
-            onClick={() => handleQuantityChange(item.quantity + 1)}
-            disabled={isUpdating || item.quantity >= 100}
-            className="store-v2-detail-size-option flex h-9 w-9 items-center justify-center text-sm disabled:opacity-50"
-          >
-            +
+            Remove item
           </button>
         </div>
 
-        {/* Remove button */}
-        <button
-          onClick={handleRemove}
-          disabled={isRemoving || loading}
-          className="store-v2-detail-icon-button min-h-9 min-w-9 p-2 disabled:opacity-50"
-        >
-          <iconify-icon icon="solar:trash-bin-trash-linear" width="16" height="16"></iconify-icon>
-        </button>
+        {error ? <p className="text-xs text-[#f4c5c7]">{error}</p> : null}
       </div>
-
-      {/* Error message */}
-      {error && (
-        <p className="text-xs text-[#f4c5c7]">{error}</p>
-      )}
-    </div>
+    </article>
   )
 }

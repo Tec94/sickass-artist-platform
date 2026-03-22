@@ -1,0 +1,124 @@
+import { Link } from 'react-router-dom';
+import { setNextTransition } from '../../components/Effects/PageTransition';
+import { Search, User, ShoppingBag, ArrowRight } from 'lucide-react';
+import SharedNavbar from '../../components/Navigation/SharedNavbar';
+export default function Directory() {
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F4EFE6] text-[#3C2A21] font-sans antialiased overflow-x-hidden">
+      <style>{`
+        .border-ink { border-color: #3C2A21; }
+        .border-ink-soft { border-color: rgba(60, 42, 33, 0.15); }
+        .border-b-1 { border-bottom-width: 1px; }
+        .border-r-1 { border-right-width: 1px; }
+        .text-xs-wide {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F4EFE6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D1C7BC;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #C36B42;
+        }
+      `}</style>
+      <SharedNavbar />
+
+      <main className="flex-1 flex flex-row h-[calc(100vh-72px)] overflow-hidden">
+        <div className="w-[65%] h-full border-r-1 border-ink flex flex-col overflow-hidden">
+          <div className="p-8 pb-4 flex-1 flex flex-col min-h-0">
+            <div className="relative w-full h-full bg-cover bg-center rounded-sm overflow-hidden flex items-end p-10 py-8 shadow-md" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3C2A21]/80 via-[#3C2A21]/30 to-transparent"></div>
+              <div className="relative z-10 w-full">
+                <span className="text-[#FAF7F2]/80 text-xs-wide block mb-4 border-b border-[#FAF7F2]/30 pb-2 inline-block">Transmission 001</span>
+                <h2 className="font-serif text-[72px] text-[#FAF7F2] leading-none font-medium mb-4">LATEST ERA</h2>
+                <p className="text-[#FAF7F2] font-serif text-2xl italic mb-3 opacity-90">"A synthesis of digital permanence and physical entropy."</p>
+                <p className="text-[#FAF7F2]/80 font-sans text-base max-w-lg">The new exhibition is now open. Explore the digital artifacts, interactive nodes, and physical manifestations defining the current cycle of residency within the Estate.</p>
+                <Link to="/proto/salon" onClick={() => setNextTransition('push')} className="inline-block mt-8 border border-[#FAF7F2] text-[#FAF7F2] px-8 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[#FAF7F2] hover:text-[#3C2A21] transition-all rounded-sm">
+                  Enter Exhibition
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="px-8 pb-8 shrink-0 grid grid-cols-2 gap-8">
+            <section className="flex flex-col gap-6">
+              <div className="flex items-center justify-between border-b border-[#3C2A21]/20 pb-2">
+                <h3 className="text-xs-wide text-[#3C2A21]">Community Pulse</h3>
+                <Link to="/proto/salon" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Salon Log</Link>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="p-4 bg-[#FAF7F2] border border-[#3C2A21]/10 rounded-sm hover:border-[#C36B42]/50 transition-all cursor-pointer group">
+                  <span className="text-[10px] text-[#8E7D72] font-bold block mb-1">THEORY / 128 REPLIES</span>
+                  <h4 className="font-serif text-lg leading-tight mb-2 group-hover:text-[#C36B42] transition-colors">The architecture of the 'North-East' Gate</h4>
+                  <p className="text-xs text-[#3C2A21]/70 line-clamp-2">Recent discoveries in the Journey map suggest the gate isn't a destination, but a reflection of player rank...</p>
+                </div>
+              </div>
+            </section>
+            <section className="flex flex-col gap-6">
+              <div className="flex items-center justify-between border-b border-[#3C2A21]/20 pb-2">
+                <h3 className="text-xs-wide text-[#3C2A21]">Boutique: Limited Artifacts</h3>
+                <Link to="/proto/store-boutique" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Full Store</Link>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group cursor-pointer">
+                  <div className="aspect-square bg-[#FAF7F2] border border-[#3C2A21]/10 mb-3 overflow-hidden">
+                    <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmYh2a1VqXp-O3e8fW5z8F9_m6Yp_3-z5mN_W_mX6_z8-v_m7_W8-m_X7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7" />
+                  </div>
+                  <h4 className="font-serif text-base text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">Obsidian Tablet (Digital)</h4>
+                  <span className="text-xs text-[#8E7D72] font-medium">0.12 ETH / TIER 2+</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div className="w-[35%] h-full bg-[#F4EFE6] flex flex-col border-l border-[#3C2A21]/10">
+          <div className="px-8 py-8 bg-[#FAF7F2] border-b border-ink">
+            <h3 className="text-xs-wide text-[#8E7D72] mb-6">User Identity / Status</h3>
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="font-serif text-3xl text-[#3C2A21] mb-1">Resident #4,102</h4>
+                <span className="text-xs-wide text-[#C36B42]">Sovereign Tier</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-[#8E7D72] font-bold block tracking-widest">CURRENT RANK</span>
+                <span className="font-serif text-4xl text-[#3C2A21]">XII</span>
+              </div>
+            </div>
+            <div className="mt-8">
+              <div className="flex justify-between text-[10px] font-bold uppercase mb-2 tracking-widest">
+                <span className="text-[#8E7D72]">Archive Progress</span>
+                <span className="text-[#3C2A21]">72%</span>
+              </div>
+              <div className="w-full h-[2px] bg-[#3C2A21]/10">
+                <div className="bg-[#C36B42] h-full transition-all duration-1000" style={{width: '72%'}}></div>
+              </div>
+            </div>
+          </div>
+          <div className="px-8 py-6 border-b-1 border-ink-soft flex items-center justify-between bg-[#F4EFE6]">
+            <h3 className="font-serif text-2xl text-[#3C2A21] font-medium">Dispatches</h3>
+            <span className="text-xs-wide text-[#8E7D72]">Log / 2024</span>
+          </div>
+          <div className="flex-1 overflow-y-auto px-0 py-0 flex flex-col bg-[#F4EFE6]">
+            <Link to="/proto/salon" onClick={() => setNextTransition('push')} className="dispatch-link group px-8 py-6 border-b border-[#3C2A21]/10 flex flex-col gap-1">
+              <span className="text-xs-wide text-[#8E7D72] group-hover:text-[#C36B42] transition-colors">14 NOV 2024</span>
+              <h4 className="font-serif text-xl text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">The Vault Opens: Archival Merch Release</h4>
+            </Link>
+          </div>
+          <div className="px-8 py-6 border-t-1 border-ink-soft flex justify-center bg-[#FAF7F2]">
+            <Link to="/proto/archive" onClick={() => setNextTransition('push')} className="text-xs-wide text-[#3C2A21] hover:text-[#C36B42] transition-all flex items-center gap-2">
+                            View Complete Archive
+                            <ArrowRight size={14} className="ml-1" />
+            </Link>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
