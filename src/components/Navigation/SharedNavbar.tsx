@@ -23,43 +23,43 @@ export default function SharedNavbar() {
     <>
     <header className="h-[72px] border-b border-[#3C2A21] bg-[#F4EFE6] flex items-center justify-between px-8 relative z-40">
       <div className="flex items-center gap-12 h-full">
-        <Link to="/proto/directory" className="font-['Cormorant_Garamond'] text-2xl font-semibold tracking-tight text-[#3C2A21] hover:text-[#C36B42] transition-colors">THE ESTATE</Link>
+        <Link to="/dashboard" className="font-['Cormorant_Garamond'] text-2xl font-semibold tracking-tight text-[#3C2A21] hover:text-[#C36B42] transition-colors">THE ESTATE</Link>
         <nav className="flex items-center gap-8 h-full">
           <div className="group h-full flex items-center relative">
-            <Link to="/proto/store-boutique" onClick={() => setNextTransition('push')} className={getLinkClasses('/proto/store-boutique')}>Store</Link>
+            <Link to="/store" onClick={() => setNextTransition('push')} className={getLinkClasses('/store')}>Store</Link>
             <div className="mega-menu invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute top-[72px] left-0 w-[800px] h-[400px] bg-[#FAF7F2] border-b border-r border-l border-[#3C2A21] shadow-lg flex transition-all duration-300">
               <div className="w-1/2 h-full p-8 border-r border-[#3C2A21]/15">
                 <div className="w-full h-full bg-cover bg-center rounded-sm relative overflow-hidden group" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCn2d7DIcuRChwL7JHv90Xk489giFm7mkFmi7UMnknopv5kyun1AIgd1oIrQ5qFfwg6l7JAT8VeMHIuwtHYoPu-FIuvXL_NcAqq2-qlAcPpe91PDjyExlV7qPqfmCyLkepSngg4YOKeZV-omlXUUGIJGbZOrldRalluKggAi817GVkaSlCDYRKLtuZiZWFDhFmDZNyy-f7MeeQg_7k89qqolK831X8e56xZdFScT0D0NGzhYA--gYHf59Q8Hvm23q4QMR6biY6Njvh0')"}}>
                   <div className="absolute inset-0 bg-[#3C2A21]/30 group-hover:bg-[#3C2A21]/20 transition-colors duration-500"></div>
                   <div className="absolute bottom-6 left-6 text-[#FAF7F2]">
-                    <span className="text-[11px] uppercase tracking-[0.15em] font-semibold block mb-1">Featured Artifact</span>
-                    <h3 className="font-['Cormorant_Garamond'] text-3xl font-medium">The Archive Collection</h3>
+                    <span className="text-[11px] uppercase tracking-[0.15em] font-semibold block mb-1">New Collection</span>
+                    <h3 className="font-['Cormorant_Garamond'] text-3xl font-medium">Private Suite Vol. 3</h3>
                   </div>
                 </div>
               </div>
               <div className="w-1/2 h-full p-12 grid grid-cols-2 gap-8 bg-[#FAF7F2]">
                 <div className="flex flex-col gap-4">
                   <h4 className="text-[11px] uppercase tracking-[0.15em] font-semibold text-[#8E7D72] mb-2">Apparel</h4>
-                  <Link to="/proto/store-boutique" className="text-[#3C2A21] text-sm hover:text-[#C36B42] transition-colors">Outerwear</Link>
+                  <Link to="/store" className="text-[#3C2A21] text-sm hover:text-[#C36B42] transition-colors">Outerwear</Link>
                 </div>
                 <div className="flex flex-col gap-4">
-                  <h4 className="text-[11px] uppercase tracking-[0.15em] font-semibold text-[#8E7D72] mb-2">Artifacts</h4>
-                  <Link to="/proto/archive" className="text-[#3C2A21] text-sm hover:text-[#C36B42] transition-colors">Vinyl & Media</Link>
+                  <h4 className="text-[11px] uppercase tracking-[0.15em] font-semibold text-[#8E7D72] mb-2">Music</h4>
+                  <Link to="/archive" className="text-[#3C2A21] text-sm hover:text-[#C36B42] transition-colors">Vinyl & Media</Link>
                 </div>
               </div>
             </div>
           </div>
-          <Link to="/proto/events-exhibitions" onClick={() => setNextTransition('push')} className={getLinkClasses('/proto/events-exhibitions')}>Events</Link>
-          <Link to="/proto/community" onClick={() => setNextTransition('push')} className={getLinkClasses('/proto/community')}>Community</Link>
-          <Link to="/proto/rankings" onClick={() => setNextTransition('push')} className={getLinkClasses('/proto/rankings')}>Rankings</Link>
-          <Link to="/proto/journey" onClick={() => setNextTransition('push')} className={getLinkClasses('/proto/journey')}>Journey</Link>
+          <Link to="/events" onClick={() => setNextTransition('push')} className={getLinkClasses('/events')}>Events</Link>
+          <Link to="/community" onClick={() => setNextTransition('push')} className={getLinkClasses('/community')}>Community</Link>
+          <Link to="/rankings" onClick={() => setNextTransition('push')} className={getLinkClasses('/rankings')}>Rankings</Link>
+          <Link to="/journey" onClick={() => setNextTransition('push')} className={getLinkClasses('/journey')}>Journey</Link>
         </nav>
       </div>
       <div className="flex items-center gap-6">
         <button onClick={() => setIsSearchOpen(true)} className="text-[#3C2A21] hover:text-[#C36B42] transition-colors">
           <Search size={20} />
         </button>
-        <Link to="/proto/identity" onClick={() => setNextTransition('slide-up')} className="text-[#3C2A21] hover:text-[#C36B42] transition-colors">
+        <Link to="/profile" onClick={() => setNextTransition('slide-up')} className="text-[#3C2A21] hover:text-[#C36B42] transition-colors">
           <User size={20} />
         </Link>
         <button onClick={() => setIsCheckoutOpen(true)} className="text-[#3C2A21] hover:text-[#C36B42] transition-colors relative">

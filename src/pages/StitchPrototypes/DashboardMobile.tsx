@@ -51,7 +51,7 @@ export default function DashboardMobile() {
       
 
 <header className="h-16 border-b border-ink/10 bg-background-light flex items-center justify-between px-6 sticky top-0 z-50">
-<Link className="font-serif text-xl font-semibold tracking-tight text-ink" to="/proto/directory">THE ESTATE</Link>
+<Link className="font-serif text-xl font-semibold tracking-tight text-ink" to="/dashboard">THE ESTATE</Link>
 <div className="flex items-center gap-4">
 <button className="text-ink">
 <Search />
@@ -106,26 +106,26 @@ export default function DashboardMobile() {
 </div>
 <div className="flex flex-col divide-y divide-ink/5">
 
-<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/proto/directory">
+<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/dashboard">
 <span className="text-xs-wide text-primary/80">14 NOV 2024</span>
 <h4 className="font-serif text-xl text-ink">The Vault Opens: Archival Merch Release</h4>
 <p className="text-muted text-sm line-clamp-2 leading-relaxed">A limited selection of pieces from the 2019-2021 touring era have been restored and made available.</p>
 </Link>
 
-<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/proto/directory">
+<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/dashboard">
 <span className="text-xs-wide text-primary/80">02 NOV 2024</span>
 <h4 className="font-serif text-xl text-ink">Global Coordinates Discovered</h4>
 <p className="text-muted text-sm line-clamp-2 leading-relaxed">New waypoints have appeared in The Outergrounds. Seekers are advised to check the Journey map.</p>
 </Link>
 
-<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/proto/directory">
+<Link className="px-6 py-6 group flex flex-col gap-2 hover:bg-vellum-light transition-colors" to="/dashboard">
 <span className="text-xs-wide text-primary/80">28 OCT 2024</span>
 <h4 className="font-serif text-xl text-ink">The Meaning of 'Vellum'</h4>
 <p className="text-muted text-sm line-clamp-2 leading-relaxed">A highlighted thread from the community dissecting the thematic use of materials in the latest visual album.</p>
 </Link>
 </div>
 <div className="px-6 py-10 flex justify-center">
-<Link className="text-xs-wide text-primary flex items-center gap-2 border border-primary/40 px-6 py-3 rounded-sm hover:bg-primary hover:text-white transition-all" to="/proto/directory">
+<Link className="text-xs-wide text-primary flex items-center gap-2 border border-primary/40 px-6 py-3 rounded-sm hover:bg-primary hover:text-white transition-all" to="/dashboard">
                     Complete Archive
                     <ArrowRight className="text-[14px]" />
 </Link>
@@ -134,27 +134,27 @@ export default function DashboardMobile() {
 </main>
 
 <nav className="fixed bottom-0 left-0 w-full h-16 border-t border-ink/10 bg-background-light/90 backdrop-blur-lg z-50 flex items-center justify-around px-1">
-<Link className="flex flex-col items-center justify-center gap-1 text-primary" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-primary" to="/dashboard">
 <ShoppingBag className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Store</span>
 </Link>
-<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/dashboard">
 <Calendar className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Events</span>
 </Link>
-<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/dashboard">
 <Circle className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Community</span>
 </Link>
-<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/dashboard">
 <Trophy className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Rankings</span>
 </Link>
-<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/dashboard">
 <Circle className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Journey</span>
 </Link>
-<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center gap-1 text-muted hover:text-ink transition-colors" to="/dashboard">
 <UserCircle className="!text-[20px]" />
 <span className="text-[9px] uppercase font-bold tracking-tighter" >Identity</span>
 </Link>

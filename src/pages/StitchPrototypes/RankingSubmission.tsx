@@ -11,7 +11,7 @@ export default function RankingSubmission() {
         {/* Left Side: Static Visual Ranking List */}
         <div className="flex-1 p-8 md:p-16 border-r border-ink flex flex-col overflow-y-auto bg-vellum">
           <div className="mb-12">
-            <Link to="/proto/rankings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors mb-8">
+            <Link to="/rankings" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors mb-8">
               <ArrowLeft size={16} /> Back to Rankings
             </Link>
             <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tighter leading-none mb-4">Submit Your Archive</h1>

@@ -131,23 +131,23 @@ export default function EventsMobile() {
 </main>
 
 <nav className="fixed bottom-0 left-0 w-full bg-[#F4EFE6] dark:bg-[#1A1614] border-t border-[#3C2A21] dark:border-[#FAF7F2] flex justify-around items-center px-2 pb-6 pt-2 z-50">
-<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/dashboard">
 <ShoppingBag className="mb-1" />
 <span className="font-['Manrope'] font-semibold uppercase tracking-[0.15em] text-[10px]">Store</span>
 </Link>
-<Link className="flex flex-col items-center justify-center text-[#C36B42] dark:text-[#E28A61] border-t-2 border-[#C36B42] -mt-[2px] pt-2 Active: opacity-80 transition-opacity" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center text-[#C36B42] dark:text-[#E28A61] border-t-2 border-[#C36B42] -mt-[2px] pt-2 Active: opacity-80 transition-opacity" to="/dashboard">
 <Calendar className="mb-1" />
 <span className="font-['Manrope'] font-semibold uppercase tracking-[0.15em] text-[10px]">Events</span>
 </Link>
-<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/dashboard">
 <Circle className="mb-1" />
 <span className="font-['Manrope'] font-semibold uppercase tracking-[0.15em] text-[10px]">Community</span>
 </Link>
-<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/dashboard">
 <Circle className="mb-1" />
 <span className="font-['Manrope'] font-semibold uppercase tracking-[0.15em] text-[10px]">Journey</span>
 </Link>
-<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/proto/directory">
+<Link className="flex flex-col items-center justify-center text-[#8E7D72] dark:text-[#D1C7BC] pt-2 hover:text-[#3C2A21] dark:hover:text-[#FAF7F2] Active: opacity-80 transition-opacity" to="/dashboard">
 <Circle className="mb-1" />
 <span className="font-['Manrope'] font-semibold uppercase tracking-[0.15em] text-[10px]">Identity</span>
 </Link>

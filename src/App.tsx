@@ -17,44 +17,44 @@ import './index.css'
 // Framer Motion Page Transition Wrapper
 import { AnimatedRoutes } from './components/Effects/PageTransition'
 
-// Stitch Prototype Screens
+// Pages
 import {
-  Archive, Rankings, Identity, Community, Journey,
-  StoreBoutique, Salon, Directory, AccessTiersMobile,
+  Archive, Rankings, Profile, Community, Journey,
+  Store, Salon, Dashboard, AccessTiersMobile,
   AccessTiersAlbert, ExperienceMobile, ExperienceAlbert,
-  EventsMobile, EventsExhibitions, DashboardMobile, RankingSubmission, Login
+  EventsMobile, Events, DashboardMobile, RankingSubmission, Login
 } from './pages/StitchPrototypes'
 
 function AppContent() {
   return (
     <div className="app-theme-root">
       <div className="relative flex-1 flex flex-col h-screen overflow-hidden bg-[#F4EFE6]" data-scroll-container>
-        <Suspense fallback={<div className="text-[#3C2A21] p-8 text-center font-serif">Loading Protocol...</div>}>
+        <Suspense fallback={<div className="text-[#3C2A21] p-8 text-center font-serif">Loading...</div>}>
           <AnimatedRoutes>
             <Routes>
-              {/* Redirect root to the directory */}
-              <Route path="/" element={<Navigate to="/proto/directory" replace />} />
+              {/* Landing page is Journey */}
+              <Route path="/" element={<Journey />} />
               
-              <Route path="/proto/directory" element={<Directory />} />
-              <Route path="/proto/archive" element={<Archive />} />
-              <Route path="/proto/rankings" element={<Rankings />} />
-              <Route path="/proto/ranking-submission" element={<RankingSubmission />} />
-              <Route path="/proto/identity" element={<Identity />} />
-              <Route path="/proto/community" element={<Community />} />
-              <Route path="/proto/journey" element={<Journey />} />
-              <Route path="/proto/store-boutique" element={<StoreBoutique />} />
-              <Route path="/proto/salon" element={<Salon />} />
-              <Route path="/proto/access-tiers-mobile" element={<AccessTiersMobile />} />
-              <Route path="/proto/access-tiers-albert" element={<AccessTiersAlbert />} />
-              <Route path="/proto/experience-mobile" element={<ExperienceMobile />} />
-              <Route path="/proto/experience-albert" element={<ExperienceAlbert />} />
-              <Route path="/proto/events-mobile" element={<EventsMobile />} />
-              <Route path="/proto/events-exhibitions" element={<EventsExhibitions />} />
-              <Route path="/proto/dashboard-mobile" element={<DashboardMobile />} />
-              <Route path="/proto/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/rankings" element={<Rankings />} />
+              <Route path="/ranking-submission" element={<RankingSubmission />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/journey" element={<Journey />} />
+              <Route path="/store" element={<Store />} />
+              <Route path="/salon" element={<Salon />} />
+              <Route path="/access-tiers-mobile" element={<AccessTiersMobile />} />
+              <Route path="/access-tiers-albert" element={<AccessTiersAlbert />} />
+              <Route path="/experience-mobile" element={<ExperienceMobile />} />
+              <Route path="/experience-albert" element={<ExperienceAlbert />} />
+              <Route path="/events-mobile" element={<EventsMobile />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/dashboard-mobile" element={<DashboardMobile />} />
+              <Route path="/login" element={<Login />} />
 
               {/* Catch all */}
-              <Route path="*" element={<Navigate to="/proto/directory" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AnimatedRoutes>
         </Suspense>

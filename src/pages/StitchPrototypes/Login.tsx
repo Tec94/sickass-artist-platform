@@ -37,7 +37,7 @@ export default function Login() {
               </p>
             </div>
             
-            <form className="flex flex-col gap-10" onSubmit={(e) => { e.preventDefault(); setNextTransition('push'); window.location.href='/proto/directory'; }}>
+            <form className="flex flex-col gap-10" onSubmit={(e) => { e.preventDefault(); setNextTransition('push'); window.location.href='/dashboard'; }}>
               <div className="space-y-8">
                 {/* Email Field */}
                 <div className="flex flex-col gap-2 group">
@@ -66,7 +66,7 @@ export default function Login() {
                   <Link className="font-label text-[10px] font-bold tracking-wider text-[#8E7D72] hover:text-[#3C2A21] transition-colors uppercase decoration-[#8E7D72]/30 underline-offset-4 underline" to="#">
                     Forgot credentials?
                   </Link>
-                  <Link className="font-label text-[10px] font-bold tracking-wider text-[#C36B42] hover:underline underline-offset-4 uppercase" to="/proto/directory">
+                  <Link className="font-label text-[10px] font-bold tracking-wider text-[#C36B42] hover:underline underline-offset-4 uppercase" to="/dashboard">
                     Create new dossier
                   </Link>
                 </div>

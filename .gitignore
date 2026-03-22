@@ -30,3 +30,10 @@ dist-ssr
 .env.development.local
 
 *roa-wolves*
+
+# Design files & generated images
+design-files/
+images/
+
+# Temp scripts
+fix-links.cjs

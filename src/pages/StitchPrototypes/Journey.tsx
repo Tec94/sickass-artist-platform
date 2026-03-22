@@ -151,19 +151,19 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 <div className="map-overlay"></div>
 
 <div className="waypoint" >
-<div className="waypoint-label">The Archive</div>
+<div className="waypoint-label">Welcome</div>
 </div>
 <div className="waypoint active" >
-<div className="waypoint-label">Midnight Release</div>
+<div className="waypoint-label">First Listen</div>
 </div>
 <div className="waypoint" >
-<div className="waypoint-label">Hidden Track</div>
+<div className="waypoint-label">Share It</div>
 </div>
 <div className="waypoint" >
-<div className="waypoint-label">Pop-up Gallery</div>
+<div className="waypoint-label">Concert Ready</div>
 </div>
 <div className="waypoint" >
-<div className="waypoint-label">Final Coordinate</div>
+<div className="waypoint-label">Inner Circle</div>
 </div>
 </div>
 
@@ -172,7 +172,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 <div className="ledger-panel interactive-ui flex-shrink-0">
 
 <div className="h-[72px] flex items-center px-6 structural-border-b bg-vellum">
-<Link className="flex items-center gap-2 text-ink hover:text-primary transition-colors" to="/proto/directory">
+<Link className="flex items-center gap-2 text-ink hover:text-primary transition-colors" to="/dashboard">
 <ArrowLeft />
 <span className="text-[12px] font-medium uppercase tracking-[0.05em]">Return</span>
 </Link>
@@ -181,7 +181,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 <div className="p-8 flex-1">
 <div className="mb-10">
 <h2 className="text-4xl font-serif text-ink mb-2">The Journey</h2>
-<p className="text-[12px] font-medium uppercase tracking-[0.05em] text-muted">Outergrounds / Global Quests</p>
+<p className="text-[12px] font-medium uppercase tracking-[0.05em] text-muted">Your Quests / Progress</p>
 </div>
 <div className="mb-8">
 <div className="flex justify-between items-end mb-4">
@@ -202,13 +202,13 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 </div>
 <div className="flex-1">
 <div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-ink">Midnight Release</h3>
+<h3 className="text-lg font-serif text-ink">First Listen</h3>
 <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-primary">Active</span>
 </div>
-<p className="text-sm text-ink/80 leading-[1.6] mb-3">Locate the hidden coordinates broadcasted during the latest transmission to unlock the exclusive audio stems.</p>
+<p className="text-sm text-ink/80 leading-[1.6] mb-3">Stream the Private Suite Vol. 3 intro track and share it on your story for exclusive bonus content.</p>
 <div className="flex items-center gap-2">
 <span className="text-[10px] font-medium uppercase tracking-[0.05em] text-muted">Reward:</span>
-<span className="text-[12px] text-ink font-medium">Digital Artifact #04</span>
+<span className="text-[12px] text-ink font-medium">Bonus Track Access</span>
 </div>
 </div>
 </div>
@@ -221,10 +221,10 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 </div>
 <div className="flex-1">
 <div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-ink line-through decoration-muted/50">The First Echo</h3>
+<h3 className="text-lg font-serif text-ink line-through decoration-muted/50">Welcome to the Pack</h3>
 <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-accent">Complete</span>
 </div>
-<p className="text-sm text-muted leading-[1.6]">Attended the digital vernissage and secured the foundation token.</p>
+<p className="text-sm text-muted leading-[1.6]">Created your account and joined La Manada.</p>
 </div>
 </div>
 </div>
@@ -236,10 +236,10 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 </div>
 <div className="flex-1">
 <div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-muted">Pop-up Gallery</h3>
+<h3 className="text-lg font-serif text-muted">Concert Ready</h3>
 <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Locked</span>
 </div>
-<p className="text-sm text-muted leading-[1.6]">Requires completion of the Midnight Release to reveal physical location.</p>
+<p className="text-sm text-muted leading-[1.6]">RSVP to any upcoming show to unlock a priority entry code.</p>
 </div>
 </div>
 </div>
@@ -251,10 +251,10 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 </div>
 <div className="flex-1">
 <div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-muted">Final Coordinate</h3>
-<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Classified</span>
+<h3 className="text-lg font-serif text-muted">Inner Circle</h3>
+<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Locked</span>
 </div>
-<p className="text-sm text-muted leading-[1.6]">Details withheld. Maintain observation of the primary frequency.</p>
+<p className="text-sm text-muted leading-[1.6]">Complete all quests to unlock exclusive Private Suite content.</p>
 </div>
 </div>
 </div>
@@ -263,17 +263,17 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 
 <div className="p-6 structural-border-t bg-vellum mt-auto">
 <button className="w-full py-3 bg-ink text-parchment text-[13px] font-semibold uppercase tracking-widest hover:bg-primary transition-colors">
-                    Sync Progress
+                    Check Progress
                 </button>
 </div>
 </div>
 
 <div className="flex-1 relative">
 <div className="absolute top-6 right-6 flex items-center gap-6 interactive-ui">
-<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/proto/directory">
+<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/dashboard">
                     Dashboard
                 </Link>
-<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/proto/directory">
+<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/store">
                     Store
                 </Link>
 <button className="size-10 flex items-center justify-center bg-vellum border border-ink hover:bg-ink hover:text-vellum transition-colors shadow-sm">

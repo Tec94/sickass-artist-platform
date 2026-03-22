@@ -130,7 +130,7 @@ export default function ExperienceAlbert() {
 <option disabled={true}>Executive Tier (Sold Out)</option>
 </select>
 </div>
-<Link to="/proto/access-tiers-albert" className="w-full bg-primary text-white py-5 font-display text-lg tracking-[0.2em] hover:bg-on-surface transition-colors duration-300 active:scale-95 text-center flex items-center justify-center">
+<Link to="/access-tiers-albert" className="w-full bg-primary text-white py-5 font-display text-lg tracking-[0.2em] hover:bg-on-surface transition-colors duration-300 active:scale-95 text-center flex items-center justify-center">
                             COMPLETE PURCHASE
                         </Link>
 </form>
@@ -176,9 +176,9 @@ export default function ExperienceAlbert() {
             © 2024 THE ESTATE DIRECTORY × PRIVATE SUITE OS. ALL RIGHTS RESERVED.
         </span>
 <div className="flex flex-wrap justify-center gap-8">
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Terms of Access</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Privacy Protocol</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Institutional Contact</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Terms of Access</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Privacy Protocol</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Institutional Contact</Link>
 </div>
 </div>
 </footer>

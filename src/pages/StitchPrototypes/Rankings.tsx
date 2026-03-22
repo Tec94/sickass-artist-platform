@@ -267,7 +267,7 @@ export default function Rankings() {
                             Load Remaining Archives
                         </span>
                         
-<Link to="/proto/ranking-submission" className="bg-ink text-vellum px-12 py-4 font-bold text-xs uppercase tracking-widest rounded-sm hover:bg-primary transition-colors flex items-center gap-3">
+<Link to="/ranking-submission" className="bg-ink text-vellum px-12 py-4 font-bold text-xs uppercase tracking-widest rounded-sm hover:bg-primary transition-colors flex items-center gap-3">
     Submit Your Rankings
 </Link>
 </div>

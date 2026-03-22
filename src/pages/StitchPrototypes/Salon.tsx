@@ -36,23 +36,23 @@ export default function Salon() {
 </div>
 </div>
 <nav className="flex-1 space-y-1">
-<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/proto/directory">
+<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/dashboard">
 <BookOpen className="text-sm" />
 <span className="font-label text-[10px] font-bold uppercase">Artists Index</span>
 </Link>
-<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/proto/directory">
+<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/dashboard">
 <Circle className="text-sm" />
 <span className="font-label text-[10px] font-bold uppercase">Regional Guilds</span>
 </Link>
-<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/proto/directory">
+<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/dashboard">
 <Circle className="text-sm" />
 <span className="font-label text-[10px] font-bold uppercase">Mediums &amp; Methods</span>
 </Link>
-<Link className="flex items-center gap-3 py-3 px-4 bg-[#C36B42]/10 text-[#C36B42] border-r-4 border-[#C36B42] font-semibold transition-all duration-300" to="/proto/directory">
+<Link className="flex items-center gap-3 py-3 px-4 bg-[#C36B42]/10 text-[#C36B42] border-r-4 border-[#C36B42] font-semibold transition-all duration-300" to="/dashboard">
 <Scroll className="text-sm" />
 <span className="font-label text-[10px] font-bold uppercase">Provenance Records</span>
 </Link>
-<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/proto/directory">
+<Link className="flex items-center gap-3 py-3 px-2 text-[#3C2A21] hover:pl-4 transition-all duration-300 group" to="/dashboard">
 <Circle className="text-sm" />
 <span className="font-label text-[10px] font-bold uppercase">Exhibition History</span>
 </Link>
@@ -62,11 +62,11 @@ export default function Salon() {
                 Submit For Review
             </button>
 <div className="flex flex-col gap-2 border-t border-outline-variant pt-4">
-<Link className="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" to="/proto/directory">
+<Link className="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" to="/dashboard">
 <Circle className="text-xs" />
 <span className="text-[10px] uppercase font-bold">Legal</span>
 </Link>
-<Link className="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" to="/proto/directory">
+<Link className="flex items-center gap-2 text-[#8E7D72] hover:text-[#3C2A21] transition-colors" to="/dashboard">
 <Circle className="text-xs" />
 <span className="text-[10px] uppercase font-bold">Support</span>
 </Link>
