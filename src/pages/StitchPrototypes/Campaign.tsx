@@ -22,7 +22,7 @@ export default function Campaign() {
     <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
       <SharedNavbar />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain">
         <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-8 md:px-8 md:pb-20 md:pt-10">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
             <section className="border border-[#3C2A21] bg-[#FAF7F2] p-7 md:p-10">

@@ -43,7 +43,9 @@ export default function StoreProductDetail() {
   }
 
   useEffect(() => {
-    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    if (typeof mainRef.current?.scrollTo === 'function') {
+      mainRef.current.scrollTo({ top: 0, behavior: 'auto' })
+    }
   }, [productSlug])
 
   useEffect(() => {
@@ -54,55 +56,76 @@ export default function StoreProductDetail() {
     <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
       <SharedNavbar />
 
-      <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1560px] px-4 pb-10 pt-4 md:px-8 md:pb-16 md:pt-5">
+      <main
+        ref={mainRef}
+        className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain"
+      >
+        <div className="mx-auto max-w-[1560px] px-4 pb-12 pt-3 md:px-8 md:pb-20 md:pt-4">
           <button
+            data-testid="detail-back-button"
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] hover:text-[#C36B42] transition-colors"
+            className="-ml-4 inline-flex w-fit items-center gap-2 rounded-sm px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#FAF7F2] hover:text-[#C36B42] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C36B42]"
           >
             <ArrowLeft size={14} />
             Back to store
           </button>
 
-          <section className="mt-4 border border-[#1C1B1A] bg-[#FCFBF9] xl:h-[min(720px,calc(100dvh-172px))]">
-            <div className="grid h-full items-start xl:grid-cols-[minmax(0,1.02fr)_420px]">
-              <div className="border-b border-[#1C1B1A] bg-[#F0ECE6] xl:h-full xl:border-b-0 xl:border-r">
-                <div className="grid h-full lg:grid-cols-[minmax(0,1fr)_180px]">
-                  <div className="min-h-[360px] bg-[#ECE7DF] md:min-h-[460px] xl:h-full xl:min-h-0">
-                    <img src={selectedImage} alt={product.alt} className="h-full w-full object-cover" />
-                  </div>
-                  <div className="border-t border-[#1C1B1A] bg-[#F7F1E8] p-4 md:p-5 xl:h-full xl:overflow-y-auto lg:border-l lg:border-t-0">
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
-                      {galleryImages.map((image, index) => {
-                        const isActive = selectedImage === image
+          <section className="mt-3 overflow-hidden border border-[#1C1B1A] bg-[#FCFBF9]">
+            <div className="xl:grid xl:h-[min(700px,calc(100dvh-212px))] xl:grid-cols-[minmax(0,1fr)_160px_420px]">
+              <div className="relative overflow-hidden border-b border-[#1C1B1A] bg-[#D7D5D0] xl:border-b-0 xl:border-r">
+                <div className="absolute inset-0">
+                  <img
+                    src={selectedImage}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full scale-[1.08] object-cover blur-[34px] opacity-50"
+                  />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(252,251,249,0.2),rgba(215,213,208,0.42)_58%,rgba(186,178,168,0.64)_100%)]" />
+                </div>
 
-                        return (
-                          <button
-                            key={`${product.slug}-${index}`}
-                            type="button"
-                            onClick={() => setSelectedImage(image)}
-                            className={`aspect-[4/5] overflow-hidden border bg-[#EFE8DE] text-left transition-colors ${
-                              isActive
-                                ? 'border-[#C36B42] shadow-[inset_0_0_0_1px_#C36B42]'
-                                : 'border-[#1C1B1A] hover:border-[#3C2A21]'
-                            }`}
-                            aria-label={`View ${product.name} image ${index + 1}`}
-                          >
-                            <img
-                              src={image}
-                              alt={`${product.name} view ${index + 1}`}
-                              className="h-full w-full object-cover"
-                            />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                <div className="relative z-10 flex min-h-[360px] items-center justify-center px-3 py-4 md:min-h-[460px] md:px-4 md:py-5 xl:h-full xl:px-5 xl:py-6">
+                  <img
+                    data-testid="detail-main-image"
+                    src={selectedImage}
+                    alt={product.alt}
+                    className="max-h-full w-full object-contain drop-shadow-[0_18px_36px_rgba(60,42,33,0.18)]"
+                  />
                 </div>
               </div>
 
-              <div className="xl:grid xl:h-full xl:grid-rows-[auto_minmax(0,1fr)]">
+              <div className="border-b border-[#1C1B1A] bg-[#F7F1E8] p-4 md:p-5 xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-1">
+                  {galleryImages.map((image, index) => {
+                    const isActive = selectedImage === image
+
+                    return (
+                      <button
+                        key={`${product.slug}-${index}`}
+                        type="button"
+                        onClick={() => setSelectedImage(image)}
+                        className={`aspect-[4/5] overflow-hidden border bg-[#EFE8DE] text-left transition-colors ${
+                          isActive
+                            ? 'border-[#C36B42] shadow-[inset_0_0_0_1px_#C36B42]'
+                            : 'border-[#1C1B1A] hover:border-[#3C2A21]'
+                        }`}
+                        aria-label={`View ${product.name} image ${index + 1}`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${product.name} view ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div
+                data-testid="detail-side-rail"
+                className="bg-[#FCFBF9] xl:flex xl:h-full xl:min-h-0 xl:flex-col"
+              >
                 <div className="border-b border-[#1C1B1A] bg-[#FAF7F2] p-6 md:p-7">
                   <div className="flex items-center justify-between gap-4">
                     <div>
@@ -146,7 +169,7 @@ export default function StoreProductDetail() {
                   </div>
                 </div>
 
-                <div className="space-y-5 bg-[#FCFBF9] p-6 md:p-7 xl:overflow-y-auto">
+                <div className="space-y-5 bg-[#FCFBF9] p-6 md:p-7 xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72] mb-3">
                       Editorial note

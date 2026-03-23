@@ -37,6 +37,18 @@ describe('RankingSubmission prototype', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByTestId('ranking-submission-shell')).toHaveClass(
+      'xl:flex-row',
+      'xl:overflow-hidden',
+    )
+    expect(screen.getByTestId('ranking-submission-left-pane')).toHaveClass(
+      'xl:overflow-y-auto',
+      'xl:overscroll-contain',
+    )
+    expect(screen.getByTestId('ranking-submission-right-pane')).toHaveClass(
+      'xl:overflow-y-auto',
+      'xl:overscroll-contain',
+    )
     expect(screen.getByText('Submit Your Archive')).toBeInTheDocument()
     expect(screen.getAllByText('WO OH OH').length).toBeGreaterThan(0)
     expect(screen.queryByText('Midnight City')).not.toBeInTheDocument()

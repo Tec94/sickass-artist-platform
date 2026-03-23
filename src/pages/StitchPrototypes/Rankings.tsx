@@ -76,7 +76,7 @@ export default function Rankings() {
     <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
       <SharedNavbar />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain">
         <div className="grid min-h-0 xl:grid-cols-[minmax(0,1.12fr)_360px]">
           <section className="bg-[#F4EFE6]">
             <div className="border-b border-[#3C2A21] bg-[#FAF7F2] px-6 py-10 md:px-10 md:py-12">

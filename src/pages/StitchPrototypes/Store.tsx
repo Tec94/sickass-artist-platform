@@ -42,7 +42,7 @@ export default function Store() {
     <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
       <SharedNavbar />
 
-      <main className="min-h-0 flex-1">
+      <main className="h-[calc(100dvh-72px)] overflow-hidden">
         <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col md:flex-row">
           <aside
             data-testid="prototype-store-sidebar"
@@ -123,7 +123,7 @@ export default function Store() {
             </div>
           </aside>
 
-          <section className="min-h-0 flex-1 overflow-y-auto bg-[#FCFBF9]">
+          <section className="min-h-0 flex-1 overflow-y-auto bg-[#FCFBF9] overscroll-contain">
             <div className="md:hidden border-b border-[#1C1B1A] bg-[#F4F0EB] px-4 py-4 space-y-4">
               <div className="overflow-x-auto whitespace-nowrap">
                 <div className="flex gap-3 min-w-max">
@@ -168,7 +168,10 @@ export default function Store() {
               </div>
             </div>
 
-            <div data-testid="prototype-store-canvas" className="border-l border-r border-b border-[#1C1B1A]">
+            <div
+              data-testid="prototype-store-canvas"
+              className="border-l border-r border-b border-[#1C1B1A] bg-[#FCFBF9]"
+            >
               <div className="border-b border-[#1C1B1A] bg-[#FAF7F2] px-5 py-5 md:px-8 md:py-7">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                   <div>
@@ -213,7 +216,7 @@ export default function Store() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                    className="grid grid-cols-1 bg-[#FCFBF9] sm:grid-cols-2 xl:grid-cols-3"
+                    className="grid min-h-[420px] grid-cols-1 content-start bg-[#FCFBF9] sm:grid-cols-2 xl:grid-cols-3"
                   >
                     {products.map((product) => (
                       <article

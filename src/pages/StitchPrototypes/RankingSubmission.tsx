@@ -282,12 +282,18 @@ export default function RankingSubmission() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-parchment font-sans text-ink">
+    <div className="flex h-full min-h-0 flex-col bg-parchment font-sans text-ink">
       <SharedNavbar />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col xl:flex-row">
-          <div className="flex flex-1 flex-col overflow-y-auto border-r border-ink bg-vellum p-8 md:p-12">
+      <main className="h-[calc(100dvh-72px)] overflow-hidden">
+        <div
+          data-testid="ranking-submission-shell"
+          className="mx-auto flex h-full w-full max-w-[1600px] flex-col overflow-y-auto xl:min-h-0 xl:flex-row xl:overflow-hidden"
+        >
+          <div
+            data-testid="ranking-submission-left-pane"
+            className="flex flex-1 flex-col border-b border-ink bg-vellum p-8 md:p-12 xl:min-h-0 xl:overflow-y-auto xl:border-b-0 xl:border-r xl:overscroll-contain"
+          >
             <div className="mb-10">
               <Link
                 to="/rankings"
@@ -388,9 +394,12 @@ export default function RankingSubmission() {
             </div>
           </div>
 
-          <aside className="xl:w-[40%] bg-[#F4EFE6]">
+          <aside
+            data-testid="ranking-submission-right-pane"
+            className="bg-[#F4EFE6] xl:h-full xl:w-[40%] xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain"
+          >
             <div className="border-b border-ink/10">
-              <div className="relative min-h-[420px] overflow-hidden">
+              <div className="relative overflow-hidden">
                 <PrototypeSafeImage
                   src={recentPost?.thumbnailUrl}
                   alt={recentPost?.description || `${content.artistName} recent post`}
@@ -401,7 +410,7 @@ export default function RankingSubmission() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-parchment via-parchment/75 to-transparent" />
 
-                <div className="relative z-10 flex min-h-[420px] flex-col justify-end p-10 md:p-12">
+                <div className="relative z-10 flex flex-col justify-end p-10 md:p-12">
                   <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
                     Latest release context
                   </p>
