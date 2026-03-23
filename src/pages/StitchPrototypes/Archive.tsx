@@ -27,11 +27,11 @@ export default function Archive() {
                     </div>
                 </div>
                 <nav className="flex-1 space-y-1">
-                    <Link to="/proto/rankings" onClick={() => setNextTransition('push')} className="flex items-center gap-3 py-3 font-sans uppercase tracking-widest text-[11px] font-semibold text-[#C36B42] bg-[#C36B42]/5 border-l-4 border-[#C36B42] pl-3 hover:translate-x-1 transition-transform duration-200">
+                    <Link to="/rankings" onClick={() => setNextTransition('push')} className="flex items-center gap-3 py-3 font-sans uppercase tracking-widest text-[11px] font-semibold text-[#C36B42] bg-[#C36B42]/5 border-l-4 border-[#C36B42] pl-3 hover:translate-x-1 transition-transform duration-200">
                         <Trophy size={18} />
                         <span>Current Rankings</span>
                     </Link>
-                    <Link to="/proto/archive" className="flex items-center gap-3 py-3 font-sans uppercase tracking-widest text-[11px] font-semibold text-[#8E7D72] hover:text-[#3C2A21] pl-4 hover:translate-x-1 transition-transform duration-200">
+                    <Link to="/archive" className="flex items-center gap-3 py-3 font-sans uppercase tracking-widest text-[11px] font-semibold text-[#8E7D72] hover:text-[#3C2A21] pl-4 hover:translate-x-1 transition-transform duration-200">
                         <BookOpen size={18} />
                         <span>Historical Registry</span>
                     </Link>

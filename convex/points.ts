@@ -1,6 +1,7 @@
 import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-import { requireAdmin } from './helpers'
+import { getCurrentUserOrNull, requireAdmin } from './helpers'
+import type { Doc } from './_generated/dataModel'
 
 // ============ TYPES ============
 export type PointTransactionType =
@@ -34,6 +35,83 @@ export const POINT_VALUES: Record<PointTransactionType, number> = {
   redemption: 0, // Variable
   admin_adjust: 0, // Variable
   refund: 0, // Variable
+}
+
+type FanLeaderboardUser = Pick<Doc<'users'>, '_id' | 'displayName' | 'username' | 'avatar' | 'fanTier' | 'role'>
+type FanLeaderboardReward = Pick<
+  Doc<'userRewards'>,
+  'userId' | 'totalPoints' | 'availablePoints' | 'currentStreak' | 'maxStreak' | 'lastInteractionDate'
+>
+
+export type FanLeaderboardEntry = {
+  rank: number
+  userId: Doc<'users'>['_id']
+  displayName: string
+  username: string | null
+  avatar: string | null
+  fanTier: Doc<'users'>['fanTier']
+  role: Doc<'users'>['role']
+  totalPoints: number
+  availablePoints: number
+  currentStreak: number
+  maxStreak: number
+  lastInteractionDate: number | null
+  statusLabel: string
+  isCurrentUser: boolean
+}
+
+const buildFanLeaderboardStatusLabel = (
+  reward: FanLeaderboardReward,
+  user: FanLeaderboardUser | null,
+): string => {
+  if ((user?.role ?? 'fan') !== 'fan') return 'Staff'
+  if ((reward.currentStreak ?? 0) >= 14) return 'On fire'
+  if ((reward.currentStreak ?? 0) >= 7) return 'Hot streak'
+  return 'Active'
+}
+
+const sortRewardsForLeaderboard = (left: FanLeaderboardReward, right: FanLeaderboardReward) => {
+  if (right.totalPoints !== left.totalPoints) {
+    return right.totalPoints - left.totalPoints
+  }
+
+  if (right.currentStreak !== left.currentStreak) {
+    return right.currentStreak - left.currentStreak
+  }
+
+  return (right.lastInteractionDate ?? 0) - (left.lastInteractionDate ?? 0)
+}
+
+export const buildFanLeaderboardEntries = (
+  rewards: FanLeaderboardReward[],
+  users: FanLeaderboardUser[],
+  currentUserId: Doc<'users'>['_id'] | null = null,
+): FanLeaderboardEntry[] => {
+  const usersById = new Map(users.map((user) => [String(user._id), user]))
+
+  return [...rewards]
+    .sort(sortRewardsForLeaderboard)
+    .map((reward, index) => {
+      const user = usersById.get(String(reward.userId)) ?? null
+      const displayName = user?.displayName || user?.username || 'Pack Member'
+      return {
+        rank: index + 1,
+        userId: reward.userId,
+        displayName,
+        username: user?.username ?? null,
+        avatar: user?.avatar ?? null,
+        fanTier: user?.fanTier ?? 'bronze',
+        role: user?.role ?? 'fan',
+        totalPoints: reward.totalPoints,
+        availablePoints: reward.availablePoints,
+        currentStreak: reward.currentStreak,
+        maxStreak: reward.maxStreak,
+        lastInteractionDate:
+          typeof reward.lastInteractionDate === 'number' ? reward.lastInteractionDate : null,
+        statusLabel: buildFanLeaderboardStatusLabel(reward, user),
+        isCurrentUser: currentUserId ? String(reward.userId) === String(currentUserId) : false,
+      }
+    })
 }
 
 // ============ MUTATIONS ============
@@ -273,6 +351,34 @@ export const getPointsLeaderboard = query({
     return allRewards
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .slice(0, 100)
+  },
+})
+
+export const getFanLeaderboard = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(Math.max(args.limit ?? 12, 3), 100)
+    const currentUser = await getCurrentUserOrNull(ctx)
+    const rewards = await ctx.db.query('userRewards').collect()
+    const relevantRewards = rewards.filter((reward) => reward.totalPoints > 0)
+    const userIds = [...new Set(relevantRewards.map((reward) => reward.userId))]
+    const users = (
+      await Promise.all(userIds.map((userId) => ctx.db.get(userId)))
+    ).filter((user): user is Doc<'users'> => Boolean(user))
+
+    const entries = buildFanLeaderboardEntries(relevantRewards, users, currentUser?._id ?? null)
+    const topEntries = entries.slice(0, limit)
+    const currentUserEntry =
+      entries.find((entry) => entry.isCurrentUser) ??
+      null
+
+    return {
+      entries: topEntries,
+      currentUserEntry,
+      fetchedAt: Date.now(),
+    }
   },
 })
 

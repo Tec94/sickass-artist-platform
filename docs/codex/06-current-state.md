@@ -1,164 +1,118 @@
 # Current state
 
-This file records the live implementation state of the estate-navigation
-product. It reflects the code that is currently in the repo, not the older
-path-wiring milestone that has already been completed.
+> **Status:** Current website. This file records the current live
+> implementation state first, then calls out the planned or unrouted systems
+> that remain in source.
 
-## Product architecture
+## Current website
 
-The app now follows one information architecture with two entry modes.
+The live website is the prototype router declared in `src/App.tsx`. It renders
+the screens exported from `src/pages/StitchPrototypes/index.tsx`.
 
-- **Explore mode** is the scenic estate layer. It is used on the outer-grounds
-  homepage and on scenic destination-entry pages where the world adds branded
-  wayfinding value.
-- **App mode** is the normal working shell. It is used for routine browsing,
-  shopping, and deeper task flows.
+The current live routes are:
 
-These are not separate products. They are two ways to enter the same top-level
-destinations and routes.
+- `/` and `/journey`
+- `/dashboard`
+- `/archive`
+- `/rankings`
+- `/ranking-submission`
+- `/profile`
+- `/community`
+- `/store`
+- `/salon`
+- `/access-tiers-mobile`
+- `/access-tiers-albert`
+- `/experience-mobile`
+- `/experience-albert`
+- `/events-mobile`
+- `/events`
+- `/dashboard-mobile`
+- `/login`
 
-## Locked navigation model
+All unmatched routes currently redirect back to `/`.
 
-The canonical top-level navigation now matches the scenic estate map and is
-shared across the global header, mobile drawer, search, and scenic entry
-points.
+## Current page model
 
-- **Explore Estate** routes to `/`
-- **Store** routes to `/store`
-- **Events** routes to `/events`
-- **Ranking** routes to `/ranking`
-- **Campaign** routes to `/campaign`
-- **Community** routes to `/community`
+The current website behaves like a prototype set for the ROA archive world:
 
-Community remains the only auth-gated primary region on the landing scene. Deep
-community pages such as Gallery, Forum, Chat, Profile, and Quests now belong to
-the Community top-level scope instead of behaving like separate global
-destinations.
+- `Journey` acts as the landing route
+- `Dashboard`, `Archive`, `Community`, `Profile`, `Store`, `Salon`, and
+  `Events` are served as standalone prototype screens
+- mobile-specific or alternate prototype routes remain live beside desktop
+  routes
+- `/login` serves the prototype archival access screen from
+  `src/pages/StitchPrototypes/Login.tsx`
 
-## Scenic landing status
+## Auth and backend state
 
-The homepage at `/` is the live outer-grounds estate scene. It already uses the
-path-driven region system and the current production interaction model.
+Auth0 and Convex are active in the app shell:
 
-The landing implementation includes:
+- `src/main.tsx` mounts `Auth0Provider`, `ConvexProvider`, and
+  `ConvexAuthProvider`
+- `convex/auth.config.js` validates the Auth0 issuer and audience used by
+  Convex
+- `src/contexts/UserContext.tsx` integrates Auth0 state with Convex-backed user
+  data
 
-- inline SVG path data as the only geometry source of truth
-- shared top-level navigation in the normal app header
-- hover, focus, and coarse-pointer preview behavior
-- compact auth prompt behavior for locked access
-- reduced-motion support
-- a working debug mode for region calibration
-- no visible production direction arrows
+There is still route-contract drift in auth:
 
-The landing scene is past the core interaction milestone. Remaining work is
-polish and expansion, not basic region wiring.
+- the live router serves `/login`
+- helper auth pages exist in `src/pages/AuthEntryPage.tsx`,
+  `src/pages/SignInPage.tsx`, `src/pages/SignUpPage.tsx`, and
+  `src/pages/SSOCallback.tsx`
+- `src/features/auth/authRouting.ts` still defines `/auth` as the helper entry
+  contract with `/community` as the default return path
+- the current live router does not declare `/auth`, `/sign-in`, `/sign-up`, or
+  `/sso-callback`
 
-## Scenic Store status
+Treat those helper auth pages as present but unrouted until the router changes.
 
-The first destination-scene proof now exists at `/store`.
+## Planned and unrouted architecture still in source
 
-This page is the scenic Store entry and currently includes:
+The repo still contains a scenic/shared-IA implementation track. Its main files
+include:
 
-- the store scene image from `public/nav_scenes/store-scene.png`
-- inline SVG product-slot paths from the traced `public/nav_scenes/paths/`
-  assets
-- curated fixed SKU mapping for the eight scenic Store product hits
-- direct routing from scenic product hit to `/store/product/:productId`
-- an **Open Store UI** control that routes to `/store/browse`
-- a **Return to Grounds** control that routes back to `/`
-- the same hover, focus, touch-preview, and reduced-motion model used on the
-  estate landing
+- `src/features/navigation/topLevelNav.ts`
+- `src/features/castleNavigation/sceneConfig.ts`
+- `src/features/castleNavigation/storeSceneConfig.ts`
+- `src/pages/LandingPage.tsx`
+- `src/pages/StoreScenePage.tsx`
+- `src/features/auth/authRouting.ts`
 
-This is the first working proof that scenic entry and normal app navigation can
-share one IA without adding click tax.
+That track assumes a different route contract built around:
 
-## Store app-mode status
+- `/auth`
+- `/campaign`
+- `/ranking`
+- `/store/browse`
+- `/store/product/:productId`
 
-The normal Store shell now lives at `/store/browse`.
+Those routes are reference architecture today, not live website behavior.
 
-The existing merch experience has already been moved into that route, and the
-core store flows still work inside the new structure:
+## Other code that exists but is not live
 
-- search
-- sort
-- filters
-- queue state and queue gating
-- cart access
-- recently viewed
-- quick view
-- product detail at `/store/product/:productId`
-
-Store-local navigation has been added for the working shell:
-
-- **Products**
-- **Drops / Queue**
-- **Cart**
-- **Orders**
-
-The store shell also includes explicit scenic return controls so the user can
-move between scenic entry and normal operation without losing orientation.
-
-## Auth and routing status
-
-Auth-gated entry now uses a shared `/auth` contract from scenic and normal
-navigation.
-
-The repo currently supports:
-
-- compact auth prompt behavior for gated entry
-- `/auth` as the canonical auth threshold
-- preserved `returnTo` targets
-- compatibility handling for older sign-in and sign-up entry points
-- legacy `/merch/*` redirects into the new `/store/*` structure
-
-The default auth return target is Community, not the old dashboard home path.
-
-## Current milestone
-
-The active milestone is the Store-first shared-IA expansion.
-
-That means the current focus is:
-
-1. keep the shared navigation model stable across scenic and app surfaces
-2. finish the Store app-mode redesign contract
-3. prove the scenic-entry-plus-working-shell pattern in Store before scaling it
-   to Events, Ranking, and Community
-
-This is no longer a "finish wiring landing paths" project phase.
-
-## Active blocker
-
-The only major blocker in the Store-first milestone is the Pencil editor bridge.
-
-The Store App Mode board has not been created in Pencil yet because Pencil's
-editor-backed actions still fail with "A file needs to be open in the editor,"
-even after `open_document('new')` and direct file-path opens. The implementation
-spec for that board must remain explicit in repo docs until the editor bridge is
-working again.
+The phone overlay system under `src/components/PhoneDisplay/` is implemented in
+source, but the current app shell does not mount `PhoneOverlayRoot` or
+`PhoneOverlayProvider`. `src/App.tsx` only imports the phone-display CSS.
 
 ## Current risks
 
-The main risks have shifted from region wiring to system coherence.
+The main repository risks are now truth and contract drift:
 
-- **Navigation drift:** Scenic entry and normal app navigation must keep sharing
-  the same IA and current-section highlighting.
-- **Store shell drift:** The normal Store shell can regress into a generic merch
-  page if the Pencil redesign contract is not locked before more ad hoc UI
-  changes land.
-- **Premature scene sprawl:** Events, Ranking, and Community scenic entry pages
-  should not begin until the Store pattern is stable.
-- **Pencil dependency:** The Store board creation step is blocked by tooling,
-  not by product uncertainty.
+- docs can accidentally describe the scenic/shared-IA track as if it is live
+- tests can assert routes that `src/App.tsx` does not serve
+- auth can look complete at the provider level while still being unrouted at
+  the page level
+- dormant systems such as the phone overlay can be mistaken for live features
 
 ## Immediate next step
 
-The immediate next step is to lock the Store App Mode redesign contract and then
-implement it at `/store/browse`.
+The immediate priority is to keep the written, tested, and routed truth aligned.
 
 In practice, that means:
 
-1. keep the shared IA and Store scenic entry stable
-2. create or recover the Pencil Store board
-3. apply the approved board to the working Store shell
-4. only then extend the same two-mode pattern to Events, Ranking, and
-   Community
+1. treat `src/App.tsx` as the live source of truth
+2. label scenic/shared-IA files as planned or unrouted
+3. keep route smoke tests aligned with the live router
+4. make any future convergence work explicit instead of implying it is already
+   done

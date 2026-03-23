@@ -1,283 +1,386 @@
-import { Link } from 'react-router-dom';
-import { setNextTransition } from '../../components/Effects/PageTransition';
-import { Circle } from 'lucide-react';
-import SharedNavbar from '../../components/Navigation/SharedNavbar';
+import { useMemo } from 'react'
+import { useQuery } from 'convex/react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Circle, Flame, RadioTower } from 'lucide-react'
+import { api } from '../../../convex/_generated/api'
+import PrototypeSafeImage from '../../components/Media/PrototypeSafeImage'
+import SharedNavbar from '../../components/Navigation/SharedNavbar'
+import { useArtistContent } from '../../features/artistContent'
+
+const formatCompact = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '--'
+  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
+}
+
+const formatPoints = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '--'
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
+const initialsFromName = (value: string) =>
+  value
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+
+const tierLabel = (tier: string) => {
+  switch (tier) {
+    case 'platinum':
+      return 'Apex'
+    case 'gold':
+      return 'Gold'
+    case 'silver':
+      return 'Silver'
+    default:
+      return 'Bronze'
+  }
+}
+
+const trimCopy = (value: string, maxLength = 132) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 1).trimEnd()}…` : value
+
 export default function Rankings() {
+  const { content, isLoading: isArtistLoading } = useArtistContent()
+  const leaderboard = useQuery(api.points.getFanLeaderboard, { limit: 12 })
+
+  const entries = leaderboard?.entries ?? []
+  const podium = entries.slice(0, 3)
+  const remainder = entries.slice(3)
+  const currentUserEntry = leaderboard?.currentUserEntry ?? null
+  const recentPost = content.instagram.posts[0] ?? null
+
+  const artistSnapshot = useMemo(
+    () => [
+      {
+        label: 'Monthly listeners',
+        value: formatCompact(content.spotify.monthlyListeners),
+      },
+      {
+        label: 'Followers',
+        value: content.instagram.followersLabel || '--',
+      },
+      {
+        label: 'Top track',
+        value: content.spotify.topTrack?.name || 'Waiting for sync',
+      },
+      {
+        label: 'Latest drop',
+        value: content.spotify.latestRelease?.name || 'Pending',
+      },
+    ],
+    [content],
+  )
+
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
-      <style>{`
-        body {
-            background-color: theme('colors.parchment');
-            color: theme('colors.ink');
-            font-family: theme('fontFamily.sans');
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        .border-structural {
-            border-color: theme('colors.ink');
-            border-width: 1px;
-            border-style: solid;
-        }
+    <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
+      <SharedNavbar />
 
-        .border-structural-b {
-            border-bottom-color: theme('colors.ink');
-            border-bottom-width: 1px;
-            border-bottom-style: solid;
-        }
-        
-        .border-structural-r {
-            border-right-color: theme('colors.ink');
-            border-right-width: 1px;
-            border-right-style: solid;
-        }
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <div className="grid min-h-0 xl:grid-cols-[minmax(0,1.12fr)_360px]">
+          <section className="bg-[#F4EFE6]">
+            <div className="border-b border-[#3C2A21] bg-[#FAF7F2] px-6 py-10 md:px-10 md:py-12">
+              <div className="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
+                <div className="max-w-3xl">
+                  <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.22em] text-[#8E7D72]">
+                    Fan standings
+                  </p>
+                  <h1 className="mb-4 font-serif text-5xl leading-none md:text-7xl">Pack Rankings</h1>
+                  <p className="text-base leading-7 text-[#3C2A21]/80 md:text-lg">
+                    Fan rank stays driven by community reward points. The ROA pulse rail tracks the
+                    current release cycle separately, so artist momentum never reads like leaderboard
+                    score.
+                  </p>
+                </div>
 
-        .border-structural-t {
-            border-top-color: theme('colors.ink');
-            border-top-width: 1px;
-            border-top-style: solid;
-        }
+                <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[440px]">
+                  {artistSnapshot.map((item) => (
+                    <div key={item.label} className="border border-[#3C2A21]/12 bg-[#F4EFE6] px-4 py-4">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                        {item.label}
+                      </p>
+                      <p className="font-serif text-[1.75rem] leading-none">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-
-
-        .nav-link {
-            position: relative;
-            text-transform: uppercase;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            color: theme('colors.ink');
-            transition: color 0.2s ease;
-        }
-
-        .nav-link:hover {
-            color: theme('colors.muted');
-        }
-
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background-color: theme('colors.ink');
-        }
-
-        /* Hide scrollbar for clean editorial look */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-    `}</style>
-      
-
-<SharedNavbar />
-
-<main className="flex-1 flex overflow-hidden bg-parchment">
-
-<section className="w-2/5 border-structural-r flex flex-col bg-parchment relative z-10">
-
-<div className="p-8 pb-4">
-<h1 className="font-serif text-5xl font-medium leading-none mb-2" >The Archive</h1>
-<p className="text-sm text-muted uppercase tracking-widest font-semibold" >Historical Registry &amp; Top Collectors</p>
-</div>
-
-<div className="flex-1 flex flex-col justify-start px-8 py-8 gap-6 overflow-y-auto no-scrollbar">
-
-<div className="bg-vellum border-structural p-6 flex items-center gap-6 relative group transition-colors duration-300 hover:bg-parchment">
-<div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
-<div className="font-serif text-6xl text-ink w-16 text-center leading-none" >I</div>
-<div className="h-20 w-20 rounded-none border-structural overflow-hidden shrink-0">
-<img alt="Avatar Rank 1" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="Portrait of a man with serious expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3YllumrAgf8dhrK3btWG8RzFH69v1BlDxAAsxe0T92vNvWEwTfepT6uJQq_15Ib1oMgIWX6SG1zjdVP-_2PHhqii4RfUxEn5iMOHYt4ATu55UIMzB1G_c_HyI5yDBdUOPCJ3clmFM381xb0fvkXuq2R_R0X-IcUw2eeV-M_ZzxnBoDfN8RMkVhPa4-vgQKFP2WWOtKfCvczWug6ZktwuOVhwJi2eNt8DYPTk4kY4_fNqRZ66q81lgy5LcEuEHmkIt1FV0rr7dmC6v"  />
-</div>
-<div className="flex-1">
-<h2 className="font-serif text-3xl font-medium mb-1" >Aurelius</h2>
-<div className="flex items-center gap-3">
-<span className="text-xs font-bold uppercase tracking-widest text-primary" >Grandmaster</span>
-<span className="text-sm text-muted flex items-center gap-1" >
-<Circle className="text-[14px]" />
-                                142,500
-                            </span>
-</div>
-</div>
-</div>
-
-<div className="bg-vellum border-structural p-5 flex items-center gap-5 relative group transition-colors duration-300 hover:bg-parchment ml-4">
-<div className="font-serif text-5xl text-muted w-12 text-center leading-none group-hover:text-ink transition-colors" >II</div>
-<div className="h-16 w-16 rounded-none border-structural overflow-hidden shrink-0">
-<img alt="Avatar Rank 2" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="Portrait of a woman looking slightly away" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDv-wWHk6MMx3OdsljChkG1LxVaJKYeGrZXWtWk--LboIOkL4EwW-N-bVkbTWkcOx8Ve8yKEiUntYIW6mCiB9PTxWe-HzkdwxrsoaOHWc41Scj2KZ1VfKR8GJyn1M7yeppZYma-6dsZUSJuHRc8Sjm4T03viPNMXrToJAcOxQuCmeV5wNFx4x92eZ39STJX4zApAPlZa2ZcRCCrFPqV91UOpbasYEzPG4uM9re7o6UuNs9PtgnHmiZRZIsiaUkvmFWHSO0jjoyF0Mvi"  />
-</div>
-<div className="flex-1">
-<h2 className="font-serif text-2xl font-medium mb-1" >Seraphina</h2>
-<div className="flex items-center gap-3">
-<span className="text-xs font-bold uppercase tracking-widest text-ink" >Curator</span>
-<span className="text-sm text-muted flex items-center gap-1" >
-<Circle className="text-[14px]" />
-                                128,400
-                            </span>
-</div>
-</div>
-</div>
-
-<div className="bg-vellum border-structural p-4 flex items-center gap-4 relative group transition-colors duration-300 hover:bg-parchment ml-8">
-<div className="font-serif text-4xl text-muted w-10 text-center leading-none group-hover:text-ink transition-colors" >III</div>
-<div className="h-12 w-12 rounded-none border-structural overflow-hidden shrink-0">
-<img alt="Avatar Rank 3" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="Portrait of a man with light stubble" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1vyU5i6mbAnNQhCWuzeym9v5a1PRwQVv_WTiU8CMABCDKIABwqI80ZEvAbtYLuvYEvFg0f2fpavFVjlHYxGMRsBTlCMOhrb5SouINay2ojh98rj3FaiQTcKuIHFrNPvb6zX-UdkL0xxqVyBw5O0HfLN18ihYC034n7Ao2YK8gwAys7xsy2RH5cqq8fAq1uvqIcFv0_E2BAYmF3QiUIftzpd98t0UX4wkl5ZZ4a8TkngaoiSoTFGoROqkhXBwZOcQ-CvJJl4tNpsSO"  />
-</div>
-<div className="flex-1">
-<h2 className="font-serif text-xl font-medium mb-0.5" >Cassius</h2>
-<div className="flex items-center gap-3">
-<span className="text-[10px] font-bold uppercase tracking-widest text-ink" >Archivist</span>
-<span className="text-xs text-muted flex items-center gap-1" >
-<Circle className="text-[12px]" />
-                                115,200
-                            </span>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section className="w-3/5 bg-vellum flex flex-col relative">
-
-<div className="h-12 border-structural-b flex items-center px-8 bg-parchment sticky top-0 z-20">
-<div className="w-16 text-xs font-bold uppercase tracking-widest text-muted" >Rank</div>
-<div className="flex-1 text-xs font-bold uppercase tracking-widest text-muted" >Collector</div>
-<div className="w-32 text-xs font-bold uppercase tracking-widest text-muted text-right" >Score</div>
-<div className="w-32 text-xs font-bold uppercase tracking-widest text-muted text-right" >Status</div>
-</div>
-
-<div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
-<div className="flex flex-col flex-1">
-
-<div className="h-14 border-structural-b flex items-center px-8 hover:bg-parchment transition-colors cursor-pointer group">
-<div className="w-16 text-sm font-semibold text-muted group-hover:text-ink" >04</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural overflow-hidden bg-parchment">
-<img alt="Avatar" className="w-full h-full object-cover grayscale opacity-70" data-alt="Small grayscale user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAZfH1ieefxAcavKum3sca_k54PAHj33LeEJhWB_0DKIT_KmsXGjaNgzhbWQGBaguIE9EGM6Rn7q_Qv7Bqg2BEdHQ8IgMEIxIyGbgmaSdXo4unQuQBwShVxsJaEhvziOhwirkaimnrAYNRiZ5g1NFKHH5WUYpdO4sySW8MdezGb0EkYj4WBHmNFtzVkNha9GAFzNAiyjwBlLe-XuldSH5kAkc8YwEg7crRFOg-nhfxOmHOdvIWqyw8DVCjUCDpJDB_Tqaua-CYO1Zg"  />
-</div>
-<span className="text-sm font-medium text-ink" >Valerius</span>
-</div>
-<div className="w-32 text-sm text-right text-muted font-mono" >98,450</div>
-<div className="w-32 text-right">
-<span className="text-[10px] uppercase tracking-wider text-accent border border-accent px-2 py-0.5" >Active</span>
-</div>
-</div>
-
-<div className="h-14 border-structural-b flex items-center px-8 hover:bg-parchment transition-colors cursor-pointer group">
-<div className="w-16 text-sm font-semibold text-muted group-hover:text-ink" >05</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural overflow-hidden bg-parchment">
-<img alt="Avatar" className="w-full h-full object-cover grayscale opacity-70" data-alt="Small grayscale user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2wWSQCJPs-5Udbpjd9YKAQkzQr8vQ0psMkbMzpHdFJ78T8a4drJLwwthVCySFmnUYvj27qRIMu0Ht_pOFFteaJCDWqYV-EPVtvw4WBJBTMZ8zrYQTf4vEBDKYI1Wzag5sdgsbwQixjV81hZeH6s7sTJMGp_ATtv9bOsFwSiCyM-518CZ8xQwkLfkw8Eq8sde8v4yUjURmSCtMR5tGP4zlXHwK1BBQYTcTiUfr74X4j-t4IGyzcP1JdDfDVBln7KqOr8GjxoPwILLt"  />
-</div>
-<span className="text-sm font-medium text-ink" >Octavia</span>
-</div>
-<div className="w-32 text-sm text-right text-muted font-mono" >95,120</div>
-<div className="w-32 text-right">
-<span className="text-[10px] uppercase tracking-wider text-accent border border-accent px-2 py-0.5" >Active</span>
-</div>
-</div>
-
-<div className="h-14 border-structural-b flex items-center px-8 hover:bg-parchment transition-colors cursor-pointer group">
-<div className="w-16 text-sm font-semibold text-muted group-hover:text-ink" >06</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural overflow-hidden bg-parchment"></div>
-<span className="text-sm font-medium text-ink" >Lucius_V</span>
-</div>
-<div className="w-32 text-sm text-right text-muted font-mono" >91,005</div>
-<div className="w-32 text-right">
-<span className="text-[10px] uppercase tracking-wider text-muted border border-muted px-2 py-0.5 opacity-50" >Dormant</span>
-</div>
-</div>
-
-<div className="h-14 border-structural-b flex items-center px-8 hover:bg-parchment transition-colors cursor-pointer group">
-<div className="w-16 text-sm font-semibold text-muted group-hover:text-ink" >07</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural overflow-hidden bg-parchment">
-<img alt="Avatar" className="w-full h-full object-cover grayscale opacity-70" data-alt="Small grayscale user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFr00LvbjEKynaBplJfDWqBjsRNOiS88-P7mOPzcKDq_dpdIKReheAUI42tuD83BIOE90bpWpfXoI6lw3xfQ1_SDWusuQVIfpOvSvSyIauZWzhFjQA3H93Jq7KacxYZzxycEOQa3Ytot8Q5rFtWtKff3gpAke0_nIDo3QxvYq7xfThQ-AvsuSyAu8yZsuZxZZ9IVRyjY1klGVVgcOPVv53kb6pQxoarz8njrxq5cBlePTLu2XZmKXrP88OzPMzBA3DxMm4ckYvQ_qV"  />
-</div>
-<span className="text-sm font-medium text-ink" >Helena</span>
-</div>
-<div className="w-32 text-sm text-right text-muted font-mono" >88,740</div>
-<div className="w-32 text-right">
-<span className="text-[10px] uppercase tracking-wider text-accent border border-accent px-2 py-0.5" >Active</span>
-</div>
-</div>
-
-<div className="h-14 border-structural-b flex items-center px-8 hover:bg-parchment transition-colors cursor-pointer group bg-primary/5">
-<div className="w-16 text-sm font-semibold text-primary" >08</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-primary border overflow-hidden bg-parchment">
-<img alt="Current User Avatar" className="w-full h-full object-cover" data-alt="Current user avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDW1X0nkps6fvGg-cbp7Uh42JWnoCwYIyab5QSsCDXjaN5PwfwAAGkuf-cEHBgT1bJInH6yeMPwhelgFDxAlbpKmJ_h3IdbG9FsMIKAg1w8YZkSomf1P82HTk3_W5fT-UqVW8m1S-pkfxyHIk3QcXYTEXVCMXcgR6Z54nvfUpp2obWDoCDOfGQ4R60C5Yxoaoh1Vm99_Eq49Iy8DLQpgf_g857Tcyx0VSBYe9xKa0Bf73pBKQdSimP56VDw7QuckyDvz_bLOSWxJet"  />
-</div>
-<span className="text-sm font-bold text-ink" >You (Observer)</span>
-</div>
-<div className="w-32 text-sm text-right text-primary font-mono font-bold" >85,200</div>
-<div className="w-32 text-right">
-<span className="text-[10px] uppercase tracking-wider text-primary border border-primary px-2 py-0.5" >Active</span>
-</div>
-</div>
-
-<div className="h-14 border-structural-b flex items-center px-8 opacity-50">
-<div className="w-16 text-sm font-semibold text-muted" >09</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural bg-parchment animate-pulse"></div>
-<div className="h-4 w-24 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-16 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-12 bg-parchment border-structural animate-pulse"></div>
-</div>
-</div>
-<div className="h-14 border-structural-b flex items-center px-8 opacity-40">
-<div className="w-16 text-sm font-semibold text-muted" >10</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural bg-parchment animate-pulse"></div>
-<div className="h-4 w-20 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-16 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-12 bg-parchment border-structural animate-pulse"></div>
-</div>
-</div>
-<div className="h-14 border-structural-b flex items-center px-8 opacity-30">
-<div className="w-16 text-sm font-semibold text-muted" >11</div>
-<div className="flex-1 flex items-center gap-3">
-<div className="h-6 w-6 rounded-full border-structural bg-parchment animate-pulse"></div>
-<div className="h-4 w-28 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-16 bg-parchment border-structural animate-pulse"></div>
-</div>
-<div className="w-32 flex justify-end">
-<div className="h-4 w-12 bg-parchment border-structural animate-pulse"></div>
-</div>
-</div>
-<div className="p-8 text-center mt-auto flex flex-col items-center gap-8 border-t border-structural">
-<span className="text-xs text-muted uppercase tracking-widest font-semibold flex items-center justify-center gap-2 cursor-pointer hover:text-ink transition-colors" >
-<Circle className="text-[16px]" />
-                            Load Remaining Archives
+            <div className="px-6 py-8 md:px-10 md:py-10">
+              <div className="mb-10 grid gap-5 lg:grid-cols-3">
+                {podium.map((entry) => (
+                  <article
+                    key={entry.userId}
+                    className={`border bg-[#FAF7F2] p-5 md:p-6 ${
+                      entry.rank === 1 ? 'border-[#3C2A21] shadow-sm' : 'border-[#3C2A21]/20'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                          Rank {String(entry.rank).padStart(2, '0')}
+                        </p>
+                        <h2 className="mt-3 font-serif text-[2.6rem] leading-[0.94]">
+                          {entry.displayName}
+                        </h2>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="text-[10px] uppercase tracking-[0.18em] text-[#C36B42]">
+                          {tierLabel(entry.fanTier)}
                         </span>
-                        
-<Link to="/ranking-submission" className="bg-ink text-vellum px-12 py-4 font-bold text-xs uppercase tracking-widest rounded-sm hover:bg-primary transition-colors flex items-center gap-3">
-    Submit Your Rankings
-</Link>
-</div>
-</div>
-</div>
-<img alt="Large Seal Graphic" className="absolute w-full h-[150%] object-contain opacity-5 grayscale -rotate-12 pointer-events-none z-0 left-20 -top-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE7cVLnoAjBRZLN_vsnzZCdrKXjIM47Y9VI-uYv4YKaG8CT8w6pUKVH1mY87GlOjIZ_-JIvAcDy_ES_gYwAvMzL0waPAyeA8iwr9LwsV8R5FvTMNxSM6vnMZGBa1I5E_Wt6y16L8ikL4-KJfX1C4VCNdf1SRaOUon2mb-QMB0pvAOtR_Pc3rM_1gCHM4UjXXrfExt1LEDzNxs1_KBotcijKSznWdSisfENT6hDP_PMqnXaBF9RXqp2UGOs4GjL7z8LsB4B2-Xmk7Yn" />
-</section>
+                        {entry.role !== 'fan' ? (
+                          <span className="border border-[#3C2A21]/15 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-[#3C2A21]">
+                            Staff
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
 
-</main>
+                    <div className="mt-6 flex items-center gap-4">
+                      {entry.avatar ? (
+                        <img
+                          src={entry.avatar}
+                          alt={entry.displayName}
+                          className="h-16 w-16 border border-[#3C2A21] object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 items-center justify-center border border-[#3C2A21] bg-[#F4EFE6] font-serif text-xl">
+                          {initialsFromName(entry.displayName)}
+                        </div>
+                      )}
 
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                          Points
+                        </p>
+                        <p className="mt-2 font-serif text-[2.35rem] leading-none">
+                          {formatPoints(entry.totalPoints)}
+                        </p>
+                        <p className="mt-2 truncate text-[11px] uppercase tracking-[0.16em] text-[#8E7D72]">
+                          {entry.username ? `@${entry.username}` : 'Pack member'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#3C2A21]/10 pt-4">
+                      <div className="border border-[#3C2A21]/10 bg-[#F4EFE6] px-3 py-3">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                          Available
+                        </p>
+                        <p className="mt-2 font-semibold text-[#3C2A21]">
+                          {formatPoints(entry.availablePoints)}
+                        </p>
+                      </div>
+                      <div className="border border-[#3C2A21]/10 bg-[#F4EFE6] px-3 py-3">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                          Streak
+                        </p>
+                        <p className="mt-2 font-semibold text-[#3C2A21]">
+                          {entry.currentStreak} day{entry.currentStreak === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="border border-[#3C2A21] bg-[#FCFBF9]">
+                <div className="grid grid-cols-[72px_minmax(0,1fr)_140px_120px] gap-4 border-b border-[#3C2A21] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                  <div>Rank</div>
+                  <div>Member</div>
+                  <div className="text-right">Points</div>
+                  <div className="text-right">Status</div>
+                </div>
+
+                {remainder.length > 0 ? (
+                  remainder.map((entry) => (
+                    <div
+                      key={entry.userId}
+                      className={`grid grid-cols-[72px_minmax(0,1fr)_140px_120px] items-center gap-4 border-b border-[#3C2A21]/10 px-6 py-4 ${
+                        entry.isCurrentUser ? 'bg-[#C36B42]/8' : 'bg-transparent'
+                      }`}
+                    >
+                      <div className="text-sm font-semibold text-[#8E7D72]">
+                        {String(entry.rank).padStart(2, '0')}
+                      </div>
+                      <div className="flex min-w-0 items-center gap-3">
+                        {entry.avatar ? (
+                          <img
+                            src={entry.avatar}
+                            alt={entry.displayName}
+                            className="h-10 w-10 rounded-full border border-[#3C2A21]/15 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#3C2A21]/15 bg-[#F4EFE6] text-xs font-bold">
+                            {initialsFromName(entry.displayName)}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{entry.displayName}</p>
+                          <p className="truncate text-[11px] uppercase tracking-[0.14em] text-[#8E7D72]">
+                            {entry.username ? `@${entry.username}` : tierLabel(entry.fanTier)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right font-mono">{formatPoints(entry.totalPoints)}</div>
+                      <div className="text-right">
+                        <span className="inline-flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
+                          <Circle size={12} />
+                          {entry.role !== 'fan' ? 'Staff' : entry.statusLabel}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-6 py-12 text-center text-sm text-[#3C2A21]/70">
+                    {leaderboard === undefined
+                      ? 'Loading fan standings.'
+                      : 'No fan ranking data is available yet.'}
+                  </div>
+                )}
+              </div>
+
+              {currentUserEntry && !entries.some((entry) => entry.userId === currentUserEntry.userId) ? (
+                <div className="mt-6 flex items-center justify-between gap-4 border border-[#C36B42] bg-[#FAF7F2] px-6 py-5">
+                  <div>
+                    <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                      Your position
+                    </p>
+                    <p className="font-serif text-3xl leading-none">{currentUserEntry.displayName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                      Rank {String(currentUserEntry.rank).padStart(2, '0')}
+                    </p>
+                    <p className="font-mono text-lg">{formatPoints(currentUserEntry.totalPoints)} pts</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <p className="text-sm text-[#3C2A21]/70">
+                  Artist pulse stays sourced from the shared artist payload while fan rank remains
+                  tied to reward points.
+                </p>
+                <Link
+                  to="/ranking-submission"
+                  className="inline-flex items-center gap-3 border border-[#3C2A21] bg-[#3C2A21] px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
+                >
+                  Submit Your Rankings
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <aside className="border-t border-[#3C2A21] bg-[#FAF7F2] p-8 md:p-9 xl:border-l xl:border-t-0">
+            <div className="border-b border-[#3C2A21]/12 pb-6">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8E7D72]">
+                Current release
+              </p>
+              <h2 className="font-serif text-4xl leading-none">
+                {content.spotify.latestRelease?.name || 'Artist sync pending'}
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
+                Context only. This rail tracks the live release cycle while the main board stays
+                focused on fan standings.
+              </p>
+            </div>
+
+            <div className="mt-6 border border-[#3C2A21] bg-[#F4EFE6] p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E7D72]">Freshness</p>
+                  <p className="mt-2 font-serif text-2xl">
+                    {content.freshness?.ageDays === null || content.freshness?.ageDays === undefined
+                      ? 'Unsynced'
+                      : `${content.freshness.ageDays}d old`}
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                  <RadioTower size={14} />
+                  {content.freshness?.isStale ? 'Needs refresh' : 'Current'}
+                </span>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
+                {recentPost?.caption
+                  ? trimCopy(recentPost.caption)
+                  : isArtistLoading
+                    ? 'Loading the artist signal feed.'
+                    : 'No recent Instagram copy has been synced yet.'}
+              </p>
+              <Link
+                to="/campaign"
+                className="mt-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:text-[#C36B42]"
+              >
+                <Flame size={14} />
+                Open campaign
+              </Link>
+            </div>
+
+            <div className="mt-6 border border-[#3C2A21]/12 bg-[#FCFBF9] p-5">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                Top tracks
+              </p>
+              <div className="space-y-4">
+                {content.spotify.popularTracks.slice(0, 4).map((track, index) => (
+                  <div
+                    key={track.id}
+                    className="flex items-baseline justify-between gap-4 border-b border-[#3C2A21]/8 pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                        #{index + 1}
+                      </p>
+                      <p className="mt-1 truncate font-semibold">{track.name}</p>
+                    </div>
+                    <p className="whitespace-nowrap text-xs text-[#8E7D72]">
+                      {formatCompact(track.streams)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 border border-[#3C2A21]/12 bg-[#FCFBF9] p-5">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                Recent post
+              </p>
+
+              {recentPost ? (
+                <a
+                  href={recentPost.url || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block transition-colors hover:text-[#C36B42]"
+                >
+                  <div className="overflow-hidden border border-[#3C2A21]/12 bg-[#F4EFE6]">
+                    <PrototypeSafeImage
+                      src={recentPost.thumbnailUrl}
+                      alt={recentPost.description || `${content.artistName} post`}
+                      kind="social"
+                      className="h-44 w-full object-cover"
+                      description="The synced caption stays visible even if the original image host expires."
+                    />
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
+                    {trimCopy(
+                      recentPost.caption ||
+                        recentPost.description ||
+                        'No social caption is available for the current post.',
+                    )}
+                  </p>
+                </a>
+              ) : (
+                <div className="border border-dashed border-[#3C2A21]/12 bg-[#F4EFE6] px-4 py-6 text-sm leading-6 text-[#3C2A21]/70">
+                  No recent social proof has been synced into the current payload yet.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      </main>
     </div>
-  );
+  )
 }

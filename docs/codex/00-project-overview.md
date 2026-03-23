@@ -1,187 +1,109 @@
-# Project Overview
+# Project overview
+
+> **Status:** Current website. This file describes the current routed app first
+> and then calls out the planned or unrouted architecture that still exists in
+> source.
 
 ## Summary
 
-This project is a music artist web application built around a scenic, navigable estate world.
+This repository currently ships a prototype-driven ROA website. The live app is
+defined by `src/App.tsx` and built from the screens in
+`src/pages/StitchPrototypes`.
 
-The landing page is not a conventional hero section with cards layered on top. It is an interactive architectural scene that acts as the user's primary navigation entrypoint.
+The repo also contains a separate scenic/shared-IA implementation track that is
+still present in source, but is not routed by the current website.
 
-Users should feel like they are entering a private estate that reflects the artist's world:
-- luxury
-- privacy
-- night energy
-- prestige
-- intimacy
-- ritual
-- exclusivity
-- editorial cool
+## Current website
 
-The product combines:
-- public artist discovery
-- campaign / album promotion
-- store / merch
-- events
-- rankings / charts
-- authenticated community features
+The live site uses:
 
----
+- `src/App.tsx` for the route contract
+- `src/pages/StitchPrototypes/*` for the served screens
+- `src/main.tsx` for Auth0 and Convex provider wiring
+- `src/components/Effects/PageTransition.tsx` for route transitions
+- shared contexts for user, cart, language, gear, and visual variants
 
-## Core concept
+The current live routes are:
 
-The app uses an estate / castle environment as the visual navigation layer.
+- `/` and `/journey`
+- `/dashboard`
+- `/archive`
+- `/rankings`
+- `/ranking-submission`
+- `/profile`
+- `/community`
+- `/store`
+- `/salon`
+- `/access-tiers-mobile`
+- `/access-tiers-albert`
+- `/experience-mobile`
+- `/experience-albert`
+- `/events-mobile`
+- `/events`
+- `/dashboard-mobile`
+- `/login`
 
-The user lands on an outer-grounds scene rendered from a slightly elevated isometric angle. Distinct architectural regions are interactive and route users to different sections of the application.
+All unknown routes currently redirect back to `/`.
 
-This is inspired by scenic spatial navigation rather than flat menu-only navigation.
+## Current product character
 
-The landing image should function as:
-- worldbuilding
-- mood setting
-- wayfinding
-- page routing
-- campaign showcase
+The current website feels closer to an editorial prototype set than to the
+older scenic navigation concept. The live screens use the ROA archive language:
 
-It should not become a puzzle. The system must remain readable and intuitive.
+- parchment and vellum surfaces
+- ink-based typography and borders
+- terracotta accent cues
+- mobile and alternate-view prototypes living beside desktop screens
 
----
+That design language is documented in `docs/DESIGN.md`.
 
-## Core user experience
+## Auth and backend state
 
-### Public users
-Public users can:
-- view the scenic landing world
-- navigate public regions
-- see auth-only regions visually
-- click locked regions and be prompted to sign in / sign up
+Auth0 and Convex are live dependencies in the app shell:
 
-### Authenticated users
-Authenticated users can:
-- access community features
-- move from scenic navigation into deeper app destinations
-- access private or gated sections
-- return back to the scenic hub
+- `src/main.tsx` mounts `Auth0Provider`, `ConvexProvider`, and
+  `ConvexAuthProvider`
+- `convex/auth.config.js` validates Auth0 issuer and audience
+- `src/contexts/UserContext.tsx` reads Auth0 state and Convex-backed identity
 
----
+There is an important split to keep in mind:
 
-## Current scenic navigation map
+- the current live router serves `/login` as a prototype login screen
+- the repo also contains helper auth pages and an `/auth` contract, but those
+  routes are not declared in `src/App.tsx`
 
-The current landing scene is the outer grounds of the estate.
+Do not assume the helper auth pages are live until the router is updated.
 
-The currently intended primary mapped destinations are:
+## Planned and unrouted architecture
 
-- **Store** — left estate wing
-- **Events** — upper-left central palace block
-- **Ranking** — top rear palace mass
-- **Campaign** — center fountain court
-- **Community** — right private wing / tower mass
+The scenic/shared-IA track is still in the repo and may be resumed later. The
+main source files for it are:
 
-Profile is not a primary landing destination in v1 and should remain nested under Community.
+- `src/features/navigation/topLevelNav.ts`
+- `src/features/castleNavigation/sceneConfig.ts`
+- `src/features/castleNavigation/storeSceneConfig.ts`
+- `src/pages/LandingPage.tsx`
+- `src/pages/StoreScenePage.tsx`
+- `src/features/auth/authRouting.ts`
 
----
+That track assumes a different route model, including `/auth`, `/campaign`,
+`/ranking`, `/store/browse`, and `/store/product/:productId`. Those routes are
+reference architecture today, not live website behavior.
 
-## World design direction
+## Other code that exists but is not live
 
-The visual identity should feel like a collision of:
-- aristocratic architecture
-- nocturnal luxury
-- cinematic editorial framing
-- artist-world exclusivity
-- subtle modern status cues
+The phone overlay system under `src/components/PhoneDisplay/` is implemented in
+source, but the current app shell does not mount it. Treat it as planned or
+unrouted work until `src/App.tsx` or `src/main.tsx` mounts the overlay root.
 
-The environment should be realistic enough to feel inhabitable and premium, but stylized enough to support brand mood and scenic navigation.
+## How to use the codex docs
 
-Key mood words:
-- midnight
-- private
-- expensive
-- cold air
-- torchlight
-- stone
-- glass
-- shadow
-- polished metal
-- ritual
-- prestige
-- silence
-- anticipation
+Use these docs in order:
 
----
+1. `docs/codex/AGENTS.md`
+2. `docs/codex/BOOTSTRAP.md`
+3. `docs/codex/06-current-state.md`
+4. `docs/codex/07-task-queue.md`
 
-## What makes this different
-
-This is not just a themed skin over a normal website.
-
-The spatial world is part of the product architecture.
-
-The scene must:
-- help users navigate
-- clarify what is public vs locked
-- support hover/tap discoverability
-- communicate hierarchy
-- support campaign storytelling
-
-That means scenic beauty alone is not enough. The image must be structurally usable.
-
----
-
-## Product sections
-
-### Public-facing
-- landing scene / estate navigation
-- campaign / current release
-- store
-- events
-- ranking
-
-### Auth-required
-- community
-- nested profile / member-specific destinations
-- deeper community utilities
-
----
-
-## Technical model
-
-The landing navigation should be driven by:
-- a base scene image
-- SVG path overlays for mapped regions
-- region config objects
-- hover / active / locked visual states
-- anchor positions for labels and directional cues
-- auth-gated click behavior
-- mobile adaptations for touch and pan
-
-This means the scene is not hardcoded by pixel-magic everywhere. It should be data-driven enough to maintain.
-
----
-
-## Implementation philosophy
-
-The correct implementation sequence is:
-1. get the region interaction system working
-2. validate usability
-3. refine path accuracy and anchors
-4. add polish effects
-5. add transitions and cinematic enhancements
-
-Not the other way around.
-
-A polished but unstable interaction model is failure.
-
-A simpler but robust navigation layer is the correct foundation.
-
----
-
-## Long-term vision
-
-The estate scene is the beginning of a broader spatial brand system.
-
-Possible later extensions:
-- establishing intro shot
-- gate-opening transition
-- room-specific scenes for destinations
-- animated environmental cues
-- richer campaign staging
-- seasonal / era-based scene swaps
-
-These are future layers. They should not destabilize the core scenic navigation system.
+Read the scenic/shared-IA docs only when the task explicitly touches that
+architecture.

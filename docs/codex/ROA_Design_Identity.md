@@ -1,3 +1,6 @@
+> **Status:** Research reference. This document is background identity research
+> and does not describe the current routed website.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ROA × PRIVATE SUITE OS
 Design Identity & Brand Personality

@@ -41,7 +41,7 @@ export const buildTopLevelNavLinks = (t: TranslationFn): TopLevelNavLink[] => [
   {
     id: 'ranking',
     name: resolveLabel(t, 'nav.ranking', 'Rankings'),
-    path: '/ranking',
+    path: '/rankings',
     keywords: ['leaderboard', 'songs', 'charts'],
   },
   {
@@ -63,7 +63,7 @@ export const getActiveTopLevelNavId = (pathname: string): TopLevelNavId | null =
   if (pathname === '/') return 'explore-estate'
   if (pathname.startsWith('/store') || pathname.startsWith('/merch')) return 'store'
   if (pathname.startsWith('/events')) return 'events'
-  if (pathname.startsWith('/ranking')) return 'ranking'
+  if (pathname.startsWith('/rankings') || pathname.startsWith('/ranking')) return 'ranking'
   if (pathname.startsWith('/campaign')) return 'campaign'
 
   if (

@@ -1,96 +1,80 @@
 # Documentation
 
-Complete documentation for the Sickass Artist Platform.
+This directory tracks the current state of the repository. The most important
+rule is simple: treat `src/App.tsx` as the source of truth for the current
+website, and label any other architecture explicitly.
 
----
+## Status taxonomy
 
-## Quick Start
+These labels are used across the docs:
 
-New to the project? Start here:
+- **Current website**: behavior currently served by `src/App.tsx`
+- **Planned/unrouted architecture**: code that exists in the repo, but is not
+  routed by the current website
+- **Research reference**: background inspiration or brand research
 
-1. **[Getting Started](./01-getting-started.md)** - Setup, project structure, key patterns
-2. **[Database Schema](./02-database-schema.md)** - Complete schema reference
-3. **[Testing Guide](./06-testing-guide.md)** - Testing procedures
+## Current website docs
 
----
+These docs describe the current routed app and backend contracts:
 
-## Feature Documentation
+| File | Status | Purpose |
+| --- | --- | --- |
+| [`../README.md`](../README.md) | Current website | Repo overview and live route summary |
+| [`README.md`](./README.md) | Current website | Documentation index |
+| [`02-database-schema.md`](./02-database-schema.md) | Current website | Domain-organized guide to `convex/schema.ts` |
+| [`07-auth0-setup.md`](./07-auth0-setup.md) | Current website | Auth0, Convex auth, and current router notes |
+| [`DESIGN.md`](./DESIGN.md) | Current website | Current design language plus planned scenic notes |
+| [`repo_sweep_plan.md`](./repo_sweep_plan.md) | Current website | Truth-alignment audit baseline |
 
-### Core Infrastructure
-**[03-features-core.md](./03-features-core.md)**
-- Analytics & privacy-first tracking
-- Offline support & service worker
-- Loading skeletons (zero-CLS)
-- Optimistic updates
-- Performance monitoring
+## Codex operating docs
 
-### Content & Discovery
-**[04-features-content.md](./04-features-content.md)**
-- Gallery & lightbox
-- Search & discovery
-- Trending algorithm
-- Recommendations
+These files help agents and contributors understand what is live today:
 
-### Commerce
-**[05-features-commerce.md](./05-features-commerce.md)**
-- Merchandise system
-- Points & gamification
-- Rewards redemption
+| File | Status | Purpose |
+| --- | --- | --- |
+| [`codex/00-project-overview.md`](./codex/00-project-overview.md) | Current website | High-level repository split and product summary |
+| [`codex/AGENTS.md`](./codex/AGENTS.md) | Current website | Working rules for agents and contributors |
+| [`codex/BOOTSTRAP.md`](./codex/BOOTSTRAP.md) | Current website | Read-first bootstrap guidance |
+| [`codex/06-current-state.md`](./codex/06-current-state.md) | Current website | Live implementation state |
+| [`codex/07-task-queue.md`](./codex/07-task-queue.md) | Current website | Active queue and deferred convergence work |
 
----
+## Planned and unrouted architecture docs
 
-## Common Tasks
+These files remain useful, but they do not describe the current routed site:
 
-| Task | Documentation |
-|------|---------------|
-| Add feature tracking | [Analytics](./03-features-core.md#analytics--privacy) |
-| Optimize performance | [Performance](./03-features-core.md#performance-monitoring) |
-| Handle offline | [Offline Support](./03-features-core.md#offline-support) |
-| Implement loading states | [Skeletons](./03-features-core.md#loading-skeletons) |
-| Add new database table | [Schema](./02-database-schema.md) |
-| Run tests | [Testing Guide](./06-testing-guide.md) |
+| File | Status | Purpose |
+| --- | --- | --- |
+| [`codex/01-non-negotiables.md`](./codex/01-non-negotiables.md) | Planned/unrouted architecture | Scenic/shared-IA constraints |
+| [`codex/02-region-map.md`](./codex/02-region-map.md) | Planned/unrouted architecture | Estate-scene region mapping |
+| [`codex/03-design-system.md`](./codex/03-design-system.md) | Planned/unrouted architecture | Scenic/shared-IA design system |
+| [`codex/08-store-app-mode-board-spec.md`](./codex/08-store-app-mode-board-spec.md) | Planned/unrouted architecture | Scenic Store shell handoff spec |
+| [`iphone-plan.md`](./iphone-plan.md) | Planned/unrouted architecture | Phone overlay implementation notes for code that is not mounted |
 
----
+## Research reference docs
 
-## Developer Tools
+These files are inspiration and reference material:
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+K` | Global search |
-| `Ctrl+Shift+P` | Performance dashboard |
+| File | Status | Purpose |
+| --- | --- | --- |
+| [`codex/Brand Identity Research.md`](./codex/Brand%20Identity%20Research.md) | Research reference | Brand direction notes |
+| [`codex/Drake Website Research.md`](./codex/Drake%20Website%20Research.md) | Research reference | Comparative research |
+| [`codex/ROA_Design_Identity.md`](./codex/ROA_Design_Identity.md) | Research reference | ROA identity notes |
+| [`codex/Style and Visual Anchor Research.md`](./codex/Style%20and%20Visual%20Anchor%20Research.md) | Research reference | Style and visual anchor study |
 
----
+## Supporting files
 
-## File Structure
+These files support development or doc work, but are not primary product docs:
 
-```
-docs/
-├── README.md              ← You are here
-├── 01-getting-started.md  ← New developer onboarding
-├── 02-database-schema.md  ← Complete schema reference
-├── 03-features-core.md    ← Analytics, offline, skeletons, performance
-├── 04-features-content.md ← Gallery, search, trending
-├── 05-features-commerce.md← Merch, points, rewards
-├── 06-testing-guide.md    ← Testing procedures
-└── _seed-data.ts          ← Sample data for development
-```
+| File | Purpose |
+| --- | --- |
+| [`_seed-data.ts`](./_seed-data.ts) | Local development seed data reference |
 
----
+## Working rules
 
-## Contributing
+When you update docs:
 
-When adding documentation:
-1. Add to the appropriate feature doc (03-06)
-2. Update this README if adding new sections
-3. Use lowercase-with-hyphens for filenames
-4. Include code examples and usage patterns
-5. Keep docs concise but comprehensive
-
----
-
-## Technical Notes
-
-- All schemas use Convex backend
-- Performance targets documented in feature docs
-- Seed data for development/testing only
-- All timestamps in UTC milliseconds
+1. Start by checking `src/App.tsx` for current routes.
+2. Confirm backend facts in `convex/schema.ts` and auth facts in `src/main.tsx`
+   and `convex/auth.config.js`.
+3. Label planned or unrouted work explicitly instead of presenting it as live.
+4. Keep links inside this index aligned with the actual files in `docs/`.

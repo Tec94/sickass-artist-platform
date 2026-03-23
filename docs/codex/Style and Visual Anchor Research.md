@@ -1,5 +1,8 @@
 # Style and Visual Anchor Research for a ROA Private Suite OS App
 
+> **Status:** Research reference. This document is background visual research
+> and does not describe the current routed website.
+
 ## Visual style audit of the reference images
 
 Your image set splits cleanly into two lanes that can coexist in one product if you assign them to the right surfaces.

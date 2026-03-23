@@ -10,6 +10,8 @@
 
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
+import type * as artistContent from "../artistContent.js";
+import type * as artistContentShared from "../artistContentShared.js";
 import type * as cart from "../cart.js";
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
@@ -60,6 +62,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   analytics: typeof analytics;
+  artistContent: typeof artistContent;
+  artistContentShared: typeof artistContentShared;
   cart: typeof cart;
   chat: typeof chat;
   crons: typeof crons;

@@ -1,300 +1,323 @@
-import { Link } from 'react-router-dom';
-import { setNextTransition } from '../../components/Effects/PageTransition';
-import { ArrowLeft, Circle, Menu } from 'lucide-react';
-import SharedNavbar from '../../components/Navigation/SharedNavbar';
+import { useMemo, useState } from 'react'
+import { useQuery } from 'convex/react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, Lock } from 'lucide-react'
+import { api } from '../../../convex/_generated/api'
+import SharedNavbar from '../../components/Navigation/SharedNavbar'
+import { useArtistContent } from '../../features/artistContent'
+import {
+  OUTER_GROUNDS_PATHS,
+  type CastleRegionId,
+} from '../../features/castleNavigation/sceneConfig'
+import { useAuth } from '../../hooks/useAuth'
+import { LandingPage, type OuterGroundRegion } from '../LandingPage'
+
+type JourneyEntry = OuterGroundRegion & {
+  contextLine: string
+  isLocked: boolean
+  statusLabel: string
+}
+
+const trimCopy = (value: string, maxLength = 88) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 1).trimEnd()}…` : value
+
+const formatCompactNumber = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '--'
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: value >= 10000 ? 1 : 0,
+  }).format(value)
+}
+
+const formatPrice = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value / 100)
+}
+
+const formatEventDate = (timestamp: number | null | undefined) => {
+  if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) return null
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(timestamp)
+}
+
+const campaignFallback: JourneyEntry = {
+  id: 'campaign',
+  ...OUTER_GROUNDS_PATHS.campaign,
+  contextLine: 'The current release cycle is the anchor point for the estate right now.',
+  isLocked: false,
+  statusLabel: 'Live now',
+}
 
 export default function Journey() {
-  return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
-        <style>{`body {
-    background-color: #F4F0EB;
-    color: #1C1B1A;
-    font-family: "Manrope", sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    /* Prevent scrolling on the main view */
-    }
-h1, h2, h3, h4, h5, h6, .font-serif {
-    font-family: "Cormorant Garamond", serif;
-    letter-spacing: -0.02em
-    }
-.structural-border {
-    border: 1px solid #1C1B1A
-    }
-.structural-border-b {
-    border-bottom: 1px solid #1C1B1A
-    }
-.structural-border-r {
-    border-right: 1px solid #1C1B1A
-    }
-.structural-border-t {
-    border-top: 1px solid #1C1B1A
-    }
-/* Map specific styles */
-.map-container {
-    position: absolute;
-    top: 72px;
-    left: 0;
-    width: 100vw;
-    height: calc(100vh - 72px);
-    z-index: 0;
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA10V_wL-Q7TGSlNaXluQqdwGlrGLm1dqTXytZyuOOdfbVVG5dLeXaQHG5utD5RUzF1Kym8fZgx4CoTRvRFVEJCwCDNBbKtx2O7E0bgl2HlNhWUzfr1_c2KpQGf0ttJPz6duiVQ87lUA2Ub3PP7i_8wYCt14SoMsHqRrPwsxBFi59NGQDl5JbCQ1A6VgVd9fXQpAWMY1VeZ9Vkb-oMBWfpL4tBfjvEoIGyUjENXrh8gZOeEXsUOI80LL-q46bROr65BNr8PN0Z_QKTq);
-    background-size: cover;
-    background-position: center
-    }
-.map-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(244, 240, 235, 0.9) 0%, rgba(244, 240, 235, 0.4) 40%, transparent 100%);
-    z-index: 1
-    }
-/* Waypoint Animation */
-@keyframes pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(15, 131, 189, 0.7);
-        } 70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(15, 131, 189, 0);
-        } 100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(15, 131, 189, 0);
+  const navigate = useNavigate()
+  const { content } = useArtistContent()
+  const { isSignedIn } = useAuth()
+  const dashboardData = useQuery(api.dashboard.getDashboardData, {})
+  const [visibleRegion, setVisibleRegion] = useState<OuterGroundRegion | null>(null)
+  const [previewRegionId, setPreviewRegionId] = useState<CastleRegionId | null>(null)
+
+  const latestRelease = content.spotify.latestRelease
+  const topTrack = content.spotify.topTrack
+  const recentPost = content.instagram.posts[0] ?? null
+  const nextEvent = dashboardData?.upcomingEvents?.[0] ?? null
+  const featuredProduct = dashboardData?.topMerch?.[0] ?? null
+  const featuredAnnouncement = dashboardData?.recentAnnouncements?.[0] ?? null
+  const fanProgression = dashboardData?.fanProgression ?? null
+
+  const journeyEntries = useMemo<JourneyEntry[]>(() => {
+    const baseRegions = (
+      Object.entries(OUTER_GROUNDS_PATHS) as [CastleRegionId, typeof OUTER_GROUNDS_PATHS[CastleRegionId]][]
+    )
+      .map(([id, region]) => ({
+        id,
+        ...region,
+      }))
+      .sort((left, right) => left.journeyOrder - right.journeyOrder)
+
+    return baseRegions.map((region) => {
+      const isLocked = region.authRequired && !isSignedIn
+
+      if (region.id === 'campaign') {
+        const releaseMeta = [latestRelease?.type, latestRelease?.year].filter(Boolean).join(' • ')
+        return {
+          ...region,
+          isLocked,
+          statusLabel: 'Live now',
+          contextLine:
+            latestRelease?.name
+              ? [latestRelease.name, releaseMeta].filter(Boolean).join(' • ')
+              : recentPost?.caption
+                ? trimCopy(recentPost.caption)
+                : 'The current release cycle is the anchor point for the estate right now.',
         }
-    }
-.waypoint {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: transparent;
-    border: 2px solid #1C1B1A;
-    z-index: 10;
-    cursor: pointer;
-    transition: all 0.3s ease
-    }
-.waypoint:hover {
-    background-color: #1C1B1A
-    }
-.waypoint.active {
-    border-color: #0f83bd;
-    animation: pulse 2s infinite;
-    background-color: #FCFBF9
-    }
-.waypoint-label {
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translatex(-50%);
-    white-space: nowrap;
-    font-family: "Manrope", sans-serif;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #1C1B1A;
-    background-color: #FCFBF9;
-    padding: 2px 6px;
-    border: 1px solid #1C1B1A;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none
-    }
-.waypoint:hover .waypoint-label, .waypoint.active .waypoint-label {
-    opacity: 1
-    }
-/* Layout */
-.ui-layer {
-    position: absolute;
-    top: 72px;
-    left: 0;
-    z-index: 20;
-    display: flex;
-    width: 100vw;
-    height: calc(100vh - 72px);
-    pointer-events: none;
-    /* Let clicks pass through to map where there's no UI */
-    }
-.interactive-ui {
-    pointer-events: auto;
-    /* Re-enable clicks for UI elements */
-    }
-.ledger-panel {
-    width: 400px;
-    height: calc(100vh - 72px);
-    background-color: #FCFBF9;
-    /* Vellum */
-    border-right: 1px solid #1C1B1A;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto
-    }
-/* Custom Scrollbar for Ledger */
-.ledger-panel::-webkit-scrollbar {
-    width: 4px
-    }
-.ledger-panel::-webkit-scrollbar-track {
-    background: #FCFBF9
-    }
-.ledger-panel::-webkit-scrollbar-thumb {
-    background: #1C1B1A
-    }`}</style>
-      
-<div className="absolute top-0 left-0 w-full z-50">
-  <SharedNavbar />
-</div>
-      
+      }
 
-<div className="map-container" data-alt="Abstract spatial map with topographical lines and subtle textures">
-<div className="map-overlay"></div>
+      if (region.id === 'events') {
+        return {
+          ...region,
+          isLocked,
+          statusLabel: nextEvent ? 'Upcoming' : region.journeyStatusFallback,
+          contextLine: nextEvent
+            ? [nextEvent.title, formatEventDate(nextEvent.startAtUtc), nextEvent.city]
+                .filter(Boolean)
+                .join(' • ')
+            : 'The next public appearance will surface here as soon as the schedule updates.',
+        }
+      }
 
-<div className="waypoint" >
-<div className="waypoint-label">Welcome</div>
-</div>
-<div className="waypoint active" >
-<div className="waypoint-label">First Listen</div>
-</div>
-<div className="waypoint" >
-<div className="waypoint-label">Share It</div>
-</div>
-<div className="waypoint" >
-<div className="waypoint-label">Concert Ready</div>
-</div>
-<div className="waypoint" >
-<div className="waypoint-label">Inner Circle</div>
-</div>
-</div>
+      if (region.id === 'store') {
+        const priceLabel = formatPrice(featuredProduct?.price)
+        return {
+          ...region,
+          isLocked,
+          statusLabel: region.journeyStatusFallback,
+          contextLine: featuredProduct
+            ? [featuredProduct.name, priceLabel].filter(Boolean).join(' • ')
+            : latestRelease?.name
+              ? `The merch hall is orbiting ${latestRelease.name}.`
+              : 'The merch hall is open with the current capsule and archive pieces.',
+        }
+      }
 
-<div className="ui-layer">
+      if (region.id === 'ranking') {
+        return {
+          ...region,
+          isLocked,
+          statusLabel: region.journeyStatusFallback,
+          contextLine: fanProgression
+            ? `${formatCompactNumber(fanProgression.points.totalPoints)} points • ${fanProgression.points.currentStreak}-day streak`
+            : topTrack?.name
+              ? `${topTrack.name} is driving the current ranking conversation.`
+              : 'Leaderboard and submission activity stay visible here for the live cycle.',
+        }
+      }
 
-<div className="ledger-panel interactive-ui flex-shrink-0">
+      return {
+        ...region,
+        isLocked,
+        statusLabel: isLocked ? 'Locked' : region.journeyStatusFallback,
+        contextLine: isLocked
+          ? 'Sign in to reach the dashboard, gallery, forum, and live rooms.'
+          : featuredAnnouncement?.content
+            ? trimCopy(featuredAnnouncement.content)
+            : 'Dashboard, gallery, forum, and live rooms are available now.',
+      }
+    })
+  }, [
+    fanProgression,
+    featuredAnnouncement?.content,
+    featuredProduct?.name,
+    featuredProduct?.price,
+    isSignedIn,
+    latestRelease?.name,
+    latestRelease?.type,
+    latestRelease?.year,
+    nextEvent,
+    recentPost?.caption,
+    topTrack?.name,
+  ])
 
-<div className="h-[72px] flex items-center px-6 structural-border-b bg-vellum">
-<Link className="flex items-center gap-2 text-ink hover:text-primary transition-colors" to="/dashboard">
-<ArrowLeft />
-<span className="text-[12px] font-medium uppercase tracking-[0.05em]">Return</span>
-</Link>
-</div>
+  const entryById = useMemo(
+    () => new Map(journeyEntries.map((entry) => [entry.id, entry])),
+    [journeyEntries],
+  )
 
-<div className="p-8 flex-1">
-<div className="mb-10">
-<h2 className="text-4xl font-serif text-ink mb-2">The Journey</h2>
-<p className="text-[12px] font-medium uppercase tracking-[0.05em] text-muted">Your Quests / Progress</p>
-</div>
-<div className="mb-8">
-<div className="flex justify-between items-end mb-4">
-<span className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink">Completion</span>
-<span className="text-[12px] font-bold text-ink">24%</span>
-</div>
-<div className="h-[1px] w-full bg-muted/30 relative">
-<div className="absolute top-0 left-0 h-full w-[24%] bg-primary"></div>
-</div>
-</div>
+  const activeRegion =
+    (previewRegionId ? entryById.get(previewRegionId) : null) ??
+    (visibleRegion ? entryById.get(visibleRegion.id) : null) ??
+    entryById.get('campaign') ??
+    campaignFallback
 
-<div className="flex flex-col">
+  const openDestinations = journeyEntries.filter((entry) => !entry.isLocked).length
+  const destinationProgress = `${openDestinations}/${journeyEntries.length}`
+  const destinationProgressWidth = `${(openDestinations / Math.max(1, journeyEntries.length)) * 100}%`
 
-<div className="py-6 structural-border-b group cursor-pointer">
-<div className="flex items-start gap-4">
-<div className="mt-1 flex-shrink-0 size-6 flex items-center justify-center rounded-full border border-primary text-primary bg-primary/10">
-<Circle />
-</div>
-<div className="flex-1">
-<div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-ink">First Listen</h3>
-<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-primary">Active</span>
-</div>
-<p className="text-sm text-ink/80 leading-[1.6] mb-3">Stream the Private Suite Vol. 3 intro track and share it on your story for exclusive bonus content.</p>
-<div className="flex items-center gap-2">
-<span className="text-[10px] font-medium uppercase tracking-[0.05em] text-muted">Reward:</span>
-<span className="text-[12px] text-ink font-medium">Bonus Track Access</span>
-</div>
-</div>
-</div>
-</div>
+  const openRegion = (region: JourneyEntry) => {
+    navigate(region.isLocked ? '/login' : region.route)
+  }
 
-<div className="py-6 structural-border-b group cursor-pointer bg-vellum hover:bg-parchment transition-colors">
-<div className="flex items-start gap-4">
-<div className="mt-1 flex-shrink-0 size-6 flex items-center justify-center text-accent">
-<Circle />
-</div>
-<div className="flex-1">
-<div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-ink line-through decoration-muted/50">Welcome to the Pack</h3>
-<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-accent">Complete</span>
-</div>
-<p className="text-sm text-muted leading-[1.6]">Created your account and joined La Manada.</p>
-</div>
-</div>
-</div>
+  return (
+    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] font-sans">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <SharedNavbar />
+      </div>
 
-<div className="py-6 structural-border-b group cursor-not-allowed opacity-60">
-<div className="flex items-start gap-4">
-<div className="mt-1 flex-shrink-0 size-6 flex items-center justify-center text-muted">
-<Circle />
-</div>
-<div className="flex-1">
-<div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-muted">Concert Ready</h3>
-<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Locked</span>
-</div>
-<p className="text-sm text-muted leading-[1.6]">RSVP to any upcoming show to unlock a priority entry code.</p>
-</div>
-</div>
-</div>
+      <main className="pt-[72px] min-h-screen grid lg:h-screen lg:min-h-0 lg:grid-cols-[400px_minmax(0,1fr)]">
+        <aside className="border-r border-[#3C2A21] bg-[#FCFBF9] flex flex-col lg:h-[calc(100vh-72px)] lg:min-h-0 lg:overflow-hidden">
+          <div className="h-10 shrink-0 px-6 md:px-8 border-b border-[#3C2A21] flex items-center">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[#3C2A21] hover:text-[#C36B42] transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Return
+            </Link>
+          </div>
 
-<div className="py-6 structural-border-b group cursor-not-allowed opacity-60">
-<div className="flex items-start gap-4">
-<div className="mt-1 flex-shrink-0 size-6 flex items-center justify-center text-muted">
-<Circle />
-</div>
-<div className="flex-1">
-<div className="flex justify-between items-baseline mb-1">
-<h3 className="text-lg font-serif text-muted">Inner Circle</h3>
-<span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Locked</span>
-</div>
-<p className="text-sm text-muted leading-[1.6]">Complete all quests to unlock exclusive Private Suite content.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
+          <div className="px-6 md:px-8 py-8 md:py-10 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+            <div className="mb-10">
+              <h1 className="font-serif text-5xl leading-none mb-4">The Journey</h1>
+              <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#8E7D72]">
+                Outergrounds / Live Chapters
+              </p>
+              <p className="mt-5 text-sm leading-6 text-[#3C2A21]/80">
+                A live estate directory for the current campaign, public events, merch hall,
+                fan standings, and member wing.
+              </p>
+            </div>
 
-<div className="p-6 structural-border-t bg-vellum mt-auto">
-<button className="w-full py-3 bg-ink text-parchment text-[13px] font-semibold uppercase tracking-widest hover:bg-primary transition-colors">
-                    Check Progress
-                </button>
-</div>
-</div>
+            <div className="mb-8">
+              <div className="flex items-end justify-between gap-4 mb-4">
+                <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#3C2A21]">
+                  Open destinations
+                </span>
+                <span className="text-[12px] font-bold text-[#3C2A21]">{destinationProgress}</span>
+              </div>
+              <div className="h-px w-full bg-[#3C2A21]/20 relative">
+                <div
+                  className="absolute inset-y-0 left-0 bg-[#C36B42]"
+                  style={{ width: destinationProgressWidth }}
+                />
+              </div>
+            </div>
 
-<div className="flex-1 relative">
-<div className="absolute top-6 right-6 flex items-center gap-6 interactive-ui">
-<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/dashboard">
-                    Dashboard
-                </Link>
-<Link className="text-[12px] font-medium uppercase tracking-[0.05em] text-ink hover:text-primary bg-vellum/80 backdrop-blur-sm px-4 py-2 border border-ink shadow-sm transition-all" to="/store">
-                    Store
-                </Link>
-<button className="size-10 flex items-center justify-center bg-vellum border border-ink hover:bg-ink hover:text-vellum transition-colors shadow-sm">
-<Menu />
-</button>
-</div>
+            <div className="flex flex-col">
+              {journeyEntries.map((entry) => {
+                const isActive = activeRegion.id === entry.id
+                const indicatorTone = entry.isLocked
+                  ? 'text-[#8E7D72] border-[#3C2A21]/20 bg-transparent'
+                  : isActive
+                    ? 'text-[#C36B42] border-[#C36B42] bg-[#C36B42]/10'
+                    : 'text-[#3C2A21] border-[#3C2A21]/30 bg-transparent'
+                const badgeTone = entry.isLocked
+                  ? 'text-[#8E7D72]'
+                  : isActive
+                    ? 'text-[#C36B42]'
+                    : 'text-[#3C2A21]'
 
-<div className="absolute bottom-6 right-6 flex flex-col gap-2 interactive-ui">
-<button className="size-10 bg-vellum border border-ink flex items-center justify-center hover:bg-parchment transition-colors shadow-sm">
-<Circle />
-</button>
-<button className="size-10 bg-vellum border border-ink flex items-center justify-center hover:bg-parchment transition-colors shadow-sm">
-<Circle />
-</button>
-<button className="size-10 bg-vellum border border-ink flex items-center justify-center hover:bg-parchment transition-colors shadow-sm mt-2">
-<Circle />
-</button>
-</div>
-</div>
-</div>
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    className={`group w-full px-3 md:px-4 py-6 text-left border-b border-[#3C2A21]/25 transition-colors ${
+                      isActive ? 'bg-[#F4EFE6]' : 'bg-transparent hover:bg-[#FAF7F2]'
+                    } ${entry.isLocked ? 'opacity-80' : ''}`}
+                    onMouseEnter={() => setPreviewRegionId(entry.id)}
+                    onMouseLeave={() => setPreviewRegionId(null)}
+                    onFocus={() => setPreviewRegionId(entry.id)}
+                    onBlur={() => setPreviewRegionId(null)}
+                    onClick={() => openRegion(entry)}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`mt-1 h-7 w-7 shrink-0 flex items-center justify-center border ${indicatorTone}`}
+                      >
+                        {entry.isLocked ? (
+                          <Lock size={13} />
+                        ) : (
+                          <span
+                            className={`block rounded-full ${
+                              isActive ? 'h-2.5 w-2.5 bg-[#C36B42]' : 'h-2 w-2 bg-[#3C2A21]'
+                            }`}
+                          />
+                        )}
+                      </div>
 
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div>
+                            <h2 className="font-serif text-[2rem] leading-none">{entry.journeyLabel}</h2>
+                            <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                              {entry.subtitle}
+                            </p>
+                          </div>
+                          <span
+                            className={`pt-1 text-[10px] font-bold uppercase tracking-[0.18em] whitespace-nowrap ${badgeTone}`}
+                          >
+                            {entry.statusLabel}
+                          </span>
+                        </div>
+
+                        <p className="text-sm leading-6 text-[#3C2A21]/80">{entry.journeyPurpose}</p>
+
+                        <div className="mt-4 flex items-start gap-2">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#8E7D72] pt-[2px]">
+                            Live detail:
+                          </span>
+                          <span className="text-sm leading-6 text-[#3C2A21]">
+                            {entry.contextLine}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="p-6 border-t border-[#3C2A21] bg-[#FCFBF9] mt-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => openRegion(activeRegion)}
+              className="w-full inline-flex items-center justify-center gap-3 border border-[#3C2A21] bg-[#1F1C19] text-[#F4EFE6] px-6 py-4 text-[12px] font-bold uppercase tracking-[0.22em] hover:bg-[#C36B42] hover:border-[#C36B42] transition-colors"
+            >
+              {activeRegion.isLocked ? <Lock size={15} /> : <ArrowRight size={15} />}
+              Open {activeRegion.journeyLabel}
+            </button>
+          </div>
+        </aside>
+
+        <section className="bg-[#05070b] min-h-[70vh] lg:h-[calc(100vh-72px)] lg:min-h-0 overflow-hidden">
+          <LandingPage fromScene="/journey" onVisibleRegionChange={setVisibleRegion} />
+        </section>
+      </main>
     </div>
-  );
+  )
 }

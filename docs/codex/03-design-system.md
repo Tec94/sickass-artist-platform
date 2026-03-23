@@ -1,5 +1,9 @@
 # Design System
 
+> **Status:** Planned/unrouted architecture. This document describes the scenic
+> and shared-IA design system, not the current live route contract in
+> `src/App.tsx`.
+
 This file defines the current design-system direction for the estate navigation experience and surrounding application UI.
 
 This is not just a visual mood board. It is the operational design language for the product.

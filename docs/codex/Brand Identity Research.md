@@ -1,5 +1,8 @@
 # ROA Brand Identity Research and App Design Identity Synthesis
 
+> **Status:** Research reference. This document is background brand research and
+> does not describe the current routed website.
+
 ## Scope and disambiguation
 
 “ROA” is not a unique name in music; there are multiple unrelated artists and even non-music brands using it (e.g., ROA the outdoor footwear brand, and other musicians named Roa). The artist profile that matches your app concept (major fanbase, touring, merch/drops, community ecosystem) is the Puerto Rican Latin urban artist whose moniker is ROA, identified by entity["company","Apple Music","streaming service"] as singer entity["people","Gilberto Figueroa","puerto rican singer"] from entity["city","Naranjito","Puerto Rico"], born 1996, working in urbano latino. citeturn24view3turn24view0

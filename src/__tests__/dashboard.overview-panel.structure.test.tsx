@@ -89,7 +89,7 @@ describe('dashboard overview panel', () => {
     expect(screen.getByText('65%')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /dashboard\.overview\.openChat/i })).toHaveAttribute('href', '/chat')
     expect(screen.getByRole('link', { name: /dashboard\.overview\.browseGallery/i })).toHaveAttribute('href', '/gallery')
-    expect(screen.getByRole('link', { name: /dashboard\.overview\.viewRankings/i })).toHaveAttribute('href', '/ranking')
+    expect(screen.getByRole('link', { name: /dashboard\.overview\.viewRankings/i })).toHaveAttribute('href', '/rankings')
     expect(screen.getAllByRole('link', { name: /dashboard\.overview\.viewQuests/i })[0]).toHaveAttribute('href', '/quests')
   })
 

@@ -7,11 +7,10 @@ import {
   useRef,
   type ReactNode,
 } from 'react'
-import { useQuery } from 'convex/react'
 import { useLocation } from 'react-router-dom'
-import { api } from '../../../convex/_generated/api'
 import { useLanguage } from '../../contexts/LanguageContext'
-import { adaptArtistScrapedData } from './content/phoneContentAdapter'
+import { useArtistContent } from '../../features/artistContent'
+import { adaptArtistContentToPhone } from './content/phoneContentAdapter'
 import type { PhoneArtistContent } from './content/phoneContentTypes'
 import { createInitialPhoneState, getCurrentPhoneRoute, phoneReducer, type PhoneState } from './phoneStore'
 import type {
@@ -65,16 +64,16 @@ export function PhoneOverlayProvider({
   const { language } = useLanguage()
   const location = useLocation()
   const visibilityPolicy = usePhoneVisibilityPolicy()
+  const artistContentState = useArtistContent()
   const [state, dispatch] = useReducer(
     phoneReducer,
     createInitialPhoneState(toPhoneLocale(language), { open: defaultOpen, locked: defaultLocked }),
   )
   const userLocaleOverrideRef = useRef(false)
-  const phoneArtistPayload = useQuery(api.phoneContent.getPhoneArtistContentPayload, {})
-  const isContentLoading = phoneArtistPayload === undefined
+  const isContentLoading = artistContentState.isLoading
   const content = useMemo<PhoneArtistContent>(
-    () => adaptArtistScrapedData(phoneArtistPayload?.payload),
-    [phoneArtistPayload],
+    () => adaptArtistContentToPhone(artistContentState.content),
+    [artistContentState.content],
   )
 
   useEffect(() => {

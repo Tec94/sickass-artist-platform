@@ -1,5 +1,9 @@
 # Region Map
 
+> **Status:** Planned/unrouted architecture. This document describes the estate
+> scene route map used by scenic/shared-IA work that is present in source, but
+> not served by the current website router.
+
 This file defines the current estate-scene region map for the landing navigation system.
 
 This is the canonical source for:

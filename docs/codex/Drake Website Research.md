@@ -1,3 +1,6 @@
+> **Status:** Research reference. This document is comparative research and
+> does not describe the current routed website.
+
 The drakerelated.com site is designed as a virtual tour of Drake’s mansion rather than a conventional grid‑based store.  A July 2023 Complex article notes that the homepage brings visitors “to the front door of his home” and lets them access rooms such as the studio, bedroom and lounge via arrows and that each location contains easter‑egg merch links.  Visiting the site today shows that this concept is still live – the landing view is a highly detailed isometric rendering of a grand house with navigation icons floating over features such as the front door and cars.  From there users can enter rooms like the studio or lounge, each depicted with full 3D scenes and small “+” markers indicating interactive elements.  There is also a minimal top bar for Albums, Projects, Tour, Shop All, etc. and a persistent “Explore” button that blurs the scene and shows a text list of all rooms for quick navigation.
 
 

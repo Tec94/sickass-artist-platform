@@ -1,5 +1,9 @@
 # Non-Negotiables
 
+> **Status:** Planned/unrouted architecture. This document describes the
+> scenic/shared-IA track that still exists in source, but is not routed by the
+> current website in `src/App.tsx`.
+
 This file defines the decisions that are already locked.
 
 Do not change these without explicit approval.

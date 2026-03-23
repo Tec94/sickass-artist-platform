@@ -1,164 +1,77 @@
-# ROA Interactive Phone Overlay (Implemented MVP Plan)
+# ROA interactive phone overlay
 
-## Status
+> **Status:** Planned/unrouted architecture. The phone overlay code exists in
+> the repo, but it is not mounted by the current app shell in `src/App.tsx` or
+> `src/main.tsx`.
 
-This document is the corrected version of the earlier pre-plan and now reflects the implemented MVP in the codebase.
+## Summary
 
-Implemented in this pass:
-- Persistent floating phone launcher + interactive iPhone-style overlay
-- Lock screen + home screen + shared nav/sheet/modal hosts
-- Priority apps: Music, Gallery, Notes, Messages, Calendar, Maps, Phone (with Voicemail), Cards
-- Utility apps: Calculator, Clock, Camera, Voice/Translate, Branded Intro
-- ROA data adapter from `public/data/artist-scraped-data.json`
-- Route visibility policy + overlay collision-aware launcher docking
-- Solar icon usage for UI iconography
+This repository contains a substantial phone overlay implementation under
+`src/components/PhoneDisplay/`. It includes a provider, launcher, overlay root,
+screen router, app registry, seeded content adapters, and multiple app screens.
 
-## Corrections Applied (from pre-plan)
+That implementation is not part of the current routed website today.
 
-### UI Iconography
-- Replaced generic emoji UI icon references with Solar icon strategy (`iconify-icon` + `solar:*`)
-- Source-content emojis are allowed only when they come from real ROA caption/message content
+## Current app state
 
-### Data Schema Corrections
-- `artist` is a string in `public/data/artist-scraped-data.json`
-- Instagram posts are under `instagram.posts`
-- `instagram.profilePictureUrl` is the stable avatar field
-- Calendar cannot be fully derived from IG post timestamps (timestamps not reliably present)
+The current website does not mount the phone overlay.
 
-### App Priority Corrections
-Priority apps in this project:
-- Music
-- Gallery
-- Notes
-- Messages (thread list + thread detail)
-- Calendar
-- Maps
-- Phone (includes Voicemail)
-- Cards
+As of the current router state:
 
-Utility/demo parity apps:
-- Calculator
-- Clock / Alarms
-- Camera
-- Voice / Translate
-- Branded Intro surface (optional visual parity module)
+- `src/App.tsx` imports `./styles/phone-display.css`
+- `src/App.tsx` does not mount `PhoneOverlayRoot`
+- `src/App.tsx` does not mount `PhoneOverlayProvider`
+- `src/main.tsx` does not mount the phone overlay either
 
-### Language / Localization Correction
-- No primary `LanguageApp` controls phone locale in V1
-- Phone locale mirrors site language (`en`/`es`) by default
-- The Voice/Translate app is a separate utility and does not control global locale
+Treat the phone system as implemented source code that is currently dormant.
 
-## Implemented Architecture (MVP)
+## What exists in source
 
-### Root integration
-Mounted at app root in `src/App.tsx` so it persists across routes and can detect overlays/layout conflicts.
+The codebase still includes these major pieces:
 
-### Key files (implemented)
-- `src/components/PhoneDisplay/PhoneOverlayProvider.tsx`
-- `src/components/PhoneDisplay/phoneStore.ts`
-- `src/components/PhoneDisplay/PhoneLauncher.tsx`
 - `src/components/PhoneDisplay/PhoneOverlay.tsx`
-- `src/components/PhoneDisplay/PhoneFrame.tsx`
-- `src/components/PhoneDisplay/PhoneSystemChrome.tsx`
+- `src/components/PhoneDisplay/PhoneOverlayProvider.tsx`
+- `src/components/PhoneDisplay/PhoneLauncher.tsx`
 - `src/components/PhoneDisplay/PhoneScreenRouter.tsx`
-- `src/components/PhoneDisplay/PhoneSheetHost.tsx`
-- `src/components/PhoneDisplay/PhoneModalHost.tsx`
 - `src/components/PhoneDisplay/PhoneAppRegistry.ts`
-- `src/components/PhoneDisplay/PhoneIconRegistry.tsx`
-- `src/components/PhoneDisplay/usePhoneOverlayDock.ts`
-- `src/components/PhoneDisplay/usePhoneVisibilityPolicy.ts`
-- `src/components/PhoneDisplay/usePhoneGestures.ts`
-- `src/components/PhoneDisplay/content/phoneContentAdapter.ts`
-- `src/components/PhoneDisplay/content/phoneSeedContent.ts`
-- `src/components/PhoneDisplay/content/phoneContentTypes.ts`
-- `src/components/PhoneDisplay/screens/LockScreen.tsx`
-- `src/components/PhoneDisplay/screens/HomeScreen.tsx`
-- `src/components/PhoneDisplay/screens/apps/*`
-- `src/styles/phone-display.css`
+- `src/components/PhoneDisplay/content/*`
+- `src/components/PhoneDisplay/screens/*`
 
-## Overlay Visibility + Collision Policy (Repo-specific)
+The source also includes the supporting CSS and adapter logic that earlier
+plans described as an implemented MVP.
 
-The launcher is not a naive fixed bottom-right button.
+## What is not live today
 
-### Existing conflicts handled in plan/implementation
-- Bottom-left admin quick access in `src/App.tsx`
-- Bottom-right Sonner toaster in `src/App.tsx`
-- Bottom-right dashboard design lab switcher (`[data-dashboard-design-lab-switcher="true"]`)
+The following statements should not be treated as current website behavior:
 
-### Launcher behavior
-- Default anchor: bottom-right
-- Auto-adjusts upward if known right-corner overlays occupy space
-- Hidden when phone is open
-- Hidden on excluded routes and some fullscreen/modal conflict states
+- the launcher is visible on every route
+- the overlay is mounted at app root
+- phone apps are part of the current user journey
+- route exclusion logic is active in the live app shell
 
-### Route exclusions (default)
-- `/sign-in`
-- `/sign-up`
-- `/sso-callback`
-- `/admin*`
-- `/store/checkout`
-- `/store/confirmation`
-- `/test-errors`
+Those behaviors may still be valid for the dormant implementation, but they are
+not part of the currently routed website.
 
-## ROA Data Sources
+## If the phone overlay is reactivated
 
-Primary sources:
-- `public/data/artist-scraped-data.json`
-- `public/images/roa profile.jpg`
+If a future task makes this feature live again, do the following in the same
+pass:
 
-Adapter behavior:
-- Normalizes Spotify popular tracks and discography
-- Normalizes Instagram post thumbnails/captions
-- Builds seeded Notes/Messages/Voicemail content from scraped metadata
-- Falls back safely if remote thumbnails fail or JSON is unavailable
+1. mount `PhoneOverlayRoot` or the equivalent provider and overlay shell
+2. verify route visibility rules against the current app shell
+3. run route-aware and UI verification for the live mount
+4. update this document and the codex current-state docs
 
-## Solar Icon Strategy (Implemented)
+Do not restore the feature without updating the docs that describe its status.
 
-Phase 1 (current):
-- `iconify-icon` custom element
-- Solar icons for launcher, lock quick actions, app grid, and app UI affordances
+## Reference value
 
-Phase 2 (planned):
-- Add custom iOS-like icon assets behind an icon registry skin toggle
-- Planned path: `public/phone-icons/<appId>.png`
+Even though the feature is not live, this code remains useful as:
 
-## Visual / Interaction Notes (MVP)
+- a reusable overlay implementation
+- a content-adapter reference
+- a future app-shell experiment
+- a source of UI components and motion patterns
 
-Implemented interaction patterns:
-- Launcher open/close overlay animation
-- Lock screen swipe-up unlock (plus tap fallback)
-- Home screen app grid + dock
-- App navigation with transitions
-- Shared sheet host (music, calendar, maps, etc.)
-- Shared modal host (cards, camera, clock actions)
-- Maps simulated pan/zoom + style toggle + list sheet
-- Cards wallet/pass surfaces + detail modal
-- Phone app tabs with Voicemail
-- Gallery grid -> detail + swipe navigation
-- Camera `getUserMedia` with fallback if unavailable/denied
-
-## Known Gaps / Next Iterations
-
-These are intentionally deferred or simplified in MVP:
-- App launch origin animation from exact icon rect (currently generalized transition)
-- Pixel-perfect iOS motion parity across all transitions
-- Live map SDK integration (current maps are simulated visuals)
-- Full voice transcription / translation backend (current demo flow is simulated)
-- Camera capture persistence into Gallery Recents (current modal confirms session capture)
-- Branded splash/interstitial parity modules beyond the included intro surface
-- Additional demo parity apps (social feed / code utility) if desired later
-
-## Validation Completed
-
-- `npm run type-check` ✅
-- `npm run build` ✅
-
-## Wallpaper / Content Notes
-
-Current placeholder wallpaper:
-- `public/images/roa profile.jpg`
-
-Future wallpaper options can include:
-- Additional project ROA portraits
-- Approved Instagram-derived imagery
-- Generated cinematic lockscreen artwork (with ROA face reference for likeness)
+Keep it documented as planned or unrouted work until the current app shell
+mounts it.

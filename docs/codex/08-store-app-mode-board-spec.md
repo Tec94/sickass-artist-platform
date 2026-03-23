@@ -1,5 +1,9 @@
 # Store App Mode board spec
 
+> **Status:** Planned/unrouted architecture. This document is a Store shell
+> contract for scenic/shared-IA work that is still present in source, but is
+> not part of the current live router.
+
 This file defines the Store App Mode v1 board that still needs to be created in
 Pencil. It exists because the current Pencil editor bridge cannot keep an open
 file handle long enough to execute `get_editor_state` or `batch_design`.

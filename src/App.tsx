@@ -7,6 +7,7 @@ import { LanguageProvider } from './contexts/LanguageContext'
 import { AppVisualVariantProvider } from './contexts/AppVisualVariantContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Toaster } from 'sonner'
+import { PrototypeCartProvider } from './features/store/prototypeCart'
 import './styles/theme.css'
 import './styles/animations.css'
 import './styles/responsive.css'
@@ -19,8 +20,8 @@ import { AnimatedRoutes } from './components/Effects/PageTransition'
 
 // Pages
 import {
-  Archive, Rankings, Profile, Community, Journey,
-  Store, Salon, Dashboard, AccessTiersMobile,
+  Archive, Rankings, Profile, Community, Journey, Campaign,
+  Store, StoreProductDetail, Salon, Dashboard, AccessTiersMobile,
   AccessTiersAlbert, ExperienceMobile, ExperienceAlbert,
   EventsMobile, Events, DashboardMobile, RankingSubmission, Login
 } from './pages/StitchPrototypes'
@@ -38,11 +39,14 @@ function AppContent() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/archive" element={<Archive />} />
               <Route path="/rankings" element={<Rankings />} />
+              <Route path="/ranking" element={<Navigate to="/rankings" replace />} />
               <Route path="/ranking-submission" element={<RankingSubmission />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/community" element={<Community />} />
               <Route path="/journey" element={<Journey />} />
+              <Route path="/campaign" element={<Campaign />} />
               <Route path="/store" element={<Store />} />
+              <Route path="/store/product/:productSlug" element={<StoreProductDetail />} />
               <Route path="/salon" element={<Salon />} />
               <Route path="/access-tiers-mobile" element={<AccessTiersMobile />} />
               <Route path="/access-tiers-albert" element={<AccessTiersAlbert />} />
@@ -72,9 +76,11 @@ function App() {
           <ErrorBoundary level="page">
             <BrowserRouter>
               <AppVisualVariantProvider>
-                <GearProvider>
-                  <AppContent />
-                </GearProvider>
+                <PrototypeCartProvider>
+                  <GearProvider>
+                    <AppContent />
+                  </GearProvider>
+                </PrototypeCartProvider>
               </AppVisualVariantProvider>
             </BrowserRouter>
           </ErrorBoundary>

@@ -65,15 +65,15 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="flex flex-col gap-6">
               <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#8E7D72] border-b border-[#3C2A21]/10 pb-2">Frequent Inquiries</h4>
               <nav className="flex flex-col gap-4">
-                <Link to="/proto/directory" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
+                <Link to="/archive" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
                   <span>Current Registration</span>
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
-                <Link to="/proto/store-boutique" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
+                <Link to="/store" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
                   <span>Exclusive Artifacts</span>
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
-                <Link to="/proto/rankings" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
+                <Link to="/rankings" onClick={() => { setNextTransition('push'); onClose(); }} className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group">
                   <span>Collector Rankings</span>
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
@@ -86,7 +86,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               <div 
                 className="group relative w-full h-48 bg-cover bg-center overflow-hidden border border-[#3C2A21]/20 cursor-pointer"
                 style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCn2d7DIcuRChwL7JHv90Xk489giFm7mkFmi7UMnknopv5kyun1AIgd1oIrQ5qFfwg6l7JAT8VeMHIuwtHYoPu-FIuvXL_NcAqq2-qlAcPpe91PDjyExlV7qPqfmCyLkepSngg4YOKeZV-omlXUUGIJGbZOrldRalluKggAi817GVkaSlCDYRKLtuZiZWFDhFmDZNyy-f7MeeQg_7k89qqolK831X8e56xZdFScT0D0NGzhYA--gYHf59Q8Hvm23q4QMR6biY6Njvh0')"}}
-                onClick={() => { setNextTransition('push'); onClose(); window.location.href = '/proto/salon'; }}
+                onClick={() => { setNextTransition('push'); onClose(); window.location.href = '/salon'; }}
               >
                 <div className="absolute inset-0 bg-[#3C2A21]/40 group-hover:bg-[#3C2A21]/20 transition-colors duration-500"></div>
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">

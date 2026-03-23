@@ -4,18 +4,12 @@ import '@testing-library/jest-dom/vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { LandingPage } from '../pages/LandingPage'
 import { useAuth } from '../hooks/useAuth'
-import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference'
 
 vi.mock('../hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }))
 
-vi.mock('../hooks/useReducedMotionPreference', () => ({
-  useReducedMotionPreference: vi.fn(),
-}))
-
 const mockedUseAuth = vi.mocked(useAuth)
-const mockedUseReducedMotionPreference = vi.mocked(useReducedMotionPreference)
 
 const installMatchMedia = (coarsePointer: boolean) => {
   Object.defineProperty(window, 'matchMedia', {
@@ -37,12 +31,10 @@ const renderLanding = ({
   initialEntry = '/',
   isSignedIn = false,
   coarsePointer = false,
-  prefersReducedMotion = true,
 }: {
   initialEntry?: string
   isSignedIn?: boolean
   coarsePointer?: boolean
-  prefersReducedMotion?: boolean
 } = {}) => {
   mockedUseAuth.mockReturnValue({
     user: isSignedIn ? ({} as ReturnType<typeof useAuth>['user']) : null,
@@ -50,10 +42,6 @@ const renderLanding = ({
     isLoading: false,
     signOut: vi.fn(),
   } as ReturnType<typeof useAuth>)
-  mockedUseReducedMotionPreference.mockReturnValue({
-    prefersReducedMotion,
-    motionClassName: prefersReducedMotion ? 'motion-reduce' : 'motion-safe',
-  })
   installMatchMedia(coarsePointer)
 
   return render(
@@ -73,18 +61,19 @@ describe('landing estate navigation', () => {
     window.scrollTo = vi.fn()
   })
 
-  it('renders all five path-driven regions in the landing overlay', () => {
+  it('renders five marker buttons and removes the old hover-button tooltip contract', () => {
     const { container } = renderLanding()
 
-    const hitRegions = container.querySelectorAll('[data-hit-region="true"]')
-    expect(hitRegions).toHaveLength(5)
-    expect(container.querySelector('[data-region-cue="true"]')).not.toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="store"][data-hit-region="true"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="events"][data-hit-region="true"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="ranking"][data-hit-region="true"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="campaign"][data-hit-region="true"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="community"][data-hit-region="true"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-debug-region]')).not.toBeInTheDocument()
+    const markers = container.querySelectorAll('[data-region-marker="true"]')
+    expect(markers).toHaveLength(5)
+    expect(container.querySelector('[data-region-id="campaign"][data-region-marker="true"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-region-id="events"][data-region-marker="true"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-region-id="store"][data-region-marker="true"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-region-id="ranking"][data-region-marker="true"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-region-id="community"][data-region-marker="true"]')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /explore the estate/i })).not.toBeInTheDocument()
+    expect(container.querySelector('title#castle-estate-title')).not.toBeInTheDocument()
+    expect(container.querySelector('desc#castle-estate-description')).not.toBeInTheDocument()
   })
 
   it('shows the full debug instrumentation contract when debug mode is enabled', () => {
@@ -99,10 +88,10 @@ describe('landing estate navigation', () => {
 
   it('opens the locked community auth prompt and preserves the scenic return target', () => {
     const { container } = renderLanding()
-    const communityPath = container.querySelector('[data-region-id="community"][data-hit-region="true"]')
+    const communityMarker = container.querySelector('[data-region-id="community"][data-region-marker="true"]')
 
-    expect(communityPath).toBeTruthy()
-    fireEvent.click(communityPath as Element)
+    expect(communityMarker).toBeTruthy()
+    fireEvent.click(communityMarker as Element)
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
@@ -115,74 +104,97 @@ describe('landing estate navigation', () => {
     )
   })
 
-  it('keeps keyboard focus and active card state aligned', () => {
+  it('keeps keyboard focus and active chip state aligned', () => {
     const { container } = renderLanding()
-    const rankingPath = container.querySelector('[data-region-id="ranking"][data-hit-region="true"]')
-    const rankingCard = container.querySelector('[data-region-id="ranking"][data-region-card="true"]')
+    const rankingMarker = container.querySelector('[data-region-id="ranking"][data-region-marker="true"]')
 
-    expect(rankingPath).toBeTruthy()
-    expect(rankingCard).toBeTruthy()
+    expect(rankingMarker).toBeTruthy()
 
-    fireEvent.focus(rankingPath as Element)
+    fireEvent.focus(rankingMarker as Element)
 
-    expect(rankingCard).toHaveAttribute('data-active', 'true')
+    expect(rankingMarker).toHaveAttribute('data-active', 'true')
   })
 
-  it('keeps the active region visible when pointer movement reaches the plaque', () => {
+  it('shows only the active chip and clears it when the pointer leaves the marker', () => {
     const { container } = renderLanding()
-    const eventsPath = container.querySelector('[data-region-id="events"][data-hit-region="true"]')
-    const eventsCard = container.querySelector('[data-region-id="events"][data-region-card="true"]')
+    const eventsMarker = container.querySelector('[data-region-id="events"][data-region-marker="true"]')
 
-    expect(eventsPath).toBeTruthy()
-    expect(eventsCard).toBeTruthy()
+    expect(eventsMarker).toBeTruthy()
 
-    fireEvent.pointerEnter(eventsPath as Element)
-    expect(eventsCard).toHaveAttribute('data-active', 'true')
+    fireEvent.pointerEnter(eventsMarker as Element)
+    expect(eventsMarker).toHaveAttribute('data-active', 'true')
 
-    fireEvent.pointerEnter(eventsCard as Element)
-    fireEvent.pointerMove(eventsCard as Element)
-    expect(eventsCard).toHaveAttribute('data-active', 'true')
+    fireEvent.pointerLeave(eventsMarker as Element)
+    expect(eventsMarker).toHaveAttribute('data-active', 'false')
   })
 
-  it('uses first tap preview and second tap entry on coarse-pointer devices', () => {
+  it('navigates immediately from a marker click on coarse-pointer devices', () => {
     const { container } = renderLanding({ coarsePointer: true })
-    const storePath = container.querySelector('[data-region-id="store"][data-hit-region="true"]')
-    const storeCard = container.querySelector('[data-region-id="store"][data-region-card="true"]')
+    const storeMarker = container.querySelector('[data-region-id="store"][data-region-marker="true"]')
 
-    expect(storePath).toBeTruthy()
-    expect(storeCard).toBeTruthy()
+    expect(storeMarker).toBeTruthy()
 
-    fireEvent.click(storePath as Element)
-    expect(screen.queryByText('Store page')).not.toBeInTheDocument()
-    expect(storeCard).toHaveAttribute('data-active', 'true')
+    fireEvent.click(storeMarker as Element)
 
-    fireEvent.click(storePath as Element)
     expect(screen.getByText('Store page')).toBeInTheDocument()
   })
 
-  it('keeps a static active highlight when reduced motion is preferred', () => {
-    const { container } = renderLanding({ prefersReducedMotion: true })
-    const campaignPath = container.querySelector('[data-region-id="campaign"][data-hit-region="true"]')
+  it('supports horizontal drag-to-pan on coarse-pointer devices without triggering marker navigation after a drag', () => {
+    const { container } = renderLanding({ coarsePointer: true })
+    const sceneWrap = container.querySelector('.castle-landing__scene-wrap') as HTMLDivElement | null
+    const storeMarker = container.querySelector('[data-region-id="store"][data-region-marker="true"]')
 
-    expect(campaignPath).toBeTruthy()
+    expect(sceneWrap).toBeTruthy()
+    expect(storeMarker).toBeTruthy()
+    expect(sceneWrap).toHaveAttribute('data-pan-enabled', 'true')
 
-    fireEvent.focus(campaignPath as Element)
+    Object.defineProperty(sceneWrap, 'scrollWidth', {
+      configurable: true,
+      value: 1800,
+    })
+    Object.defineProperty(sceneWrap, 'clientWidth', {
+      configurable: true,
+      value: 900,
+    })
+    Object.defineProperty(sceneWrap, 'scrollLeft', {
+      configurable: true,
+      value: 300,
+      writable: true,
+    })
 
-    expect(container.querySelector('.castle-landing__sheen')).not.toBeInTheDocument()
-    expect(container.querySelector('[data-region-id="campaign"][data-region-card="true"]')).toHaveAttribute(
-      'data-active',
-      'true',
-    )
+    sceneWrap!.setPointerCapture = vi.fn()
+    sceneWrap!.releasePointerCapture = vi.fn()
+    sceneWrap!.hasPointerCapture = vi.fn(() => true)
+
+    fireEvent.pointerDown(sceneWrap as Element, {
+      clientX: 320,
+      pointerId: 7,
+      pointerType: 'touch',
+    })
+    fireEvent.pointerMove(sceneWrap as Element, {
+      clientX: 180,
+      pointerId: 7,
+      pointerType: 'touch',
+    })
+
+    expect(sceneWrap!.scrollLeft).toBe(440)
+
+    fireEvent.pointerUp(sceneWrap as Element, {
+      clientX: 180,
+      pointerId: 7,
+      pointerType: 'touch',
+    })
+    fireEvent.click(storeMarker as Element)
+
+    expect(screen.queryByText('Store page')).not.toBeInTheDocument()
   })
 
-  it('renders the animated sheen only when motion is allowed and a region is active', () => {
-    const { container } = renderLanding({ prefersReducedMotion: false })
-    const storePath = container.querySelector('[data-region-id="store"][data-hit-region="true"]')
+  it('keeps the fallback estate list accessible on coarse-pointer devices', () => {
+    renderLanding({ coarsePointer: true })
 
-    expect(storePath).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /open estate list/i }))
 
-    fireEvent.focus(storePath as Element)
-
-    expect(container.querySelector('.castle-landing__sheen')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Estate list' })).toBeInTheDocument()
+    expect(screen.getByText(/follow the active release cycle/i)).toBeInTheDocument()
   })
 })

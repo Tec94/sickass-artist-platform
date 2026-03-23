@@ -202,7 +202,7 @@ export const DashboardOverviewPanel = ({
                 <iconify-icon icon="solar:gallery-wide-bold-duotone" width="16" height="16"></iconify-icon>
                 {t('dashboard.overview.browseGallery')}
               </Link>
-              <Link to="/ranking" className="dashboard-overview-panel__action">
+              <Link to="/rankings" className="dashboard-overview-panel__action">
                 <iconify-icon icon="solar:cup-star-bold" width="16" height="16"></iconify-icon>
                 {t('dashboard.overview.viewRankings')}
               </Link>

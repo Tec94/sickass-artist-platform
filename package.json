@@ -1,7 +1,7 @@
 {
   "name": "sickass-artist-platform",
   "private": true,
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,8 @@
     "merch:generate-manifest": "node scripts/generateMerchImageManifest.mjs",
     "merch:images": "npm run merch:normalize-images && npm run merch:generate-manifest",
     "test": "npm run check:color-contract && vitest run",
-    "seed:phone-content": "node scripts/seedPhoneArtistContent.mjs"
+    "seed:artist-content": "node scripts/seedArtistContent.mjs",
+    "seed:phone-content": "npm run seed:artist-content"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",

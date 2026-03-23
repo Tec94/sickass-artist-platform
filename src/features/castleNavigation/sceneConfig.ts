@@ -9,6 +9,11 @@ export interface CastlePoint {
   y: number
 }
 
+export interface CastleMarkerOffset {
+  x: number
+  y: number
+}
+
 export interface CastleCardPlacement {
   alignX: CastleCardAlign
   alignY: CastleCardAlign
@@ -21,6 +26,7 @@ export interface CastleCardPlacement {
 
 export interface OuterGroundRegionConfig {
   label: string
+  journeyLabel: string
   locationLabel: string
   subtitle: string
   route: string
@@ -31,7 +37,12 @@ export interface OuterGroundRegionConfig {
   hitPriority: number
   debugLabel: string
   debugAccessLabel: string
+  journeyOrder: number
+  journeyPurpose: string
+  journeyStatusFallback: string
   labelAnchor: CastlePoint
+  markerAnchor: CastlePoint
+  markerLabelOffset?: CastleMarkerOffset
   arrowAnchor: CastlePoint
   arrowDirection: CastleArrowDirection
   cardPlacement: CastleCardPlacement
@@ -70,6 +81,7 @@ export const OUTER_GROUNDS_REGION_ORDER: CastleRegionId[] = [
 export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig> = {
   store: {
     label: 'Store',
+    journeyLabel: 'Store',
     locationLabel: 'Left Wing',
     subtitle: 'Merchant Wing',
     route: '/store',
@@ -80,7 +92,11 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 2,
     debugLabel: 'STORE',
     debugAccessLabel: 'PUBLIC',
-    labelAnchor: point(700, 1080),
+    journeyOrder: 2,
+    journeyPurpose: 'Browse the merch hall, active drops, and limited-edition pieces.',
+    journeyStatusFallback: 'Open',
+    labelAnchor: point(630, 1530),
+    markerAnchor: point(630, 1530),
     arrowAnchor: point(620, 980),
     arrowDirection: 'left',
     cardPlacement: {
@@ -96,9 +112,10 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
   },
   ranking: {
     label: 'Ranking',
+    journeyLabel: 'Rankings',
     locationLabel: 'Upper Tower',
     subtitle: 'North Observatory',
-    route: '/ranking',
+    route: '/rankings',
     authRequired: false,
     d: 'M 2209.77,457.75 C 2209.77,457.75 2209.75,522.65 2209.77,530.55 2209.77,530.55 2213.97,661.72 2200.73,661.88 2200.73,661.88 2176.46,689.01 2176.46,689.01 2167.37,688.96 2156.88,685.34 2148.86,680.92 2148.86,680.92 2116.03,663.31 2116.03,663.31 2116.03,663.31 2079.39,642.85 2079.39,642.85 2079.39,642.85 2001.35,603.36 2001.35,603.36 2001.35,603.36 1956.15,619.06 1956.15,619.06 1956.15,619.06 1827.67,678.54 1827.67,678.54 1827.67,678.54 1770.57,712.80 1755.82,721.36 1755.16,718.51 1725.21,744.10 1727.27,735.64 1727.75,721.36 1726.53,715.34 1727.75,705.18 1727.75,705.18 1728.87,602.64 1728.87,602.64 1728.87,602.64 1726.69,575.64 1726.69,575.64 1726.69,575.64 1726.69,563.64 1726.69,563.64 1726.69,563.64 1724.82,554.64 1724.82,554.64 1724.82,554.64 1724.82,540.64 1724.82,540.64 1724.71,535.21 1722.98,516.98 1720.76,512.64 1718.76,508.73 1711.28,502.41 1707.78,499.36 1698.96,491.69 1661.78,473.38 1661.78,473.38 1661.78,473.38 1596.78,439.96 1596.78,439.96 1596.78,439.96 1537.78,411.27 1537.78,411.27 1537.78,411.27 1444.15,363.54 1444.15,363.54 1402.75,342.12 1407.99,327.85 1417.51,319.28 1432.26,311.19 1475.56,267.42 1475.56,267.42 1475.56,267.42 1520.28,257.90 1520.28,257.90 1520.28,257.90 1556.78,238.29 1556.78,238.29 1556.78,238.29 1609.27,206.04 1609.27,206.04 1609.27,206.04 1640.67,187.00 1640.67,187.00 1640.67,187.00 1665.41,170.35 1665.41,170.35 1665.41,170.35 1758.20,111.34 1758.20,111.34 1758.20,111.34 1917.13,23.32 1917.13,23.32 1917.13,23.32 1926.78,-7.73 1926.78,-7.73 1929.38,-8.46 1932.10,-8.36 1934.78,-8.36 1934.78,-8.36 2126.78,-8.36 2126.78,-8.36 2129.45,-8.36 2132.15,-8.43 2134.78,-7.83 2134.78,-7.83 2145.53,50.44 2145.53,50.44 2156.34,55.84 2199.77,60.09 2205.01,65.19 2209.77,73.75 2219.28,99.92 2238.32,99.45 2238.32,99.45 2270.73,114.15 2277.81,118.96 2277.81,118.96 2332.53,147.03 2332.53,147.03 2332.53,147.03 2386.30,166.07 2386.30,166.07 2397.54,170.66 2397.09,178.21 2400.57,190.33 2401.55,193.72 2414.42,201.56 2414.37,205.08 2414.27,214.00 2415.73,215.83 2413.42,224.12 2413.42,224.12 2397.72,236.01 2397.72,236.01 2395.46,245.58 2393.93,276.07 2393.91,285.98 2393.88,308.45 2398.81,379.66 2388.68,383.52 2388.68,383.52 2289.08,419.21 2282.09,423.97 2274.45,429.17 2218.81,455.17 2209.77,457.75 Z',
     hoverAccent: '#C8D2E0',
@@ -106,7 +123,11 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 1,
     debugLabel: 'RANKING',
     debugAccessLabel: 'PUBLIC',
-    labelAnchor: point(1950, 180),
+    journeyOrder: 3,
+    journeyPurpose: 'Track fan standings, current placement, and ranking submissions.',
+    journeyStatusFallback: 'Open',
+    labelAnchor: point(2120, 650),
+    markerAnchor: point(2120, 650),
     arrowAnchor: point(2048, 260),
     arrowDirection: 'down',
     cardPlacement: {
@@ -121,6 +142,7 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
   },
   campaign: {
     label: 'Current Release',
+    journeyLabel: 'Campaign',
     locationLabel: 'Center Plaza',
     subtitle: 'Featured Campaign',
     route: '/campaign',
@@ -131,7 +153,11 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 5,
     debugLabel: 'CAMPAIGN',
     debugAccessLabel: 'PUBLIC',
-    labelAnchor: point(1900, 1250),
+    journeyOrder: 0,
+    journeyPurpose: 'Follow the active release cycle, featured story beat, and latest signal.',
+    journeyStatusFallback: 'Live now',
+    labelAnchor: point(2000, 1350),
+    markerAnchor: point(2000, 1350),
     arrowAnchor: point(2050, 1320),
     arrowDirection: 'up',
     cardPlacement: {
@@ -147,6 +173,7 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
   },
   events: {
     label: 'Events',
+    journeyLabel: 'Events',
     locationLabel: 'West Hall',
     subtitle: 'Gathering Court',
     route: '/events',
@@ -157,7 +184,11 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 4,
     debugLabel: 'EVENTS',
     debugAccessLabel: 'PUBLIC',
-    labelAnchor: point(1200, 620),
+    journeyOrder: 1,
+    journeyPurpose: 'Check upcoming appearances, installations, and ticketed moments.',
+    journeyStatusFallback: 'Upcoming',
+    labelAnchor: point(1530, 930),
+    markerAnchor: point(1530, 930),
     arrowAnchor: point(1320, 710),
     arrowDirection: 'up',
     cardPlacement: {
@@ -173,6 +204,7 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
   },
   community: {
     label: 'Community',
+    journeyLabel: 'Community',
     locationLabel: 'Right Wing',
     subtitle: 'Inner Keep',
     route: '/community',
@@ -183,7 +215,11 @@ export const OUTER_GROUNDS_PATHS: Record<CastleRegionId, OuterGroundRegionConfig
     hitPriority: 3,
     debugLabel: 'COMMUNITY',
     debugAccessLabel: 'MEMBERS',
-    labelAnchor: point(2900, 860),
+    journeyOrder: 4,
+    journeyPurpose: 'Enter the member wing for dashboard, gallery, forum, and live rooms.',
+    journeyStatusFallback: 'Members',
+    labelAnchor: point(2480, 1100),
+    markerAnchor: point(2480, 1100),
     arrowAnchor: point(3050, 940),
     arrowDirection: 'left',
     cardPlacement: {

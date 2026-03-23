@@ -1,3 +1,4 @@
+import { adaptArtistContentPayload, type ArtistContent } from '../../../features/artistContent'
 import { FALLBACK_PHONE_ARTIST_CONTENT } from './phoneSeedContent'
 import type {
   PhoneArtistContent,
@@ -8,15 +9,6 @@ import type {
   PhoneSeedMessage,
   PhoneSeedNote,
 } from './phoneContentTypes'
-
-type UnknownRecord = Record<string, unknown>
-
-const isRecord = (value: unknown): value is UnknownRecord => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-
-const asString = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value : null)
-const asNumber = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null)
-
-const asArray = <T = unknown>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : [])
 
 const buildMessages = (posts: PhoneArtistPhoto[], tracks: PhoneArtistTrack[]): PhoneSeedMessage[] => {
   const fromPosts = posts.slice(0, 3).map((post, index): PhoneSeedMessage => ({
@@ -78,80 +70,54 @@ const buildNotes = (tracks: PhoneArtistTrack[], posts: PhoneArtistPhoto[]): Phon
   return [...trackNotes, ...postNotes]
 }
 
-const formatPhotoSource = (post: UnknownRecord, index: number): PhoneArtistPhoto | null => {
-  const thumbnailUrl = asString(post.thumbnailUrl)
-  if (!thumbnailUrl) return null
-  return {
-    id: `ig-post-${index}`,
-    thumbnailUrl,
-    fullUrl: thumbnailUrl,
-    caption: asString(post.caption),
-    sourceUrl: asString(post.url),
-  }
-}
-
-const formatTrack = (track: UnknownRecord, index: number): PhoneArtistTrack | null => {
-  const name = asString(track.name)
-  const url = asString(track.url)
-  if (!name || !url) return null
-  return {
-    id: `track-${index}`,
-    name,
-    url,
-    streams: asNumber(track.streams),
-  }
-}
-
-const formatRelease = (release: UnknownRecord, index: number): PhoneArtistRelease | null => {
-  const name = asString(release.name)
-  const url = asString(release.url)
-  if (!name || !url) return null
-  return {
-    id: `release-${index}`,
-    name,
-    type: asString(release.type) || 'Release',
-    year: asString(release.year),
-    url,
-    embedUrl: asString(release.embedUrl),
-  }
-}
-
-const formatCollaborator = (artist: UnknownRecord, index: number): PhoneCollaborator | null => {
-  const name = asString(artist.name) || asString(artist.artistName)
-  if (!name) return null
-  return {
-    id: `collab-${index}`,
-    name,
-    url: asString(artist.url),
-  }
-}
-
-export function adaptArtistScrapedData(raw: unknown): PhoneArtistContent {
-  if (!isRecord(raw)) {
-    return FALLBACK_PHONE_ARTIST_CONTENT
-  }
-
-  const artistName = asString(raw.artist) || FALLBACK_PHONE_ARTIST_CONTENT.artistName
-  const instagram = isRecord(raw.instagram) ? raw.instagram : {}
-  const spotify = isRecord(raw.spotify) ? raw.spotify : {}
-
-  const igPosts = asArray<UnknownRecord>(instagram.posts)
-    .map(formatPhotoSource)
+export function adaptArtistContentToPhone(content: ArtistContent): PhoneArtistContent {
+  const artistName = content.artistName || FALLBACK_PHONE_ARTIST_CONTENT.artistName
+  const igPosts = content.instagram.posts
+    .map((post, index): PhoneArtistPhoto | null => {
+      if (!post.thumbnailUrl) return null
+      return {
+        id: post.id || `ig-post-${index}`,
+        thumbnailUrl: post.thumbnailUrl,
+        fullUrl: post.thumbnailUrl,
+        caption: post.caption,
+        sourceUrl: post.url,
+      }
+    })
     .filter((value): value is PhoneArtistPhoto => Boolean(value))
 
-  const popularTracks = asArray<UnknownRecord>(spotify.popularTracks)
-    .map(formatTrack)
+  const popularTracks = content.spotify.popularTracks
+    .map((track): PhoneArtistTrack | null => {
+      if (!track.url) return null
+      return {
+        id: track.id,
+        name: track.name,
+        url: track.url,
+        streams: track.streams,
+      }
+    })
     .filter((value): value is PhoneArtistTrack => Boolean(value))
 
-  const discography = asArray<UnknownRecord>(spotify.discography)
-    .map(formatRelease)
+  const discography = content.spotify.releases
+    .map((release): PhoneArtistRelease | null => {
+      if (!release.url) return null
+      return {
+        id: release.id,
+        name: release.name,
+        type: release.type,
+        year: release.year,
+        url: release.url,
+        embedUrl: release.embedUrl,
+      }
+    })
     .filter((value): value is PhoneArtistRelease => Boolean(value))
 
-  const relatedArtists = asArray<UnknownRecord>(spotify.relatedArtists)
-    .map(formatCollaborator)
-    .filter((value): value is PhoneCollaborator => Boolean(value))
+  const relatedArtists = content.spotify.relatedArtists.map((artist): PhoneCollaborator => ({
+    id: artist.id,
+    name: artist.name,
+    url: artist.url,
+  }))
 
-  const profileImage = asString(instagram.profilePictureUrl) || FALLBACK_PHONE_ARTIST_CONTENT.profileImage
+  const profileImage = content.instagram.profilePictureUrl || FALLBACK_PHONE_ARTIST_CONTENT.profileImage
   const messagesSeed = buildMessages(igPosts.length ? igPosts : FALLBACK_PHONE_ARTIST_CONTENT.photos, popularTracks)
   const notesSeed = buildNotes(popularTracks.length ? popularTracks : FALLBACK_PHONE_ARTIST_CONTENT.music.popularTracks, igPosts)
 
@@ -164,7 +130,7 @@ export function adaptArtistScrapedData(raw: unknown): PhoneArtistContent {
     ],
     profileImage,
     music: {
-      monthlyListeners: asNumber(spotify.monthlyListeners),
+      monthlyListeners: content.spotify.monthlyListeners,
       popularTracks: popularTracks.length ? popularTracks : FALLBACK_PHONE_ARTIST_CONTENT.music.popularTracks,
       discography: discography.length ? discography : FALLBACK_PHONE_ARTIST_CONTENT.music.discography,
     },
@@ -173,4 +139,8 @@ export function adaptArtistScrapedData(raw: unknown): PhoneArtistContent {
     notesSeed: notesSeed.length ? notesSeed : FALLBACK_PHONE_ARTIST_CONTENT.notesSeed,
     collaborators: relatedArtists.length ? relatedArtists : FALLBACK_PHONE_ARTIST_CONTENT.collaborators,
   }
+}
+
+export function adaptArtistScrapedData(raw: unknown): PhoneArtistContent {
+  return adaptArtistContentToPhone(adaptArtistContentPayload(raw))
 }

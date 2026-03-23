@@ -288,7 +288,7 @@ function BelowFoldContent() {
             { label: 'Events', href: '/events', accent: 'border-amber-500/30' },
             { label: 'Store', href: '/store', accent: 'border-red-500/30' },
             { label: 'Gallery', href: '/gallery', accent: 'border-blue-500/30' },
-            { label: 'Ranking', href: '/ranking', accent: 'border-emerald-500/30' },
+            { label: 'Rankings', href: '/rankings', accent: 'border-emerald-500/30' },
           ].map((item) => (
             <Link
               key={item.href}

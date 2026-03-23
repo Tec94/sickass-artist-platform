@@ -1,203 +1,308 @@
-import { Link } from 'react-router-dom';
-import { setNextTransition } from '../../components/Effects/PageTransition';
-import { Circle, User, ShoppingBag } from 'lucide-react';
-import SharedNavbar from '../../components/Navigation/SharedNavbar';
+import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { setNextTransition } from '../../components/Effects/PageTransition'
+import SharedNavbar from '../../components/Navigation/SharedNavbar'
+import { usePrototypeCart } from '../../features/store/prototypeCart'
+import {
+  PROTOTYPE_STORE_CATEGORY_LABELS,
+  PROTOTYPE_STORE_SORT_LABELS,
+  formatPrototypePrice,
+  getPrototypeStoreCategoryCounts,
+  getPrototypeStoreProducts,
+  type PrototypeStoreCategory,
+  type PrototypeStoreSort,
+} from '../../features/store/prototypeStoreCatalog'
+
+const categoryOptions: PrototypeStoreCategory[] = [
+  'all',
+  'apparel',
+  'music',
+  'collectibles',
+  'accessories',
+]
+
+const sortOptions: PrototypeStoreSort[] = ['latest', 'price-low', 'price-high']
+
 export default function Store() {
+  const navigate = useNavigate()
+  const { addItem, itemCount } = usePrototypeCart()
+  const [activeCategory, setActiveCategory] = useState<PrototypeStoreCategory>('all')
+  const [activeSort, setActiveSort] = useState<PrototypeStoreSort>('latest')
+
+  const categoryCounts = getPrototypeStoreCategoryCounts()
+  const products = getPrototypeStoreProducts(activeCategory, activeSort)
+
+  const openProduct = (productSlug: string) => {
+    setNextTransition('push')
+    navigate(`/store/product/${productSlug}`)
+  }
+
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
-      <style>{`
-        :root {
-            --color-ink: #1C1B1A;
-            --color-parchment: #F4F0EB;
-            --color-vellum: #FCFBF9;
-        }
-        
-        body {
-            background-color: var(--color-parchment);
-            color: var(--color-ink);
-        }
+    <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
+      <SharedNavbar />
 
-        .border-structural {
-            border-color: var(--color-ink);
-            border-width: 1px;
-        }
+      <main className="min-h-0 flex-1">
+        <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col md:flex-row">
+          <aside
+            data-testid="prototype-store-sidebar"
+            className="hidden md:block w-[250px] flex-shrink-0 overflow-y-auto bg-[#F4F0EB]"
+          >
+            <div className="p-8">
+              <h2 className="font-['Cormorant_Garamond'] text-2xl mb-8 tracking-tight">Categories</h2>
+              <nav className="flex flex-col gap-6">
+                {categoryOptions.map((category) => {
+                  const isActive = activeCategory === category
 
-        .product-card:hover img {
-            transform: scale(1.03);
-        }
+                  return (
+                    <button
+                      key={category}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setActiveCategory(category)}
+                      className="flex items-center justify-between text-left text-sm font-semibold uppercase tracking-widest group"
+                    >
+                      <span
+                        className={
+                          isActive
+                            ? 'text-[#C36B42] border-b border-[#C36B42] pb-1'
+                            : 'text-[#8E7D72] group-hover:text-[#3C2A21] transition-colors'
+                        }
+                      >
+                        {PROTOTYPE_STORE_CATEGORY_LABELS[category]}
+                      </span>
+                      <span
+                        className={`text-xs transition-colors ${
+                          isActive ? 'text-[#C36B42]' : 'text-[#8E7D72] group-hover:text-[#3C2A21]'
+                        }`}
+                      >
+                        {categoryCounts[category]}
+                      </span>
+                    </button>
+                  )
+                })}
+              </nav>
 
-        .add-btn:hover {
-            background-color: var(--color-ink);
-            color: var(--color-parchment);
-        }
-        
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-    `}</style>
-      
+              <div className="mt-16 pt-8">
+                <h3 className="font-['Cormorant_Garamond'] text-xl mb-6 tracking-tight">Sort By</h3>
+                <div className="flex flex-col gap-4">
+                  {sortOptions.map((sort) => {
+                    const isActive = activeSort === sort
 
-<SharedNavbar />
+                    return (
+                      <button
+                        key={sort}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setActiveSort(sort)}
+                        className="flex items-center gap-3 text-left group"
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            isActive ? 'border-[#0C86D2]' : 'border-[#1C1B1A]/50'
+                          }`}
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full bg-[#0C86D2] transition-opacity ${
+                              isActive ? 'opacity-100' : 'opacity-0'
+                            }`}
+                          />
+                        </span>
+                        <span
+                          className={`text-xs font-semibold uppercase tracking-widest transition-colors ${
+                            isActive ? 'text-[#3C2A21]' : 'text-[#8E7D72] group-hover:text-[#3C2A21]'
+                          }`}
+                        >
+                          {PROTOTYPE_STORE_SORT_LABELS[sort]}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </aside>
 
-<main className="flex-1 flex flex-col md:flex-row w-full max-w-[1600px] mx-auto">
+          <section className="min-h-0 flex-1 overflow-y-auto bg-[#FCFBF9]">
+            <div className="md:hidden border-b border-[#1C1B1A] bg-[#F4F0EB] px-4 py-4 space-y-4">
+              <div className="overflow-x-auto whitespace-nowrap">
+                <div className="flex gap-3 min-w-max">
+                  {categoryOptions.map((category) => {
+                    const isActive = activeCategory === category
 
-<aside className="w-full md:w-[250px] flex-shrink-0 border-r border-structural bg-parchment hidden md:block sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto no-scrollbar">
-<div className="p-8">
-<h2 className="font-serif text-2xl mb-8 tracking-tight">Categories</h2>
-<nav className="flex flex-col gap-6">
-<Link className="flex items-center justify-between text-sm font-semibold uppercase tracking-widest group" to="/dashboard">
-<span className="text-primary border-b border-primary pb-1">Apparel</span>
-<span className="text-xs text-muted group-hover:text-primary transition-colors">12</span>
-</Link>
-<Link className="flex items-center justify-between text-sm font-semibold uppercase tracking-widest text-muted hover:text-ink transition-colors group" to="/dashboard">
-<span>Music</span>
-<span className="text-xs group-hover:text-ink transition-colors">8</span>
-</Link>
-<Link className="flex items-center justify-between text-sm font-semibold uppercase tracking-widest text-muted hover:text-ink transition-colors group" to="/dashboard">
-<span>Collectibles</span>
-<span className="text-xs group-hover:text-ink transition-colors">5</span>
-</Link>
-<Link className="flex items-center justify-between text-sm font-semibold uppercase tracking-widest text-muted hover:text-ink transition-colors group" to="/dashboard">
-<span>Accessories</span>
-<span className="text-xs group-hover:text-ink transition-colors">3</span>
-</Link>
-</nav>
-<div className="mt-16 pt-8">
-<h3 className="font-serif text-xl mb-6 tracking-tight">Sort By</h3>
-<div className="flex flex-col gap-4">
-<label className="flex items-center gap-3 cursor-pointer group">
-<input defaultChecked={true} className="form-radio text-ink border-structural focus:ring-ink" name="sort" type="radio" />
-<span className="text-xs font-semibold uppercase tracking-widest text-ink group-hover:text-primary transition-colors">Latest</span>
-</label>
-<label className="flex items-center gap-3 cursor-pointer group">
-<input className="form-radio text-ink border-structural focus:ring-ink" name="sort" type="radio" />
-<span className="text-xs font-semibold uppercase tracking-widest text-muted group-hover:text-ink transition-colors">Price: Low - High</span>
-</label>
-<label className="flex items-center gap-3 cursor-pointer group">
-<input className="form-radio text-ink border-structural focus:ring-ink" name="sort" type="radio" />
-<span className="text-xs font-semibold uppercase tracking-widest text-muted group-hover:text-ink transition-colors">Price: High - Low</span>
-</label>
-</div>
-</div>
-</div>
-</aside>
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => setActiveCategory(category)}
+                        className={`border px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${
+                          isActive
+                            ? 'border-[#1C1B1A] bg-[#1C1B1A] text-[#F4EFE6]'
+                            : 'border-[#1C1B1A]/20 bg-[#FCFBF9] text-[#3C2A21]'
+                        }`}
+                      >
+                        {PROTOTYPE_STORE_CATEGORY_LABELS[category]} ({categoryCounts[category]})
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-<section className="flex-1 bg-vellum">
+              <div className="flex flex-wrap gap-3">
+                {sortOptions.map((sort) => {
+                  const isActive = activeSort === sort
 
-<div className="md:hidden border-b border-structural p-4 flex justify-between items-center bg-parchment">
-<span className="font-serif text-xl">Apparel</span>
-<button className="text-xs font-semibold uppercase tracking-widest border border-structural px-3 py-1.5 hover:bg-ink hover:text-parchment transition-colors rounded-none flex items-center gap-1">
-<Circle className="text-[16px]" /> Filter
-                </button>
-</div>
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full bg-ink gap-[1px] border-b border-structural">
+                  return (
+                    <button
+                      key={sort}
+                      type="button"
+                      onClick={() => setActiveSort(sort)}
+                      className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        isActive ? 'text-[#C36B42]' : 'text-[#8E7D72]'
+                      }`}
+                    >
+                      {PROTOTYPE_STORE_SORT_LABELS[sort]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative cursor-pointer border-b border-structural bg-[#f0f0f0]">
-<img alt="Black heavyweight hoodie with Private Suite embroidery" className="w-full h-full object-cover transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSKDzlRjFImnV-UfzxaF0-Q-flI9yLrlnTa0JVsCY3hdDA4-LDzpwvxjNrPc24CjNJY9_fNec7boAzrML7yL2_J9LXlooNOnujpssGINo8omlpS9WBjJHa759zujeex3SGz1ZA8Est5Kmvx-baj157bibrqvpp07Z-DOj4GEoCKngvXqPWcdRVC2TIGFzgji0LoA_a8EhijJ-2DBiX_rXEUcPrCeWzQGggjumKZUN9rJeeH4d6k6WrkhkeJsypirllffe7Y9jYS1OM" />
-<div className="absolute top-4 left-4">
-<span className="bg-ink text-parchment text-[10px] font-bold uppercase tracking-widest px-2 py-1">New</span>
-</div>
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate">Private Suite Tee</h3>
-<p className="text-sm font-medium mt-1 text-muted">$45.00</p>
-</div>
-<button className="add-btn absolute bottom-5 right-5 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-structural transition-colors rounded-none bg-vellum">
-                            Add
+            <div data-testid="prototype-store-canvas" className="border-l border-r border-b border-[#1C1B1A]">
+              <div className="border-b border-[#1C1B1A] bg-[#FAF7F2] px-5 py-5 md:px-8 md:py-7">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                      Prototype-first collection
+                    </p>
+                    <h1 className="font-['Cormorant_Garamond'] text-4xl md:text-5xl leading-none mt-3">
+                      {PROTOTYPE_STORE_CATEGORY_LABELS[activeCategory]}
+                    </h1>
+                    <p className="text-sm md:text-base text-[#3C2A21]/75 mt-3 max-w-3xl">
+                      Filter the editorial prototype catalog without leaving the route. Product cards
+                      open a dedicated detail page, while cart actions stay local and persistent.
+                    </p>
+                  </div>
+
+                  <div className="flex items-end gap-8">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                        Showing
+                      </p>
+                      <p className="font-['Cormorant_Garamond'] text-3xl leading-none mt-2">
+                        {products.length}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                        Cart
+                      </p>
+                      <p className="font-['Cormorant_Garamond'] text-3xl leading-none mt-2">
+                        {itemCount}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {products.length > 0 ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${activeCategory}-${activeSort}`}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                    className="grid grid-cols-1 bg-[#FCFBF9] sm:grid-cols-2 xl:grid-cols-3"
+                  >
+                    {products.map((product) => (
+                      <article
+                        key={product.slug}
+                        className="group flex h-[450px] flex-col border-r border-b border-[#1C1B1A] bg-[#FCFBF9] first:border-l sm:[&:nth-child(odd)]:border-l xl:[&:nth-child(3n+1)]:border-l"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openProduct(product.slug)}
+                          className="flex-1 overflow-hidden border-b border-[#1C1B1A] bg-[#F0ECE6] text-left"
+                          aria-label={`Open ${product.name} details`}
+                        >
+                          <div className="relative h-full w-full overflow-hidden">
+                            <img
+                              src={product.primaryImage}
+                              alt={product.alt}
+                              className={`h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] ${
+                                product.availability === 'sold-out' ? 'grayscale opacity-55' : ''
+                              }`}
+                            />
+                            {product.badge ? (
+                              <div className="absolute top-4 left-4">
+                                <span className="bg-[#1C1B1A] px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-[#F4EFE6]">
+                                  {product.badge}
+                                </span>
+                              </div>
+                            ) : null}
+                            {product.availability === 'sold-out' ? (
+                              <div className="absolute inset-0 flex items-center justify-center bg-[#FCFBF9]/20 backdrop-blur-[2px]">
+                                <span className="border border-[#1C1B1A] bg-[#F4F0EB] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#1C1B1A]">
+                                  Sold Out
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
                         </button>
-</div>
-</article>
 
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative cursor-pointer border-b border-structural bg-[#1a1a1a]">
-<img alt="Black oversized hoodie with tonal embroidery" className="w-full h-full object-cover transition-transform duration-500 ease-out opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5uguBbRQ_xy2XdYYrNQCFI2mqEM3EXSBlAasBcgiaoZuB4-e0vt4K7GJIcSFekVGoXc9daRhjfk5vYLb48V3Rj2ZgqGcdgW4XO7enKG_wWXOShz3NUMSfEC8VQJv3f7rjcQMvgYFeOk9g6jBzOxM9el5nFhd2xYf2a0kcOpwh6qz8_pEZez1B40lb5UeiyldTFc6BwvIh1-VoTCd_Jtwk2ThrdQat0HWZ54HOa6TQme8x5eJ8UJQhuJSFTW8KSh9Koxk49Xwh8ryG" />
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate">El Lobo Hoodie</h3>
-<p className="text-sm font-medium mt-1 text-muted">$120.00</p>
-</div>
-<button className="add-btn absolute bottom-5 right-5 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-structural transition-colors rounded-none bg-vellum">
-                            Add
-                        </button>
-</div>
-</article>
+                        <div className="flex min-h-[120px] items-end gap-4 bg-[#FCFBF9] p-5">
+                          <button
+                            type="button"
+                            onClick={() => openProduct(product.slug)}
+                            className="flex-1 self-stretch text-left"
+                            aria-label={`View ${product.name}`}
+                          >
+                            <div className="flex h-full flex-col justify-end">
+                              <h3
+                                className={`font-['Cormorant_Garamond'] text-[32px] leading-none tracking-tight ${
+                                  product.availability === 'sold-out' ? 'text-[#8E7D72]' : 'text-[#3C2A21]'
+                                }`}
+                              >
+                                {product.name}
+                              </h3>
+                              <p className="mt-3 text-sm font-medium text-[#8E7D72]">
+                                {formatPrototypePrice(product.priceCents)}
+                              </p>
+                            </div>
+                          </button>
 
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative cursor-pointer border-b border-structural bg-[#e5e5e5]">
-<img alt="Minimalist cotton cap in bone color" className="w-full h-full object-cover transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGY91OWq9bJ9-d0st2AXFNHZtCmQPu22dwwGMfJ6yCHsc-X4TPe5Ldk1QwJDhjToqkgrPgMOlWXA7PCQ9ZbJBDQNs9GnQoXT-8XSdMfRzHnph3AwTXs7NqIbZ5-rSdEBXIxMMXBVBP0AwtFYjdzhpYinElnt9dE1xCBugJecLRbeM42eryzAf60se_fYew5Z3KzT_PaGfoChTqb-ZxUXqckjTPckw0hgxU-rhWw1bzHdTCKOYMl6GO0CfyPV6iBEdg4343YYLH9R5w" />
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate">La Manada Cap</h3>
-<p className="text-sm font-medium mt-1 text-muted">$35.00</p>
-</div>
-<button className="add-btn absolute bottom-5 right-5 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-structural transition-colors rounded-none bg-vellum">
-                            Add
-                        </button>
-</div>
-</article>
-
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative cursor-pointer border-b border-structural bg-[#dcdcdc]">
-<img alt="Structured overshirt in olive green" className="w-full h-full object-cover transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhZsIzPBlB-WDNyJhHB5SZYKEjShn_Tlafuus7sNqI4ouApe94yj1A5rMQZY2aZC1uBW1hL6fEqLxBza7qrF_po-6LCHupjHtCl-ItcH2XON3iSdz_7wj42K1Y-H1Ahx14X3gJJqKg066Q4PQ5irCNFMq9zi4eqq277qqe23AHDrJ5VZZusJ6Dj0eHcdHWuGPLjhPdt62Y2qeNHfDBXDexoGFihop2YYerxgWjAqKY-XZHk89xCNdzJykfjgcelHEatsZjbpwK-7Ci" />
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate">Naranjito Overshirt</h3>
-<p className="text-sm font-medium mt-1 text-muted">$185.00</p>
-</div>
-<button className="add-btn absolute bottom-5 right-5 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-structural transition-colors rounded-none bg-vellum">
-                            Add
-                        </button>
-</div>
-</article>
-
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative border-b border-structural bg-[#e0e0e0]">
-<img alt="White long sleeve shirt" className="w-full h-full object-cover grayscale opacity-50 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZYachcBpvP2OixxrH8LN3Z9Rrgp6OqiW4Sg4T9RSD1jA7gn9fLPJvxUaO3GSfl2XwSFfaiBU-bCxNjIxINniQ13UccFsjoD64UtLdJ2GWpgR_JfkKt-NrKp4RSwWjxdJPv3LooCwu7EDhO_WE9pKTcxln1frBmlBCvit2qQc2wRd-K1sPD-WzxiW80Vf_MrsGb4f9IhrdBp294sUo8pu-3Hd0X0JEPz8dfjcDalATF0BGMUljQ_FE-lNjDqzCBMu7Am2qmgg1sI_u" />
-<div className="absolute inset-0 flex items-center justify-center bg-vellum/20 backdrop-blur-[2px]">
-<span className="bg-parchment border border-structural text-ink text-xs font-bold uppercase tracking-widest px-4 py-2">Sold Out</span>
-</div>
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate text-muted">Tour Longsleeve</h3>
-<p className="text-sm font-medium mt-1 text-muted">$55.00</p>
-</div>
-</div>
-</article>
-
-<article className="product-card group relative flex flex-col bg-vellum h-[450px]">
-<div className="flex-1 overflow-hidden relative cursor-pointer border-b border-structural bg-[#222]">
-<img alt="Minimalist black leather sneakers" className="w-full h-full object-cover transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB04Te93bWhgjl5FliglDYwlpb3OJaodbpS2R5-gFxpS9fRTqKCnuKKlQAihWPI_iT6V4Fi8ed0-lBynPMbnZdyuShmqScxn517aeQpNar5S6NDze9FD0LKtkZRK2ufqkymymgG3XtzQIZ5-AeUUbe0jTFbBkMb584wOXveRrWNhmG9SHd7O9lNL2n5KSvULHahwfiyg5DZFn5F6MTEkE8eg9pNeH9jfzcrfgo5selmNEWZh5HSB6-5dQgfy8g-xLDWnQyQxtZRcLEs" />
-</div>
-<div className="p-5 flex flex-col justify-between h-[120px] bg-vellum relative z-10">
-<div>
-<h3 className="font-serif text-lg font-medium leading-tight truncate">Midnight Sneaker</h3>
-<p className="text-sm font-medium mt-1 text-muted">$220.00</p>
-</div>
-<button className="add-btn absolute bottom-5 right-5 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-structural transition-colors rounded-none bg-vellum">
-                            Add
-                        </button>
-</div>
-</article>
-</div>
-
-<div className="h-32 flex items-center justify-center border-b border-structural bg-vellum">
-<p className="font-serif text-lg text-muted italic">End of collection.</p>
-</div>
-</section>
-</main>
-
+                          {product.availability === 'available' ? (
+                            <button
+                              type="button"
+                              onClick={() => addItem(product.slug)}
+                              className="self-end border border-[#1C1B1A] bg-[#FCFBF9] px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6]"
+                            >
+                              Add
+                            </button>
+                          ) : (
+                            <span className="self-end border border-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
+                              Sold Out
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <div className="h-[360px] flex flex-col items-center justify-center gap-4 bg-[#FCFBF9] px-6 text-center">
+                  <p className="font-['Cormorant_Garamond'] text-4xl leading-none">No products in this lane.</p>
+                  <p className="max-w-xl text-sm leading-7 text-[#3C2A21]/75">
+                    This category is still empty in the prototype catalog. Switch filters to return
+                    to the full collection.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
-  );
+  )
 }
