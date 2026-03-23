@@ -21,16 +21,8 @@ interface UseForumThreadsArgs {
   limit?: number
 }
 
-const getUserVote = (currentUserId: Id<'users'> | null, upVoterIds: Id<'users'>[], downVoterIds: Id<'users'>[]): UserVote => {
-  if (!currentUserId) return null
-  if (upVoterIds.includes(currentUserId)) return 'up'
-  if (downVoterIds.includes(currentUserId)) return 'down'
-  return null
-}
-
 export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThreadsArgs): UseForumThreadsResult {
-  const { user } = useAuth()
-  const currentUserId = user?._id ?? null
+  useAuth()
 
   const [currentLimit, setCurrentLimit] = useState(limit)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
@@ -63,11 +55,10 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
       authorTier: Thread['authorTier']
       categoryId: Id<'categories'>
       tags: string[]
-      upVoterIds: Id<'users'>[]
-      downVoterIds: Id<'users'>[]
       upVoteCount: number
       downVoteCount: number
       netVoteCount: number
+      userVote?: UserVote
       replyCount: number
       viewCount: number
       lastReplyAt?: number
@@ -93,7 +84,7 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
         upVoteCount: t.upVoteCount ?? 0,
         downVoteCount: t.downVoteCount ?? 0,
         netVoteCount: t.netVoteCount ?? 0,
-        userVote: getUserVote(currentUserId, t.upVoterIds ?? [], t.downVoterIds ?? []),
+        userVote: t.userVote ?? null,
         replyCount: t.replyCount ?? 0,
         viewCount: t.viewCount ?? 0,
         lastReplyAt: t.lastReplyAt ?? null,
@@ -102,7 +93,7 @@ export function useForumThreads({ categoryId, sortBy, limit = 20 }: UseForumThre
         isDeleted: t.isDeleted,
         deletedAt: t.deletedAt ?? null,
       }))
-  }, [currentUserId, data])
+  }, [data])
 
   // Since getThreads returns a simple array, we check if we got the full limit
   const hasMore = data !== undefined && (data as unknown[]).length >= currentLimit && currentLimit < 50

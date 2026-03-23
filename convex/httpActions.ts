@@ -40,17 +40,15 @@ export const cleanupCron = httpAction(async (ctx) => {
 })
 
 // Cron job to update event sale status based on time
-// Note: This requires a mutation to be created in events.ts or scheduler.ts
-// For now, this is a placeholder that can be called via external cron
-export const updateEventStatusCron = httpAction(async () => {
+export const updateEventStatusCron = httpAction(async (ctx) => {
   try {
     console.log('[Cron] Updating event sale statuses...')
-    
-    // TODO: Create updateEventStatuses mutation in events.ts or scheduler.ts
-    // For now, return success but no actual update
+
+    const result = await ctx.runMutation(api.ops.refreshEventSaleStatuses)
+
     return new Response(JSON.stringify({ 
       success: true, 
-      message: 'Event status update not yet implemented - requires mutation',
+      result,
       timestamp: new Date().toISOString()
     }), {
       status: 200,
@@ -70,13 +68,11 @@ export const updateEventStatusCron = httpAction(async () => {
 })
 
 // Cron job for data reconciliation and consistency checks
-export const reconcileCron = httpAction(async () => {
+export const reconcileCron = httpAction(async (ctx) => {
   try {
     console.log('[Cron] Starting data reconciliation...')
-    
-    // Note: reconcileEventData function doesn't exist yet
-    // For now, just return success
-    const result = { message: 'Reconciliation not yet implemented' }
+
+    const result = await ctx.runMutation(api.ops.reconcileEventData)
     
     console.log('[Cron] Reconciliation completed:', result)
     

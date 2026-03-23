@@ -5,7 +5,7 @@ import { ArrowRight, ShoppingBag, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { setNextTransition } from '../Effects/PageTransition'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
-import { formatPrototypePrice } from '../../features/store/prototypeStoreCatalog'
+import { formatPrototypePrice } from '../../features/store/prototypeStoreContract'
 
 interface CheckoutOverlayProps {
   isOpen: boolean
@@ -14,7 +14,7 @@ interface CheckoutOverlayProps {
 
 export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProps) {
   const navigate = useNavigate()
-  const { items, itemCount, subtotalCents, removeItem, clearCart } = usePrototypeCart()
+  const { items, itemCount, subtotalCents, removeItem, clearCart, canWrite } = usePrototypeCart()
 
   useEffect(() => {
     if (!isOpen) return
@@ -118,7 +118,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
               ) : (
                 <div className="flex flex-col gap-6">
                   {items.map((item) => (
-                    <div key={item.slug} className="group flex gap-4">
+                    <div key={item.lineKey} className="group flex gap-4">
                       <div className="h-24 w-24 flex-shrink-0 overflow-hidden border border-[#3C2A21]/10 bg-[#FAF7F2]">
                         <img
                           src={item.product.primaryImage}
@@ -132,13 +132,23 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                             <h3 className="font-['Cormorant_Garamond'] text-xl leading-tight text-[#3C2A21]">
                               {item.product.name}
                             </h3>
+                            {item.selectedOptions.length > 0 ? (
+                              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
+                                {item.selectedOptions
+                                  .map(
+                                    (selectedOption) =>
+                                      `${selectedOption.label}: ${selectedOption.selectedLabel}`,
+                                  )
+                                  .join(' • ')}
+                              </p>
+                            ) : null}
                             <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
                               Qty {item.quantity}
                             </p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeItem(item.slug)}
+                            onClick={() => removeItem(item.lineKey)}
                             className="text-[#8E7D72] transition-colors hover:text-[#A62B3A]"
                             aria-label={`Remove ${item.product.name}`}
                           >
@@ -150,7 +160,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                         </p>
                         <div className="mt-3 flex items-end justify-between">
                           <span className="text-xs uppercase tracking-[0.16em] text-[#8E7D72]">
-                            {formatPrototypePrice(item.product.priceCents)} each
+                            {formatPrototypePrice(item.unitPriceCents)} each
                           </span>
                           <span className="text-sm font-semibold text-[#3C2A21]">
                             {formatPrototypePrice(item.lineTotalCents)}
@@ -177,28 +187,30 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                   <span className="text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
                     Prototype note
                   </span>
-                  <span className="text-xs text-[#3C2A21]/75">Cart persists locally</span>
+                  <span className="text-xs text-[#3C2A21]/75">
+                    {canWrite ? 'Cart synced to Convex' : 'Sign in required for cart writes'}
+                  </span>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 min-[480px]:flex-row">
                   <button
                     type="button"
                     onClick={clearCart}
-                    className="flex-1 border border-[#3C2A21] py-4 text-xs font-bold uppercase tracking-[0.18em] text-[#3C2A21] transition-colors hover:bg-[#3C2A21] hover:text-[#FAF7F2]"
+                    className="w-full border border-[#3C2A21] px-4 py-4 text-xs font-bold uppercase tracking-[0.18em] text-[#3C2A21] transition-colors hover:bg-[#3C2A21] hover:text-[#FAF7F2] min-[480px]:flex-1"
                   >
                     Clear
                   </button>
                   <button
                     type="button"
-                    className="flex flex-[1.35] items-center justify-center gap-3 bg-[#3C2A21] py-4 text-xs font-bold uppercase tracking-[0.18em] text-[#FAF7F2] transition-colors hover:bg-[#C36B42]"
+                    className="flex w-full items-center justify-center gap-3 whitespace-nowrap bg-[#3C2A21] px-4 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#FAF7F2] transition-colors hover:bg-[#C36B42] min-[480px]:flex-[1.35]"
                     onClick={() => {
                       setNextTransition('push')
                       onClose()
                       navigate('/store')
                     }}
                   >
-                    Continue Browsing
-                    <ArrowRight size={16} />
+                    <span>Continue Browsing</span>
+                    <ArrowRight size={16} className="shrink-0" />
                   </button>
                 </div>
               </div>

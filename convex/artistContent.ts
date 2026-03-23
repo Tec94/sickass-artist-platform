@@ -30,10 +30,22 @@ export const uploadArtistContentPayload = mutation({
     const existing = await getStoredArtistContent(ctx)
     const now = Date.now()
     const metadata = getArtistPayloadMetadata(args.payload)
+    const payloadData =
+      typeof args.payload === 'object' && args.payload !== null
+        ? (args.payload as Record<string, unknown>)
+        : {}
 
     if (existing) {
       await ctx.db.patch(existing._id, {
-        payload: args.payload,
+        payloadEnvelope: {
+          version: 'artist-scrape/v1',
+          data: {
+            artist: metadata.artist,
+            scrapeDate: metadata.scrapeDate,
+            ...payloadData,
+          },
+          importedAt: now,
+        },
         source: args.source ?? existing.source,
         artist: metadata.artist ?? existing.artist,
         scrapeDate: metadata.scrapeDate ?? existing.scrapeDate,
@@ -50,7 +62,15 @@ export const uploadArtistContentPayload = mutation({
 
     await ctx.db.insert('phoneArtistContent', {
       key: ARTIST_CONTENT_KEY,
-      payload: args.payload,
+      payloadEnvelope: {
+        version: 'artist-scrape/v1',
+        data: {
+          artist: metadata.artist,
+          scrapeDate: metadata.scrapeDate,
+          ...payloadData,
+        },
+        importedAt: now,
+      },
       source: args.source,
       artist: metadata.artist,
       scrapeDate: metadata.scrapeDate,

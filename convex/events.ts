@@ -1,6 +1,7 @@
 import { query, mutation } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
 import type { Doc, Id } from './_generated/dataModel'
+import { findUserByCurrentIdentity } from './domain/identity'
 import { getCurrentUser, isModerator } from './helpers'
 
 const CHECKOUT_LIMIT = 5 // max concurrent checkout sessions per event
@@ -333,11 +334,7 @@ export const getEventDetail = query({
     let userContext: EventDetailWithContext['userContext'] = undefined
 
     if (identity) {
-      const user = await ctx.db
-        .query('users')
-        .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-        .first()
-
+      const user = await findUserByCurrentIdentity(ctx)
       if (user) {
         const [queueEntry, checkoutSession, tickets] = await Promise.all([
           ctx.db
@@ -494,13 +491,7 @@ export const getQueueState = query({
     eventId: v.id('events'),
   },
   handler: async (ctx, args): Promise<QueueStateResponse> => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return null
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
+    const user = await findUserByCurrentIdentity(ctx)
     if (!user) return null
 
     const queueEntry = await ctx.db

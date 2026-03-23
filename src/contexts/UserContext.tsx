@@ -1,27 +1,32 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, ReactNode, useEffect, useRef, useState, useContext } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { Doc } from '../../convex/_generated/dataModel'
 import { useTokenAuth } from '../components/ConvexAuthProvider'
 
-const USER_CACHE_KEY = 'user_profile_cache_v1'
+const USER_CACHE_KEY = 'user_profile_cache_v2'
 const USER_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 type CachedUserProfile = {
-  clerkId: string
+  authSubject: string
   profile: Doc<'users'>
   cachedAt: number
 }
 
-const readCachedProfile = (clerkId: string | null) => {
-  if (!clerkId || typeof localStorage === 'undefined') return null
+const getProfileAuthSubject = (profile: Doc<'users'> | null): string | null => {
+  if (!profile) return null
+  return profile.authSubject ?? null
+}
+
+const readCachedProfile = (authSubject: string | null) => {
+  if (!authSubject || typeof localStorage === 'undefined') return null
   try {
     const raw = localStorage.getItem(USER_CACHE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as CachedUserProfile
-    if (parsed.clerkId !== clerkId) return null
+    if (parsed.authSubject !== authSubject) return null
     if (Date.now() - parsed.cachedAt > USER_CACHE_TTL_MS) return null
     return parsed.profile
   } catch {
@@ -30,9 +35,11 @@ const readCachedProfile = (clerkId: string | null) => {
 }
 
 const writeCachedProfile = (profile: Doc<'users'>) => {
-  if (typeof localStorage === 'undefined') return
+  const authSubject = getProfileAuthSubject(profile)
+  if (!authSubject || typeof localStorage === 'undefined') return
+
   const payload: CachedUserProfile = {
-    clerkId: profile.clerkId,
+    authSubject,
     profile,
     cachedAt: Date.now(),
   }
@@ -45,16 +52,11 @@ const clearCachedProfile = () => {
 }
 
 interface UserContextType {
-  // Auth0 auth state
   authUser: Record<string, unknown> | null
   isSignedIn: boolean
   isLoading: boolean
-  
-  // Convex user profile
   userProfile: Doc<'users'> | null
   isProfileLoaded: boolean
-  
-  // Methods
   signOut: () => Promise<void>
   refreshUserProfile: () => void
 }
@@ -66,16 +68,14 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { user, isAuthenticated, isLoading: auth0Loading, logout, getIdTokenClaims } = useAuth0()
-  
-  // Token-based auth (kept as the source of truth for Convex auth readiness)
+  const { user, isAuthenticated, isLoading: auth0Loading, logout } = useAuth0()
   const { hasValidToken, isTokenLoading, userId: tokenUserId, refreshAuth } = useTokenAuth()
-  
-  // Treat "signed in" as: Auth0 says authenticated OR we have a valid Convex token.
+
   const isSignedIn = isAuthenticated || hasValidToken
   const isLoading = auth0Loading || isTokenLoading
   const effectiveUserId = tokenUserId || user?.sub || null
-  
+  const canUseConvexAuth = hasValidToken && !isTokenLoading
+
   const [userProfile, setUserProfile] = useState<Doc<'users'> | null>(null)
   const [isProfileLoaded, setIsProfileLoaded] = useState(false)
   const hasRecordedLoginRef = useRef(false)
@@ -84,137 +84,34 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     if (!effectiveUserId) return
-    if (userProfile?.clerkId === effectiveUserId) return
+    if (getProfileAuthSubject(userProfile) === effectiveUserId) return
     const cachedProfile = readCachedProfile(effectiveUserId)
     if (cachedProfile) {
       setUserProfile(cachedProfile)
       setIsProfileLoaded(true)
     }
-  }, [effectiveUserId, userProfile?.clerkId])
-  
-  // Convex mutations & queries
-  const createUserMutation = useMutation(api.users.create)
+  }, [effectiveUserId, userProfile])
+
+  const syncCurrentUserMutation = useMutation(api.users.upsertCurrentUser)
   const recordLoginMutation = useMutation(api.users.recordLogin)
   const updateUserMutation = useMutation(api.users.update)
-  const getUserQuery = useQuery(
-    api.users.getByClerkId,
-    isSignedIn && effectiveUserId ? { clerkId: effectiveUserId } : 'skip'
-  )
-  
-  // On sign-in, create user profile if doesn't exist
+  const getUserQuery = useQuery(api.users.getCurrentUser, canUseConvexAuth ? {} : 'skip')
+
   useEffect(() => {
-    if (!isSignedIn || !effectiveUserId || isLoading || getUserQuery === undefined) return
+    if (!canUseConvexAuth || !effectiveUserId || isLoading || getUserQuery !== null) return
     if (hasInitializedRef.current) return
-    
-    const initializeUser = async () => {
-      try {
-        // Check if user exists in Convex
-        if (getUserQuery === null) {
-          hasInitializedRef.current = true
-          
-          // Try to get user info from Auth0 user object or ID token claims
-          let email = ''
-          let username = ''
-          let displayName = ''
-          let avatar = ''
 
-          const sanitizeUsername = (raw: string): string => {
-            const s = raw
-              .toLowerCase()
-              .trim()
-              .replace(/[^a-z0-9_]/g, '_')
-              .replace(/_+/g, '_')
-              .replace(/^_+|_+$/g, '')
-              .slice(0, 20)
-            return s.length >= 3 ? s : ''
-          }
-
-          const fallbackUsername = `user_${effectiveUserId.substring(0, 8)}` // <= 13 chars, valid
-          
-          if (user) {
-            email = user.email || ''
-            const candidates = [
-              sanitizeUsername(user.nickname || ''),
-              sanitizeUsername(user.name || ''),
-              sanitizeUsername(email ? email.split('@')[0] : ''),
-              sanitizeUsername(fallbackUsername),
-            ].filter(Boolean)
-            username = candidates[0] || fallbackUsername
-            displayName = user.given_name || user.name || username
-            avatar = user.picture || ''
-          } else {
-            try {
-              const claims = await getIdTokenClaims()
-              if (claims) {
-                email = claims.email || ''
-                const candidates = [
-                  sanitizeUsername((claims as unknown as { nickname?: string }).nickname || ''),
-                  sanitizeUsername(claims.name || ''),
-                  sanitizeUsername(email ? email.split('@')[0] : ''),
-                  sanitizeUsername(fallbackUsername),
-                ].filter(Boolean)
-                username = candidates[0] || fallbackUsername
-                displayName = (claims as unknown as { given_name?: string }).given_name || claims.name || username
-                avatar = claims.picture || ''
-                
-                console.log('[UserContext] Extracted user info from Auth0 ID token:', { email, username, displayName })
-              }
-            } catch (e) {
-              console.error('[UserContext] Failed to extract user info from token:', e)
-              // Use fallback values
-              username = fallbackUsername
-            }
-          }
-          
-          // First sign-in: create user in Convex
-          // Retry with fallback usernames if we hit validation/uniqueness issues.
-          const candidateUsernames = [
-            sanitizeUsername(username),
-            sanitizeUsername(email ? email.split('@')[0] : ''),
-            sanitizeUsername(fallbackUsername),
-          ].filter(Boolean)
-
-          let lastError: unknown = null
-          let created = false
-          for (const candidate of candidateUsernames) {
-            try {
-              await createUserMutation({
-                clerkId: effectiveUserId,
-                email,
-                username: candidate,
-                displayName: displayName || candidate,
-                avatar,
-              })
-              created = true
-              break
-            } catch (err) {
-              lastError = err
-              const msg = (err as { message?: string } | null)?.message ?? String(err)
-              const retryable =
-                msg.includes('Username already taken') ||
-                msg.includes('Invalid username') ||
-                msg.includes('Invalid username:')
-              if (!retryable) throw err
-            }
-          }
-
-          if (!created) throw lastError
-          
-          console.log('[UserContext] ✅ Created new user in Convex')
-        }
-        
+    hasInitializedRef.current = true
+    syncCurrentUserMutation()
+      .catch((error) => {
+        console.error('[UserContext] Failed to upsert current user:', error)
+        hasInitializedRef.current = false
+      })
+      .finally(() => {
         setIsProfileLoaded(true)
-      } catch (error) {
-        console.error('[UserContext] Failed to initialize user:', error)
-        setIsProfileLoaded(true)
-        hasInitializedRef.current = false // Allow retry
-      }
-    }
-    
-    initializeUser()
-  }, [isSignedIn, effectiveUserId, isLoading, createUserMutation, getUserQuery, user, getIdTokenClaims])
-  
-  // Set userProfile from query and record login (once per session)
+      })
+  }, [canUseConvexAuth, effectiveUserId, getUserQuery, isLoading, syncCurrentUserMutation])
+
   useEffect(() => {
     if (getUserQuery !== undefined && getUserQuery !== null) {
       setUserProfile(getUserQuery)
@@ -223,17 +120,22 @@ export function UserProvider({ children }: UserProviderProps) {
       if (!hasRecordedLoginRef.current) {
         hasRecordedLoginRef.current = true
         recordLoginMutation({ userId: getUserQuery._id }).catch((err) =>
-          console.error('[UserContext] Failed to record login:', err)
+          console.error('[UserContext] Failed to record login:', err),
         )
       }
-    } else if (getUserQuery === null) {
+
+      setIsProfileLoaded(true)
+      return
+    }
+
+    if (getUserQuery === null) {
       setUserProfile(null)
       hasRecordedLoginRef.current = false
     }
   }, [getUserQuery, recordLoginMutation])
 
   useEffect(() => {
-    if (!userProfile || !user || !user.picture) return
+    if (!userProfile || !user?.picture) return
     if (userProfile.avatar === user.picture) return
     if (lastAvatarRef.current === user.picture) return
 
@@ -246,9 +148,8 @@ export function UserProvider({ children }: UserProviderProps) {
     }).catch((error) => {
       console.error('[UserContext] Failed to refresh avatar:', error)
     })
-  }, [user, userProfile, updateUserMutation])
-  
-  // Reset state on sign out
+  }, [updateUserMutation, user?.picture, userProfile])
+
   useEffect(() => {
     if (!isSignedIn && !isLoading) {
       setUserProfile(null)
@@ -259,7 +160,7 @@ export function UserProvider({ children }: UserProviderProps) {
       clearCachedProfile()
     }
   }, [isSignedIn, isLoading])
-  
+
   const signOut = async () => {
     logout({ logoutParams: { returnTo: window.location.origin } })
     setUserProfile(null)
@@ -268,27 +169,28 @@ export function UserProvider({ children }: UserProviderProps) {
     hasInitializedRef.current = false
     clearCachedProfile()
   }
-  
+
   const refreshUserProfile = () => {
     setIsProfileLoaded(false)
+    hasInitializedRef.current = false
+    hasRecordedLoginRef.current = false
     clearCachedProfile()
     refreshAuth()
   }
-  
+
   const value: UserContextType = {
     authUser: (user as unknown as Record<string, unknown>) ?? null,
-    isSignedIn, // Now uses token-based auth primarily
+    isSignedIn,
     isLoading,
     userProfile,
     isProfileLoaded,
     signOut,
     refreshUserProfile,
   }
-  
+
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
-// Custom hook to use the user context
 export const useUser = () => {
   const context = useContext(UserContext)
   if (!context) {

@@ -532,6 +532,10 @@ export const uploadUGC = mutation({
       uploadedFile: undefined, // Could be used for file storage if needed
       category: args.category as UGCCategory,
       tags: args.tags,
+      searchText: [args.title, args.description, args.category, ...args.tags]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase(),
       likeCount: 0,
       viewCount: 0,
       downloadCount: 0,

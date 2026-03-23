@@ -1,7 +1,71 @@
 import { query, mutation } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
 import { v, ConvexError } from "convex/values";
 import { api, internal } from "./_generated/api";
+import { findUserByCurrentIdentity } from "./domain/identity";
 import { getCurrentUser, canAccessCategory, isModerator, updateUserSocialPoints } from "./helpers";
+
+type VoteSelection = "up" | "down" | null;
+type ForumCtx = QueryCtx | MutationCtx;
+
+const buildThreadSearchText = (input: {
+  title: string;
+  content: string;
+  tags: string[];
+  authorDisplayName: string;
+}) =>
+  [input.title, input.content, input.authorDisplayName, ...input.tags]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const withThreadVoteView = (
+  thread: Doc<"threads">,
+  userVote: VoteSelection = null,
+) => ({
+  ...thread,
+  upVoteCount: thread.upVoteCount || 0,
+  downVoteCount: thread.downVoteCount || 0,
+  netVoteCount: thread.netVoteCount || 0,
+  userVote,
+});
+
+const withReplyVoteView = (
+  reply: Doc<"replies">,
+  userVote: VoteSelection = null,
+) => ({
+  ...reply,
+  upVoteCount: reply.upVoteCount || 0,
+  downVoteCount: reply.downVoteCount || 0,
+  userVote,
+});
+
+const getThreadVoteForUser = async (
+  ctx: ForumCtx,
+  threadId: Id<"threads">,
+  userId: Id<"users">,
+): Promise<VoteSelection> => {
+  const vote = await ctx.db
+    .query("threadVotes")
+    .withIndex("by_thread_user", (q) => q.eq("threadId", threadId).eq("userId", userId))
+    .first();
+
+  return vote?.voteType ?? null;
+};
+
+const getReplyVoteForUser = async (
+  ctx: ForumCtx,
+  replyId: Id<"replies">,
+  userId: Id<"users">,
+): Promise<VoteSelection> => {
+  const vote = await ctx.db
+    .query("replyVotes")
+    .withIndex("by_reply_user", (q) => q.eq("replyId", replyId).eq("userId", userId))
+    .first();
+
+  return vote?.voteType ?? null;
+};
 
 // QUERIES
 
@@ -19,11 +83,7 @@ export const getCategories = query({
         .sort((a, b) => a.order - b.order);
     }
 
-    const clerkId = identity.subject;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .first();
+    const user = await findUserByCurrentIdentity(ctx);
 
     if (!user) {
       // Return public categories if user record not found
@@ -79,6 +139,9 @@ export const getThreads = query({
     ),
   },
   handler: async (ctx, args) => {
+    const viewer = await findUserByCurrentIdentity(ctx);
+    const viewerId = viewer?._id ?? null;
+
     // Get category to check access requirements
     const category = await ctx.db.get(args.categoryId);
     if (!category) {
@@ -131,14 +194,14 @@ export const getThreads = query({
       }
     }
 
-    return threads.slice(0, limit).map(t => ({
-      ...t,
-      upVoteCount: t.upVoteCount || 0,
-      downVoteCount: t.downVoteCount || 0,
-      netVoteCount: t.netVoteCount || 0,
-      upVoterIds: t.upVoterIds || [],
-      downVoterIds: t.downVoterIds || [],
-    }));
+    return await Promise.all(
+      threads.slice(0, limit).map(async (thread) =>
+        withThreadVoteView(
+          thread,
+          viewerId ? await getThreadVoteForUser(ctx, thread._id, viewerId) : null,
+        ),
+      ),
+    );
   },
 });
 
@@ -148,6 +211,8 @@ export const getThreadDetail = query({
     categoryId: v.id("categories")
   },
   handler: async (ctx, args) => {
+    const viewer = await findUserByCurrentIdentity(ctx);
+
     // Get category to check access requirements
     const category = await ctx.db.get(args.categoryId);
     if (!category) {
@@ -181,14 +246,10 @@ export const getThreadDetail = query({
     // Note: View count increment should be done via a separate mutation
     // Queries cannot mutate data
 
-    return {
-      ...thread,
-      upVoteCount: thread.upVoteCount || 0,
-      downVoteCount: thread.downVoteCount || 0,
-      netVoteCount: thread.netVoteCount || 0,
-      upVoterIds: thread.upVoterIds || [],
-      downVoterIds: thread.downVoterIds || [],
-    };
+    return withThreadVoteView(
+      thread,
+      viewer ? await getThreadVoteForUser(ctx, thread._id, viewer._id) : null,
+    );
   },
 });
 
@@ -204,10 +265,12 @@ export const getReplies = query({
     ),
   },
   handler: async (ctx, args) => {
+    const viewer = await findUserByCurrentIdentity(ctx);
+    const viewerId = viewer?._id ?? null;
+
     const user = await getCurrentUser(ctx);
     const userId = user._id;
 
-    // Get thread to check access
     const thread = await ctx.db.get(args.threadId);
     if (!thread) {
       throw new ConvexError("Thread not found");
@@ -223,7 +286,6 @@ export const getReplies = query({
       .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
       .collect();
 
-    // Filter out deleted replies and apply cursor if provided
     let filteredReplies = allReplies.filter(
       (r) => !r.isDeleted && (r.moderationStatus ?? "active") === "active"
     );
@@ -237,15 +299,15 @@ export const getReplies = query({
       }
     }
 
-    // Sort by createdAt descending and take limit
     filteredReplies.sort((a, b) => b.createdAt - a.createdAt);
-    return filteredReplies.slice(0, args.limit).map(r => ({
-      ...r,
-      upVoteCount: r.upVoteCount || 0,
-      downVoteCount: r.downVoteCount || 0,
-      upVoterIds: r.upVoterIds || [],
-      downVoterIds: r.downVoterIds || [],
-    }));
+    return await Promise.all(
+      filteredReplies.slice(0, args.limit).map(async (reply) =>
+        withReplyVoteView(
+          reply,
+          viewerId ? await getReplyVoteForUser(ctx, reply._id, viewerId) : null,
+        ),
+      ),
+    );
   },
 });
 
@@ -255,6 +317,9 @@ export const subscribeToThread = query({
     threadId: v.id("threads"),
   },
   handler: async (ctx, args) => {
+    const viewer = await findUserByCurrentIdentity(ctx);
+    const viewerId = viewer?._id ?? null;
+
     // Get thread
     const thread = await ctx.db.get(args.threadId);
     if (
@@ -271,26 +336,23 @@ export const subscribeToThread = query({
       .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
       .collect();
 
-    const replies = allReplies
-      .filter((r) => !r.isDeleted && (r.moderationStatus ?? "active") === "active")
-      .sort((a, b) => a.createdAt - b.createdAt)
-      .map(r => ({
-        ...r,
-        upVoteCount: r.upVoteCount || 0,
-        downVoteCount: r.downVoteCount || 0,
-        upVoterIds: r.upVoterIds || [],
-        downVoterIds: r.downVoterIds || [],
-      }));
+    const replies = await Promise.all(
+      allReplies
+        .filter((r) => !r.isDeleted && (r.moderationStatus ?? "active") === "active")
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .map(async (reply) =>
+          withReplyVoteView(
+            reply,
+            viewerId ? await getReplyVoteForUser(ctx, reply._id, viewerId) : null,
+          ),
+        ),
+    );
 
     return {
-      thread: {
-        ...thread,
-        upVoteCount: thread.upVoteCount || 0,
-        downVoteCount: thread.downVoteCount || 0,
-        netVoteCount: thread.netVoteCount || 0,
-        upVoterIds: thread.upVoterIds || [],
-        downVoterIds: thread.downVoterIds || [],
-      },
+      thread: withThreadVoteView(
+        thread,
+        viewerId ? await getThreadVoteForUser(ctx, thread._id, viewerId) : null,
+      ),
       replies,
     };
   },
@@ -308,6 +370,7 @@ export const createThread = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
+    const now = Date.now();
 
     // Rate limiting: max 3 threads per hour per user per category
     const oneHourAgo = Date.now() - 3600000;
@@ -363,8 +426,12 @@ export const createThread = mutation({
       authorTier: user.fanTier,
       categoryId: args.categoryId,
       tags: args.tags,
-      upVoterIds: [],
-      downVoterIds: [],
+      searchText: buildThreadSearchText({
+        title: args.title,
+        content: args.content,
+        tags: args.tags,
+        authorDisplayName: user.displayName,
+      }),
       upVoteCount: 0,
       downVoteCount: 0,
       netVoteCount: 0,
@@ -372,8 +439,8 @@ export const createThread = mutation({
       viewCount: 0,
       isDeleted: false,
       moderationStatus: "active",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     });
 
     // Update category thread count and last thread
@@ -381,7 +448,7 @@ export const createThread = mutation({
     if (category) {
       await ctx.db.patch(args.categoryId, {
         threadCount: (category.threadCount || 0) + 1,
-        lastThreadAt: Date.now(),
+        lastThreadAt: now,
       });
     }
 
@@ -461,6 +528,15 @@ export const editThread = mutation({
       updates.content = args.newContent;
     }
 
+    const nextTitle = (updates.title as string | undefined) ?? thread.title;
+    const nextContent = (updates.content as string | undefined) ?? thread.content;
+    updates.searchText = buildThreadSearchText({
+      title: nextTitle,
+      content: nextContent,
+      tags: thread.tags,
+      authorDisplayName: thread.authorDisplayName,
+    });
+
     // Update the thread
     const updatedThread = await ctx.db.patch(args.threadId, updates);
 
@@ -476,6 +552,7 @@ export const createReply = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
+    const now = Date.now();
 
     // Rate limiting: max 10 replies per 30 minutes per user
     const thirtyMinutesAgo = Date.now() - 1800000;
@@ -522,28 +599,26 @@ export const createReply = mutation({
       authorAvatar: user.avatar,
       authorTier: user.fanTier,
       content: args.content,
-      upVoterIds: [],
-      downVoterIds: [],
       upVoteCount: 0,
       downVoteCount: 0,
       isDeleted: false,
       moderationStatus: "active",
-      createdAt: Date.now(),
+      createdAt: now,
     });
 
     // Update thread stats
     await ctx.db.patch(args.threadId, {
       replyCount: (thread.replyCount || 0) + 1,
-      lastReplyAt: Date.now(),
+      lastReplyAt: now,
       lastReplyById: userId,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     // Update category last thread time
     const category = await ctx.db.get(thread.categoryId);
     if (category) {
       await ctx.db.patch(thread.categoryId, {
-        lastThreadAt: Date.now(),
+        lastThreadAt: now,
       });
     }
 
@@ -622,6 +697,7 @@ export const castThreadVote = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
+    const now = Date.now();
 
     // Rate limiting: max 20 votes per 60 seconds per user
     const sixtySecondsAgo = Date.now() - 60000;
@@ -655,55 +731,59 @@ export const castThreadVote = mutation({
       throw new ConvexError("Access denied");
     }
 
-    // Update vote arrays
-    const isCurrentlyUpvoted = thread.upVoterIds?.includes(userId) || false;
-    const isCurrentlyDownvoted = thread.downVoterIds?.includes(userId) || false;
-
-    let newUpVoterIds: typeof thread.upVoterIds = thread.upVoterIds || [];
-    let newDownVoterIds: typeof thread.downVoterIds = thread.downVoterIds || [];
     let newUpVoteCount = thread.upVoteCount || 0;
     let newDownVoteCount = thread.downVoteCount || 0;
+    let newUserVote: VoteSelection = args.voteType;
 
-    if (args.voteType === "up") {
-      if (isCurrentlyUpvoted) {
-        // Remove upvote
-        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+    const existingVote = await ctx.db
+      .query("threadVotes")
+      .withIndex("by_thread_user", (q) => q.eq("threadId", args.threadId).eq("userId", userId))
+      .first();
+
+    if (!existingVote) {
+      if (args.voteType === "up") {
+        newUpVoteCount += 1;
+      } else {
+        newDownVoteCount += 1;
+      }
+
+      await ctx.db.insert("threadVotes", {
+        threadId: args.threadId,
+        userId,
+        voteType: args.voteType,
+        createdAt: now,
+      });
+    } else if (existingVote.voteType === args.voteType) {
+      newUserVote = null;
+      if (args.voteType === "up") {
         newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       } else {
-        // Add upvote and remove downvote if present
-        newUpVoterIds = [...newUpVoterIds, userId];
-        newUpVoteCount = newUpVoteCount + 1;
-        if (isCurrentlyDownvoted) {
-          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
-          newDownVoteCount = Math.max(0, newDownVoteCount - 1);
-        }
+        newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       }
+
+      await ctx.db.delete(existingVote._id);
     } else {
-      if (isCurrentlyDownvoted) {
-        // Remove downvote
-        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+      if (args.voteType === "up") {
+        newUpVoteCount += 1;
         newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       } else {
-        // Add downvote and remove upvote if present
-        newDownVoterIds = [...newDownVoterIds, userId];
-        newDownVoteCount = newDownVoteCount + 1;
-        if (isCurrentlyUpvoted) {
-          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
-          newUpVoteCount = Math.max(0, newUpVoteCount - 1);
-        }
+        newDownVoteCount += 1;
+        newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       }
+
+      await ctx.db.patch(existingVote._id, {
+        voteType: args.voteType,
+        createdAt: now,
+      });
     }
 
     const newNetVoteCount = newUpVoteCount - newDownVoteCount;
 
-    // Update the thread
     await ctx.db.patch(args.threadId, {
-      upVoterIds: newUpVoterIds,
-      downVoterIds: newDownVoterIds,
       upVoteCount: newUpVoteCount,
       downVoteCount: newDownVoteCount,
       netVoteCount: newNetVoteCount,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     // Sync points to author
@@ -711,8 +791,12 @@ export const castThreadVote = mutation({
     const pointDelta = newNetVoteCount - oldNetVoteCount;
     await updateUserSocialPoints(ctx, thread.authorId, pointDelta);
 
-    const updatedThread = await ctx.db.get(args.threadId);
-    return updatedThread;
+    return {
+      upVoteCount: newUpVoteCount,
+      downVoteCount: newDownVoteCount,
+      netVoteCount: newNetVoteCount,
+      userVote: newUserVote,
+    };
   },
 });
 
@@ -724,6 +808,7 @@ export const castReplyVote = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
+    const now = Date.now();
 
     // Rate limiting: max 20 votes per 60 seconds per user
     const sixtySecondsAgo = Date.now() - 60000;
@@ -759,49 +844,53 @@ export const castReplyVote = mutation({
       throw new ConvexError("Access denied");
     }
 
-    // Update vote arrays
-    const isCurrentlyUpvoted = reply.upVoterIds?.includes(userId) || false;
-    const isCurrentlyDownvoted = reply.downVoterIds?.includes(userId) || false;
-
-    let newUpVoterIds: typeof reply.upVoterIds = reply.upVoterIds || [];
-    let newDownVoterIds: typeof reply.downVoterIds = reply.downVoterIds || [];
     let newUpVoteCount = reply.upVoteCount || 0;
     let newDownVoteCount = reply.downVoteCount || 0;
+    let newUserVote: VoteSelection = args.voteType;
 
-    if (args.voteType === "up") {
-      if (isCurrentlyUpvoted) {
-        // Remove upvote
-        newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
+    const existingVote = await ctx.db
+      .query("replyVotes")
+      .withIndex("by_reply_user", (q) => q.eq("replyId", args.replyId).eq("userId", userId))
+      .first();
+
+    if (!existingVote) {
+      if (args.voteType === "up") {
+        newUpVoteCount += 1;
+      } else {
+        newDownVoteCount += 1;
+      }
+
+      await ctx.db.insert("replyVotes", {
+        replyId: args.replyId,
+        userId,
+        voteType: args.voteType,
+        createdAt: now,
+      });
+    } else if (existingVote.voteType === args.voteType) {
+      newUserVote = null;
+      if (args.voteType === "up") {
         newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       } else {
-        // Add upvote and remove downvote if present
-        newUpVoterIds = [...newUpVoterIds, userId];
-        newUpVoteCount = newUpVoteCount + 1;
-        if (isCurrentlyDownvoted) {
-          newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
-          newDownVoteCount = Math.max(0, newDownVoteCount - 1);
-        }
+        newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       }
+
+      await ctx.db.delete(existingVote._id);
     } else {
-      if (isCurrentlyDownvoted) {
-        // Remove downvote
-        newDownVoterIds = newDownVoterIds.filter((id) => id !== userId);
+      if (args.voteType === "up") {
+        newUpVoteCount += 1;
         newDownVoteCount = Math.max(0, newDownVoteCount - 1);
       } else {
-        // Add downvote and remove upvote if present
-        newDownVoterIds = [...newDownVoterIds, userId];
-        newDownVoteCount = newDownVoteCount + 1;
-        if (isCurrentlyUpvoted) {
-          newUpVoterIds = newUpVoterIds.filter((id) => id !== userId);
-          newUpVoteCount = Math.max(0, newUpVoteCount - 1);
-        }
+        newDownVoteCount += 1;
+        newUpVoteCount = Math.max(0, newUpVoteCount - 1);
       }
+
+      await ctx.db.patch(existingVote._id, {
+        voteType: args.voteType,
+        createdAt: now,
+      });
     }
 
-    // Update the reply
     await ctx.db.patch(args.replyId, {
-      upVoterIds: newUpVoterIds,
-      downVoterIds: newDownVoterIds,
       upVoteCount: newUpVoteCount,
       downVoteCount: newDownVoteCount,
     });
@@ -812,8 +901,11 @@ export const castReplyVote = mutation({
     const pointDelta = newNetVoteCount - oldNetVoteCount;
     await updateUserSocialPoints(ctx, reply.authorId, pointDelta);
 
-    const updatedReply = await ctx.db.get(args.replyId);
-    return updatedReply;
+    return {
+      upVoteCount: newUpVoteCount,
+      downVoteCount: newDownVoteCount,
+      userVote: newUserVote,
+    };
   },
 });
 
@@ -950,6 +1042,7 @@ export const toggleThreadBookmark = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     const userId = user._id;
+    const now = Date.now();
 
     const thread = await ctx.db.get(args.threadId);
     if (!thread || thread.isDeleted || (thread.moderationStatus ?? "active") !== "active") {
@@ -966,7 +1059,6 @@ export const toggleThreadBookmark = mutation({
       return { bookmarked: false };
     }
 
-    const now = Date.now();
     await ctx.db.insert("forumThreadBookmarks", {
       userId,
       threadId: args.threadId,
@@ -982,14 +1074,7 @@ export const toggleThreadBookmark = mutation({
 export const getBookmarkedThreadIds = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await findUserByCurrentIdentity(ctx);
     if (!user) return [];
 
     const bookmarks = await ctx.db

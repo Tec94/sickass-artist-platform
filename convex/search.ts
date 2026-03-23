@@ -29,12 +29,25 @@ export const searchThreads = query({
     const searchTerm = args.query.toLowerCase().trim();
     const candidateLimit = Math.min(limit * 10, 200);
 
-    // Get all threads in the category
-    const allThreads = await ctx.db
+    const indexedThreads = await ctx.db
       .query("threads")
-      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .order("desc")
+      .withSearchIndex("search_threads", (q) =>
+        q.search("searchText", searchTerm).eq("categoryId", args.categoryId)
+      )
       .take(candidateLimit);
+
+    let allThreads = indexedThreads;
+    if (allThreads.length < limit) {
+      const recentThreads = await ctx.db
+        .query("threads")
+        .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+        .order("desc")
+        .take(candidateLimit);
+
+      allThreads = Array.from(
+        new Map([...indexedThreads, ...recentThreads].map((thread) => [String(thread._id), thread])).values()
+      );
+    }
 
     const threads = allThreads.filter(
       (t) => !t.isDeleted && (t.moderationStatus ?? "active") === "active"
@@ -318,15 +331,16 @@ async function searchUsersHelper(
   limit: number
 ): Promise<SearchUserResult[]> {
   try {
-    // Use existing index: by_username
-    const byUsername = await ctx.db
+    const candidateLimit = Math.min(limit * 5, 100);
+    const indexedUsers = await ctx.db
       .query("users")
-      .withIndex("by_username", (q) => q.gte("username", searchTerm))
-      .take(limit * 2); // Fetch more to account for filtering
+      .withSearchIndex("search_users", (q) => q.search("searchText", searchTerm))
+      .take(candidateLimit);
 
-    const results = byUsername.filter(
+    const results = indexedUsers.filter(
       (u) =>
         u.username.toLowerCase().includes(searchTerm) ||
+        u.email.toLowerCase().includes(searchTerm) ||
         u.displayName.toLowerCase().includes(searchTerm)
     );
 
@@ -363,11 +377,14 @@ async function searchThreadsGlobal(
   currentUserId?: Id<"users">
 ): Promise<SearchThreadResult[]> {
   try {
-    // Get all threads (filtered for access control)
-    const allThreads = await ctx.db.query("threads").collect();
+    const candidateLimit = Math.min(limit * 5, 100);
+    const indexedThreads = await ctx.db
+      .query("threads")
+      .withSearchIndex("search_threads", (q) => q.search("searchText", searchTerm))
+      .take(candidateLimit);
 
     // Filter for access control and search term
-    const results = allThreads
+    const results = indexedThreads
       .filter((t) => {
         // Skip deleted threads
         if (t.isDeleted) return false;
@@ -428,7 +445,11 @@ async function searchGalleryGlobal(
   currentUser?: Doc<"users">
 ): Promise<SearchGalleryResult[]> {
   try {
-    const allGallery = await ctx.db.query("galleryContent").collect();
+    const candidateLimit = Math.min(limit * 5, 100);
+    const allGallery = await ctx.db
+      .query("galleryContent")
+      .withSearchIndex("search_galleryContent", (q) => q.search("searchText", searchTerm))
+      .take(candidateLimit);
 
     // FILTERING: Respect tier restrictions
     const filtered = allGallery.filter((g) => {
@@ -481,7 +502,13 @@ async function searchUGCGlobal(
   limit: number
 ): Promise<SearchUGCResult[]> {
   try {
-    const allUGC = await ctx.db.query("ugcContent").collect();
+    const candidateLimit = Math.min(limit * 5, 100);
+    const allUGC = await ctx.db
+      .query("ugcContent")
+      .withSearchIndex("search_ugcContent", (q) =>
+        q.search("searchText", searchTerm).eq("isApproved", true)
+      )
+      .take(candidateLimit);
 
     // FILTERING: Only approved content, respect tier restrictions
     const filtered = allUGC.filter((u) => {
@@ -533,7 +560,11 @@ async function searchChannels(
   currentUserId?: Id<"users">
 ): Promise<SearchChannelResult[]> {
   try {
-    const allChannels = await ctx.db.query("channels").collect();
+    const candidateLimit = Math.min(limit * 5, 100);
+    const allChannels = await ctx.db
+      .query("channels")
+      .withSearchIndex("search_channels", (q) => q.search("searchText", searchTerm))
+      .take(candidateLimit);
 
     // Get current user for access checks
     let currentUser: Doc<"users"> | null = null;
@@ -679,7 +710,11 @@ async function searchEventsGlobal(
   limit: number
 ): Promise<SearchEventResult[]> {
   try {
-    const events = await ctx.db.query("events").collect();
+    const candidateLimit = Math.min(limit * 5, 100);
+    const events = await ctx.db
+      .query("events")
+      .withSearchIndex("search_events", (q) => q.search("searchText", searchTerm))
+      .take(candidateLimit);
 
     const results = events.filter(e =>
       e.saleStatus !== 'cancelled' &&

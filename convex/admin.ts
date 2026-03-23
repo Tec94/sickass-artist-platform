@@ -23,6 +23,9 @@ const DEFAULT_CHAT_SERVER_SETTINGS = {
 const buildProductSearchText = (name: string, description: string, tags: string[]) =>
     [name, description, tags.join(" ")].join(" ").toLowerCase()
 
+const buildChannelSearchText = (name: string, slug: string, description: string) =>
+    [name, slug, description].join(" ").toLowerCase()
+
 const normalizeWordList = (items: string[] | undefined) =>
     Array.from(
         new Set((items || []).map((item) => item.toLowerCase().trim()).filter(Boolean))
@@ -44,12 +47,30 @@ export const getUsers = query({
         role: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const { page, pageSize, search, role } = args
+        await requireAdmin(ctx)
+
+        const { page, role, search } = args
+        const pageSize = Math.min(Math.max(args.pageSize, 1), 100)
+        const normalizedSearch = search?.trim().toLowerCase() ?? ""
+        const startIdx = page * pageSize
+        const endIdx = startIdx + pageSize
 
         let allUsers
 
-        // If role filter provided, use index
-        if (role && role !== "all") {
+        if (normalizedSearch.length >= 2) {
+            const candidateLimit = Math.min(Math.max(endIdx + pageSize, 50), 250)
+            allUsers = role && role !== "all"
+                ? await ctx.db
+                    .query("users")
+                    .withSearchIndex("search_users", (q) =>
+                        q.search("searchText", normalizedSearch).eq("role", role as any)
+                    )
+                    .take(candidateLimit)
+                : await ctx.db
+                    .query("users")
+                    .withSearchIndex("search_users", (q) => q.search("searchText", normalizedSearch))
+                    .take(candidateLimit)
+        } else if (role && role !== "all") {
             allUsers = await ctx.db
                 .query("users")
                 .withIndex("by_role", (q) => q.eq("role", role as any))
@@ -58,25 +79,38 @@ export const getUsers = query({
             allUsers = await ctx.db.query("users").collect()
         }
 
-        // Filter by search if provided
-        let filteredUsers = allUsers
-        if (search && search.trim()) {
-            const searchLower = search.toLowerCase()
-            filteredUsers = allUsers.filter(user =>
-                user.displayName.toLowerCase().includes(searchLower) ||
-                user.email.toLowerCase().includes(searchLower) ||
-                user.username.toLowerCase().includes(searchLower)
+        const filteredUsers = normalizedSearch
+            ? allUsers.filter((user) =>
+                user.displayName.toLowerCase().includes(normalizedSearch) ||
+                user.email.toLowerCase().includes(normalizedSearch) ||
+                user.username.toLowerCase().includes(normalizedSearch)
             )
-        }
+            : allUsers
 
-        // Paginate
-        const startIdx = page * pageSize
-        const paginatedUsers = filteredUsers.slice(startIdx, startIdx + pageSize)
+        filteredUsers.sort((left, right) => {
+            if (!normalizedSearch) return right.updatedAt - left.updatedAt
+
+            const leftUsernameStarts = left.username.toLowerCase().startsWith(normalizedSearch)
+            const rightUsernameStarts = right.username.toLowerCase().startsWith(normalizedSearch)
+            if (leftUsernameStarts !== rightUsernameStarts) {
+                return leftUsernameStarts ? -1 : 1
+            }
+
+            const leftDisplayStarts = left.displayName.toLowerCase().startsWith(normalizedSearch)
+            const rightDisplayStarts = right.displayName.toLowerCase().startsWith(normalizedSearch)
+            if (leftDisplayStarts !== rightDisplayStarts) {
+                return leftDisplayStarts ? -1 : 1
+            }
+
+            return right.updatedAt - left.updatedAt
+        })
+
+        const paginatedUsers = filteredUsers.slice(startIdx, endIdx)
 
         return {
             items: paginatedUsers,
             totalCount: filteredUsers.length,
-            hasMore: startIdx + pageSize < filteredUsers.length,
+            hasMore: endIdx < filteredUsers.length,
             page,
         }
     },
@@ -710,8 +744,7 @@ export const seedModerationData = mutation({
                 authorTier: admin.fanTier,
                 categoryId: category._id,
                 tags: ["seeded"],
-                upVoterIds: [],
-                downVoterIds: [],
+                searchText: "seeded moderation thread seeded moderation queue",
                 upVoteCount: 0,
                 downVoteCount: 0,
                 netVoteCount: 0,
@@ -735,8 +768,6 @@ export const seedModerationData = mutation({
                 authorAvatar: admin.avatar,
                 authorTier: admin.fanTier,
                 content: "Seeded moderation reply",
-                upVoterIds: [],
-                downVoterIds: [],
                 upVoteCount: 0,
                 downVoteCount: 0,
                 isDeleted: false,
@@ -771,23 +802,7 @@ export const seedModerationData = mutation({
 export const listChannels = query({
     args: {},
     handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity()
-        if (!identity) {
-            return []
-        }
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
-            .first()
-
-        if (!user) {
-            return []
-        }
-
-        if (user.role !== "admin" && user.role !== "mod" && user.role !== "artist") {
-            throw new ConvexError("Insufficient permissions. Admin, mod, or artist role required.")
-        }
+        await requireAdmin(ctx, ["admin", "mod", "artist"])
 
         const channels = await ctx.db.query("channels").collect()
         return channels.sort((a, b) => a.createdAt - b.createdAt)
@@ -834,6 +849,7 @@ export const seedDefaultChannels = mutation({
                 createdAt: now,
                 updatedAt: now,
                 messageCount: 0,
+                searchText: buildChannelSearchText(channel.name, slug, channel.description),
             })
 
             created.push({ name: channel.name, channelId })
@@ -899,6 +915,7 @@ export const createChannel = mutation({
             createdAt: now,
             updatedAt: now,
             messageCount: 0,
+            searchText: buildChannelSearchText(args.name, slug, args.description),
         })
 
         return { success: true, channelId, slug }
@@ -940,8 +957,13 @@ export const updateChannel = mutation({
             throw new ConvexError("Channel not found")
         }
 
+        const nextName = args.updates.name ?? channel.name
+        const nextSlug = channel.slug
+        const nextDescription = args.updates.description ?? channel.description
+
         await ctx.db.patch(args.channelId, {
             ...args.updates,
+            searchText: buildChannelSearchText(nextName, nextSlug, nextDescription),
             updatedAt: Date.now(),
         })
 

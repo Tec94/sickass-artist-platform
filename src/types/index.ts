@@ -28,7 +28,7 @@ export interface UserProfile {
 
 // User data with auth integration
 export interface User {
-  clerkId: string // Auth subject (`sub`) from Auth0 (historical field name)
+  authSubject: string
   email: string
   profile: UserProfile
 }

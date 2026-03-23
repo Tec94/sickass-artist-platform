@@ -1,6 +1,7 @@
 import { query, mutation } from './_generated/server'
 import type { QueryCtx } from './_generated/server'
 import type { Doc } from './_generated/dataModel'
+import { findUserByCurrentIdentity } from './domain/identity'
 import { getCurrentUser, getOrCreateCurrentUser } from './helpers'
 import { v, ConvexError } from 'convex/values'
 
@@ -62,12 +63,7 @@ function sortProducts(products: Doc<'merchProducts'>[], sortBy: MerchSort) {
 }
 
 async function isAdmin(ctx: QueryCtx) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) return false
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-    .first()
+  const user = await findUserByCurrentIdentity(ctx)
   return user?.role === 'admin'
 }
 
@@ -384,13 +380,7 @@ export const toggleWishlist = mutation({
 export const getWishlist = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return []
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
+    const user = await findUserByCurrentIdentity(ctx)
     if (!user) return []
 
     const wishlistItems = await ctx.db
@@ -469,13 +459,7 @@ export const getRecentlyViewed = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return []
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
+    const user = await findUserByCurrentIdentity(ctx)
     if (!user) return []
 
     const limit = Math.max(1, Math.min(args.limit ?? 8, 24))

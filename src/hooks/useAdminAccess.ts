@@ -12,7 +12,7 @@ export function useAdminAccess() {
   const hasAdminAccess = Boolean(role && ADMIN_ROLES.includes(role as AdminRole))
   const isAdmin = role === 'admin'
   const isReady = !isLoading && !isTokenLoading
-  const tokenMatchesUser = !!tokenUserId && !!user?.clerkId && user.clerkId === tokenUserId
+  const tokenMatchesUser = !!tokenUserId && !!user?.authSubject && user.authSubject === tokenUserId
   const canUseAdminQueries = isReady && hasValidToken && hasAdminAccess && tokenMatchesUser
 
   return {

@@ -4,15 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import { setNextTransition } from '../../components/Effects/PageTransition'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
+import { usePrototypeCatalog } from '../../features/store/usePrototypeCatalog'
 import {
   PROTOTYPE_STORE_CATEGORY_LABELS,
   PROTOTYPE_STORE_SORT_LABELS,
-  formatPrototypePrice,
-  getPrototypeStoreCategoryCounts,
-  getPrototypeStoreProducts,
+  getPrototypeDefaultSelection,
   type PrototypeStoreCategory,
   type PrototypeStoreSort,
-} from '../../features/store/prototypeStoreCatalog'
+} from '../../features/store/prototypeStoreContract'
 
 const categoryOptions: PrototypeStoreCategory[] = [
   'all',
@@ -26,12 +25,13 @@ const sortOptions: PrototypeStoreSort[] = ['latest', 'price-low', 'price-high']
 
 export default function Store() {
   const navigate = useNavigate()
-  const { addItem, itemCount } = usePrototypeCart()
+  const { addItem, itemCount, canWrite } = usePrototypeCart()
+  const { getCategoryCounts, getProducts, formatPrototypePrice } = usePrototypeCatalog()
   const [activeCategory, setActiveCategory] = useState<PrototypeStoreCategory>('all')
   const [activeSort, setActiveSort] = useState<PrototypeStoreSort>('latest')
 
-  const categoryCounts = getPrototypeStoreCategoryCounts()
-  const products = getPrototypeStoreProducts(activeCategory, activeSort)
+  const categoryCounts = getCategoryCounts()
+  const products = getProducts(activeCategory, activeSort)
 
   const openProduct = (productSlug: string) => {
     setNextTransition('push')
@@ -181,11 +181,17 @@ export default function Store() {
                     <h1 className="font-['Cormorant_Garamond'] text-4xl md:text-5xl leading-none mt-3">
                       {PROTOTYPE_STORE_CATEGORY_LABELS[activeCategory]}
                     </h1>
-                    <p className="text-sm md:text-base text-[#3C2A21]/75 mt-3 max-w-3xl">
-                      Filter the editorial prototype catalog without leaving the route. Product cards
-                      open a dedicated detail page, while cart actions stay local and persistent.
-                    </p>
-                  </div>
+                     <p className="text-sm md:text-base text-[#3C2A21]/75 mt-3 max-w-3xl">
+                       Filter the editorial prototype catalog without leaving the route. Product cards
+                       open a dedicated detail page, while cart actions resolve against the live
+                       Convex catalog.
+                     </p>
+                     {!canWrite ? (
+                       <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#C36B42]">
+                         Sign in to add items to the Convex cart.
+                       </p>
+                     ) : null}
+                   </div>
 
                   <div className="flex items-end gap-8">
                     <div>
@@ -275,14 +281,18 @@ export default function Store() {
                             </div>
                           </button>
 
-                          {product.availability === 'available' ? (
+                          {product.availability === 'available' && canWrite ? (
                             <button
                               type="button"
-                              onClick={() => addItem(product.slug)}
+                              onClick={() => addItem(product.slug, getPrototypeDefaultSelection(product), 1)}
                               className="self-end border border-[#1C1B1A] bg-[#FCFBF9] px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6]"
                             >
                               Add
                             </button>
+                          ) : product.availability === 'available' ? (
+                            <span className="self-end border border-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
+                              Sign in to add
+                            </span>
                           ) : (
                             <span className="self-end border border-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
                               Sold Out

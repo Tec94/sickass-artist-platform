@@ -1,34 +1,44 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Minus, Plus } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { setNextTransition } from '../../components/Effects/PageTransition'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
+import { usePrototypeCatalog } from '../../features/store/usePrototypeCatalog'
 import {
-  PROTOTYPE_STORE_PRODUCTS,
   formatPrototypePrice,
-  getPrototypeStoreProduct,
-} from '../../features/store/prototypeStoreCatalog'
+  getPrototypeDefaultSelection,
+  getPrototypeSelectionUnitPrice,
+  type PrototypeStoreSelection,
+} from '../../features/store/prototypeStoreContract'
+
+const clampQuantity = (value: number) => Math.max(1, Math.min(9, value))
 
 export default function StoreProductDetail() {
   const navigate = useNavigate()
   const { productSlug } = useParams<{ productSlug: string }>()
-  const { addItem, itemCount } = usePrototypeCart()
+  const { addItem, canWrite } = usePrototypeCart()
+  const { products, getProductBySlug } = usePrototypeCatalog()
   const mainRef = useRef<HTMLElement | null>(null)
 
-  const product = getPrototypeStoreProduct(productSlug ?? '')
+  const matchedProduct = getProductBySlug(productSlug ?? '')
+  const product = matchedProduct ?? products[0]
 
   const galleryImages = useMemo(
-    () => (product?.gallery?.length ? product.gallery : product ? [product.primaryImage] : []),
-    [product],
+    () => (product.gallery.length ? product.gallery : [product.primaryImage]),
+    [product.gallery, product.primaryImage],
   )
-  const [selectedImage, setSelectedImage] = useState<string>(galleryImages[0] ?? '')
+  const defaultSelection = useMemo(() => getPrototypeDefaultSelection(product), [product])
+  const [selectedImage, setSelectedImage] = useState<string>(galleryImages[0] ?? product.primaryImage)
+  const [selectedSelection, setSelectedSelection] = useState<PrototypeStoreSelection>(defaultSelection)
+  const [quantity, setQuantity] = useState(1)
 
-  if (!product) {
-    return <Navigate to="/store" replace />
-  }
+  const selectedPriceCents = useMemo(
+    () => getPrototypeSelectionUnitPrice(product, selectedSelection),
+    [product, selectedSelection],
+  )
 
-  const relatedProducts = PROTOTYPE_STORE_PRODUCTS.filter(
+  const relatedProducts = products.filter(
     (candidate) => candidate.slug !== product.slug && candidate.category === product.category,
   ).slice(0, 3)
 
@@ -50,7 +60,27 @@ export default function StoreProductDetail() {
 
   useEffect(() => {
     setSelectedImage(galleryImages[0] ?? product.primaryImage)
-  }, [galleryImages, product.primaryImage, productSlug])
+    setSelectedSelection(defaultSelection)
+    setQuantity(1)
+  }, [defaultSelection, galleryImages, product.primaryImage, productSlug])
+
+  const formatOptionDelta = (priceDeltaCents?: number) => {
+    if (!priceDeltaCents) return ''
+    const formattedDelta = formatPrototypePrice(Math.abs(priceDeltaCents))
+    return priceDeltaCents > 0 ? ` +${formattedDelta}` : ` -${formattedDelta}`
+  }
+
+  const handleOptionSelect = (groupId: string, optionId: string) => {
+    setSelectedSelection((currentSelection) => ({ ...currentSelection, [groupId]: optionId }))
+  }
+
+  const handleAddToCart = () => {
+    addItem(product.slug, selectedSelection, quantity)
+  }
+
+  if (!matchedProduct) {
+    return <Navigate to="/store" replace />
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
@@ -72,7 +102,7 @@ export default function StoreProductDetail() {
           </button>
 
           <section className="mt-3 overflow-hidden border border-[#1C1B1A] bg-[#FCFBF9]">
-            <div className="xl:grid xl:h-[min(700px,calc(100dvh-212px))] xl:grid-cols-[minmax(0,1fr)_160px_420px]">
+            <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_160px_420px] xl:items-stretch">
               <div className="relative overflow-hidden border-b border-[#1C1B1A] bg-[#D7D5D0] xl:border-b-0 xl:border-r">
                 <div className="absolute inset-0">
                   <img
@@ -81,20 +111,20 @@ export default function StoreProductDetail() {
                     aria-hidden="true"
                     className="h-full w-full scale-[1.08] object-cover blur-[34px] opacity-50"
                   />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(252,251,249,0.2),rgba(215,213,208,0.42)_58%,rgba(186,178,168,0.64)_100%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(252,251,249,0.16),rgba(215,213,208,0.38)_58%,rgba(186,178,168,0.58)_100%)]" />
                 </div>
 
-                <div className="relative z-10 flex min-h-[360px] items-center justify-center px-3 py-4 md:min-h-[460px] md:px-4 md:py-5 xl:h-full xl:px-5 xl:py-6">
+                <div className="relative z-10 flex min-h-[400px] items-center justify-center px-3 py-4 md:min-h-[520px] md:px-4 md:py-5 xl:h-full xl:px-0 xl:py-0">
                   <img
                     data-testid="detail-main-image"
                     src={selectedImage}
                     alt={product.alt}
-                    className="max-h-full w-full object-contain drop-shadow-[0_18px_36px_rgba(60,42,33,0.18)]"
+                    className="h-full max-h-[720px] w-full origin-center object-contain md:scale-[1.06] xl:scale-[1.14]"
                   />
                 </div>
               </div>
 
-              <div className="border-b border-[#1C1B1A] bg-[#F7F1E8] p-4 md:p-5 xl:h-full xl:overflow-y-auto xl:border-b-0 xl:border-r">
+              <div className="border-b border-[#1C1B1A] bg-[#F7F1E8] p-4 md:p-5 xl:border-b-0 xl:border-r">
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-1">
                   {galleryImages.map((image, index) => {
                     const isActive = selectedImage === image
@@ -122,9 +152,9 @@ export default function StoreProductDetail() {
                 </div>
               </div>
 
-              <div
+              <aside
                 data-testid="detail-side-rail"
-                className="bg-[#FCFBF9] xl:flex xl:h-full xl:min-h-0 xl:flex-col"
+                className="border-t border-[#1C1B1A] bg-[#FCFBF9] xl:border-l xl:border-t-0"
               >
                 <div className="border-b border-[#1C1B1A] bg-[#FAF7F2] p-6 md:p-7">
                   <div className="flex items-center justify-between gap-4">
@@ -132,7 +162,7 @@ export default function StoreProductDetail() {
                       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
                         Prototype product detail
                       </p>
-                      <h1 className="font-['Cormorant_Garamond'] text-4xl md:text-5xl leading-none mt-3">
+                      <h1 className="mt-3 font-['Cormorant_Garamond'] text-4xl leading-none md:text-5xl">
                         {product.name}
                       </h1>
                     </div>
@@ -143,84 +173,148 @@ export default function StoreProductDetail() {
                     ) : null}
                   </div>
 
-                  <div className="mt-7 flex items-end justify-between gap-4">
+                  <div className="mt-7">
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                      {product.releaseNote}
+                    </p>
+                    <p className="font-['Cormorant_Garamond'] text-3xl leading-none">
+                      {formatPrototypePrice(selectedPriceCents)}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  data-testid="detail-rail-content"
+                  className="space-y-6 bg-[#FCFBF9] p-6 md:p-7"
+                >
+                  <section className="space-y-5 border border-[#1C1B1A]/15 bg-[#F4EFE6] p-4">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E7D72] mb-2">
-                        {product.releaseNote}
-                      </p>
-                      <p className="text-3xl font-['Cormorant_Garamond'] leading-none">
-                        {formatPrototypePrice(product.priceCents)}
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                        Select options
                       </p>
                     </div>
-                    {product.availability === 'available' ? (
-                      <button
-                        type="button"
-                        onClick={() => addItem(product.slug)}
-                        className="inline-flex items-center gap-2 border border-[#1C1B1A] bg-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4EFE6] hover:bg-[#C36B42] hover:border-[#C36B42] transition-colors"
-                      >
-                        <ShoppingBag size={14} />
-                        Add to cart
-                      </button>
-                    ) : (
-                      <span className="border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                        Sold out
-                      </span>
-                    )}
-                  </div>
+
+                    <div className="space-y-4">
+                       {product.optionGroups.map((group) => (
+                         <fieldset key={group.key} className="space-y-2">
+                           <legend className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                             {group.label}
+                           </legend>
+                           <div className="flex flex-wrap gap-2">
+                             {group.options.map((option) => {
+                               const isSelected = selectedSelection[group.key] === option.value
+
+                               return (
+                                 <button
+                                   key={option.value}
+                                   type="button"
+                                   onClick={() => handleOptionSelect(group.key, option.value)}
+                                   className={`min-h-[40px] border px-3 py-2 text-left text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                                     isSelected
+                                       ? 'border-[#1C1B1A] bg-[#1C1B1A] text-[#F4EFE6]'
+                                      : 'border-[#1C1B1A]/18 bg-[#FCFBF9] text-[#3C2A21] hover:border-[#C36B42] hover:text-[#C36B42]'
+                                  }`}
+                                  aria-pressed={isSelected}
+                                >
+                                  {option.label}
+                                  <span className="text-[10px] font-medium normal-case tracking-normal">
+                                    {formatOptionDelta(option.priceDeltaCents)}
+                                  </span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </fieldset>
+                      ))}
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-[132px_minmax(0,1fr)] sm:items-end">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                          Quantity
+                        </p>
+                        <div className="mt-2 inline-flex items-center border border-[#1C1B1A] bg-[#FCFBF9]">
+                          <button
+                            type="button"
+                            onClick={() => setQuantity((currentQuantity) => clampQuantity(currentQuantity - 1))}
+                            disabled={product.availability !== 'available'}
+                            className="flex h-11 w-11 items-center justify-center border-r border-[#1C1B1A] text-[#3C2A21] transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6] disabled:cursor-not-allowed disabled:text-[#8E7D72] disabled:hover:bg-transparent disabled:hover:text-[#8E7D72]"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span
+                            data-testid="detail-quantity-value"
+                            className="flex h-11 min-w-[52px] items-center justify-center px-3 text-sm font-semibold tabular-nums"
+                          >
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setQuantity((currentQuantity) => clampQuantity(currentQuantity + 1))}
+                            disabled={product.availability !== 'available'}
+                            className="flex h-11 w-11 items-center justify-center border-l border-[#1C1B1A] text-[#3C2A21] transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6] disabled:cursor-not-allowed disabled:text-[#8E7D72] disabled:hover:bg-transparent disabled:hover:text-[#8E7D72]"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                       {product.availability === 'available' && canWrite ? (
+                         <button
+                           type="button"
+                           onClick={handleAddToCart}
+                           className="inline-flex min-h-[44px] items-center justify-center border border-[#1C1B1A] bg-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
+                         >
+                           Add to cart
+                         </button>
+                       ) : product.availability === 'available' ? (
+                         <span className="inline-flex min-h-[44px] items-center justify-center border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                           Sign in to add
+                         </span>
+                       ) : (
+                         <span className="inline-flex min-h-[44px] items-center justify-center border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                           Sold out
+                        </span>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="border border-[#1C1B1A]/15 bg-[#F4EFE6] p-4">
+                     <p className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                       Quick details
+                     </p>
+                     <ul className="mt-4 space-y-3">
+                       {product.quickDetails.map((detail) => (
+                         <li
+                           key={detail}
+                           className="border-b border-[#1C1B1A]/10 pb-3 text-sm leading-6 text-[#3C2A21]/80 last:border-b-0 last:pb-0"
+                         >
+                           {detail}
+                         </li>
+                       ))}
+                     </ul>
+                   </section>
                 </div>
-
-                <div className="space-y-5 bg-[#FCFBF9] p-6 md:p-7 xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72] mb-3">
-                      Editorial note
-                    </p>
-                    <p className="text-base leading-8 text-[#3C2A21]/82">{product.detailDescription}</p>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="border border-[#1C1B1A]/15 bg-[#F4EFE6] p-4">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72] mb-2">
-                        Material study
-                      </p>
-                      <p className="text-sm leading-6 text-[#3C2A21]/80">{product.materials}</p>
-                    </div>
-                    <div className="border border-[#1C1B1A]/15 bg-[#F4EFE6] p-4">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72] mb-2">
-                        Grid status
-                      </p>
-                      <p className="text-sm leading-6 text-[#3C2A21]/80">
-                        {product.availability === 'available'
-                          ? `Ready to add. Your cart currently holds ${itemCount} item${itemCount === 1 ? '' : 's'}.`
-                          : 'The story page stays open for browsing, but cart actions are disabled while stock is closed.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="border border-[#1C1B1A]/15 bg-[#F4EFE6] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72] mb-2">
-                      Product intent
-                    </p>
-                    <p className="text-sm leading-6 text-[#3C2A21]/80">{product.shortDescription}</p>
-                  </div>
-                </div>
-              </div>
+              </aside>
             </div>
           </section>
 
           {relatedProducts.length > 0 ? (
             <section className="mt-8 border border-[#1C1B1A] bg-[#FAF7F2]">
-              <div className="px-6 md:px-8 py-6 border-b border-[#1C1B1A] flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-4 border-b border-[#1C1B1A] px-6 py-6 md:px-8">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
                     Same wing
                   </p>
-                  <h2 className="font-['Cormorant_Garamond'] text-3xl leading-none mt-2">
+                  <h2 className="mt-2 font-['Cormorant_Garamond'] text-3xl leading-none">
                     More in {product.category}
                   </h2>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-3 bg-[#1C1B1A] gap-px">
+              <div className="grid gap-px bg-[#1C1B1A] md:grid-cols-3">
                 {relatedProducts.map((relatedProduct) => (
                   <article key={relatedProduct.slug} className="bg-[#FCFBF9]">
                     <button
@@ -239,7 +333,7 @@ export default function StoreProductDetail() {
                         <p className="font-['Cormorant_Garamond'] text-2xl leading-none">
                           {relatedProduct.name}
                         </p>
-                        <p className="text-sm text-[#8E7D72] mt-2">
+                        <p className="mt-2 text-sm text-[#8E7D72]">
                           {formatPrototypePrice(relatedProduct.priceCents)}
                         </p>
                       </div>
@@ -254,7 +348,7 @@ export default function StoreProductDetail() {
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-2 border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] hover:bg-[#1C1B1A] hover:text-[#F4EFE6] transition-colors"
+              className="inline-flex items-center gap-2 border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6]"
             >
               Return to collection
               <ArrowRight size={14} />

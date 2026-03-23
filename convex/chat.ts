@@ -2,6 +2,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
+import { findUserByCurrentIdentity } from "./domain/identity";
 import {
   getCurrentUser,
   canAccessChannel,
@@ -115,16 +116,7 @@ const normalizeMessage = (message: any) => ({
 export const getChannels = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const clerkId = identity.subject;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .first();
+    const user = await findUserByCurrentIdentity(ctx);
 
     if (!user) {
       return [];
@@ -999,24 +991,6 @@ export const castMessageVote = mutation({
         q.eq("messageId", args.messageId).eq("userId", userId)
       )
       .first();
-
-    if (!voteRecord) {
-      const fallbackVoteType = message.upVoterIds?.includes(userId)
-        ? "up"
-        : message.downVoterIds?.includes(userId)
-        ? "down"
-        : null;
-
-      if (fallbackVoteType) {
-        const seededVoteId = await ctx.db.insert("messageVotes", {
-          messageId: args.messageId,
-          userId,
-          voteType: fallbackVoteType,
-          createdAt: now,
-        });
-        voteRecord = { _id: seededVoteId, voteType: fallbackVoteType } as any;
-      }
-    }
 
     const oldUpVoteCount = message.upVoteCount || 0;
     const oldDownVoteCount = message.downVoteCount || 0;

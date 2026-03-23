@@ -13,16 +13,8 @@ interface UseForumThreadDetailResult {
   error: null
 }
 
-const getUserVote = (currentUserId: Id<'users'> | null, upVoterIds: Id<'users'>[], downVoterIds: Id<'users'>[]): UserVote => {
-  if (!currentUserId) return null
-  if (upVoterIds.includes(currentUserId)) return 'up'
-  if (downVoterIds.includes(currentUserId)) return 'down'
-  return null
-}
-
 export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumThreadDetailResult {
-  const { user } = useAuth()
-  const currentUserId = user?._id ?? null
+  useAuth()
 
   const data = useQuery(
     api.forum.subscribeToThread,
@@ -44,11 +36,10 @@ export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumTh
       authorTier: Thread['authorTier']
       categoryId: Id<'categories'>
       tags: string[]
-      upVoterIds: Id<'users'>[]
-      downVoterIds: Id<'users'>[]
       upVoteCount: number
       downVoteCount: number
       netVoteCount: number
+      userVote?: UserVote
       replyCount: number
       viewCount: number
       lastReplyAt?: number
@@ -72,7 +63,7 @@ export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumTh
       upVoteCount: rawThread.upVoteCount,
       downVoteCount: rawThread.downVoteCount,
       netVoteCount: rawThread.netVoteCount,
-      userVote: getUserVote(currentUserId, rawThread.upVoterIds, rawThread.downVoterIds),
+      userVote: rawThread.userVote ?? null,
       replyCount: rawThread.replyCount,
       viewCount: rawThread.viewCount,
       lastReplyAt: rawThread.lastReplyAt ?? null,
@@ -90,10 +81,9 @@ export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumTh
       authorAvatar: string
       authorTier: Reply['authorTier']
       content: string
-      upVoterIds: Id<'users'>[]
-      downVoterIds: Id<'users'>[]
       upVoteCount: number
       downVoteCount: number
+      userVote?: UserVote
       createdAt: number
       editedAt?: number
       isDeleted: boolean
@@ -111,7 +101,7 @@ export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumTh
         content: r.content,
         upVoteCount: r.upVoteCount,
         downVoteCount: r.downVoteCount,
-        userVote: getUserVote(currentUserId, r.upVoterIds, r.downVoterIds),
+        userVote: r.userVote ?? null,
         createdAt: r.createdAt,
         editedAt: r.editedAt ?? null,
         isDeleted: r.isDeleted,
@@ -119,7 +109,7 @@ export function useForumThreadDetail(threadId: Id<'threads'> | null): UseForumTh
       }))
 
     return { thread, replies }
-  }, [data, currentUserId])
+  }, [data])
 
   return {
     thread: mapped.thread,

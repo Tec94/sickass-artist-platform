@@ -1,6 +1,7 @@
 import { mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { api } from "./_generated/api";
+import { findUserByCurrentIdentity } from "./domain/identity";
 
 /**
  * Temporary mutation to promote a user to admin.
@@ -15,20 +16,16 @@ export const promoteToAdmin = mutation({
         let user;
 
         if (args.email) {
+            const email = args.email;
             user = await ctx.db
                 .query("users")
-                .withIndex("by_clerkId") // Note: We don't have an email index, using query filter instead
-                .filter(q => q.eq(q.field("email"), args.email))
+                .withIndex("by_email", (q) => q.eq("email", email))
                 .first();
         } else {
-            const identity = await ctx.auth.getUserIdentity();
-            if (!identity) {
+            user = await findUserByCurrentIdentity(ctx);
+            if (!user) {
                 throw new ConvexError("Not authenticated. Please provide your email address in the 'args' section of the dashboard.");
             }
-            user = await ctx.db
-                .query("users")
-                .withIndex("by_clerkId", q => q.eq("clerkId", identity.subject))
-                .first();
         }
 
         if (!user) {

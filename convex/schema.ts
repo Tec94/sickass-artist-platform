@@ -2,16 +2,52 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
+const prototypeStoreOptionValidator = v.object({
+  value: v.string(),
+  label: v.string(),
+  priceDeltaCents: v.optional(v.number()),
+  badge: v.optional(v.string()),
+  swatch: v.optional(v.string()),
+})
+
+const prototypeStoreOptionGroupValidator = v.object({
+  key: v.string(),
+  label: v.string(),
+  options: v.array(prototypeStoreOptionValidator),
+})
+
+const prototypeStoreSelectionValidator = v.record(v.string(), v.string())
+
+const artistScrapePayloadDataValidator = v.object({
+  artist: v.optional(v.string()),
+  scrapeDate: v.optional(v.string()),
+  instagram: v.optional(v.any()),
+  spotify: v.optional(v.any()),
+  youtube: v.optional(v.any()),
+  tiktok: v.optional(v.any()),
+  appleMusic: v.optional(v.any()),
+  soundcloud: v.optional(v.any()),
+  links: v.optional(v.any()),
+  press: v.optional(v.any()),
+})
+
+const artistScrapePayloadEnvelopeValidator = v.object({
+  version: v.literal('artist-scrape/v1'),
+  data: artistScrapePayloadDataValidator,
+  importedAt: v.number(),
+})
+
 export default defineSchema({
   users: defineTable({
-    // Historical field name: this stores the auth provider subject (`sub`).
-    clerkId: v.string(),           // Auth0 subject (unique)
+    authSubject: v.string(),
+    authProvider: v.string(),
     email: v.string(),             // Email from auth provider
     username: v.string(),          // Username (unique, editable)
     displayName: v.string(),       // Display name (editable)
     bio: v.string(),               // Bio/description (editable, max 500 chars)
     avatar: v.string(),            // Avatar URL (editable)
     avatarStorageId: v.optional(v.id('_storage')), // Uploaded avatar file (Convex Storage)
+    searchText: v.string(),
 
     // Role & permissions
     role: v.union(
@@ -55,10 +91,15 @@ export default defineSchema({
     updatedAt: v.number(),
     lastSignIn: v.optional(v.number()),
   })
-    .index('by_clerkId', ['clerkId'])
+    .index('by_authSubject', ['authSubject'])
+    .index('by_email', ['email'])
     .index('by_username', ['username'])
     .index('by_role', ['role'])
-    .index('by_fanTier', ['fanTier']),
+    .index('by_fanTier', ['fanTier'])
+    .searchIndex('search_users', {
+      searchField: 'searchText',
+      filterFields: ['role', 'fanTier']
+    }),
 
   // Chat channels
   channels: defineTable({
@@ -95,9 +136,14 @@ export default defineSchema({
     messageCount: v.number(),
     lastMessageAt: v.optional(v.number()),
     lastMessageId: v.optional(v.id('messages')),
+    searchText: v.optional(v.string()),
   })
     .index('by_slug', ['slug'])
-    .index('by_category', ['category']),
+    .index('by_category', ['category'])
+    .searchIndex('search_channels', {
+      searchField: 'searchText',
+      filterFields: ['category']
+    }),
 
   // Chat messages
   messages: defineTable({
@@ -142,9 +188,6 @@ export default defineSchema({
     reactionEmojis: v.array(v.string()),
     reactionCount: v.number(),
 
-    // Voting
-    upVoterIds: v.optional(v.array(v.id('users'))),
-    downVoterIds: v.optional(v.array(v.id('users'))),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     netVoteCount: v.optional(v.number()),
@@ -194,8 +237,7 @@ export default defineSchema({
     ),
     categoryId: v.id('categories'),
     tags: v.array(v.string()),
-    upVoterIds: v.optional(v.array(v.id('users'))),
-    downVoterIds: v.optional(v.array(v.id('users'))),
+    searchText: v.string(),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     netVoteCount: v.optional(v.number()),
@@ -220,7 +262,11 @@ export default defineSchema({
     .index('by_category', ['categoryId', 'createdAt'])
     .index('by_category_netVote', ['categoryId', 'netVoteCount'])
     .index('by_category_lastReply', ['categoryId', 'lastReplyAt'])
-    .index('by_author', ['authorId', 'createdAt']),
+    .index('by_author', ['authorId', 'createdAt'])
+    .searchIndex('search_threads', {
+      searchField: 'searchText',
+      filterFields: ['categoryId']
+    }),
 
   // Forum replies
   replies: defineTable({
@@ -236,8 +282,6 @@ export default defineSchema({
     ),
     content: v.string(),
     editedAt: v.optional(v.number()),
-    upVoterIds: v.optional(v.array(v.id('users'))),
-    downVoterIds: v.optional(v.array(v.id('users'))),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     isDeleted: v.boolean(),
@@ -255,6 +299,26 @@ export default defineSchema({
   })
     .index('by_thread', ['threadId', 'createdAt'])
     .index('by_author', ['authorId', 'createdAt']),
+
+  threadVotes: defineTable({
+    threadId: v.id('threads'),
+    userId: v.id('users'),
+    voteType: v.union(v.literal('up'), v.literal('down')),
+    createdAt: v.number(),
+  })
+    .index('by_thread_user', ['threadId', 'userId'])
+    .index('by_thread', ['threadId'])
+    .index('by_user', ['userId']),
+
+  replyVotes: defineTable({
+    replyId: v.id('replies'),
+    userId: v.id('users'),
+    voteType: v.union(v.literal('up'), v.literal('down')),
+    createdAt: v.number(),
+  })
+    .index('by_reply_user', ['replyId', 'userId'])
+    .index('by_reply', ['replyId'])
+    .index('by_user', ['userId']),
 
   // Moderation reports for chat and forum content
   moderationReports: defineTable({
@@ -486,6 +550,7 @@ export default defineSchema({
       )
     ),
     tags: v.array(v.string()),
+    searchText: v.optional(v.string()),
     likeCount: v.number(),
     viewCount: v.number(),
     pinned: v.boolean(),
@@ -494,7 +559,11 @@ export default defineSchema({
   })
     .index('by_type', ['type'])
     .index('by_creator', ['creatorId'])
-    .index('by_tier', ['requiredFanTier']),
+    .index('by_tier', ['requiredFanTier'])
+    .searchIndex('search_galleryContent', {
+      searchField: 'searchText',
+      filterFields: ['type', 'requiredFanTier']
+    }),
 
   // User-generated content
   ugcContent: defineTable({
@@ -521,6 +590,7 @@ export default defineSchema({
       v.literal('repost')
     ),
     tags: v.array(v.string()),
+    searchText: v.optional(v.string()),
     isApproved: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -528,7 +598,11 @@ export default defineSchema({
     .index('by_creator', ['creatorId'])
     .index('by_category', ['category'])
     .index('by_createdAt', ['createdAt'])
-    .index('by_approved', ['isApproved']),
+    .index('by_approved', ['isApproved'])
+    .searchIndex('search_ugcContent', {
+      searchField: 'searchText',
+      filterFields: ['category', 'isApproved']
+    }),
 
   // Gallery likes (for both gallery and UGC content)
   galleryLikes: defineTable({
@@ -541,7 +615,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_user_type', ['userId', 'type'])
-    .index('by_content_type', ['contentId', 'type']),
+    .index('by_content_type', ['contentId', 'type'])
+    .index('by_user_content_type', ['userId', 'contentId', 'type']),
 
   // Precomputed trending scores for gallery and UGC content
   // Refreshed hourly by scheduled job
@@ -729,9 +804,17 @@ export default defineSchema({
   // Products table - Main product catalog with pricing and inventory
   merchProducts: defineTable({
     // Basic info
+    slug: v.optional(v.string()),
     name: v.string(),                  // "Tour T-Shirt"
     description: v.string(),           // Short description
     longDescription: v.optional(v.string()), // Markdown/rich text
+    shortDescription: v.optional(v.string()),
+    detailDescription: v.optional(v.string()),
+    materials: v.optional(v.string()),
+    releaseNote: v.optional(v.string()),
+    alt: v.optional(v.string()),
+    featuredOrder: v.optional(v.number()),
+    catalogView: v.optional(v.union(v.literal('live'), v.literal('prototype'))),
 
     // Pricing (in cents, e.g., 9999 = $99.99)
     price: v.number(),                  // Base price
@@ -763,6 +846,9 @@ export default defineSchema({
     ),
     tags: v.array(v.string()),          // For search/filtering (max 5)
     searchText: v.optional(v.string()),
+    optionGroups: v.optional(v.array(prototypeStoreOptionGroupValidator)),
+    quickDetails: v.optional(v.array(v.string())),
+    defaultSelection: v.optional(prototypeStoreSelectionValidator),
 
     // Status & visibility
     status: v.union(
@@ -785,16 +871,18 @@ export default defineSchema({
     createdBy: v.id('users'),            // Artist/admin who created
   })
     .index('by_status', ['status'])
+    .index('by_slug', ['slug'])
     .index('by_category', ['category'])
     .index('by_status_created', ['status', 'createdAt'])
     .index('by_status_price', ['status', 'price'])
+    .index('by_catalogView_featuredOrder', ['catalogView', 'featuredOrder'])
     .index('by_category_status_created', ['category', 'status', 'createdAt'])
     .index('by_category_status_price', ['category', 'status', 'price'])
     .index('by_created', ['createdAt'])
     .index('by_drop', ['isDropProduct', 'dropStartsAt'])
     .searchIndex('search_merchProducts', {
       searchField: 'searchText',
-      filterFields: ['status', 'category']
+      filterFields: ['status', 'category', 'catalogView']
     }),
 
   // Merch image manifest (single doc keyed by name)
@@ -810,7 +898,7 @@ export default defineSchema({
   // Phone overlay scraped content payload (single doc keyed by name)
   phoneArtistContent: defineTable({
     key: v.string(), // "default"
-    payload: v.any(), // Raw scraped JSON payload used by phone content adapter
+    payloadEnvelope: artistScrapePayloadEnvelopeValidator,
     source: v.optional(v.string()), // e.g. "public/data/artist-scraped-data.json"
     artist: v.optional(v.string()),
     scrapeDate: v.optional(v.string()),
@@ -828,6 +916,7 @@ export default defineSchema({
     size: v.optional(v.string()),       // "XL", "One Size", etc.
     color: v.optional(v.string()),      // "Black", "White", etc.
     style: v.optional(v.string()),      // "Crewneck", "Hoodie", etc.
+    optionSelections: v.optional(prototypeStoreSelectionValidator),
 
     // Pricing & stock
     price: v.optional(v.number()),      // Override product price (if different)
@@ -1101,17 +1190,34 @@ export default defineSchema({
     totalPoints: v.number(),        // Total lifetime points earned
     availablePoints: v.number(),    // Points available to spend
     redeemedPoints: v.number(),     // Total points spent on rewards
-    currentStreak: v.number(),      // Days in current login streak
-    maxStreak: v.number(),          // Longest streak achieved ever
-    lastInteractionDate: v.number(), // Last action timestamp (milliseconds)
-    lastLoginDate: v.string(),      // ISO date string (YYYY-MM-DD) of last login
-    unseenMilestones: v.array(v.string()), // Badge IDs earned but not shown
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('by_userId', ['userId'])
-    .index('by_totalPoints', ['totalPoints']) // Leaderboard ranking
-    .index('by_currentStreak', ['currentStreak']), // Streak leaderboard
+    .index('by_totalPoints', ['totalPoints']), // Leaderboard ranking
+
+  userStreaks: defineTable({
+    userId: v.id('users'),
+    currentStreak: v.number(),
+    maxStreak: v.number(),
+    lastInteractionDate: v.string(),
+    streakStartDate: v.string(),
+    lastBreakDate: v.optional(v.string()),
+    breakReason: v.optional(v.union(
+      v.literal('missed_day'),
+      v.literal('manual_reset'),
+      v.literal('admin_reset'),
+      v.literal('seasonal_reset')
+    )),
+    hasStreakFreeze: v.boolean(),
+    unseenMilestones: v.array(v.string()),
+    lastLoginDate: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_currentStreak', ['currentStreak'])
+    .index('by_maxStreak', ['maxStreak']),
 
   // Immutable transaction log (use for auditing & analytics)
   pointTransactions: defineTable({
@@ -1151,6 +1257,7 @@ export default defineSchema({
 
   // Quest catalog (created & managed by admins)
   quests: defineTable({
+    key: v.optional(v.string()),
     questId: v.string(),             // Unique identifier (daily_login_001, weekly_forum_02)
     type: v.union(
       v.literal('daily'),            // Resets at midnight UTC
@@ -1192,6 +1299,7 @@ export default defineSchema({
     priority: v.number(),            // Display order (1=top)
     createdAt: v.number(),
   })
+    .index('by_key', ['key'])
     .index('by_type_active', ['type', 'isActive', 'priority'])
     .index('by_category', ['category'])
     .index('by_endsAt', ['endsAt']), // Find expiring quests
@@ -1210,28 +1318,6 @@ export default defineSchema({
   })
     .index('by_userId_active', ['userId', 'isCompleted', 'expiresAt'])
     .index('by_questId_active', ['questId', 'isCompleted']),
-
-  // Streak tracking & milestones
-  streakBonus: defineTable({
-    userId: v.id('users'),
-    currentStreak: v.number(),       // Days 0-999
-    maxStreak: v.number(),           // Best ever achieved
-    lastInteractionDate: v.string(), // ISO date (YYYY-MM-DD) in user's timezone
-    streakStartDate: v.string(),     // ISO date when current streak began
-    lastBreakDate: v.optional(v.string()), // ISO date of last streak break
-    breakReason: v.optional(v.union(
-      v.literal('missed_day'),
-      v.literal('manual_reset'),
-      v.literal('admin_reset'),
-      v.literal('seasonal_reset')
-    )),
-    hasStreakFreeze: v.boolean(),    // Can user use streak freeze power-up? (earned at 7-day)
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index('by_userId', ['userId'])
-    .index('by_currentStreak', ['currentStreak']) // Streak leaderboard
-    .index('by_maxStreak', ['maxStreak']), // "All-time streaks"
 
   // Milestone rewards for streaks (1-time per user)
   streakMilestones: defineTable({
@@ -1254,6 +1340,7 @@ export default defineSchema({
 
   // Redeemable rewards catalog (admin-managed)
   rewards: defineTable({
+    key: v.optional(v.string()),
     rewardId: v.string(),
     name: v.string(), // "10% Off Merch" (max 100 chars)
     description: v.string(), // Full description (max 500 chars)
@@ -1281,6 +1368,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index('by_key', ['key'])
     .index('by_category_active', ['category', 'isActive'])
     .index('by_pointCost', ['pointCost']), // "Sort by price"
 
@@ -1324,7 +1412,8 @@ export default defineSchema({
     .index('by_userId_status', ['userId', 'status', 'createdAt'])
     .index('by_rewardId', ['rewardId'])
     .index('by_status', ['status']) // Admin view all pending
-    .index('by_idempotency', ['userId', 'idempotencyKey']),
+    .index('by_idempotency', ['userId', 'idempotencyKey'])
+    .index('by_redeemCode', ['redeemCode']),
 
   // ==================== SONG LEADERBOARD SYSTEM ====================
 

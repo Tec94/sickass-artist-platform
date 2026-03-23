@@ -2,6 +2,7 @@ import { query, mutation, action } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { api } from "./_generated/api";
 import { getCurrentUser } from "./helpers";
+import { findUserByAuthSubject } from "./domain/identity";
 
  
 interface QueueItem {
@@ -124,8 +125,8 @@ export const processOfflineQueue = action({
     }
     
     // Get user via query
-    const user = await ctx.runQuery(api.offlineQueue.getUserByClerkId, {
-      clerkId: identity.subject,
+    const user = await ctx.runQuery(api.offlineQueue.getUserByAuthSubject, {
+      authSubject: identity.subject,
     });
     if (!user) {
       throw new ConvexError("User not found");
@@ -330,16 +331,12 @@ export const recordOfflineMessage = mutation({
 });
 
 /**
- * Helper query: Get user by auth subject (`sub`) (for actions)
+ * Helper query: Get user by canonical auth subject (for actions)
  */
-export const getUserByClerkId = query({
-  args: { clerkId: v.string() },
+export const getUserByAuthSubject = query({
+  args: { authSubject: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
-      .first();
-    return user;
+    return await findUserByAuthSubject(ctx, args.authSubject);
   },
 });
 

@@ -2,6 +2,7 @@ import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
 import { getCurrentUserOrNull, requireAdmin } from './helpers'
 import type { Doc } from './_generated/dataModel'
+import { hydrateFanLeaderboardRewards, type FanLeaderboardRewardSnapshot } from './readModels/fanProgression'
 
 // ============ TYPES ============
 export type PointTransactionType =
@@ -38,10 +39,7 @@ export const POINT_VALUES: Record<PointTransactionType, number> = {
 }
 
 type FanLeaderboardUser = Pick<Doc<'users'>, '_id' | 'displayName' | 'username' | 'avatar' | 'fanTier' | 'role'>
-type FanLeaderboardReward = Pick<
-  Doc<'userRewards'>,
-  'userId' | 'totalPoints' | 'availablePoints' | 'currentStreak' | 'maxStreak' | 'lastInteractionDate'
->
+type FanLeaderboardReward = FanLeaderboardRewardSnapshot
 
 export type FanLeaderboardEntry = {
   rank: number
@@ -202,11 +200,6 @@ export const awardPoints = mutation({
         totalPoints: args.amount,
         availablePoints: args.amount,
         redeemedPoints: 0,
-        currentStreak: 0,
-        maxStreak: 0,
-        lastInteractionDate: Date.now(),
-        lastLoginDate: new Date().toISOString().split('T')[0],
-        unseenMilestones: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       })
@@ -221,7 +214,6 @@ export const awardPoints = mutation({
       await ctx.db.patch(rewards._id, {
         totalPoints: newTotal,
         availablePoints: newAvailable,
-        lastInteractionDate: Date.now(),
         updatedAt: Date.now(),
       })
     }
@@ -344,13 +336,11 @@ export const getUserTransactionHistory = query({
 export const getPointsLeaderboard = query({
   args: {},
   handler: async (ctx) => {
-    // Get all user rewards and sort by totalPoints in descending order
-    const allRewards = await ctx.db.query('userRewards').collect()
-    
-    // Sort by totalPoints descending and take top 100
-    return allRewards
-      .sort((a, b) => b.totalPoints - a.totalPoints)
-      .slice(0, 100)
+    return await ctx.db
+      .query('userRewards')
+      .withIndex('by_totalPoints')
+      .order('desc')
+      .take(100)
   },
 })
 
@@ -362,13 +352,15 @@ export const getFanLeaderboard = query({
     const limit = Math.min(Math.max(args.limit ?? 12, 3), 100)
     const currentUser = await getCurrentUserOrNull(ctx)
     const rewards = await ctx.db.query('userRewards').collect()
-    const relevantRewards = rewards.filter((reward) => reward.totalPoints > 0)
-    const userIds = [...new Set(relevantRewards.map((reward) => reward.userId))]
+    const relevantRewards = rewards
+      .filter((reward) => reward.totalPoints > 0)
+    const hydratedRewards = await hydrateFanLeaderboardRewards(ctx, relevantRewards)
+    const userIds = [...new Set(hydratedRewards.map((reward) => reward.userId))]
     const users = (
       await Promise.all(userIds.map((userId) => ctx.db.get(userId)))
     ).filter((user): user is Doc<'users'> => Boolean(user))
 
-    const entries = buildFanLeaderboardEntries(relevantRewards, users, currentUser?._id ?? null)
+    const entries = buildFanLeaderboardEntries(hydratedRewards, users, currentUser?._id ?? null)
     const topEntries = entries.slice(0, limit)
     const currentUserEntry =
       entries.find((entry) => entry.isCurrentUser) ??
@@ -440,7 +432,6 @@ export const adminAdjustPoints = mutation({
       await ctx.db.patch(rewards._id, {
         totalPoints: rewards.totalPoints + args.amount,
         availablePoints: nextAvailable,
-        lastInteractionDate: now,
         updatedAt: now,
       })
 
@@ -463,11 +454,6 @@ export const adminAdjustPoints = mutation({
         totalPoints: args.amount,
         availablePoints: args.amount,
         redeemedPoints: 0,
-        currentStreak: 0,
-        maxStreak: 0,
-        lastInteractionDate: now,
-        lastLoginDate: new Date().toISOString().split('T')[0],
-        unseenMilestones: [],
         createdAt: now,
         updatedAt: now,
       })
@@ -475,7 +461,6 @@ export const adminAdjustPoints = mutation({
       await ctx.db.patch(rewards._id, {
         totalPoints: rewards.totalPoints + args.amount,
         availablePoints: rewards.availablePoints + args.amount,
-        lastInteractionDate: now,
         updatedAt: now,
       })
     }

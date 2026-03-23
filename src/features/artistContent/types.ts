@@ -76,6 +76,8 @@ export type ArtistContent = {
 
 export type ArtistContentPayloadResult = {
   payload: unknown
+  version: 'artist-scrape/v1'
+  importedAt: number
   artist: string | null
   scrapeDate: string | null
   source: string | null

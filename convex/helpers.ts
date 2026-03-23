@@ -1,6 +1,12 @@
 import type { MutationCtx, QueryCtx } from './_generated/server'
 import { ConvexError } from 'convex/values'
 import type { Doc, Id } from './_generated/dataModel'
+import {
+  AUTH_PROVIDER_AUTH0,
+  buildUserSearchText,
+  findUserByCurrentIdentity,
+  getIdentityClaims,
+} from './domain/identity'
 
 type UserRole = 'artist' | 'admin' | 'mod' | 'crew' | 'fan'
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
@@ -11,18 +17,9 @@ export const requireAdmin = async (
   ctx: QueryCtx | MutationCtx,
   allowedRoles: UserRole[] = ADMIN_ROLES
 ): Promise<Doc<'users'>> => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) {
-    throw new ConvexError('Not authenticated')
-  }
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-    .first()
-
+  const user = await findUserByCurrentIdentity(ctx)
   if (!user) {
-    throw new ConvexError('User not found')
+    throw new ConvexError('Not authenticated')
   }
 
   if (!allowedRoles.includes(user.role as UserRole)) {
@@ -32,37 +29,17 @@ export const requireAdmin = async (
   return user
 }
 
-export const getCurrentUser = async (ctx: QueryCtx): Promise<Doc<'users'>> => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) {
-    throw new Error('Not authenticated')
-  }
-
-  const clerkId = identity.subject
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
-    .first()
-
+export const getCurrentUser = async (ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> => {
+  const user = await findUserByCurrentIdentity(ctx)
   if (!user) {
-    throw new Error('User not found')
+    throw new Error('Not authenticated')
   }
 
   return user
 }
 
-export const getCurrentUserOrNull = async (ctx: QueryCtx): Promise<Doc<'users'> | null> => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) return null
-
-  const clerkId = identity.subject
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
-    .first()
-
-  return user ?? null
+export const getCurrentUserOrNull = async (ctx: QueryCtx | MutationCtx): Promise<Doc<'users'> | null> => {
+  return await findUserByCurrentIdentity(ctx)
 }
 
 const sanitizeUsername = (raw: string): string => {
@@ -87,28 +64,23 @@ const fnv1a32Base36 = (input: string): string => {
 }
 
 export const getOrCreateCurrentUser = async (ctx: MutationCtx): Promise<Doc<'users'>> => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new Error('Not authenticated')
+  const claims = await getIdentityClaims(ctx)
+  if (!claims) throw new Error('Not authenticated')
 
-  const clerkId = identity.subject
-
-  const existing = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
-    .first()
+  const existing = await findUserByCurrentIdentity(ctx)
   if (existing) return existing
 
   const now = Date.now()
 
-  const email = typeof (identity as any).email === 'string' ? ((identity as any).email as string) : ''
-  const name = typeof (identity as any).name === 'string' ? ((identity as any).name as string) : ''
-  const picture = typeof (identity as any).picture === 'string' ? ((identity as any).picture as string) : ''
+  const email = claims.email
+  const name = claims.name
+  const picture = claims.picture
 
-  const hash = fnv1a32Base36(clerkId).slice(0, 8)
+  const hash = fnv1a32Base36(claims.subject).slice(0, 8)
   const fallbackUsername = `user_${hash}` // <= 13 chars, valid
 
   const candidateUsernames = [
-    sanitizeUsername((identity as any).nickname ?? ''),
+    sanitizeUsername(claims.nickname),
     sanitizeUsername(name),
     sanitizeUsername(email.split('@')[0] ?? ''),
     sanitizeUsername(fallbackUsername),
@@ -145,7 +117,8 @@ export const getOrCreateCurrentUser = async (ctx: MutationCtx): Promise<Doc<'use
   if (!usernameToUse) throw new Error('Failed to allocate username')
 
   const userId = await ctx.db.insert('users', {
-    clerkId,
+    authSubject: claims.subject,
+    authProvider: AUTH_PROVIDER_AUTH0,
     email,
     username: usernameToUse,
     displayName: sanitizeUsername(name) ? name : usernameToUse,
@@ -159,6 +132,11 @@ export const getOrCreateCurrentUser = async (ctx: MutationCtx): Promise<Doc<'use
     level: 1,
     badges: [],
     votedPoints: 0,
+    searchText: buildUserSearchText({
+      email,
+      username: usernameToUse,
+      displayName: sanitizeUsername(name) ? name : usernameToUse,
+    }),
     createdAt: now,
     updatedAt: now,
     lastSignIn: now,

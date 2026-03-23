@@ -1,118 +1,90 @@
 import { mutation, query } from './_generated/server'
-import type { MutationCtx } from './_generated/server'
-import type { Id } from './_generated/dataModel'
+import type { MutationCtx, QueryCtx } from './_generated/server'
+import type { Doc, Id } from './_generated/dataModel'
 import { v } from 'convex/values'
 import { api } from './_generated/api'
 import { requireAdmin } from './helpers'
 
-// ============ UTILITIES ============
+type ReadCtx = QueryCtx | MutationCtx
 
-/**
- * Get today's date in user's timezone as ISO string (YYYY-MM-DD)
- * For now, we'll use UTC. In production, pass user's timezone from profile.
- */
+type CanonicalStreakState = {
+  currentStreak: number
+  maxStreak: number
+  lastInteractionDate: string
+  streakStartDate: string
+  lastBreakDate?: string
+  breakReason?: 'missed_day' | 'manual_reset' | 'admin_reset' | 'seasonal_reset'
+  hasStreakFreeze: boolean
+  unseenMilestones: string[]
+  lastLoginDate?: string
+}
+
 function getTodayISO(): string {
-  const now = new Date()
-  return now.toISOString().split('T')[0]
+  return new Date().toISOString().split('T')[0]
 }
 
-/**
- * Get yesterday's date as ISO string
- */
 function getYesterdayISO(): string {
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  return yesterday.toISOString().split('T')[0]
+  return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 }
 
-// ============ MUTATIONS ============
+async function readCanonicalStreakState(
+  ctx: ReadCtx,
+  userId: Id<'users'>,
+): Promise<CanonicalStreakState | null> {
+  const canonical = await ctx.db
+    .query('userStreaks')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .first()
 
-/**
- * Called on any user interaction (login, post, etc)
- * Updates streak automatically
- */
-export const updateStreak = mutation({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
-    const today = getTodayISO()
+  if (!canonical) return null
 
-    // Get streak record
-    const streak = await ctx.db
-      .query('streakBonus')
-      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-      .first()
+  return {
+    currentStreak: canonical.currentStreak,
+    maxStreak: canonical.maxStreak,
+    lastInteractionDate: canonical.lastInteractionDate,
+    streakStartDate: canonical.streakStartDate,
+    lastBreakDate: canonical.lastBreakDate,
+    breakReason: canonical.breakReason,
+    hasStreakFreeze: canonical.hasStreakFreeze,
+    unseenMilestones: canonical.unseenMilestones,
+    lastLoginDate: canonical.lastLoginDate,
+  }
+}
 
-    if (!streak) {
-      // Create new streak (first interaction)
-      await ctx.db.insert('streakBonus', {
-        userId: args.userId,
-        currentStreak: 1,
-        maxStreak: 1,
-        lastInteractionDate: today,
-        streakStartDate: today,
-        hasStreakFreeze: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
+async function upsertCanonicalStreak(
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  streak: CanonicalStreakState,
+) {
+  const existing = await ctx.db
+    .query('userStreaks')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .first()
 
-      return { streakDays: 1, isNewStreak: true }
-    }
+  const payload = {
+    userId,
+    currentStreak: streak.currentStreak,
+    maxStreak: streak.maxStreak,
+    lastInteractionDate: streak.lastInteractionDate,
+    streakStartDate: streak.streakStartDate,
+    lastBreakDate: streak.lastBreakDate,
+    breakReason: streak.breakReason,
+    hasStreakFreeze: streak.hasStreakFreeze,
+    unseenMilestones: streak.unseenMilestones,
+    lastLoginDate: streak.lastLoginDate ?? streak.lastInteractionDate,
+    updatedAt: Date.now(),
+  }
 
-    // Already updated today
-    if (streak.lastInteractionDate === today) {
-      return { streakDays: streak.currentStreak, isNewStreak: false }
-    }
-
-    const yesterday = getYesterdayISO()
-
-    // Check if streak continues (yesterday was last interaction)
-    if (streak.lastInteractionDate === yesterday) {
-      // Extend streak
-      const newStreak = streak.currentStreak + 1
-      const newMaxStreak = Math.max(newStreak, streak.maxStreak)
-
-      await ctx.db.patch(streak._id, {
-        currentStreak: newStreak,
-        maxStreak: newMaxStreak,
-        lastInteractionDate: today,
-        updatedAt: Date.now(),
-      })
-
-      // Award bonus points based on streak length
-      const bonusPoints = calculateStreakBonus(newStreak)
-      if (bonusPoints > 0) {
-        await ctx.runMutation(api.points.awardPoints, {
-          userId: args.userId,
-          type: 'streak_bonus',
-          amount: bonusPoints,
-          description: `${newStreak}-day streak bonus`,
-          idempotencyKey: `streak-bonus-${args.userId}-${today}`,
-          metadata: { streakMultiplier: 1 + newStreak * 0.1 },
-        })
-      }
-
-      // Check for milestone
-      await checkStreakMilestone(ctx, args.userId, newStreak)
-
-      return { streakDays: newStreak, isNewStreak: false, bonusPoints }
-    }
-
-    // Streak broken (gap > 1 day)
-    await ctx.db.patch(streak._id, {
-      currentStreak: 1,
-      lastInteractionDate: today,
-      streakStartDate: today,
-      lastBreakDate: streak.lastInteractionDate,
-      breakReason: 'missed_day',
-      updatedAt: Date.now(),
+  if (existing) {
+    await ctx.db.patch(existing._id, payload)
+  } else {
+    await ctx.db.insert('userStreaks', {
+      ...payload,
+      createdAt: Date.now(),
     })
+  }
+}
 
-    return { streakDays: 1, isNewStreak: true, streakBroken: true }
-  },
-})
-
-/**
- * Award points at streak milestones
- */
 async function checkStreakMilestone(
   ctx: MutationCtx,
   userId: Id<'users'>,
@@ -122,7 +94,6 @@ async function checkStreakMilestone(
 
   if (!milestones.includes(days)) return
 
-  // Check if already awarded
   const existing = await ctx.db
     .query('userStreakMilestones')
     .withIndex('by_userId_day', (q) => q.eq('userId', userId).eq('day', days))
@@ -130,7 +101,6 @@ async function checkStreakMilestone(
 
   if (existing) return
 
-  // Get milestone reward
   const milestone = await ctx.db
     .query('streakMilestones')
     .withIndex('by_day', (q) => q.eq('day', days))
@@ -138,7 +108,6 @@ async function checkStreakMilestone(
 
   if (!milestone) return
 
-  // Award points
   await ctx.runMutation(api.points.awardPoints, {
     userId,
     type: 'quest_complete',
@@ -147,7 +116,6 @@ async function checkStreakMilestone(
     idempotencyKey: `milestone-${userId}-${days}`,
   })
 
-  // Record milestone
   await ctx.db.insert('userStreakMilestones', {
     userId,
     day: days,
@@ -156,27 +124,27 @@ async function checkStreakMilestone(
     awardedAt: Date.now(),
   })
 
-  // Add to unseenMilestones
   if (milestone.rewardBadgeId) {
-    const userRewards = await ctx.db
-      .query('userRewards')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .first()
-
-    if (userRewards) {
-      const updated = [...userRewards.unseenMilestones]
-      if (!updated.includes(milestone.rewardBadgeId)) {
-        updated.push(milestone.rewardBadgeId)
-      }
-      await ctx.db.patch(userRewards._id, { unseenMilestones: updated })
+    const streak = (await readCanonicalStreakState(ctx, userId)) ?? {
+      currentStreak: days,
+      maxStreak: days,
+      lastInteractionDate: getTodayISO(),
+      streakStartDate: getTodayISO(),
+      hasStreakFreeze: false,
+      unseenMilestones: [],
     }
+
+    const unseenMilestones = streak.unseenMilestones.includes(milestone.rewardBadgeId)
+      ? streak.unseenMilestones
+      : [...streak.unseenMilestones, milestone.rewardBadgeId]
+
+    await upsertCanonicalStreak(ctx, userId, {
+      ...streak,
+      unseenMilestones,
+    })
   }
 }
 
-/**
- * Calculate bonus points based on streak length
- * Scales: 7d=50pts, 14d=100pts, 30d=200pts, 60d=400pts, etc
- */
 function calculateStreakBonus(days: number): number {
   if (days < 7) return 0
   if (days === 7) return 50
@@ -188,16 +156,81 @@ function calculateStreakBonus(days: number): number {
   if (days === 365) return 2000
   if (days > 365) return 5000
 
-  // Linear interpolation between milestones
   if (days > 30) return Math.floor(200 + (days - 30) * 5)
   if (days > 14) return Math.floor(100 + (days - 14) * 7)
   if (days > 7) return Math.floor(50 + (days - 7) * 7)
   return 0
 }
 
-/**
- * Admin: Reset user's streak (for testing or moderation)
- */
+export const updateStreak = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    const today = getTodayISO()
+    const yesterday = getYesterdayISO()
+    const existing = await readCanonicalStreakState(ctx, args.userId)
+
+    if (!existing) {
+      const created: CanonicalStreakState = {
+        currentStreak: 1,
+        maxStreak: 1,
+        lastInteractionDate: today,
+        streakStartDate: today,
+        hasStreakFreeze: false,
+        unseenMilestones: [],
+        lastLoginDate: today,
+      }
+
+      await upsertCanonicalStreak(ctx, args.userId, created)
+      return { streakDays: 1, isNewStreak: true }
+    }
+
+    if (existing.lastInteractionDate === today) {
+      return { streakDays: existing.currentStreak, isNewStreak: false }
+    }
+
+    if (existing.lastInteractionDate === yesterday) {
+      const nextStreak = existing.currentStreak + 1
+      const nextState: CanonicalStreakState = {
+        ...existing,
+        currentStreak: nextStreak,
+        maxStreak: Math.max(nextStreak, existing.maxStreak),
+        lastInteractionDate: today,
+        lastLoginDate: today,
+      }
+
+      await upsertCanonicalStreak(ctx, args.userId, nextState)
+
+      const bonusPoints = calculateStreakBonus(nextStreak)
+      if (bonusPoints > 0) {
+        await ctx.runMutation(api.points.awardPoints, {
+          userId: args.userId,
+          type: 'streak_bonus',
+          amount: bonusPoints,
+          description: `${nextStreak}-day streak bonus`,
+          idempotencyKey: `streak-bonus-${args.userId}-${today}`,
+          metadata: { streakMultiplier: 1 + nextStreak * 0.1 },
+        })
+      }
+
+      await checkStreakMilestone(ctx, args.userId, nextStreak)
+      return { streakDays: nextStreak, isNewStreak: false, bonusPoints }
+    }
+
+    const resetState: CanonicalStreakState = {
+      ...existing,
+      currentStreak: 1,
+      lastInteractionDate: today,
+      streakStartDate: today,
+      lastBreakDate: existing.lastInteractionDate,
+      breakReason: 'missed_day',
+      lastLoginDate: today,
+    }
+
+    await upsertCanonicalStreak(ctx, args.userId, resetState)
+    return { streakDays: 1, isNewStreak: true, streakBroken: true }
+  },
+})
+
 export const adminResetStreak = mutation({
   args: {
     userId: v.id('users'),
@@ -206,36 +239,25 @@ export const adminResetStreak = mutation({
     await requireAdmin(ctx, ['admin'])
 
     const today = getTodayISO()
-    const streak = await ctx.db
-      .query('streakBonus')
-      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-      .first()
-
+    const streak = await readCanonicalStreakState(ctx, args.userId)
     if (!streak) return
 
-    await ctx.db.patch(streak._id, {
+    await upsertCanonicalStreak(ctx, args.userId, {
+      ...streak,
       currentStreak: 0,
       lastBreakDate: today,
       breakReason: 'admin_reset',
-      updatedAt: Date.now(),
+      lastLoginDate: today,
     })
 
     return { success: true }
   },
 })
 
-// ============ QUERIES ============
-
-/**
- * Get user's current streak info
- */
 export const getUserStreak = query({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {
-    const streak = await ctx.db
-      .query('streakBonus')
-      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-      .first()
+    const streak = await readCanonicalStreakState(ctx, args.userId)
 
     if (!streak) {
       return {
@@ -255,22 +277,17 @@ export const getUserStreak = query({
   },
 })
 
-/**
- * Get top streak users (for leaderboard)
- */
 export const getStreakLeaderboard = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit || 50, 500)
 
-    const streaks = await ctx.db.query('streakBonus').collect()
+    const topStreaks = await ctx.db
+      .query('userStreaks')
+      .withIndex('by_currentStreak')
+      .order('desc')
+      .take(limit)
 
-    // Sort by currentStreak descending and take top N
-    const topStreaks = streaks
-      .sort((a, b) => b.currentStreak - a.currentStreak)
-      .slice(0, limit)
-
-    // Join with user info
     const results = await Promise.all(
       topStreaks.map(async (streak) => {
         const user = await ctx.db.get(streak.userId)
@@ -288,9 +305,6 @@ export const getStreakLeaderboard = query({
   },
 })
 
-/**
- * Get user's streak milestones
- */
 export const getUserMilestones = query({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {

@@ -1,7 +1,7 @@
 import { query, mutation } from "./_generated/server"
 import { v, ConvexError } from "convex/values"
 import type { Doc, Id } from "./_generated/dataModel"
-import { getCurrentUser, getTierLevel } from "./helpers"
+import { getCurrentUser, getCurrentUserOrNull, getTierLevel } from "./helpers"
 
 type FanTier = 'bronze' | 'silver' | 'gold' | 'platinum'
 
@@ -1010,18 +1010,7 @@ export const getAvailableTags = query({
 export const getGalleryViewPreferences = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      return {
-        activeTab: 'artist' as const,
-        layoutMode: 'feed' as const,
-      }
-    }
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
+    const user = await getCurrentUserOrNull(ctx)
 
     if (!user) {
       return {

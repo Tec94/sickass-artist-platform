@@ -1,5 +1,6 @@
 import { query } from "./_generated/server"
 import { getCurrentUserOrNull } from "./helpers"
+import { getFanProgressionPoints } from "./readModels/fanProgression"
 
 const DASHBOARD_EXPERIENCE_FLAG_KEYS = {
     hardeningV1: "dashboard_cinematic_hardening_v1",
@@ -35,7 +36,7 @@ export const getDashboardData = query({
                 // Top products (for "Top Merch" widget)
                 ctx.db
                     .query("merchProducts")
-                    .filter((q) => q.neq(q.field("status"), "archived"))
+                    .withIndex("by_status_created", (q) => q.eq("status", "active"))
                     .order("desc")
                     .take(8),
 
@@ -61,7 +62,7 @@ export const getDashboardData = query({
                 // Upcoming events
                 ctx.db
                     .query("events")
-                    .filter((q) => q.gte(q.field("startAtUtc"), Date.now()))
+                    .withIndex("by_status_start", (q) => q.eq("saleStatus", "upcoming"))
                     .order("asc")
                     .take(5),
             ])
@@ -103,11 +104,8 @@ export const getDashboardData = query({
 
             if (currentUser) {
                 try {
-                    const [rewards, questProgress] = await Promise.all([
-                        ctx.db
-                            .query("userRewards")
-                            .withIndex("by_userId", (q) => q.eq("userId", currentUser._id))
-                            .first(),
+                    const [points, questProgress] = await Promise.all([
+                        getFanProgressionPoints(ctx, currentUser._id),
                         ctx.db
                             .query("questProgress")
                             .filter((q) => q.eq(q.field("userId"), currentUser._id))
@@ -158,15 +156,7 @@ export const getDashboardData = query({
 
                     fanProgression = {
                         memberName: currentUser.displayName || currentUser.username || null,
-                        points: {
-                            totalPoints: rewards?.totalPoints || 0,
-                            availablePoints: rewards?.availablePoints || 0,
-                            redeemedPoints: rewards?.redeemedPoints || 0,
-                            currentStreak: rewards?.currentStreak || 0,
-                            maxStreak: rewards?.maxStreak || 0,
-                            lastInteractionDate: typeof rewards?.lastInteractionDate === "number" ? rewards.lastInteractionDate : null,
-                            lastLoginDate: rewards?.lastLoginDate || null,
-                        },
+                        points,
                         activeQuests: activeQuests.slice(0, 4),
                         questSummary: {
                             activeCount: activeQuests.length,
@@ -214,11 +204,8 @@ export const getDashboardData = query({
                 }))
 
             // Get announcements channel and its recent messages
-            const channels = await ctx.db.query("channels").collect()
-            const announcementChannel = channels.find(c =>
-                c.slug === "announcements" ||
-                c.name.toLowerCase().includes("announcement")
-            )
+            const announcementChannel =
+                await ctx.db.query("channels").withIndex("by_slug", (q) => q.eq("slug", "announcements")).first()
 
             let recentAnnouncements: any[] = []
             if (announcementChannel) {

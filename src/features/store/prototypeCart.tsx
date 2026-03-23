@@ -1,28 +1,29 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
-import {
-  PROTOTYPE_STORE_PRODUCTS,
-  getPrototypeStoreProduct,
-  type PrototypeStoreProduct,
-} from './prototypeStoreCatalog'
-
-const PROTOTYPE_CART_STORAGE_KEY = 'prototype_store_cart_v1'
-
-interface PrototypeCartStoredItem {
-  slug: string
-  quantity: number
-}
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
+import type {
+  PrototypeStoreProduct,
+  PrototypeStoreResolvedSelection,
+  PrototypeStoreSelection,
+} from './prototypeStoreContract'
 
 export interface PrototypeCartLineItem {
+  lineKey: string
   slug: string
   quantity: number
+  selection: PrototypeStoreSelection
+  selectedOptions: PrototypeStoreResolvedSelection[]
+  variantId?: string | null
   product: PrototypeStoreProduct
+  unitPriceCents: number
   lineTotalCents: number
 }
 
@@ -30,112 +31,137 @@ interface PrototypeCartContextValue {
   items: PrototypeCartLineItem[]
   itemCount: number
   subtotalCents: number
-  addItem: (slug: string) => void
-  removeItem: (slug: string) => void
-  setQuantity: (slug: string, quantity: number) => void
-  clearCart: () => void
+  addItem: (
+    slug: string,
+    selection?: PrototypeStoreSelection,
+    quantity?: number,
+  ) => Promise<void>
+  removeItem: (lineId: string) => Promise<void>
+  setQuantity: (lineId: string, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
+  storageMode: 'convex'
+  canWrite: boolean
+  isSyncing: boolean
+}
+
+interface RemoteCartState {
+  items: Array<{
+    lineId: string
+    slug: string
+    quantity: number
+    selection: PrototypeStoreSelection
+    selectedOptions: PrototypeStoreResolvedSelection[]
+    variantId?: Id<'merchVariants'> | null
+    product: PrototypeStoreProduct
+    lineTotalCents: number
+  }>
+  itemCount: number
+  subtotalCents: number
+  canWrite: boolean
 }
 
 const PrototypeCartContext = createContext<PrototypeCartContextValue | null>(null)
 
-const parseStoredItems = (rawValue: string | null): PrototypeCartStoredItem[] => {
-  if (!rawValue) return []
-
-  try {
-    const parsed = JSON.parse(rawValue)
-    if (!Array.isArray(parsed)) return []
-
-    return parsed
-      .map((item) => ({
-        slug: typeof item?.slug === 'string' ? item.slug : '',
-        quantity: typeof item?.quantity === 'number' ? item.quantity : 0,
-      }))
-      .filter((item) => item.slug && item.quantity > 0 && getPrototypeStoreProduct(item.slug))
-  } catch {
-    return []
-  }
-}
-
 export function PrototypeCartProvider({ children }: { children: ReactNode }) {
-  const [storedItems, setStoredItems] = useState<PrototypeCartStoredItem[]>(() => {
-    if (typeof window === 'undefined') return []
-    return parseStoredItems(window.localStorage.getItem(PROTOTYPE_CART_STORAGE_KEY))
-  })
+  const remoteCart = useQuery(api.catalog.getPrototypeCart, {}) as RemoteCartState | undefined
+  const addPrototypeCartItem = useMutation(api.catalog.addPrototypeCartItem)
+  const setPrototypeCartQuantity = useMutation(api.catalog.setPrototypeCartQuantity)
+  const removePrototypeCartItem = useMutation(api.catalog.removePrototypeCartItem)
+  const clearPrototypeCart = useMutation(api.catalog.clearPrototypeCart)
+  const [pendingOps, setPendingOps] = useState(0)
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(PROTOTYPE_CART_STORAGE_KEY, JSON.stringify(storedItems))
-  }, [storedItems])
-
-  const items = useMemo<PrototypeCartLineItem[]>(() => {
-    return storedItems.flatMap((item) => {
-      const product = getPrototypeStoreProduct(item.slug)
-      if (!product) return []
-
-      return [
-        {
-          slug: item.slug,
-          quantity: item.quantity,
-          product,
-          lineTotalCents: product.priceCents * item.quantity,
-        },
-      ]
-    })
-  }, [storedItems])
-
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0)
-  const subtotalCents = items.reduce((total, item) => total + item.lineTotalCents, 0)
-
-  const setQuantity = (slug: string, quantity: number) => {
-    setStoredItems((currentItems) => {
-      if (quantity <= 0) {
-        return currentItems.filter((item) => item.slug !== slug)
+  const runCartMutation = useCallback(
+    async (operation: () => Promise<unknown>) => {
+      setPendingOps((count) => count + 1)
+      try {
+        await operation()
+      } finally {
+        setPendingOps((count) => Math.max(0, count - 1))
       }
+    },
+    [],
+  )
 
-      const product = getPrototypeStoreProduct(slug)
-      if (!product || product.availability !== 'available') return currentItems
+  const items = useMemo<PrototypeCartLineItem[]>(
+    () =>
+      (remoteCart?.items ?? []).map((item) => ({
+        lineKey: item.lineId,
+        slug: item.slug,
+        quantity: item.quantity,
+        selection: item.selection,
+        selectedOptions: item.selectedOptions,
+        variantId: item.variantId ? String(item.variantId) : null,
+        product: item.product,
+        unitPriceCents:
+          item.quantity > 0 ? Math.round(item.lineTotalCents / item.quantity) : item.product.priceCents,
+        lineTotalCents: item.lineTotalCents,
+      })),
+    [remoteCart],
+  )
 
-      const existingItem = currentItems.find((item) => item.slug === slug)
-      if (!existingItem) {
-        return [...currentItems, { slug, quantity }]
-      }
-
-      return currentItems.map((item) => (item.slug === slug ? { ...item, quantity } : item))
-    })
-  }
-
-  const addItem = (slug: string) => {
-    const product = getPrototypeStoreProduct(slug)
-    if (!product || product.availability !== 'available') return
-
-    setStoredItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.slug === slug)
-      if (!existingItem) return [...currentItems, { slug, quantity: 1 }]
-
-      return currentItems.map((item) =>
-        item.slug === slug ? { ...item, quantity: item.quantity + 1 } : item,
+  const addItem = useCallback(
+    async (slug: string, selection: PrototypeStoreSelection = {}, quantity = 1) => {
+      if (!remoteCart?.canWrite) return
+      await runCartMutation(() =>
+        addPrototypeCartItem({
+          slug,
+          selection,
+          quantity,
+        }),
       )
-    })
-  }
+    },
+    [addPrototypeCartItem, remoteCart?.canWrite, runCartMutation],
+  )
 
-  const removeItem = (slug: string) => {
-    setStoredItems((currentItems) => currentItems.filter((item) => item.slug !== slug))
-  }
+  const setQuantity = useCallback(
+    async (lineKey: string, quantity: number) => {
+      if (!remoteCart?.canWrite) return
+      const remoteItem = remoteCart.items.find((item) => item.lineId === lineKey)
+      if (!remoteItem?.variantId) return
 
-  const clearCart = () => {
-    setStoredItems([])
-  }
+      await runCartMutation(() =>
+        setPrototypeCartQuantity({
+          variantId: remoteItem.variantId!,
+          quantity,
+        }),
+      )
+    },
+    [remoteCart, runCartMutation, setPrototypeCartQuantity],
+  )
+
+  const removeItem = useCallback(
+    async (lineKey: string) => {
+      if (!remoteCart?.canWrite) return
+      const remoteItem = remoteCart.items.find((item) => item.lineId === lineKey)
+      if (!remoteItem?.variantId) return
+
+      await runCartMutation(() =>
+        removePrototypeCartItem({
+          variantId: remoteItem.variantId!,
+        }),
+      )
+    },
+    [remoteCart, removePrototypeCartItem, runCartMutation],
+  )
+
+  const clearCart = useCallback(async () => {
+    if (!remoteCart?.canWrite) return
+    await runCartMutation(() => clearPrototypeCart({}))
+  }, [clearPrototypeCart, remoteCart?.canWrite, runCartMutation])
 
   return (
     <PrototypeCartContext.Provider
       value={{
         items,
-        itemCount,
-        subtotalCents,
+        itemCount: remoteCart?.itemCount ?? 0,
+        subtotalCents: remoteCart?.subtotalCents ?? 0,
         addItem,
         removeItem,
         setQuantity,
         clearCart,
+        storageMode: 'convex',
+        canWrite: remoteCart?.canWrite ?? false,
+        isSyncing: remoteCart === undefined || pendingOps > 0,
       }}
     >
       {children}
@@ -145,12 +171,8 @@ export function PrototypeCartProvider({ children }: { children: ReactNode }) {
 
 export function usePrototypeCart() {
   const context = useContext(PrototypeCartContext)
-
   if (!context) {
-    throw new Error('usePrototypeCart must be used inside PrototypeCartProvider')
+    throw new Error('usePrototypeCart must be used within a PrototypeCartProvider')
   }
-
   return context
 }
-
-export const PROTOTYPE_CART_PRODUCT_SLUGS = PROTOTYPE_STORE_PRODUCTS.map((product) => product.slug)

@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-import { getCurrentUser, requireAdmin } from './helpers'
+import { getCurrentUser, getCurrentUserOrNull, requireAdmin } from './helpers'
 
 export const getUserNotifications = query({
   args: {
@@ -8,15 +8,7 @@ export const getUserNotifications = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      return []
-    }
-
-    const currentUser = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .first()
+    const currentUser = await getCurrentUserOrNull(ctx)
 
     if (!currentUser) {
       return []

@@ -7,20 +7,20 @@ This schema supports both chat and forum features with proper indexing, access c
 
 ### 1. users
 User profiles integrated with Auth0 authentication.
-- **Indexes**: by_clerkId, by_username, by_role, by_fanTier
+- **Indexes**: by_authSubject, by_email, by_username, by_role, by_fanTier
 
 ### 2. channels
 Chat channels with role/tier-based access control.
-- **Fields**: name, slug, description, requiredRole, requiredFanTier, category, pinnedMessageId, createdBy, createdAt, updatedAt, messageCount, lastMessageAt, lastMessageId
+- **Fields**: name, slug, description, requiredRole, requiredFanTier, category, pinnedMessageId, createdBy, createdAt, updatedAt, messageCount, lastMessageAt, lastMessageId, searchText
 - **Denormalized fields**:
   - `messageCount`: Total messages in channel (update on message create/delete)
   - `lastMessageAt`: Timestamp of most recent message (update on message create)
   - `lastMessageId`: ID of most recent message (update on message create)
-- **Indexes**: by_slug, by_category
+- **Indexes**: by_slug, by_category, search_channels
 
 ### 3. messages
 Chat messages with author snapshot and tombstone pattern.
-- **Fields**: channelId, authorId, authorDisplayName, authorAvatar, authorTier, content, editedAt, isPinned, isDeleted, deletedAt, deletedBy, reactionEmojis, reactionCount, idempotencyKey, createdAt
+- **Fields**: channelId, authorId, authorDisplayName, authorAvatar, authorTier, content, editedAt, isPinned, isDeleted, deletedAt, deletedBy, reactionEmojis, reactionCount, upVoteCount, downVoteCount, netVoteCount, idempotencyKey, createdAt
 - **Denormalized fields**:
   - `authorDisplayName`, `authorAvatar`, `authorTier`: Author snapshot (never update)
   - `reactionEmojis`: Array of unique emoji strings (update on reaction add/remove)
@@ -35,24 +35,22 @@ Individual message reactions.
 
 ### 5. threads
 Forum threads with voting and tracking.
-- **Fields**: title, content, authorId, authorDisplayName, authorAvatar, authorTier, categoryId, tags, upVoterIds, downVoterIds, upVoteCount, downVoteCount, netVoteCount, replyCount, viewCount, lastReplyAt, lastReplyById, isDeleted, deletedAt, createdAt, updatedAt
+- **Fields**: title, content, authorId, authorDisplayName, authorAvatar, authorTier, categoryId, tags, searchText, upVoteCount, downVoteCount, netVoteCount, replyCount, viewCount, lastReplyAt, lastReplyById, isDeleted, deletedAt, createdAt, updatedAt
 - **Denormalized fields**:
   - `authorDisplayName`, `authorAvatar`, `authorTier`: Author snapshot (never update)
-  - `upVoterIds`, `downVoterIds`: Arrays of user IDs for vote tracking
   - `upVoteCount`, `downVoteCount`: Vote counts (update on vote)
   - `netVoteCount`: upVoteCount - downVoteCount (update on vote, for sorting)
   - `replyCount`: Total replies (update on reply create/delete)
   - `lastReplyAt`: Timestamp of most recent reply (update on reply)
   - `lastReplyById`: User ID of most recent reply (update on reply)
-- **Indexes**: by_category, by_category_netVote, by_category_lastReply, by_author
+- **Indexes**: by_category, by_category_netVote, by_category_lastReply, by_author, search_threads
 - **Tombstone pattern**: Use `isDeleted: true` instead of deletion
 
 ### 6. replies
 Forum thread replies with voting.
-- **Fields**: threadId, authorId, authorDisplayName, authorAvatar, authorTier, content, editedAt, upVoterIds, downVoterIds, upVoteCount, downVoteCount, isDeleted, deletedAt, createdAt
+- **Fields**: threadId, authorId, authorDisplayName, authorAvatar, authorTier, content, editedAt, upVoteCount, downVoteCount, isDeleted, deletedAt, createdAt
 - **Denormalized fields**:
   - `authorDisplayName`, `authorAvatar`, `authorTier`: Author snapshot (never update)
-  - `upVoterIds`, `downVoterIds`: Arrays of user IDs for vote tracking
   - `upVoteCount`, `downVoteCount`: Vote counts (update on vote)
 - **Indexes**: by_thread, by_author
 - **Tombstone pattern**: Use `isDeleted: true` instead of deletion

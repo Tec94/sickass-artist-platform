@@ -1,16 +1,7 @@
 import { mutation, internalMutation, query } from './_generated/server'
 import type { QueryCtx, MutationCtx } from './_generated/server'
 import { v, ConvexError } from 'convex/values'
-
-async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) return null
-  
-  return await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', q => q.eq('clerkId', identity.subject))
-    .first()
-}
+import { requireAdmin } from './helpers'
 
 // Query: Get active and past drops
 export const getActiveDrops = query({
@@ -61,10 +52,7 @@ export const createDrop = mutation({
     queueEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
-    if (!user || user.role !== 'admin') {
-      throw new ConvexError('Admin only')
-    }
+    const user = await requireAdmin(ctx, ['admin'])
 
     // Validate dates
     if (args.endsAt <= args.startsAt) {

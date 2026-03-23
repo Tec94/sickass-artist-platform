@@ -2,6 +2,13 @@ import { query, mutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { api } from "./_generated/api";
 import { getOrCreateCurrentUser } from "./helpers";
+import {
+  AUTH_PROVIDER_AUTH0,
+  buildUserSearchText,
+  findUserByAuthSubject,
+  findUserByCurrentIdentity,
+  getIdentityClaims,
+} from "./domain/identity";
 
 const VALID_ROLES = ["artist", "admin", "mod", "crew", "fan"] as const;
 const VALID_FAN_TIERS = ["bronze", "silver", "gold", "platinum"] as const;
@@ -27,33 +34,10 @@ export const isValidFanTier = (tier: string): boolean => {
   return VALID_FAN_TIERS.includes(tier as (typeof VALID_FAN_TIERS)[number]);
 };
 
-export const getMe = query({
-  args: { clerkId: v.string() },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
-      .first();
-    return user;
-  },
-});
-
-// Get current user from auth context
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const clerkId = identity.subject; // Auth provider subject (`sub`)
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .first();
-
-    return user;
+    return await findUserByCurrentIdentity(ctx);
   },
 });
 
@@ -76,14 +60,10 @@ export const getByUsername = query({
   },
 });
 
-export const getByClerkId = query({
-  args: { clerkId: v.string() },
+export const getByAuthSubject = query({
+  args: { authSubject: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
-      .first();
-    return user;
+    return await findUserByAuthSubject(ctx, args.authSubject);
   },
 });
 
@@ -126,7 +106,7 @@ export const getByFanTier = query({
 
 export const create = mutation({
   args: {
-    clerkId: v.string(),
+    authSubject: v.string(),
     email: v.string(),
     username: v.string(),
     displayName: v.optional(v.string()),
@@ -146,24 +126,28 @@ export const create = mutation({
       throw new ConvexError("Username already taken");
     }
 
-    const existingUserByClerkId = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
-      .first();
+    const existingUserByAuthSubject = await findUserByAuthSubject(ctx, args.authSubject);
 
-    if (existingUserByClerkId) {
+    if (existingUserByAuthSubject) {
       throw new ConvexError("User already exists with this auth subject");
     }
 
     const now = Date.now();
+    const displayName = args.displayName || args.username;
     const userId = await ctx.db.insert("users", {
-      clerkId: args.clerkId,
+      authSubject: args.authSubject,
+      authProvider: AUTH_PROVIDER_AUTH0,
       email: args.email,
       username: args.username,
-      displayName: args.displayName || args.username,
+      displayName,
       bio: "",
       avatar: args.avatar || "",
       avatarStorageId: undefined,
+      searchText: buildUserSearchText({
+        email: args.email,
+        username: args.username,
+        displayName,
+      }),
       role: "fan",
       fanTier: "bronze",
       socials: {},
@@ -179,6 +163,44 @@ export const create = mutation({
 
     const user = await ctx.db.get(userId);
     return { userId, user };
+  },
+});
+
+export const upsertCurrentUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const claims = await getIdentityClaims(ctx);
+    if (!claims) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    const existing = await findUserByCurrentIdentity(ctx);
+    if (existing) {
+      const nextEmail = claims.email || existing.email;
+      const nextAvatar = claims.picture || existing.avatar;
+      const nextSearchText = buildUserSearchText({
+        email: nextEmail,
+        username: existing.username,
+        displayName: existing.displayName,
+      });
+
+      await ctx.db.patch(existing._id, {
+        authSubject: claims.subject,
+        authProvider: AUTH_PROVIDER_AUTH0,
+        email: nextEmail,
+        avatar: nextAvatar,
+        searchText: nextSearchText,
+        lastSignIn: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      const user = await ctx.db.get(existing._id);
+      return { created: false, userId: existing._id, user };
+    }
+
+    const createdUser = await getOrCreateCurrentUser(ctx);
+    const user = await ctx.db.get(createdUser._id);
+    return { created: true, userId: createdUser._id, user };
   },
 });
 
@@ -227,15 +249,10 @@ export const update = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const currentUser = await findUserByCurrentIdentity(ctx);
+    if (!currentUser) {
       throw new ConvexError("Unauthorized");
     }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
-      .first();
 
     if (!currentUser || currentUser._id.toString() !== args.userId.toString()) {
       throw new ConvexError("Unauthorized");
@@ -269,6 +286,11 @@ export const update = mutation({
 
     const updatedUser = await ctx.db.patch(args.userId, {
       ...args.updates,
+      searchText: buildUserSearchText({
+        email: user.email,
+        username: args.updates.username ?? user.username,
+        displayName: args.updates.displayName ?? user.displayName,
+      }),
       updatedAt: Date.now(),
     });
     return updatedUser;

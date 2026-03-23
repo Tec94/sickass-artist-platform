@@ -1,17 +1,7 @@
 import { mutation } from './_generated/server'
 import { v } from 'convex/values'
 import { ConvexError } from 'convex/values'
-import type { MutationCtx } from './_generated/server'
-
-async function getCurrentUser(ctx: MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) return null
-
-  return await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-    .first()
-}
+import { requireAdmin } from './helpers'
 
 // Admin: Manually fix inventory
 export const manualInventoryCorrection = mutation({
@@ -21,10 +11,7 @@ export const manualInventoryCorrection = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
-    if (!user || user.role !== 'admin') {
-      throw new ConvexError('Admin only')
-    }
+    const user = await requireAdmin(ctx, ['admin'])
 
     const variant = await ctx.db.get(args.variantId)
     if (!variant) throw new ConvexError('Variant not found')
@@ -69,10 +56,7 @@ export const manualInventoryCorrection = mutation({
 export const detectOversoldVariants = mutation({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
-    if (!user || user.role !== 'admin') {
-      throw new ConvexError('Admin only')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const variants = await ctx.db.query('merchVariants').collect()
     const oversold = []
@@ -99,10 +83,7 @@ export const recoverOversoldOrder = mutation({
     action: v.union(v.literal('cancel'), v.literal('backorder')),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
-    if (!user || user.role !== 'admin') {
-      throw new ConvexError('Admin only')
-    }
+    await requireAdmin(ctx, ['admin'])
 
     const order = await ctx.db.get(args.orderId)
     if (!order) throw new ConvexError('Order not found')

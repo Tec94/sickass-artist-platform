@@ -1,7 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
-import { getOrCreateCurrentUser } from './helpers'
+import { getCurrentUserOrNull, getOrCreateCurrentUser } from './helpers'
 
 const QUEUE_EXPIRY_MS = 60 * 60 * 1000
 const SLOT_EXPIRY_MS = 15 * 60 * 1000
@@ -11,18 +11,6 @@ const MAX_ACTIVE_SLOTS = 10
 type QueueTargetState = 'active' | 'upcoming' | 'none'
 
 const isQueueEnabled = (drop: Doc<'merchDrops'>) => drop.queueEnabled ?? true
-
-async function getCurrentUserOrNull(ctx: QueryCtx) {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) return null
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-    .first()
-
-  return user ?? null
-}
 
 function selectQueueTargetDrop(drops: Doc<'merchDrops'>[], now: number): { state: QueueTargetState; drop: Doc<'merchDrops'> | null } {
   const active = drops

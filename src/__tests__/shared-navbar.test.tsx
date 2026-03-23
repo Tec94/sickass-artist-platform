@@ -9,6 +9,87 @@ vi.mock('../components/Navigation/SearchOverlay', () => ({
   default: () => null,
 }))
 
+vi.mock('../features/store/prototypeCart', async () => {
+  const React = await import('react')
+  const catalog = await import('../features/store/prototypeStoreCatalog')
+  const contract = await import('../features/store/prototypeStoreContract')
+
+  const runtimeProducts = catalog.PROTOTYPE_STORE_PRODUCTS.map((product) => ({
+    ...product,
+    optionGroups: product.optionGroups.map((group) => ({
+      key: group.id,
+      label: group.label,
+      options: group.options.map((option) => ({
+        value: option.id,
+        label: option.label,
+        priceDeltaCents: option.priceDeltaCents,
+      })),
+    })),
+    quickDetails: product.quickDetails.map((detail) => `${detail.label}: ${detail.value}`),
+    defaultSelection: catalog.getPrototypeDefaultSelection(product),
+  }))
+
+  const productBySlug = new Map(runtimeProducts.map((product) => [product.slug, product]))
+  const Context = React.createContext<any>(null)
+
+  const createLineKey = (slug: string, selection: Record<string, string>) =>
+    `${slug}::${JSON.stringify(Object.entries(selection).sort(([left], [right]) => left.localeCompare(right)))}`
+
+  const buildLineItem = (product: (typeof runtimeProducts)[number], quantity: number) => {
+    const selection = contract.normalizePrototypeStoreSelection(product, product.defaultSelection)
+    const selectedOptions = contract.resolvePrototypeStoreSelection(product, selection)
+    const unitPriceCents = contract.getPrototypeSelectionUnitPrice(product, selection)
+    return {
+      lineKey: createLineKey(product.slug, selection),
+      slug: product.slug,
+      quantity,
+      selection,
+      selectedOptions,
+      variantId: null,
+      product,
+      unitPriceCents,
+      lineTotalCents: unitPriceCents * quantity,
+    }
+  }
+
+  function PrototypeCartProvider({ children }: { children: React.ReactNode }) {
+    const [items] = React.useState(() => {
+      const legacyRaw = window.localStorage.getItem('prototype_store_cart_v1')
+      if (!legacyRaw) return []
+      const parsed = JSON.parse(legacyRaw) as Array<{ slug: string; quantity: number }>
+      return parsed.flatMap((item) => {
+        const product = productBySlug.get(item.slug)
+        if (!product) return []
+        return [buildLineItem(product, item.quantity)]
+      })
+    })
+
+    const value = React.useMemo(() => ({
+      items,
+      itemCount: items.reduce((total: number, item: { quantity: number }) => total + item.quantity, 0),
+      subtotalCents: items.reduce((total: number, item: { lineTotalCents: number }) => total + item.lineTotalCents, 0),
+      addItem: async () => {},
+      removeItem: async () => {},
+      setQuantity: async () => {},
+      clearCart: async () => {},
+      storageMode: 'convex' as const,
+      canWrite: true,
+      isSyncing: false,
+    }), [items])
+
+    return <Context.Provider value={value}>{children}</Context.Provider>
+  }
+
+  return {
+    PrototypeCartProvider,
+    usePrototypeCart: () => {
+      const context = React.useContext(Context)
+      if (!context) throw new Error('usePrototypeCart must be used within a PrototypeCartProvider')
+      return context
+    },
+  }
+})
+
 describe('SharedNavbar', () => {
   beforeEach(() => {
     window.localStorage.clear()
