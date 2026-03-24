@@ -6,7 +6,24 @@ import SharedNavbar from '../components/Navigation/SharedNavbar'
 import { PrototypeCartProvider } from '../features/store/prototypeCart'
 
 vi.mock('../components/Navigation/SearchOverlay', () => ({
-  default: () => null,
+  default: ({
+    state,
+    onExited,
+    onRequestClose,
+  }: {
+    state: 'open' | 'closing'
+    onExited: () => void
+    onRequestClose: () => void
+  }) => (
+    <div role="dialog" aria-label="search overlay" data-state={state}>
+      <button type="button" onClick={onRequestClose}>
+        Request search close
+      </button>
+      <button type="button" onClick={onExited}>
+        Complete search exit
+      </button>
+    </div>
+  ),
 }))
 
 vi.mock('../features/store/prototypeCart', async () => {
@@ -136,5 +153,43 @@ describe('SharedNavbar', () => {
     fireEvent.click(screen.getByLabelText(/open cart/i))
 
     expect(screen.getByRole('dialog', { name: /prototype cart/i })).toBeInTheDocument()
+  })
+
+  it('keeps the search overlay mounted through closing, blocks navbar re-entry, and restores focus on exit', () => {
+    render(
+      <PrototypeCartProvider>
+        <MemoryRouter initialEntries={['/rankings']}>
+          <SharedNavbar />
+        </MemoryRouter>
+      </PrototypeCartProvider>,
+    )
+
+    const searchButton = screen.getByLabelText(/open search/i)
+    const storeTrigger = screen.getByRole('link', { name: /store/i }).parentElement!
+
+    expect(screen.queryByRole('dialog', { name: /search overlay/i })).not.toBeInTheDocument()
+
+    fireEvent.click(searchButton)
+
+    expect(screen.getByRole('dialog', { name: /search overlay/i })).toHaveAttribute('data-state', 'open')
+
+    fireEvent.mouseEnter(storeTrigger)
+
+    expect(screen.queryByTestId('store-mega-menu')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /request search close/i }))
+
+    expect(screen.getByRole('dialog', { name: /search overlay/i })).toHaveAttribute('data-state', 'closing')
+
+    fireEvent.mouseEnter(storeTrigger)
+    fireEvent.click(screen.getByLabelText(/open cart/i))
+
+    expect(screen.queryByTestId('store-mega-menu')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /prototype cart/i })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /complete search exit/i }))
+
+    expect(screen.queryByRole('dialog', { name: /search overlay/i })).not.toBeInTheDocument()
+    expect(searchButton).toHaveFocus()
   })
 })

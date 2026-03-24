@@ -1,74 +1,127 @@
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowRight, Search, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { setNextTransition } from '../Effects/PageTransition'
 
+export type SearchOverlayState = 'open' | 'closing'
+
 interface SearchOverlayProps {
-  onClose: () => void
+  state: SearchOverlayState
+  onExited: () => void
+  onRequestClose: () => void
 }
 
 const overlayTransition = {
-  duration: 0.24,
+  duration: 0.28,
   ease: [0.22, 1, 0.36, 1] as const,
 }
 
 const panelTransition = {
-  duration: 0.34,
+  duration: 0.28,
   ease: [0.16, 1, 0.3, 1] as const,
 }
 
-export default function SearchOverlay({ onClose }: SearchOverlayProps) {
+export default function SearchOverlay({ state, onExited, onRequestClose }: SearchOverlayProps) {
   const [query, setQuery] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const hasCompletedExitRef = useRef(false)
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+    if (state === 'open') {
+      hasCompletedExitRef.current = false
+      inputRef.current?.focus()
     }
+  }, [state])
+
+  useEffect(() => {
+    if (state !== 'open') return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onRequestClose()
+      }
+    }
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [onRequestClose, state])
 
-  return (
-    <motion.div
-      className="fixed inset-0 z-[100] flex flex-col font-sans pointer-events-none"
-      initial="closed"
-      animate="open"
-      exit="closed"
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const { body } = document
+    const previousOverflow = body.style.overflow
+    body.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[130] flex flex-col overflow-hidden font-sans pointer-events-none"
+      data-testid="prototype-search-overlay"
     >
       <motion.div
-        className="absolute inset-0 bg-[#3C2A21]/40 backdrop-blur-[2px]"
-        onClick={onClose}
-        style={{ pointerEvents: 'auto' }}
-        variants={{
-          open: { opacity: 1 },
-          closed: { opacity: 0 },
-        }}
+        data-testid="prototype-search-overlay-backdrop"
+        className="absolute inset-0 bg-[#3C2A21]/38 backdrop-blur-[1px] pointer-events-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: state === 'open' ? 1 : 0 }}
         transition={overlayTransition}
+        aria-hidden="true"
+        onClick={() => {
+          if (state === 'open') {
+            onRequestClose()
+          }
+        }}
       />
 
       <motion.div
-        className="relative w-full max-h-[80vh] border-b border-[#3C2A21] bg-[#F4EFE6] shadow-[rgba(0,0,0,0.5)_0px_10px_40px] pointer-events-auto flex flex-col"
-        variants={{
-          open: { y: 0, opacity: 1 },
-          closed: { y: -32, opacity: 0.96 },
-        }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search the Estate Archives"
+        data-state={state}
+        className={`relative flex max-h-[80vh] w-full transform-gpu flex-col overflow-hidden border-b border-[#3C2A21] bg-[#F4EFE6] shadow-[0_18px_48px_rgba(28,27,26,0.22)] will-change-transform ${
+          state === 'open' ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+        style={{ willChange: 'transform, opacity' }}
+        initial={{ y: -44, opacity: 0.92 }}
+        animate={state === 'open' ? { y: 0, opacity: 1 } : { y: -44, opacity: 0.92 }}
         transition={panelTransition}
+        onAnimationComplete={() => {
+          if (state === 'closing' && !hasCompletedExitRef.current) {
+            hasCompletedExitRef.current = true
+            onExited()
+          }
+        }}
       >
-        <div className="flex items-center justify-between px-8 py-6 border-b border-[#3C2A21]/15">
-          <div className="flex items-center gap-6 flex-1 max-w-4xl mx-auto w-full">
+        <div className="flex items-center justify-between border-b border-[#3C2A21]/15 px-8 py-6">
+          <div className="mx-auto flex w-full max-w-4xl flex-1 items-center gap-6">
             <Search size={28} className="text-[#8E7D72]" />
             <input
+              ref={inputRef}
               type="text"
-              autoFocus
-              className="flex-1 bg-transparent border-none text-3xl font-serif text-[#3C2A21] placeholder-[#8E7D72]/50 focus:ring-0 p-0"
+              className="flex-1 bg-transparent border-none p-0 font-serif text-3xl text-[#3C2A21] placeholder-[#8E7D72]/50 focus:ring-0"
               placeholder="Search the Estate Archives..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
             />
             <button
-              onClick={onClose}
-              className="text-[#3C2A21] hover:text-[#C36B42] transition-colors p-2"
+              type="button"
+              aria-label="Close search overlay"
+              onClick={() => {
+                if (state === 'open') {
+                  onRequestClose()
+                }
+              }}
+              className="p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
             >
               <X size={28} strokeWidth={1.5} />
             </button>
@@ -76,9 +129,9 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 py-12">
-          <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
             <div className="flex flex-col gap-6">
-              <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#8E7D72] border-b border-[#3C2A21]/10 pb-2">
+              <h4 className="border-b border-[#3C2A21]/10 pb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#8E7D72]">
                 Frequent Inquiries
               </h4>
               <nav className="flex flex-col gap-4">
@@ -86,71 +139,72 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
                   to="/archive"
                   onClick={() => {
                     setNextTransition('push')
-                    onClose()
+                    onRequestClose()
                   }}
-                  className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group"
+                  className="group flex items-center justify-between text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42]"
                 >
                   <span>Current Registration</span>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
                 <Link
                   to="/store"
                   onClick={() => {
                     setNextTransition('push')
-                    onClose()
+                    onRequestClose()
                   }}
-                  className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group"
+                  className="group flex items-center justify-between text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42]"
                 >
                   <span>Exclusive Artifacts</span>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
                 <Link
                   to="/rankings"
                   onClick={() => {
                     setNextTransition('push')
-                    onClose()
+                    onRequestClose()
                   }}
-                  className="text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42] flex items-center justify-between group"
+                  className="group flex items-center justify-between text-sm font-semibold text-[#3C2A21] hover:text-[#C36B42]"
                 >
                   <span>Collector Rankings</span>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
               </nav>
             </div>
 
             <div className="md:col-span-2 flex flex-col gap-6">
-              <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#8E7D72] border-b border-[#3C2A21]/10 pb-2">
+              <h4 className="border-b border-[#3C2A21]/10 pb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#8E7D72]">
                 Highlight
               </h4>
               <div
-                className="group relative w-full h-48 bg-cover bg-center overflow-hidden border border-[#3C2A21]/20 cursor-pointer"
+                className="group relative h-48 w-full cursor-pointer overflow-hidden border border-[#3C2A21]/20 bg-cover bg-center"
                 style={{
                   backgroundImage:
                     "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCn2d7DIcuRChwL7JHv90Xk489giFm7mkFmi7UMnknopv5kyun1AIgd1oIrQ5qFfwg6l7JAT8VeMHIuwtHYoPu-FIuvXL_NcAqq2-qlAcPpe91PDjyExlV7qPqfmCyLkepSngg4YOKeZV-omlXUUGIJGbZOrldRalluKggAi817GVkaSlCDYRKLtuZiZWFDhFmDZNyy-f7MeeQg_7k89qqolK831X8e56xZdFScT0D0NGzhYA--gYHf59Q8Hvm23q4QMR6biY6Njvh0')",
                 }}
                 onClick={() => {
                   setNextTransition('push')
-                  onClose()
+                  onRequestClose()
                   window.location.href = '/new-post'
                 }}
               >
-                <div className="absolute inset-0 bg-[#3C2A21]/40 group-hover:bg-[#3C2A21]/20 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-[#3C2A21]/40 transition-colors duration-500 group-hover:bg-[#3C2A21]/20" />
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                   <div>
-                    <span className="text-[#FAF7F2] text-[10px] uppercase tracking-widest font-bold mb-1 block">
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-[#FAF7F2]">
                       Latest Log
                     </span>
-                    <h3 className="font-serif text-2xl text-[#FAF7F2] font-medium">
+                    <h3 className="font-serif text-2xl font-medium text-[#FAF7F2]">
                       The Architecture of the 'North-East' Gate
                     </h3>
                   </div>
-                  <ArrowRight className="text-[#FAF7F2] transform group-hover:translate-x-2 transition-transform" />
+                  <ArrowRight className="text-[#FAF7F2] transform transition-transform group-hover:translate-x-2" />
                 </div>
               </div>
             </div>
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </div>,
+    document.body,
   )
 }

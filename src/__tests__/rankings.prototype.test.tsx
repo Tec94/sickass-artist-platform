@@ -1,32 +1,15 @@
 import '@testing-library/jest-dom/vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Rankings from '../pages/StitchPrototypes/Rankings'
 
+const { mockUseQuery } = vi.hoisted(() => ({
+  mockUseQuery: vi.fn(),
+}))
+
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn(() => ({
-    entries: [
-      {
-        rank: 1,
-        userId: 'alpha',
-        displayName: 'Pack Hero',
-        username: 'alpha',
-        avatar: null,
-        fanTier: 'gold',
-        role: 'fan',
-        totalPoints: 5600,
-        availablePoints: 2400,
-        currentStreak: 8,
-        maxStreak: 12,
-        lastInteractionDate: 1,
-        statusLabel: 'Hot streak',
-        isCurrentUser: false,
-      },
-    ],
-    currentUserEntry: null,
-    fetchedAt: Date.now(),
-  })),
+  useQuery: mockUseQuery,
 }))
 
 vi.mock('../components/Navigation/SharedNavbar', () => ({
@@ -55,7 +38,69 @@ vi.mock('../features/artistContent', () => ({
 }))
 
 describe('Rankings prototype', () => {
-  it('renders fan standings with artist pulse context', () => {
+  beforeEach(() => {
+    mockUseQuery.mockImplementation((_query, args) => {
+      if (args === 'skip') return undefined
+
+      if (args && typeof args === 'object' && 'period' in args) {
+        return [
+          {
+            rank: 1,
+            _id: 'weekly:track-1',
+            leaderboardId: 'weekly',
+            period: 'weekly',
+            spotifyTrackId: 'track-1',
+            songTitle: 'North Gate',
+            songArtist: 'ROA',
+            albumCover: 'https://example.com/cover.jpg',
+            totalScore: 9.7,
+            uniqueVoters: 54,
+            updatedAt: Date.now(),
+          },
+        ]
+      }
+
+      return {
+        entries: [
+          {
+            rank: 1,
+            userId: 'alpha',
+            displayName: 'Pack Hero',
+            username: 'alpha',
+            avatar: null,
+            fanTier: 'gold',
+            role: 'fan',
+            totalPoints: 5600,
+            availablePoints: 2400,
+            currentStreak: 8,
+            maxStreak: 12,
+            lastInteractionDate: 1,
+            statusLabel: 'Hot streak',
+            isCurrentUser: true,
+          },
+        ],
+        currentUserEntry: {
+          rank: 1,
+          userId: 'alpha',
+          displayName: 'Pack Hero',
+          username: 'alpha',
+          avatar: null,
+          fanTier: 'gold',
+          role: 'fan',
+          totalPoints: 5600,
+          availablePoints: 2400,
+          currentStreak: 8,
+          maxStreak: 12,
+          lastInteractionDate: 1,
+          statusLabel: 'Hot streak',
+          isCurrentUser: true,
+        },
+        fetchedAt: Date.now(),
+      }
+    })
+  })
+
+  it('renders member standings, song championship, and the submission portal access point', () => {
     render(
       <MemoryRouter>
         <Rankings />
@@ -63,11 +108,17 @@ describe('Rankings prototype', () => {
     )
 
     expect(screen.getByText('Pack Rankings')).toBeInTheDocument()
-    expect(screen.getByText('Pack Hero')).toBeInTheDocument()
-    expect(screen.getByText('Current release')).toBeInTheDocument()
+    expect(screen.getAllByText('Pack Hero').length).toBeGreaterThan(0)
+    expect(screen.getByText(/^current release$/i)).toBeInTheDocument()
     expect(screen.getAllByText('WO OH OH').length).toBeGreaterThan(0)
-    expect(screen.getByText('Gold')).toBeInTheDocument()
+    expect(screen.getByText(/gold tier/i)).toBeInTheDocument()
     expect(screen.queryByText('Hot streak')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /submit your rankings/i })).toHaveAttribute('href', '/ranking-submission')
+    expect(screen.getByRole('link', { name: /ranking submission portal/i })).toHaveAttribute('href', '/ranking-submission')
+
+    fireEvent.click(screen.getByRole('tab', { name: /song championship/i }))
+
+    expect(screen.getAllByText('North Gate').length).toBeGreaterThan(0)
+    expect(screen.getByText('54 voters')).toBeInTheDocument()
+    expect(screen.getByText('Score')).toBeInTheDocument()
   })
 })

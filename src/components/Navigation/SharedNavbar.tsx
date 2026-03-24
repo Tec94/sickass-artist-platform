@@ -1,9 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { setNextTransition } from '../Effects/PageTransition'
 import { Search, User, ShoppingBag } from 'lucide-react'
-import SearchOverlay from './SearchOverlay'
+import SearchOverlay, { type SearchOverlayState } from './SearchOverlay'
 import CheckoutOverlay from './CheckoutOverlay'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
 
@@ -11,20 +11,33 @@ const isActivePath = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
 
 export default function SharedNavbar() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchState, setSearchState] = useState<SearchOverlayState | 'closed'>('closed')
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false)
   const location = useLocation()
   const { itemCount } = usePrototypeCart()
+  const searchTriggerRef = useRef<HTMLButtonElement>(null)
+
+  const isSearchActive = searchState !== 'closed'
 
   const closeTransientUi = () => {
-    setIsSearchOpen(false)
+    setSearchState('closed')
     setIsCheckoutOpen(false)
     setIsStoreMenuOpen(false)
   }
 
+  const beginCloseSearch = () => {
+    setIsStoreMenuOpen(false)
+    setSearchState((currentState) => (currentState === 'open' ? 'closing' : currentState))
+  }
+
+  const handleSearchExited = () => {
+    setSearchState('closed')
+    searchTriggerRef.current?.focus()
+  }
+
   useEffect(() => {
-    setIsSearchOpen(false)
+    setSearchState('closed')
     setIsCheckoutOpen(false)
     setIsStoreMenuOpen(false)
   }, [location.pathname])
@@ -42,7 +55,7 @@ export default function SharedNavbar() {
 
   return (
     <>
-      <header className="h-[72px] border-b border-[#3C2A21] bg-[#F4EFE6] flex items-center justify-between px-8 relative z-40 shadow-[0_4px_10px_rgba(60,42,33,0.12)]">
+      <header className="relative z-40 flex h-[72px] min-h-[72px] shrink-0 items-center justify-between border-b border-[#3C2A21] bg-[#F4EFE6] px-8 shadow-[0_4px_10px_rgba(60,42,33,0.12)]">
         <div className="flex items-center gap-12 h-full">
           <Link
             to="/dashboard"
@@ -54,10 +67,20 @@ export default function SharedNavbar() {
           <nav className="flex items-center gap-8 h-full">
             <div
               className="relative h-full flex items-center"
-              onMouseEnter={() => setIsStoreMenuOpen(true)}
-              onMouseLeave={() => setIsStoreMenuOpen(false)}
-              onFocusCapture={() => setIsStoreMenuOpen(true)}
+              onMouseEnter={() => {
+                if (isSearchActive) return
+                setIsStoreMenuOpen(true)
+              }}
+              onMouseLeave={() => {
+                if (isSearchActive) return
+                setIsStoreMenuOpen(false)
+              }}
+              onFocusCapture={() => {
+                if (isSearchActive) return
+                setIsStoreMenuOpen(true)
+              }}
               onBlurCapture={(event) => {
+                if (isSearchActive) return
                 const nextFocusedElement = event.relatedTarget
                 if (!event.currentTarget.contains(nextFocusedElement as Node | null)) {
                   setIsStoreMenuOpen(false)
@@ -66,19 +89,23 @@ export default function SharedNavbar() {
             >
               <Link
                 to="/store"
-                onClick={() => {
+                onClick={(event) => {
+                  if (isSearchActive) {
+                    event.preventDefault()
+                    return
+                  }
                   setNextTransition('push')
                   closeTransientUi()
                 }}
                 className={getLinkClasses('/store')}
-                aria-expanded={isStoreMenuOpen}
+                aria-expanded={isStoreMenuOpen && !isSearchActive}
                 aria-haspopup="true"
               >
                 Store
               </Link>
 
               <AnimatePresence>
-                {isStoreMenuOpen ? (
+                {isStoreMenuOpen && !isSearchActive ? (
                   <motion.div
                     className="absolute left-0 top-full z-[110]"
                     initial={{ opacity: 0, y: -12 }}
@@ -182,7 +209,11 @@ export default function SharedNavbar() {
 
             <Link
               to="/events"
-              onClick={() => {
+              onClick={(event) => {
+                if (isSearchActive) {
+                  event.preventDefault()
+                  return
+                }
                 setNextTransition('push')
                 closeTransientUi()
               }}
@@ -192,7 +223,11 @@ export default function SharedNavbar() {
             </Link>
             <Link
               to="/community"
-              onClick={() => {
+              onClick={(event) => {
+                if (isSearchActive) {
+                  event.preventDefault()
+                  return
+                }
                 setNextTransition('push')
                 closeTransientUi()
               }}
@@ -202,7 +237,11 @@ export default function SharedNavbar() {
             </Link>
             <Link
               to="/rankings"
-              onClick={() => {
+              onClick={(event) => {
+                if (isSearchActive) {
+                  event.preventDefault()
+                  return
+                }
                 setNextTransition('push')
                 closeTransientUi()
               }}
@@ -212,7 +251,11 @@ export default function SharedNavbar() {
             </Link>
             <Link
               to="/journey"
-              onClick={() => {
+              onClick={(event) => {
+                if (isSearchActive) {
+                  event.preventDefault()
+                  return
+                }
                 setNextTransition('push')
                 closeTransientUi()
               }}
@@ -225,12 +268,14 @@ export default function SharedNavbar() {
 
         <div className="flex items-center gap-6">
           <button
+            ref={searchTriggerRef}
             type="button"
             aria-label="Open search"
             onClick={() => {
-              setIsSearchOpen(true)
+              if (isSearchActive) return
               setIsCheckoutOpen(false)
               setIsStoreMenuOpen(false)
+              setSearchState('open')
             }}
             className="text-[#3C2A21] hover:text-[#C36B42] transition-colors"
           >
@@ -238,7 +283,11 @@ export default function SharedNavbar() {
           </button>
           <Link
             to="/profile"
-            onClick={() => {
+            onClick={(event) => {
+              if (isSearchActive) {
+                event.preventDefault()
+                return
+              }
               setNextTransition('slide-up')
               closeTransientUi()
             }}
@@ -251,8 +300,8 @@ export default function SharedNavbar() {
             type="button"
             aria-label="Open cart"
             onClick={() => {
+              if (isSearchActive) return
               setIsCheckoutOpen(true)
-              setIsSearchOpen(false)
               setIsStoreMenuOpen(false)
             }}
             className="text-[#3C2A21] hover:text-[#C36B42] transition-colors relative"
@@ -267,9 +316,13 @@ export default function SharedNavbar() {
         </div>
       </header>
 
-      <AnimatePresence>
-        {isSearchOpen ? <SearchOverlay onClose={() => setIsSearchOpen(false)} /> : null}
-      </AnimatePresence>
+      {searchState !== 'closed' ? (
+        <SearchOverlay
+          state={searchState}
+          onRequestClose={beginCloseSearch}
+          onExited={handleSearchExited}
+        />
+      ) : null}
       <CheckoutOverlay isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
     </>
   )
