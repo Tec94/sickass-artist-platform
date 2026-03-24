@@ -30,14 +30,16 @@ export const getStoredArtistContent = async (ctx: QueryCtx | MutationCtx) =>
 export const serializeArtistContentRecord = (
   record:
     | {
-        payloadEnvelope: {
+        payloadEnvelope?: {
           version: 'artist-scrape/v1'
           data: unknown
           importedAt: number
         }
+        payload?: unknown
         artist?: string
         scrapeDate?: string
         source?: string
+        createdAt?: number
         updatedAt: number
       }
     | null,
@@ -46,10 +48,15 @@ export const serializeArtistContentRecord = (
     return null
   }
 
+  const payloadEnvelope = record.payloadEnvelope
+  const payload = payloadEnvelope?.data ?? record.payload ?? null
+  const version = payloadEnvelope?.version ?? 'artist-scrape/v1'
+  const importedAt = payloadEnvelope?.importedAt ?? record.createdAt ?? record.updatedAt
+
   return {
-    payload: record.payloadEnvelope.data,
-    version: record.payloadEnvelope.version,
-    importedAt: record.payloadEnvelope.importedAt,
+    payload,
+    version,
+    importedAt,
     artist: record.artist ?? null,
     scrapeDate: record.scrapeDate ?? null,
     source: record.source ?? null,

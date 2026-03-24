@@ -16,7 +16,8 @@
     "merch:images": "npm run merch:normalize-images && npm run merch:generate-manifest",
     "test": "npm run check:color-contract && vitest run",
     "seed:artist-content": "node scripts/seedArtistContent.mjs",
-    "seed:phone-content": "npm run seed:artist-content"
+    "seed:phone-content": "npm run seed:artist-content",
+    "seed:test-products": "npx convex run migrations:importPrototypeCatalog"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",

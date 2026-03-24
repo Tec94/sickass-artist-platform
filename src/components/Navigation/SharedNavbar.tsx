@@ -267,7 +267,9 @@ export default function SharedNavbar() {
         </div>
       </header>
 
-      {isSearchOpen ? <SearchOverlay isOpen={true} onClose={() => setIsSearchOpen(false)} /> : null}
+      <AnimatePresence>
+        {isSearchOpen ? <SearchOverlay onClose={() => setIsSearchOpen(false)} /> : null}
+      </AnimatePresence>
       <CheckoutOverlay isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
     </>
   )

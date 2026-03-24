@@ -21,7 +21,7 @@ import { AnimatedRoutes } from './components/Effects/PageTransition'
 // Pages
 import {
   Archive, Rankings, Profile, Community, Journey, Campaign,
-  Store, StoreProductDetail, Salon, Dashboard, AccessTiersMobile,
+  Store, StoreProductDetail, NewPost, Dashboard, AccessTiersMobile,
   AccessTiersAlbert, ExperienceMobile, ExperienceAlbert,
   EventsMobile, Events, DashboardMobile, RankingSubmission, Login
 } from './pages/StitchPrototypes'
@@ -47,7 +47,8 @@ function AppContent() {
               <Route path="/campaign" element={<Campaign />} />
               <Route path="/store" element={<Store />} />
               <Route path="/store/product/:productSlug" element={<StoreProductDetail />} />
-              <Route path="/salon" element={<Salon />} />
+              <Route path="/new-post" element={<NewPost />} />
+              <Route path="/salon" element={<Navigate to="/new-post" replace />} />
               <Route path="/access-tiers-mobile" element={<AccessTiersMobile />} />
               <Route path="/access-tiers-albert" element={<AccessTiersAlbert />} />
               <Route path="/experience-mobile" element={<ExperienceMobile />} />

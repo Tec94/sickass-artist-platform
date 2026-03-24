@@ -1,11 +1,22 @@
 import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Circle, Flame, RadioTower } from 'lucide-react'
+import { 
+  ArrowRight, 
+  Circle, 
+  Flame, 
+  RadioTower, 
+  ChevronDown, 
+  TrendingUp,
+  Landmark,
+  History,
+  PenTool
+} from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import PrototypeSafeImage from '../../components/Media/PrototypeSafeImage'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
 import { useArtistContent } from '../../features/artistContent'
+import './RankingsV2.css'
 
 const formatCompact = (value: number | null | undefined) => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return '--'
@@ -53,11 +64,11 @@ export default function Rankings() {
   const artistSnapshot = useMemo(
     () => [
       {
-        label: 'Monthly listeners',
+        label: 'Active Peers',
         value: formatCompact(content.spotify.monthlyListeners),
       },
       {
-        label: 'Followers',
+        label: 'Citations',
         value: content.instagram.followersLabel || '--',
       },
       {
@@ -72,314 +83,296 @@ export default function Rankings() {
     [content],
   )
 
+  // Sort podium for display: 2, 1, 3
+  const displayPodium = useMemo(() => {
+    if (podium.length === 0) return []
+    if (podium.length === 1) return [podium[0]]
+    if (podium.length === 2) return [podium[1], podium[0]]
+    return [podium[1], podium[0], podium[2]]
+  }, [podium])
+
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
+    <div className="rankings-v2-container flex h-full min-h-0 flex-col overflow-x-hidden">
+      <div className="halftone-overlay" />
       <SharedNavbar />
 
-      <main className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain">
-        <div className="grid min-h-0 xl:grid-cols-[minmax(0,1.12fr)_360px]">
-          <section className="bg-[#F4EFE6]">
-            <div className="border-b border-[#3C2A21] bg-[#FAF7F2] px-6 py-10 md:px-10 md:py-12">
-              <div className="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
-                <div className="max-w-3xl">
-                  <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.22em] text-[#8E7D72]">
-                    Fan standings
-                  </p>
-                  <h1 className="mb-4 font-serif text-5xl leading-none md:text-7xl">Pack Rankings</h1>
-                  <p className="text-base leading-7 text-[#3C2A21]/80 md:text-lg">
-                    Fan rank stays driven by community reward points. The ROA pulse rail tracks the
-                    current release cycle separately, so artist momentum never reads like leaderboard
-                    score.
-                  </p>
-                </div>
+      <main className="max-w-[1920px] mx-auto flex min-h-[calc(100dvh-72px)] w-full">
+        {/* Content Area */}
+        <div className="flex-1 p-8 md:p-12 border-r border-structural overflow-y-auto custom-scrollbar">
+          <header className="mb-12">
+            <div className="flex justify-between items-end mb-4">
+              <span className="font-mono text-[10px] uppercase tracking-tighter opacity-40">
+                Collection: Pack_Rankings_2024
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-tighter opacity-40">
+                Log No. 882-C
+              </span>
+            </div>
+            <h2 className="text-6xl md:text-8xl editorial-title mb-6 leading-tight text-[#1C1B1A]">
+              Pack Rankings
+            </h2>
+            <div className="h-px w-full bg-[#1C1B1A]/20 mb-6" />
+            <p className="max-w-2xl text-sm leading-relaxed opacity-70">
+              A comprehensive ledger of the archive's most influential contributors and their sonic artifacts. 
+              Updated every lunar cycle to reflect shifting hierarchies within the collective.
+            </p>
+          </header>
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[440px]">
-                  {artistSnapshot.map((item) => (
-                    <div key={item.label} className="border border-[#3C2A21]/12 bg-[#F4EFE6] px-4 py-4">
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                        {item.label}
-                      </p>
-                      <p className="font-serif text-[1.75rem] leading-none">{item.value}</p>
-                    </div>
-                  ))}
+          {/* Spotlight Podium */}
+          <section className="grid grid-cols-1 md:grid-cols-3 items-end gap-8 mb-16 relative bg-[#FAF7F2]/50 p-8 border border-black/5">
+            {displayPodium.map((entry, idx) => {
+              const isFirst = entry?.rank === 1
+              
+              return (
+                <div 
+                  key={entry?.userId || `empty-${idx}`}
+                  className={`rank-podium flex flex-col items-center ${isFirst ? 'scale-110 z-10' : 'justify-end pb-8'}`}
+                >
+                  <div className={`relative mb-6 ${isFirst ? 'terracotta-glow p-1.5 bg-white border-2' : 'p-1 bg-white border'} border-black/10`}>
+                    {isFirst && <div className="absolute inset-0 bg-[#98A8CA]/10 blur-2xl -z-10" />}
+                    
+                    {entry?.avatar ? (
+                      <img 
+                        src={entry.avatar} 
+                        alt={entry.displayName} 
+                        className={`object-cover grayscale ${isFirst ? 'w-48 h-48' : 'w-32 h-32'}`} 
+                      />
+                    ) : (
+                      <div className={`flex items-center justify-center bg-[#F4F0EB] font-serif text-2xl grayscale ${isFirst ? 'w-48 h-48' : 'w-32 h-32'}`}>
+                        {entry ? initialsFromName(entry.displayName) : '--'}
+                      </div>
+                    )}
+
+                    {isFirst && (
+                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C36B42] text-white px-3 py-1 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">
+                        Elite Standing
+                      </div>
+                    )}
+                    
+                    <span className={`absolute -bottom-3 ${idx === 0 && !isFirst ? '-left-3' : '-right-3'} w-10 h-10 ${isFirst ? 'bg-[#98A8CA]' : 'bg-black'} text-white flex items-center justify-center font-mono text-xs z-20`}>
+                      {entry ? String(entry.rank).padStart(2, '0') : '--'}
+                    </span>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className={`font-editorial italic ${isFirst ? 'text-3xl' : 'text-2xl'} mb-1`}>
+                      {entry?.displayName || 'Awaiting Entry'}
+                    </h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                      {entry ? tierLabel(entry.fanTier) : 'Unranked'}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )
+            })}
+          </section>
+
+          {/* Dual Leaderboards */}
+          <section className="border-t border-structural pt-12">
+            <div className="flex gap-12 mb-10">
+              <button className="text-[11px] font-bold uppercase tracking-widest border-b-2 border-[#C36B42] pb-2 text-[#1C1B1A]">
+                Member Standings
+              </button>
+              <button className="text-[11px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity pb-2">
+                Song Championship
+              </button>
             </div>
 
-            <div className="px-6 py-8 md:px-10 md:py-10">
-              <div className="mb-10 grid gap-5 lg:grid-cols-3">
-                {podium.map((entry) => (
-                  <article
-                    key={entry.userId}
-                    className={`border bg-[#FAF7F2] p-5 md:p-6 ${
-                      entry.rank === 1 ? 'border-[#3C2A21] shadow-sm' : 'border-[#3C2A21]/20'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                          Rank {String(entry.rank).padStart(2, '0')}
-                        </p>
-                        <h2 className="mt-3 font-serif text-[2.6rem] leading-[0.94]">
-                          {entry.displayName}
-                        </h2>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.18em] text-[#C36B42]">
-                          {tierLabel(entry.fanTier)}
-                        </span>
-                        {entry.role !== 'fan' ? (
-                          <span className="border border-[#3C2A21]/15 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-[#3C2A21]">
-                            Staff
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex items-center gap-4">
-                      {entry.avatar ? (
-                        <img
-                          src={entry.avatar}
-                          alt={entry.displayName}
-                          className="h-16 w-16 border border-[#3C2A21] object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center border border-[#3C2A21] bg-[#F4EFE6] font-serif text-xl">
-                          {initialsFromName(entry.displayName)}
-                        </div>
-                      )}
-
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                          Points
-                        </p>
-                        <p className="mt-2 font-serif text-[2.35rem] leading-none">
-                          {formatPoints(entry.totalPoints)}
-                        </p>
-                        <p className="mt-2 truncate text-[11px] uppercase tracking-[0.16em] text-[#8E7D72]">
-                          {entry.username ? `@${entry.username}` : 'Pack member'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#3C2A21]/10 pt-4">
-                      <div className="border border-[#3C2A21]/10 bg-[#F4EFE6] px-3 py-3">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                          Available
-                        </p>
-                        <p className="mt-2 font-semibold text-[#3C2A21]">
-                          {formatPoints(entry.availablePoints)}
-                        </p>
-                      </div>
-                      <div className="border border-[#3C2A21]/10 bg-[#F4EFE6] px-3 py-3">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                          Streak
-                        </p>
-                        <p className="mt-2 font-semibold text-[#3C2A21]">
-                          {entry.currentStreak} day{entry.currentStreak === 1 ? '' : 's'}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              <div className="border border-[#3C2A21] bg-[#FCFBF9]">
-                <div className="grid grid-cols-[72px_minmax(0,1fr)_140px_120px] gap-4 border-b border-[#3C2A21] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                  <div>Rank</div>
-                  <div>Member</div>
-                  <div className="text-right">Points</div>
-                  <div className="text-right">Status</div>
-                </div>
-
-                {remainder.length > 0 ? (
-                  remainder.map((entry) => (
-                    <div
-                      key={entry.userId}
-                      className={`grid grid-cols-[72px_minmax(0,1fr)_140px_120px] items-center gap-4 border-b border-[#3C2A21]/10 px-6 py-4 ${
-                        entry.isCurrentUser ? 'bg-[#C36B42]/8' : 'bg-transparent'
-                      }`}
-                    >
-                      <div className="text-sm font-semibold text-[#8E7D72]">
-                        {String(entry.rank).padStart(2, '0')}
-                      </div>
-                      <div className="flex min-w-0 items-center gap-3">
+            <div className="space-y-px bg-black/5 border border-black/5 overflow-hidden">
+              {remainder.map((entry) => (
+                <div 
+                  key={entry.userId}
+                  className="flex items-center justify-between p-6 bg-white/40 border-b border-black/5 last:border-b-0 hover:bg-white/80 transition-colors group"
+                >
+                  <div className="flex items-center gap-12">
+                    <span className="font-mono text-xs opacity-40 w-8">
+                      {String(entry.rank).padStart(3, '0')}
+                    </span>
+                    <div className="flex items-center gap-5">
+                      <div className="w-10 h-10 border border-black/10 overflow-hidden bg-white">
                         {entry.avatar ? (
-                          <img
-                            src={entry.avatar}
-                            alt={entry.displayName}
-                            className="h-10 w-10 rounded-full border border-[#3C2A21]/15 object-cover"
+                          <img 
+                            src={entry.avatar} 
+                            alt={entry.displayName} 
+                            className="w-full h-full object-cover grayscale" 
                           />
                         ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#3C2A21]/15 bg-[#F4EFE6] text-xs font-bold">
+                          <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-[#F4F0EB]">
                             {initialsFromName(entry.displayName)}
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{entry.displayName}</p>
-                          <p className="truncate text-[11px] uppercase tracking-[0.14em] text-[#8E7D72]">
-                            {entry.username ? `@${entry.username}` : tierLabel(entry.fanTier)}
-                          </p>
-                        </div>
                       </div>
-                      <div className="text-right font-mono">{formatPoints(entry.totalPoints)}</div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
-                          <Circle size={12} />
-                          {entry.role !== 'fan' ? 'Staff' : entry.statusLabel}
+                      <div>
+                        <h4 className="text-sm font-bold text-[#1C1B1A]">{entry.displayName}</h4>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-[#C36B42]/10 text-[#C36B42] font-bold uppercase tracking-wider">
+                          {tierLabel(entry.fanTier)}
                         </span>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="px-6 py-12 text-center text-sm text-[#3C2A21]/70">
-                    {leaderboard === undefined
-                      ? 'Loading fan standings.'
-                      : 'No fan ranking data is available yet.'}
                   </div>
-                )}
-              </div>
-
-              {currentUserEntry && !entries.some((entry) => entry.userId === currentUserEntry.userId) ? (
-                <div className="mt-6 flex items-center justify-between gap-4 border border-[#C36B42] bg-[#FAF7F2] px-6 py-5">
-                  <div>
-                    <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                      Your position
-                    </p>
-                    <p className="font-serif text-3xl leading-none">{currentUserEntry.displayName}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E7D72]">
-                      Rank {String(currentUserEntry.rank).padStart(2, '0')}
-                    </p>
-                    <p className="font-mono text-lg">{formatPoints(currentUserEntry.totalPoints)} pts</p>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                <p className="text-sm text-[#3C2A21]/70">
-                  Artist pulse stays sourced from the shared artist payload while fan rank remains
-                  tied to reward points.
-                </p>
-                <Link
-                  to="/ranking-submission"
-                  className="inline-flex items-center gap-3 border border-[#3C2A21] bg-[#3C2A21] px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
-                >
-                  Submit Your Rankings
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          <aside className="border-t border-[#3C2A21] bg-[#FAF7F2] p-8 md:p-9 xl:border-l xl:border-t-0">
-            <div className="border-b border-[#3C2A21]/12 pb-6">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8E7D72]">
-                Current release
-              </p>
-              <h2 className="font-serif text-4xl leading-none">
-                {content.spotify.latestRelease?.name || 'Artist sync pending'}
-              </h2>
-              <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
-                Context only. This rail tracks the live release cycle while the main board stays
-                focused on fan standings.
-              </p>
-            </div>
-
-            <div className="mt-6 border border-[#3C2A21] bg-[#F4EFE6] p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E7D72]">Freshness</p>
-                  <p className="mt-2 font-serif text-2xl">
-                    {content.freshness?.ageDays === null || content.freshness?.ageDays === undefined
-                      ? 'Unsynced'
-                      : `${content.freshness.ageDays}d old`}
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
-                  <RadioTower size={14} />
-                  {content.freshness?.isStale ? 'Needs refresh' : 'Current'}
-                </span>
-              </div>
-
-              <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
-                {recentPost?.caption
-                  ? trimCopy(recentPost.caption)
-                  : isArtistLoading
-                    ? 'Loading the artist signal feed.'
-                    : 'No recent Instagram copy has been synced yet.'}
-              </p>
-              <Link
-                to="/campaign"
-                className="mt-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:text-[#C36B42]"
-              >
-                <Flame size={14} />
-                Open campaign
-              </Link>
-            </div>
-
-            <div className="mt-6 border border-[#3C2A21]/12 bg-[#FCFBF9] p-5">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                Top tracks
-              </p>
-              <div className="space-y-4">
-                {content.spotify.popularTracks.slice(0, 4).map((track, index) => (
-                  <div
-                    key={track.id}
-                    className="flex items-baseline justify-between gap-4 border-b border-[#3C2A21]/8 pb-3 last:border-b-0 last:pb-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                        #{index + 1}
-                      </p>
-                      <p className="mt-1 truncate font-semibold">{track.name}</p>
+                  
+                  <div className="flex items-center gap-16">
+                    <div className="hidden md:flex items-end gap-1 h-8 opacity-40">
+                      <div className="w-1 bg-[#C36B42] h-1/2"></div>
+                      <div className="w-1 bg-[#C36B42] h-full"></div>
+                      <div className="w-1 bg-[#C36B42] h-3/4"></div>
+                      <div className="w-1 bg-[#C36B42] h-1/2"></div>
                     </div>
-                    <p className="whitespace-nowrap text-xs text-[#8E7D72]">
-                      {formatCompact(track.streams)}
-                    </p>
+                    <span className="font-mono text-sm font-bold text-[#1C1B1A]">
+                      {formatPoints(entry.totalPoints)} 
+                      <span className="text-[10px] opacity-40 ml-1 font-normal">PTS</span>
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              ))}
 
-            <div className="mt-6 border border-[#3C2A21]/12 bg-[#FCFBF9] p-5">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
-                Recent post
-              </p>
-
-              {recentPost ? (
-                <a
-                  href={recentPost.url || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition-colors hover:text-[#C36B42]"
-                >
-                  <div className="overflow-hidden border border-[#3C2A21]/12 bg-[#F4EFE6]">
-                    <PrototypeSafeImage
-                      src={recentPost.thumbnailUrl}
-                      alt={recentPost.description || `${content.artistName} post`}
-                      kind="social"
-                      className="h-44 w-full object-cover"
-                      description="The synced caption stays visible even if the original image host expires."
-                    />
-                  </div>
-                  <p className="mt-4 text-sm leading-6 text-[#3C2A21]/80">
-                    {trimCopy(
-                      recentPost.caption ||
-                        recentPost.description ||
-                        'No social caption is available for the current post.',
-                    )}
-                  </p>
-                </a>
-              ) : (
-                <div className="border border-dashed border-[#3C2A21]/12 bg-[#F4EFE6] px-4 py-6 text-sm leading-6 text-[#3C2A21]/70">
-                  No recent social proof has been synced into the current payload yet.
+              {remainder.length === 0 && (
+                <div className="p-12 text-center text-sm opacity-40 border border-dashed border-black/10 italic bg-white/20">
+                  No further entries logged for this cycle.
                 </div>
               )}
             </div>
-          </aside>
+
+            <div className="mt-12 flex justify-center">
+              <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-all group">
+                <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
+                Load Remaining Archives
+              </button>
+            </div>
+          </section>
         </div>
+
+        {/* Sidebar Pulse */}
+        <aside className="w-96 hidden xl:flex flex-col bg-[#FAF7F2]/80 border-l border-structural pt-12">
+          <div className="px-8 mb-12">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-px h-6 bg-[#C36B42]"></div>
+              <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest text-[#1C1B1A]">
+                Sidebar_Pulse
+              </h3>
+            </div>
+            <span className="font-mono text-[9px] uppercase tracking-tighter opacity-40">
+              Live_Data_Stream: Active
+            </span>
+          </div>
+
+          <div className="px-8 pb-12 flex-1 custom-scrollbar overflow-y-auto">
+            {/* New Archive Entry (Latest Release) */}
+            <div className="bg-[#1C1B1A] text-[#F4F0EB] p-8 mb-12 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Landmark size={80} strokeWidth={1} />
+              </div>
+              <span className="font-mono text-[9px] uppercase tracking-widest mb-6 block opacity-70">
+                New Archive Entry
+              </span>
+              
+              <div className="aspect-square bg-white/5 mb-6 relative overflow-hidden group">
+                {content.spotify.latestRelease?.imageUrl ? (
+                  <img 
+                    src={content.spotify.latestRelease.imageUrl} 
+                    alt="Latest Drop" 
+                    className="w-full h-full object-cover opacity-60 grayscale group-hover:scale-105 transition-transform duration-700" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#2A2A28]">
+                    <Flame size={48} className="opacity-20" />
+                  </div>
+                )}
+                <div className="absolute inset-0 border border-white/10 m-3"></div>
+              </div>
+              
+              <h4 className="text-3xl font-editorial italic mb-2 leading-tight">
+                {content.spotify.latestRelease?.name || 'Echoes of Vellum'}
+              </h4>
+              <p className="font-mono text-[9px] uppercase tracking-widest opacity-60 mb-8">
+                Collection: {content.spotify.latestRelease?.type || 'Sonic_Artifact'}
+              </p>
+              
+              <Link 
+                to="/campaign" 
+                className="w-full bg-[#F4F0EB] text-[#1C1B1A] py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-center block transition-colors hover:bg-white"
+              >
+                Access Manuscript
+              </Link>
+            </div>
+
+            {/* Audience Metrics */}
+            <div className="mb-12">
+              <h5 className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-6 pb-2 border-b border-black/5">
+                Audience Metrics
+              </h5>
+              <div className="grid grid-cols-2 gap-px bg-black/5 border border-black/5 overflow-hidden">
+                {artistSnapshot.map((item) => (
+                  <div key={item.label} className="bg-[#FAF7F2] p-4">
+                    <span className="block text-[10px] uppercase tracking-tighter opacity-40 mb-1">
+                      {item.label}
+                    </span>
+                    <span className="block text-xl font-bold tracking-tighter text-[#1C1B1A]">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+                <div className="bg-[#FAF7F2] p-4">
+                  <span className="block text-[10px] uppercase tracking-tighter opacity-40 mb-1">
+                    Reliability
+                  </span>
+                  <span className="block text-xl font-bold tracking-tighter text-[#C36B42]">
+                    99.1
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quote Box (Instagram) */}
+            {recentPost && (
+              <div className="relative pt-8 pb-4 border-t border-black/5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 grayscale rounded-sm overflow-hidden border border-black/10">
+                    <PrototypeSafeImage 
+                      src={recentPost.thumbnailUrl} 
+                      kind="social" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <span className="font-mono text-[10px] font-bold tracking-tighter opacity-60">
+                    @{content.instagram.username || 'archivist'}
+                  </span>
+                </div>
+                <blockquote className="text-xs italic leading-relaxed opacity-70 mb-6 font-serif">
+                  "{trimCopy(recentPost.caption || recentPost.description || 'The archive breathes through our interaction.', 180)}"
+                </blockquote>
+                <div className="flex justify-between items-center opacity-40 font-mono text-[9px]">
+                  <span>RECORDED: {new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase()}</span>
+                  <div className="flex gap-2">
+                    <Link to="/ranking-submission" className="hover:text-[#C36B42] transition-colors">
+                      <History size={12} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <footer className="p-8 border-t border-structural bg-[#FAF7F2]">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="w-10 h-10 border border-black flex items-center justify-center font-editorial text-xl italic font-bold">A</div>
+                <div>
+                    <h5 className="text-[11px] font-bold mb-0.5 text-[#1C1B1A]">The Archive Index</h5>
+                    <p className="font-mono text-[8px] uppercase opacity-40 tracking-widest">Protocol Version 01.2024</p>
+                </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center font-mono text-[9px] uppercase tracking-widest opacity-40">
+                <span>Access Status</span>
+                <span className="text-[#C36B42] font-bold">Authenticated</span>
+              </div>
+              <div className="bg-[#1C1B1A] text-[#F4F0EB] px-3 py-2 text-[10px] font-mono text-center">
+                ID: 882-C-MANIFEST-01
+              </div>
+            </div>
+          </footer>
+        </aside>
       </main>
     </div>
   )

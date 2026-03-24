@@ -39,15 +39,17 @@ const artistScrapePayloadEnvelopeValidator = v.object({
 
 export default defineSchema({
   users: defineTable({
-    authSubject: v.string(),
-    authProvider: v.string(),
+    // Temporary legacy compatibility for pre-authSubject identity storage.
+    clerkId: v.optional(v.string()),
+    authSubject: v.optional(v.string()),
+    authProvider: v.optional(v.string()),
     email: v.string(),             // Email from auth provider
     username: v.string(),          // Username (unique, editable)
     displayName: v.string(),       // Display name (editable)
     bio: v.string(),               // Bio/description (editable, max 500 chars)
     avatar: v.string(),            // Avatar URL (editable)
     avatarStorageId: v.optional(v.id('_storage')), // Uploaded avatar file (Convex Storage)
-    searchText: v.string(),
+    searchText: v.optional(v.string()),
 
     // Role & permissions
     role: v.union(
@@ -188,6 +190,9 @@ export default defineSchema({
     reactionEmojis: v.array(v.string()),
     reactionCount: v.number(),
 
+    // Temporary legacy compatibility for inline vote storage.
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     netVoteCount: v.optional(v.number()),
@@ -237,7 +242,10 @@ export default defineSchema({
     ),
     categoryId: v.id('categories'),
     tags: v.array(v.string()),
-    searchText: v.string(),
+    searchText: v.optional(v.string()),
+    // Temporary legacy compatibility for inline vote storage.
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     netVoteCount: v.optional(v.number()),
@@ -282,6 +290,9 @@ export default defineSchema({
     ),
     content: v.string(),
     editedAt: v.optional(v.number()),
+    // Temporary legacy compatibility for inline vote storage.
+    upVoterIds: v.optional(v.array(v.id('users'))),
+    downVoterIds: v.optional(v.array(v.id('users'))),
     upVoteCount: v.optional(v.number()),
     downVoteCount: v.optional(v.number()),
     isDeleted: v.boolean(),
@@ -898,7 +909,9 @@ export default defineSchema({
   // Phone overlay scraped content payload (single doc keyed by name)
   phoneArtistContent: defineTable({
     key: v.string(), // "default"
-    payloadEnvelope: artistScrapePayloadEnvelopeValidator,
+    // Temporary legacy compatibility for pre-envelope payload storage.
+    payloadEnvelope: v.optional(artistScrapePayloadEnvelopeValidator),
+    payload: v.optional(v.any()),
     source: v.optional(v.string()), // e.g. "public/data/artist-scraped-data.json"
     artist: v.optional(v.string()),
     scrapeDate: v.optional(v.string()),
@@ -1190,6 +1203,12 @@ export default defineSchema({
     totalPoints: v.number(),        // Total lifetime points earned
     availablePoints: v.number(),    // Points available to spend
     redeemedPoints: v.number(),     // Total points spent on rewards
+    // Temporary legacy compatibility for pre-userStreaks streak storage.
+    currentStreak: v.optional(v.number()),
+    maxStreak: v.optional(v.number()),
+    lastInteractionDate: v.optional(v.number()),
+    lastLoginDate: v.optional(v.string()),
+    unseenMilestones: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

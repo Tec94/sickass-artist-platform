@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&family=Manrope:wght@400;500;600;700&family=Space+Mono&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap');
+
+:root {
+    --color-primary: #1C1B1A;
+    --color-background: #F4F0EB;
+    --color-surface: #FCFBF9;
+    --color-text: #1C1B1A;
+    --color-muted: #8E8982;
+    --color-accent: #4A503D;
+    --color-rank-1: #98A8CA;
+    --color-rank-2: #D4CCC8;
+    --color-rank-3: #9AAAA6;
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-sans: 'Manrope', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --font-editorial: 'Newsreader', serif;
+}
+
+.rankings-v2-container {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    position: relative;
+}
+
+.editorial-title {
+    font-family: var(--font-editorial);
+    font-style: italic;
+}
+
+.border-structural {
+    border-color: rgba(28, 27, 26, 0.15);
+}
+
+.halftone-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+}
+
+.glass-panel {
+    background: rgba(252, 251, 249, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(28, 27, 26, 0.1);
+}
+
+.rank-podium {
+    transition: transform 0.3s ease;
+}
+
+.rank-podium:hover {
+    transform: translateY(-4px);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-muted);
+    opacity: 0.3;
+}
+
+/* Material Symbols alignment fix */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.terracotta-glow {
+    position: relative;
+}
+
+.terracotta-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(147, 70, 32, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}

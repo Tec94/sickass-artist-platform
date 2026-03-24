@@ -1,14 +1,37 @@
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { setNextTransition } from '../../components/Effects/PageTransition';
 
 export default function Login() {
   return (
-    <div className="font-body selection:bg-[#C36B42]/20 min-h-screen flex items-center justify-center p-6 bg-[#F4EFE6] text-[#3C2A21]">
+    <div className="archive-login-shell font-body selection:bg-[#C36B42]/20 min-h-screen flex items-center justify-center p-6 bg-[#F4EFE6] text-[#3C2A21]">
       <style>{`
+        .archive-login-shell { color-scheme: light; }
         .vellum-surface { background-color: #FAF7F2; }
         .ink-border { border: 1px solid #3C2A21; }
         .ink-rule { border-bottom: 1px solid #3C2A21; }
         .ink-rule-soft { border-bottom: 1px solid rgba(60, 42, 33, 0.15); }
+        .archive-login-input {
+          background: transparent;
+          color: #3C2A21;
+          caret-color: #3C2A21;
+        }
+        .archive-login-input::placeholder {
+          color: rgba(142, 125, 114, 0.65);
+        }
+        .archive-login-input:-webkit-autofill,
+        .archive-login-input:-webkit-autofill:hover,
+        .archive-login-input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #3C2A21;
+          -webkit-box-shadow: 0 0 0 1000px #FAF7F2 inset;
+          box-shadow: 0 0 0 1000px #FAF7F2 inset;
+          border-bottom-color: #3C2A21;
+          transition: background-color 9999s ease-out 0s;
+        }
+        .archive-login-input:-moz-autofill {
+          box-shadow: 0 0 0 1000px #FAF7F2 inset;
+          color: #3C2A21;
+        }
       `}</style>
       
       <main className="w-full max-w-lg flex flex-col gap-12 z-10">
@@ -44,7 +67,7 @@ export default function Login() {
                   <label className="font-label text-[10px] font-bold tracking-widest text-[#3C2A21] uppercase" htmlFor="email">
                     Registered Email
                   </label>
-                  <input className="bg-transparent border-0 border-b border-[#3C2A21]/20 focus:border-[#3C2A21] focus:ring-0 px-0 py-2 text-[#3C2A21] placeholder:text-[#8E7D72]/40 font-body transition-colors" id="email" name="email" placeholder="name@institution.org" required type="email" />
+                  <input autoComplete="email" className="archive-login-input border-0 border-b border-[#3C2A21]/20 focus:border-[#3C2A21] focus:ring-0 px-0 py-2 font-body transition-colors" id="email" name="email" placeholder="name@institution.org" required type="email" />
                 </div>
                 
                 {/* Password Field */}
@@ -52,14 +75,14 @@ export default function Login() {
                   <label className="font-label text-[10px] font-bold tracking-widest text-[#3C2A21] uppercase" htmlFor="password">
                     Security Key
                   </label>
-                  <input className="bg-transparent border-0 border-b border-[#3C2A21]/20 focus:border-[#3C2A21] focus:ring-0 px-0 py-2 text-[#3C2A21] placeholder:text-[#8E7D72]/40 font-body transition-colors" id="password" name="password" placeholder="••••••••••••" required type="password" />
+                  <input autoComplete="current-password" className="archive-login-input border-0 border-b border-[#3C2A21]/20 focus:border-[#3C2A21] focus:ring-0 px-0 py-2 font-body transition-colors" id="password" name="password" placeholder="••••••••••••" required type="password" />
                 </div>
               </div>
               
               <div className="flex flex-col gap-6">
                 <button className="bg-[#3C2A21] text-[#F4EFE6] px-8 py-4 font-label text-[11px] font-extrabold tracking-[0.3em] uppercase hover:bg-[#C36B42] transition-colors duration-300 flex items-center justify-center gap-3 group" type="submit">
                   AUTHORIZE ENTRY
-                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_right_alt</span>
+                  <ArrowRight aria-hidden="true" className="h-[18px] w-[18px] shrink-0 transition-transform group-hover:translate-x-1" strokeWidth={2.2} />
                 </button>
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-[#3C2A21]/10 pt-6">

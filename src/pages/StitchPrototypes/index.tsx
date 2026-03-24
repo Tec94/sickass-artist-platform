@@ -7,7 +7,7 @@ export { default as Journey } from './Journey';
 export { default as Campaign } from './Campaign';
 export { default as Store } from './Store';
 export { default as StoreProductDetail } from './StoreProductDetail';
-export { default as Salon } from './Salon';
+export { default as NewPost } from './NewPost';
 export { default as AccessTiersMobile } from './AccessTiersMobile';
 export { default as AccessTiersAlbert } from './AccessTiersAlbert';
 export { default as ExperienceMobile } from './ExperienceMobile';

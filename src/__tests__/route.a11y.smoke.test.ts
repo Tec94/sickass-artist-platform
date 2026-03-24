@@ -17,6 +17,7 @@ describe('route a11y smoke', () => {
       '/campaign',
       '/store',
       '/store/product/:productSlug',
+      '/new-post',
       '/salon',
       '/access-tiers-mobile',
       '/access-tiers-albert',
@@ -36,6 +37,7 @@ describe('route a11y smoke', () => {
     expect(appTsx).not.toContain('path="/store/browse"')
     expect(appTsx).not.toContain('path="/sso-callback"')
     expect(appTsx).toContain('<Navigate to="/rankings" replace />')
+    expect(appTsx).toContain('<Navigate to="/new-post" replace />')
   })
 
   it('keeps scenic helper contracts aligned with the live route model', () => {

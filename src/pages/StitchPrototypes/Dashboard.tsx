@@ -41,7 +41,7 @@ export default function Dashboard() {
                 <h2 className="font-serif text-[72px] text-[#FAF7F2] leading-none font-medium mb-4">LATEST DROP</h2>
                 <p className="text-[#FAF7F2] font-serif text-2xl italic mb-3 opacity-90">"Every night has a room. This one is yours."</p>
                 <p className="text-[#FAF7F2]/80 font-sans text-base max-w-lg">The new collection just dropped. Explore the merch, listen to the latest tracks, and check upcoming tour dates.</p>
-                <Link to="/salon" onClick={() => setNextTransition('push')} className="inline-block mt-8 border border-[#FAF7F2] text-[#FAF7F2] px-8 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[#FAF7F2] hover:text-[#3C2A21] transition-all rounded-sm">
+                <Link to="/new-post" onClick={() => setNextTransition('push')} className="inline-block mt-8 border border-[#FAF7F2] text-[#FAF7F2] px-8 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[#FAF7F2] hover:text-[#3C2A21] transition-all rounded-sm">
                   Explore Now
                 </Link>
               </div>
@@ -51,7 +51,7 @@ export default function Dashboard() {
             <section className="flex flex-col gap-6">
               <div className="flex items-center justify-between border-b border-[#3C2A21]/20 pb-2">
                 <h3 className="text-xs-wide text-[#3C2A21]">Pack Activity</h3>
-                <Link to="/salon" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Forum</Link>
+                <Link to="/new-post" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Forum</Link>
               </div>
               <div className="flex flex-col gap-4">
                 <div className="p-4 bg-[#FAF7F2] border border-[#3C2A21]/10 rounded-sm hover:border-[#C36B42]/50 transition-all cursor-pointer group">
@@ -106,7 +106,7 @@ export default function Dashboard() {
             <span className="text-xs-wide text-[#8E7D72]">2026</span>
           </div>
           <div className="flex-1 overflow-y-auto px-0 py-0 flex flex-col bg-[#F4EFE6]">
-            <Link to="/salon" onClick={() => setNextTransition('push')} className="dispatch-link group px-8 py-6 border-b border-[#3C2A21]/10 flex flex-col gap-1">
+            <Link to="/new-post" onClick={() => setNextTransition('push')} className="dispatch-link group px-8 py-6 border-b border-[#3C2A21]/10 flex flex-col gap-1">
               <span className="text-xs-wide text-[#8E7D72] group-hover:text-[#C36B42] transition-colors">20 MAR 2026</span>
               <h4 className="font-serif text-xl text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">New merch just dropped — Private Suite Vol. 3 collection</h4>
             </Link>
