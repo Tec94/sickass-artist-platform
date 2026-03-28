@@ -17,3 +17,4 @@ export { default as Events } from './Events';
 export { default as DashboardMobile } from './DashboardMobile';
 export { default as RankingSubmission } from './RankingSubmission';
 export { default as Login } from './Login';
+export { default as NotFound } from './NotFound';

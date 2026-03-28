@@ -188,7 +188,7 @@ export default function Store() {
                      </p>
                      {!canWrite ? (
                        <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#C36B42]">
-                         Sign in to add items to the Convex cart.
+                         Sign in to add items to the cart.
                        </p>
                      ) : null}
                    </div>

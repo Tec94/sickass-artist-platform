@@ -1,10 +1,35 @@
 import { Link } from 'react-router-dom';
 import { setNextTransition } from '../../components/Effects/PageTransition';
-import { Search, User, ShoppingBag, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import SharedNavbar from '../../components/Navigation/SharedNavbar';
+import {
+  formatPrototypePrice,
+  getPrototypeStoreProducts,
+} from '../../features/store/prototypeStoreCatalog';
+
+const featuredDrops = getPrototypeStoreProducts('all', 'latest')
+  .filter((product) => product.availability === 'available')
+  .slice(0, 2)
+  .map((product) => ({
+    ...product,
+    displayImage:
+      product.gallery.find((image) => image.startsWith('/')) ||
+      (product.primaryImage.startsWith('/') ? product.primaryImage : '/images/placeholder.jpg'),
+  }));
+
+const handleFeaturedDropImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
+  const target = event.currentTarget;
+  if (target.dataset.fallbackApplied === 'true') return;
+  target.dataset.fallbackApplied = 'true';
+  target.src = '/images/placeholder.jpg';
+};
+
+const formatFeaturedDropPrice = (priceCents: number) =>
+  formatPrototypePrice(priceCents).replace('.00', '');
+
 export default function Dashboard() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4EFE6] text-[#3C2A21] font-sans antialiased overflow-x-hidden">
+    <div className="h-screen flex flex-col bg-[#F4EFE6] text-[#3C2A21] font-sans antialiased overflow-hidden">
       <style>{`
         .border-ink { border-color: #3C2A21; }
         .border-ink-soft { border-color: rgba(60, 42, 33, 0.15); }
@@ -31,8 +56,9 @@ export default function Dashboard() {
       `}</style>
       <SharedNavbar />
 
-      <main className="flex-1 flex flex-row h-[calc(100vh-72px)] overflow-hidden">
-        <div className="w-[65%] h-full border-r-1 border-ink flex flex-col overflow-hidden">
+      <main className="relative flex-1 min-h-0 flex flex-row overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[65%] z-20 w-px bg-[#3C2A21]" />
+        <div className="w-[65%] h-full flex flex-col overflow-hidden">
           <div className="p-8 pb-4 flex-1 flex flex-col min-h-0">
             <div className="relative w-full h-full bg-cover bg-center rounded-sm overflow-hidden flex items-end p-10 py-8 shadow-md" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}>
               <div className="absolute inset-0 bg-gradient-to-t from-[#3C2A21]/80 via-[#3C2A21]/30 to-transparent"></div>
@@ -67,18 +93,33 @@ export default function Dashboard() {
                 <Link to="/store" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Full Store</Link>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="group cursor-pointer">
-                  <div className="aspect-square bg-[#FAF7F2] border border-[#3C2A21]/10 mb-3 overflow-hidden">
-                    <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmYh2a1VqXp-O3e8fW5z8F9_m6Yp_3-z5mN_W_mX6_z8-v_m7_W8-m_X7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7_z8_v-m_7_W8-mX7" />
-                  </div>
-                  <h4 className="font-serif text-base text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">Private Suite Hoodie</h4>
-                  <span className="text-xs text-[#8E7D72] font-medium">$120 / LIMITED</span>
-                </div>
+                {featuredDrops.map((product) => (
+                  <Link
+                    key={product.slug}
+                    to={`/store/product/${product.slug}`}
+                    onClick={() => setNextTransition('push')}
+                    className="group cursor-pointer"
+                  >
+                    <div className="aspect-square bg-[#FAF7F2] border border-[#3C2A21]/10 mb-3 overflow-hidden shadow-[0_8px_24px_rgba(60,42,33,0.08)]">
+                      <img
+                        alt={product.alt}
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100"
+                        loading="lazy"
+                        onError={handleFeaturedDropImageError}
+                        src={product.displayImage}
+                      />
+                    </div>
+                    <h4 className="font-serif text-base text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">{product.name}</h4>
+                    <span className="text-xs text-[#8E7D72] font-medium">
+                      {formatFeaturedDropPrice(product.priceCents)} / {(product.badge ?? 'Featured').toUpperCase()}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </section>
           </div>
         </div>
-        <div className="w-[35%] h-full bg-[#F4EFE6] flex flex-col border-l border-[#3C2A21]/10">
+        <div className="w-[35%] h-full bg-[#F4EFE6] flex flex-col">
           <div className="px-8 py-8 bg-[#FAF7F2] border-b border-ink">
             <h3 className="text-xs-wide text-[#8E7D72] mb-6">Your Status</h3>
             <div className="flex items-start justify-between">

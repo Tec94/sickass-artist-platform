@@ -69,7 +69,7 @@ function PoolTrackCard({ track, onAdd }: PoolTrackCardProps) {
             {formatStreams(track.streams)} streams
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2">
           <button
             type="button"
             onClick={() => onAdd(track)}
@@ -81,7 +81,7 @@ function PoolTrackCard({ track, onAdd }: PoolTrackCardProps) {
           </button>
           <button
             type="button"
-            className="cursor-grab border border-[#3C2A21]/12 p-2 text-[#8E7D72] transition-colors hover:border-[#3C2A21] hover:text-[#3C2A21] active:cursor-grabbing"
+            className="inline-flex h-[25px] w-[25px] flex-none items-center justify-center border border-[#3C2A21]/12 p-0 text-[#8E7D72] transition-colors hover:border-[#3C2A21] hover:text-[#3C2A21] active:cursor-grabbing"
             aria-label={`Drag ${track.name}`}
             {...attributes}
             {...listeners}
@@ -302,12 +302,8 @@ export default function RankingSubmission() {
                 <ArrowLeft size={16} /> Back to Rankings
               </Link>
               <h1 className="mb-4 font-display text-4xl uppercase leading-none tracking-tighter md:text-6xl">
-                Submit Your Archive
+                Submit Your Rankings
               </h1>
-              <p className="max-w-2xl font-headline text-lg italic text-muted">
-                Build your top five from the synced ROA track pool, then drag inside the ranked list
-                to set the final order.
-              </p>
             </div>
 
             <DndContext
@@ -354,9 +350,8 @@ export default function RankingSubmission() {
               <section className="mt-8">
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest">Source track pool</p>
-                    <p className="mt-2 text-sm text-muted">
-                      Drag songs into the ranked slots or tap add for a quick stage.
+                    <p className="mt-2 text-xs font-bold uppercase tracking-widest">
+                      Drag songs into slots or tap add
                     </p>
                   </div>
                   <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
@@ -379,17 +374,13 @@ export default function RankingSubmission() {
               </section>
             </DndContext>
 
-            <div className="mt-10 flex flex-col gap-4 border-t border-ink/20 pt-8 md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted">
-                Prototype mode only. Ranking order is interactive on this page, but submit is not yet
-                persisted to Convex.
-              </p>
+            <div className="mt-10 flex flex-col gap-4 border-t border-ink/20 pt-8">
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="bg-ink px-12 py-4 text-xs font-bold uppercase tracking-widest text-vellum transition-colors hover:bg-primary"
+                className="w-full bg-ink px-12 py-4 text-center text-xs font-bold uppercase tracking-widest text-vellum transition-colors hover:bg-primary"
               >
-                Seal & Submit Archive
+                Submit
               </button>
             </div>
           </div>
@@ -462,15 +453,13 @@ export default function RankingSubmission() {
               </section>
 
               {latestRelease?.embedUrl ? (
-                <section className="border border-ink/15 bg-vellum p-3">
-                  <iframe
-                    title={`${latestRelease.name} Spotify embed`}
-                    src={latestRelease.embedUrl}
-                    className="h-[352px] w-full border-0"
-                    loading="lazy"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  />
-                </section>
+                <iframe
+                  title={`${latestRelease.name} Spotify embed`}
+                  src={latestRelease.embedUrl}
+                  className="block h-[352px] w-full rounded-none border-0 bg-transparent"
+                  loading="lazy"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                />
               ) : (
                 <section className="border border-dashed border-ink/15 bg-vellum px-4 py-6 text-sm leading-6 text-muted">
                   No release embed is available for the current payload.

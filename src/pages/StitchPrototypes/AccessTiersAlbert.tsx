@@ -35,8 +35,7 @@ export default function AccessTiersAlbert() {
 
 <div className="flex-grow">
 <div className="mb-8 border-l-4 border-[#C36B42] pl-6">
-<h2 className="font-headline italic text-4xl text-[#1C1B1A]">Select Access Tiers</h2>
-<p className="text-sm uppercase tracking-widest opacity-60 mt-2 font-label">Vault Registry Protocol v.2.4</p>
+<h2 className="font-headline italic text-4xl text-[#1C1B1A]">Select Tickets</h2>
 </div>
 <div className="border-t border-[#1C1B1A]">
 
@@ -49,7 +48,6 @@ export default function AccessTiersAlbert() {
 <div className="grid grid-cols-12 py-8 px-4 md:px-6 items-center border-b border-[#1C1B1A]/10 hover:bg-[#1C1B1A]/5 transition-colors group">
 <div className="col-span-6">
 <h3 className="font-['Bebas_Neue'] text-2xl tracking-tight text-[#1C1B1A]">General Access</h3>
-<p className="font-headline italic text-lg opacity-70">Standard gallery entry &amp; directional archive materials.</p>
 </div>
 <div className="col-span-2 text-right font-mono text-xl">
                         £ 45.00
@@ -67,7 +65,6 @@ export default function AccessTiersAlbert() {
 <h3 className="font-['Bebas_Neue'] text-2xl tracking-tight text-[#1C1B1A]">VIP Suite Access</h3>
 <span className="bg-[#9A8838] text-white text-[10px] px-2 py-0.5 font-label tracking-widest uppercase">Preferred</span>
 </div>
-<p className="font-headline italic text-lg opacity-70">Elevated mezzanine positioning &amp; private suite lounge.</p>
 </div>
 <div className="col-span-2 text-right font-mono text-xl">
                         £ 125.00
@@ -82,7 +79,6 @@ export default function AccessTiersAlbert() {
 <div className="grid grid-cols-12 py-8 px-4 md:px-6 items-center border-b border-[#1C1B1A] hover:bg-[#1C1B1A]/5 transition-colors group">
 <div className="col-span-6">
 <h3 className="font-['Bebas_Neue'] text-2xl tracking-tight text-[#1C1B1A]">Vault Access Key</h3>
-<p className="font-headline italic text-lg opacity-70">Complete immersion. Direct Artifact Access via the Sub-Level Archive.</p>
 </div>
 <div className="col-span-2 text-right font-mono text-xl">
                         £ 450.00
@@ -100,10 +96,8 @@ export default function AccessTiersAlbert() {
 <div className="border border-[#1C1B1A] p-8 bg-[#1C1B1A]/5 sticky top-24">
 <div className="flex justify-between items-start mb-12">
 <div>
-<h2 className="font-['Bebas_Neue'] text-4xl text-[#1C1B1A]">The Ledger</h2>
-<p className="text-[0.6875rem] font-mono tracking-widest uppercase opacity-60">ID: ALBERT-8821</p>
+<h2 className="font-['Bebas_Neue'] text-4xl text-[#1C1B1A]">Checkout</h2>
 </div>
-<Circle className="text-3xl opacity-20" />
 </div>
 <div className="space-y-4 mb-12">
 <div className="flex justify-between items-center text-sm font-label uppercase tracking-widest border-b border-[#1C1B1A]/10 pb-4">
@@ -123,12 +117,12 @@ export default function AccessTiersAlbert() {
 <span className="font-['Bebas_Neue'] text-xl tracking-widest whitespace-nowrap">Total Due</span>
 <span className="font-mono text-4xl md:text-5xl font-bold whitespace-nowrap text-[#3C2A21]">£ 56.50</span>
 </div>
-<button className="w-full bg-[#C36B42] text-white font-['Bebas_Neue'] text-xl md:text-2xl py-6 tracking-widest hover:bg-[#EC5107] active:scale-[0.98] transition-all flex flex-row items-center justify-center gap-3 whitespace-nowrap">
+<button className="w-full bg-[#C36B42] text-white font-['Bebas_Neue'] text-xl md:text-2xl py-4 tracking-widest hover:bg-[#EC5107] active:scale-[0.98] transition-all flex flex-row items-center justify-center gap-3 whitespace-nowrap">
                     Authorize Access
                     <ArrowRight className="shrink-0" />
 </button>
-<p className="text-[0.5rem] font-label uppercase text-center mt-6 opacity-40 leading-relaxed tracking-wider">
-                    By authorizing, you agree to the estate's private protocol and archival preservation standards. Non-refundable.
+<p className="text-[0.65rem] font-label text-center mt-6 opacity-40 leading-relaxed tracking-wider">
+                    By authorizing, you agree to the estate's ticket policies
                 </p>
 </div>
 </aside>
@@ -138,12 +132,12 @@ export default function AccessTiersAlbert() {
 <footer className="bg-[#F4F0EB] border-t border-[#1C1B1A]/20 mt-auto">
 <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto">
 <p className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A]/70 mb-8 md:mb-0">
-            © 2024 THE ESTATE DIRECTORY. ALL RIGHTS RESERVED.
+            © 2026 THE ESTATE DIRECTORY. ALL RIGHTS RESERVED.
         </p>
 <div className="flex gap-10">
 <Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A] opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Terms of Access</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A] opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Privacy Protocol</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A] opacity-70 hover:opacity-100 transition-opacity duration-300 underline font-bold" to="/proto/directory">Institutional Contact</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A] opacity-70 hover:opacity-100 transition-opacity duration-300" to="/proto/directory">Privacy Policy</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest text-[#1C1B1A] opacity-70 hover:opacity-100 transition-opacity duration-300 underline font-bold" to="/proto/directory">Contact Us</Link>
 </div>
 </div>
 </footer>

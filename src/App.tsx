@@ -23,7 +23,7 @@ import {
   Archive, Rankings, Profile, Community, Journey, Campaign,
   Store, StoreProductDetail, NewPost, Dashboard, AccessTiersMobile,
   AccessTiersAlbert, ExperienceMobile, ExperienceAlbert,
-  EventsMobile, Events, DashboardMobile, RankingSubmission, Login
+  EventsMobile, Events, DashboardMobile, RankingSubmission, Login, NotFound
 } from './pages/StitchPrototypes'
 
 function AppContent() {
@@ -59,7 +59,7 @@ function AppContent() {
               <Route path="/login" element={<Login />} />
 
               {/* Catch all */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatedRoutes>
         </Suspense>

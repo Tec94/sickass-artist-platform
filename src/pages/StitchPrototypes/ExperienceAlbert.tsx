@@ -177,8 +177,8 @@ export default function ExperienceAlbert() {
         </span>
 <div className="flex flex-wrap justify-center gap-8">
 <Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Terms of Access</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Privacy Protocol</Link>
-<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Institutional Contact</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Privacy Policy</Link>
+<Link className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity duration-300" to="/dashboard">Contact Us</Link>
 </div>
 </div>
 </footer>

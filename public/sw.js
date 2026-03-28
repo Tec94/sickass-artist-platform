@@ -1,7 +1,12 @@
 // Bump this when changing app shell caching behavior.
-const CACHE_NAME = 'sickass-v3'
+const CACHE_NAME = 'sickass-v4'
 const OFFLINE_URL = '/offline.html'
-const URLS_TO_CACHE = [OFFLINE_URL]
+const URLS_TO_CACHE = [
+  OFFLINE_URL,
+  '/dashboard/hero-bg-4k.webp',
+  '/dashboard/hero-grain.webp',
+  '/dashboard/hero-vignette.webp',
+]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
