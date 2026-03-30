@@ -5,7 +5,7 @@ import SharedNavbar from '../../components/Navigation/SharedNavbar';
 import CommunitySidebar from './CommunitySidebar';
 export default function Community() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden font-sans antialiased selection:bg-[#C36B42] selection:text-[#F4EFE6] bg-[#F4EFE6] text-[#3C2A21]">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--site-page-bg)] font-sans text-[var(--site-text)] antialiased selection:bg-[var(--site-selection)] selection:text-[var(--site-button-solid-text)]">
         <style>{`
             .material-symbols-outlined {
                 font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

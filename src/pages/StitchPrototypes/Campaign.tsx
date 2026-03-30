@@ -19,7 +19,7 @@ export default function Campaign() {
   const topTrack = content.spotify.topTrack
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
+    <div className="flex h-full min-h-0 flex-col bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <SharedNavbar />
 
       <main className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain">

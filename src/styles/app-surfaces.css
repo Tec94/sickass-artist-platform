@@ -1618,6 +1618,7 @@
 }
 
 .store-v2-product-card {
+  align-self: start;
   gap: 14px;
   border-radius: 18px;
   border: 1px solid rgba(216, 184, 152, 0.1);

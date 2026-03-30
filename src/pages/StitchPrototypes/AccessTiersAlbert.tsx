@@ -15,7 +15,7 @@ export default function AccessTiersAlbert() {
   })
 
   return (
-    <div className="min-h-[100dvh] overflow-y-auto bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
+    <div className="min-h-[100dvh] w-full overflow-y-auto bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <style>{`
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;

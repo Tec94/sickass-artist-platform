@@ -58,7 +58,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            className="absolute inset-0 bg-[#3C2A21]/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[color:var(--site-overlay-scrim)] backdrop-blur-[2px]"
             onClick={onClose}
             aria-hidden="true"
             initial={{ opacity: 0 }}
@@ -68,23 +68,23 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
           />
 
           <motion.div
-            className="responsive-sheet-panel mobile-safe-nav relative mt-auto flex w-full max-h-[min(82dvh,42rem)] flex-col overflow-hidden border border-[#3C2A21] bg-[#F4EFE6] shadow-[rgba(0,0,0,0.35)_0px_0px_40px] md:mt-0 md:h-full md:w-[400px] md:max-w-[92vw] md:rounded-none md:border-l md:border-t-0"
+            className="responsive-sheet-panel mobile-safe-nav relative mt-auto flex w-full max-h-[min(82dvh,42rem)] flex-col overflow-hidden border border-[var(--site-border-strong)] bg-[var(--site-page-bg)] shadow-[var(--site-panel-shadow)] md:mt-0 md:h-full md:w-[400px] md:max-w-[92vw] md:rounded-none md:border-l md:border-t-0"
             initial={{ x: '100%' }}
             animate={{ x: 0, y: 0 }}
             exit={{ x: '100%', y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex justify-center pt-3 md:hidden">
-              <span className="h-1.5 w-14 rounded-full bg-[#3C2A21]/18" />
+              <span className="h-1.5 w-14 rounded-full bg-[color:var(--site-border-soft)]" />
             </div>
-            <div className="flex items-center justify-between border-b border-[#3C2A21]/15 px-6 py-6">
+            <div className="flex items-center justify-between border-b border-[color:var(--site-border-soft)] px-6 py-6">
               <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-[#C36B42]" />
+                <ShoppingBag size={20} className="text-[var(--site-accent)]" />
                 <div>
-                  <h2 className="font-['Cormorant_Garamond'] text-2xl font-semibold text-[#3C2A21]">
+                  <h2 className="font-['Cormorant_Garamond'] text-2xl font-semibold text-[var(--site-text)]">
                     Your Cart
                   </h2>
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--site-text-muted)]">
                     {itemCount} item{itemCount === 1 ? '' : 's'}
                   </p>
                 </div>
@@ -92,7 +92,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+                className="p-2 text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
                 aria-label="Close cart"
               >
                 <X size={24} />
@@ -102,8 +102,8 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
             <div className="flex-1 overflow-y-auto px-6 py-8">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                  <ShoppingBag size={48} className="text-[#C36B42]/20" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
+                  <ShoppingBag size={48} className="text-[var(--site-accent)] opacity-20" />
+                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--site-text-muted)]">
                     Your collection is empty
                   </p>
                   <button
@@ -113,7 +113,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                       onClose()
                       navigate('/store')
                     }}
-                    className="mt-4 bg-[#3C2A21] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FAF7F2] transition-colors hover:bg-[#C36B42]"
+                    className="mt-4 bg-[var(--site-button-solid)] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--site-button-solid-text)] transition-colors hover:bg-[var(--site-accent)]"
                   >
                     Explore Collection
                   </button>
@@ -122,7 +122,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                 <div className="flex flex-col gap-6">
                   {items.map((item) => (
                     <div key={item.lineKey} className="group flex gap-4">
-                      <div className="h-24 w-24 flex-shrink-0 overflow-hidden border border-[#3C2A21]/10 bg-[#FAF7F2]">
+                      <div className="h-24 w-24 flex-shrink-0 overflow-hidden border border-[color:var(--site-border-soft)] bg-[var(--site-surface)]">
                         <img
                           src={item.product.primaryImage}
                           alt={item.product.alt}
@@ -132,11 +132,11 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                       <div className="flex flex-1 flex-col">
                         <div className="mb-2 flex items-start justify-between gap-3">
                           <div>
-                            <h3 className="font-['Cormorant_Garamond'] text-xl leading-tight text-[#3C2A21]">
+                            <h3 className="font-['Cormorant_Garamond'] text-xl leading-tight text-[var(--site-text)]">
                               {item.product.name}
                             </h3>
                             {item.selectedOptions.length > 0 ? (
-                              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
+                              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[var(--site-text-muted)]">
                                 {item.selectedOptions
                                   .map(
                                     (selectedOption) =>
@@ -145,27 +145,27 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                                   .join(' • ')}
                               </p>
                             ) : null}
-                            <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#8E7D72]">
+                            <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[var(--site-text-muted)]">
                               Qty {item.quantity}
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeItem(item.lineKey)}
-                            className="text-[#8E7D72] transition-colors hover:text-[#A62B3A]"
+                            className="text-[var(--site-text-muted)] transition-colors hover:text-[var(--site-accent)]"
                             aria-label={`Remove ${item.product.name}`}
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        <p className="flex-1 text-sm leading-6 text-[#3C2A21]/72">
+                        <p className="flex-1 text-sm leading-6 text-[var(--site-text-muted)]">
                           {item.product.shortDescription}
                         </p>
                         <div className="mt-3 flex items-end justify-between">
-                          <span className="text-xs uppercase tracking-[0.16em] text-[#8E7D72]">
+                          <span className="text-xs uppercase tracking-[0.16em] text-[var(--site-text-muted)]">
                             {formatPrototypePrice(item.unitPriceCents)} each
                           </span>
-                          <span className="text-sm font-semibold text-[#3C2A21]">
+                          <span className="text-sm font-semibold text-[var(--site-text)]">
                             {formatPrototypePrice(item.lineTotalCents)}
                           </span>
                         </div>
@@ -177,20 +177,20 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
             </div>
 
             {items.length > 0 ? (
-              <div className="border-t border-[#3C2A21]/15 bg-[#FAF7F2]/60 px-6 py-8">
+              <div className="border-t border-[color:var(--site-border-soft)] bg-[var(--site-surface)] px-6 py-8">
                 <div className="mb-2 flex justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[var(--site-text-muted)]">
                     Subtotal
                   </span>
-                  <span className="text-sm font-semibold text-[#3C2A21]">
+                  <span className="text-sm font-semibold text-[var(--site-text)]">
                     {formatPrototypePrice(subtotalCents)}
                   </span>
                 </div>
                 <div className="mb-6 flex justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#8E7D72]">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[var(--site-text-muted)]">
                     Prototype note
                   </span>
-                  <span className="text-xs text-[#3C2A21]/75">
+                  <span className="text-xs text-[var(--site-text-muted)]">
                     {canWrite ? 'Cart synced to Convex' : 'Sign in required for cart writes'}
                   </span>
                 </div>
@@ -199,13 +199,13 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
                   <button
                     type="button"
                     onClick={clearCart}
-                    className="w-full border border-[#3C2A21] px-4 py-4 text-xs font-bold uppercase tracking-[0.18em] text-[#3C2A21] transition-colors hover:bg-[#3C2A21] hover:text-[#FAF7F2] min-[480px]:flex-1"
+                    className="w-full border border-[var(--site-border-strong)] px-4 py-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--site-text)] transition-colors hover:bg-[var(--site-button-solid)] hover:text-[var(--site-button-solid-text)] min-[480px]:flex-1"
                   >
                     Clear
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-center gap-3 whitespace-nowrap bg-[#3C2A21] px-4 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#FAF7F2] transition-colors hover:bg-[#C36B42] min-[480px]:flex-[1.35]"
+                    className="flex w-full items-center justify-center gap-3 whitespace-nowrap bg-[var(--site-button-solid)] px-4 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--site-button-solid-text)] transition-colors hover:bg-[var(--site-accent)] min-[480px]:flex-[1.35]"
                     onClick={() => {
                       setNextTransition('push')
                       onClose()

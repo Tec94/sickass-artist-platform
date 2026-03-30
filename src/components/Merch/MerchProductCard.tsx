@@ -207,7 +207,7 @@ export const MerchProductCard = ({
 
   return (
     <article
-      className="store-v2-product-card group relative flex h-full cursor-pointer flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-50"
+      className="store-v2-product-card group relative flex cursor-pointer flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-50"
       role="button"
       tabIndex={0}
       onClick={openProduct}
@@ -317,7 +317,7 @@ export const MerchProductCard = ({
         )}
       </div>
 
-      <div className="store-v2-product-meta mt-auto">
+      <div className="store-v2-product-meta">
         <h3 className="store-v2-product-title line-clamp-1 transition group-hover:text-white">{product.name}</h3>
         <div className="flex items-end gap-2">
           <span className="store-v2-product-price">{priceLabel}</span>

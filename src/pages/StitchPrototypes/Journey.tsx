@@ -183,7 +183,7 @@ export default function Journey() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] font-sans">
+    <div className="min-h-screen bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <div className="fixed top-0 left-0 right-0 z-50">
         <SharedNavbar />
       </div>

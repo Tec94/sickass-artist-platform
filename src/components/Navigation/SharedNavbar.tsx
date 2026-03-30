@@ -21,6 +21,8 @@ const mobileNavItems = [
   { label: 'Profile', path: '/profile' },
 ]
 
+const mobileNavViewportOffset = 'calc(72px + env(safe-area-inset-top, 0px))'
+
 export default function SharedNavbar() {
   const [searchState, setSearchState] = useState<SearchOverlayState | 'closed'>('closed')
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -59,30 +61,30 @@ export default function SharedNavbar() {
       'flex h-full items-center text-sm font-semibold uppercase tracking-wider transition-colors nav-link-hover'
 
     if (isActivePath(location.pathname, path)) {
-      return `${baseClasses} border-b-2 border-[#C36B42] text-[#C36B42]`
+      return `${baseClasses} border-b-2 border-[var(--site-accent)] text-[var(--site-accent)]`
     }
 
-    return `${baseClasses} text-[#3C2A21] hover:text-[#C36B42]`
+    return `${baseClasses} text-[var(--site-text)] hover:text-[var(--site-accent)]`
   }
 
   const getDrawerLinkClasses = (path: string) => {
     const baseClasses =
-      'flex items-center justify-between border-b border-[#3C2A21]/10 py-4 text-sm font-semibold uppercase tracking-[0.16em] transition-colors'
+      'flex items-center justify-between border-b border-[color:var(--site-border-soft)] py-4 text-sm font-semibold uppercase tracking-[0.16em] transition-colors'
 
     if (isActivePath(location.pathname, path)) {
-      return `${baseClasses} text-[#C36B42]`
+      return `${baseClasses} text-[var(--site-accent)]`
     }
 
-    return `${baseClasses} text-[#3C2A21] hover:text-[#C36B42]`
+    return `${baseClasses} text-[var(--site-text)] hover:text-[var(--site-accent)]`
   }
 
   return (
     <>
-      <header className="mobile-safe-header relative z-40 flex min-h-[72px] shrink-0 items-center justify-between border-b border-[#3C2A21] bg-[#F4EFE6] px-4 shadow-[0_4px_10px_rgba(60,42,33,0.12)] sm:px-6 lg:px-8">
+      <header className="mobile-safe-header relative z-40 flex min-h-[72px] shrink-0 items-center justify-between border-b border-[var(--site-border-strong)] bg-[var(--site-page-bg)] px-4 shadow-[var(--site-navbar-shadow)] sm:px-6 lg:px-8">
         <div className="flex h-full min-w-0 items-center gap-4 lg:gap-12">
           <Link
             to="/dashboard"
-            className="truncate font-['Cormorant_Garamond'] text-xl font-semibold tracking-tight text-[#3C2A21] transition-colors hover:text-[#C36B42] sm:text-2xl"
+            className="truncate font-['Cormorant_Garamond'] text-xl font-semibold tracking-tight text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)] sm:text-2xl"
             onClick={() => closeTransientUi()}
           >
             THE ESTATE
@@ -144,10 +146,10 @@ export default function SharedNavbar() {
                     />
                     <div
                       data-testid="store-mega-menu"
-                      className="w-[820px] overflow-hidden border border-[#3C2A21] bg-[#FAF7F2] shadow-[0_30px_60px_rgba(28,27,26,0.16)]"
+                      className="w-[820px] overflow-hidden border border-[var(--site-border-strong)] bg-[var(--site-surface)] shadow-[var(--site-panel-shadow-strong)]"
                     >
                       <div className="flex">
-                        <div className="h-full w-1/2 border-r border-[#3C2A21]/15 p-8">
+                        <div className="h-full w-1/2 border-r border-[color:var(--site-border-soft)] p-8">
                           <Link
                             to="/store/product/private-suite-tee"
                             onClick={() => {
@@ -160,7 +162,7 @@ export default function SharedNavbar() {
                                 "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCn2d7DIcuRChwL7JHv90Xk489giFm7mkFmi7UMnknopv5kyun1AIgd1oIrQ5qFfwg6l7JAT8VeMHIuwtHYoPu-FIuvXL_NcAqq2-qlAcPpe91PDjyExlV7qPqfmCyLkepSngg4YOKeZV-omlXUUGIJGbZOrldRalluKggAi817GVkaSlCDYRKLtuZiZWFDhFmDZNyy-f7MeeQg_7k89qqolK831X8e56xZdFScT0D0NGzhYA--gYHf59Q8Hvm23q4QMR6biY6Njvh0')",
                             }}
                           >
-                            <div className="absolute inset-0 bg-[#3C2A21]/30 transition-colors duration-500 group-hover:bg-[#3C2A21]/18" />
+                            <div className="absolute inset-0 bg-[color:var(--site-overlay-scrim)] transition-colors duration-500 group-hover:opacity-80" />
                             <div className="absolute bottom-6 left-6 text-[#FAF7F2]">
                               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.15em]">
                                 New Collection
@@ -172,9 +174,9 @@ export default function SharedNavbar() {
                           </Link>
                         </div>
 
-                        <div className="grid h-full w-1/2 grid-cols-2 gap-8 bg-[#FAF7F2] p-10">
+                        <div className="grid h-full w-1/2 grid-cols-2 gap-8 bg-[var(--site-surface)] p-10">
                           <div className="flex flex-col gap-4">
-                            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#8E7D72]">
+                            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--site-text-muted)]">
                               Latest
                             </h4>
                             <Link
@@ -183,7 +185,7 @@ export default function SharedNavbar() {
                                 setNextTransition('push')
                                 closeTransientUi()
                               }}
-                              className="text-sm text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+                              className="text-sm text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
                             >
                               Full Collection
                             </Link>
@@ -193,13 +195,13 @@ export default function SharedNavbar() {
                                 setNextTransition('push')
                                 closeTransientUi()
                               }}
-                              className="text-sm text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+                              className="text-sm text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
                             >
                               Vinyl &amp; Media
                             </Link>
                           </div>
                           <div className="flex flex-col gap-4">
-                            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#8E7D72]">
+                            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--site-text-muted)]">
                               Top
                             </h4>
                             <Link
@@ -208,7 +210,7 @@ export default function SharedNavbar() {
                                 setNextTransition('push')
                                 closeTransientUi()
                               }}
-                              className="text-sm text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+                              className="text-sm text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
                             >
                               Outerwear
                             </Link>
@@ -218,7 +220,7 @@ export default function SharedNavbar() {
                                 setNextTransition('push')
                                 closeTransientUi()
                               }}
-                              className="text-sm text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+                              className="text-sm text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
                             >
                               Collectibles
                             </Link>
@@ -302,7 +304,7 @@ export default function SharedNavbar() {
               setIsMobileNavOpen(false)
               setSearchState('open')
             }}
-            className="rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+            className="rounded-full p-2 text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
           >
             <Search size={20} />
           </button>
@@ -316,7 +318,7 @@ export default function SharedNavbar() {
               setNextTransition('slide-up')
               closeTransientUi()
             }}
-            className="hidden rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42] lg:block"
+            className="hidden rounded-full p-2 text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)] lg:block"
             aria-label="Open profile"
           >
             <User size={20} />
@@ -330,7 +332,7 @@ export default function SharedNavbar() {
               setIsStoreMenuOpen(false)
               setIsMobileNavOpen(false)
             }}
-            className="relative rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+            className="relative rounded-full p-2 text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)]"
           >
             <ShoppingBag size={20} />
             {itemCount > 0 ? (
@@ -348,7 +350,7 @@ export default function SharedNavbar() {
               setIsStoreMenuOpen(false)
               setIsMobileNavOpen((currentState) => !currentState)
             }}
-            className="rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42] lg:hidden"
+            className="rounded-full p-2 text-[var(--site-text)] transition-colors hover:text-[var(--site-accent)] lg:hidden"
           >
             {isMobileNavOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -358,37 +360,38 @@ export default function SharedNavbar() {
       <AnimatePresence>
         {isMobileNavOpen ? (
           <motion.div
-            className="fixed inset-0 z-[115] lg:hidden"
+            className="fixed inset-x-0 bottom-0 z-[115] lg:hidden"
+            style={{ top: mobileNavViewportOffset }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div
-              className="absolute inset-0 bg-[#3C2A21]/34 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-[color:var(--site-overlay-scrim)] backdrop-blur-[2px]"
               aria-hidden="true"
               onClick={() => setIsMobileNavOpen(false)}
             />
             <motion.aside
               data-testid="mobile-nav-drawer"
-              className="responsive-sheet-panel mobile-safe-nav absolute inset-x-0 top-[72px] mx-3 overflow-hidden border border-[#3C2A21] bg-[#FAF7F2] px-5 pb-8 pt-4 shadow-[0_24px_48px_rgba(28,27,26,0.18)]"
+              className="responsive-sheet-panel mobile-safe-nav absolute inset-x-0 top-0 mx-3 overflow-hidden border border-[var(--site-border-strong)] bg-[var(--site-surface)] px-5 pb-8 pt-4 shadow-[var(--site-panel-shadow)]"
               initial={{ y: -20, opacity: 0.9 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -14, opacity: 0.92 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="mb-4 flex items-center justify-between gap-4 border-b border-[#3C2A21]/12 pb-4">
+              <div className="mb-4 flex items-center justify-between gap-4 border-b border-[color:var(--site-border-soft)] pb-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--site-text-muted)]">
                     Estate navigation
                   </p>
-                  <p className="mt-2 font-['Cormorant_Garamond'] text-2xl text-[#3C2A21]">
+                  <p className="mt-2 font-['Cormorant_Garamond'] text-2xl text-[var(--site-text)]">
                     Move through the live routes
                   </p>
                 </div>
                 <Link
                   to="/profile"
                   aria-label="Open profile"
-                  className="rounded-full border border-[#3C2A21]/18 p-2 text-[#3C2A21] transition-colors hover:border-[#C36B42] hover:text-[#C36B42]"
+                  className="rounded-full border border-[color:var(--site-border-soft)] p-2 text-[var(--site-text)] transition-colors hover:border-[var(--site-accent)] hover:text-[var(--site-accent)]"
                   onClick={() => {
                     setNextTransition('slide-up')
                     closeTransientUi()
@@ -410,7 +413,7 @@ export default function SharedNavbar() {
                     className={getDrawerLinkClasses(item.path)}
                   >
                     <span>{item.label}</span>
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--site-text-muted)]">
                       Open
                     </span>
                   </Link>

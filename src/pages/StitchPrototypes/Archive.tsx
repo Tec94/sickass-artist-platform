@@ -4,7 +4,7 @@ import { Search, UserCircle, Trophy, BookOpen, TrendingUp, Minus, TrendingDown, 
 import SharedNavbar from '../../components/Navigation/SharedNavbar';
 export default function Archive() {
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-[#F4EFE6] text-[#3C2A21] selection:bg-[#C36B42]/30">
+    <div className="min-h-screen flex flex-col bg-[var(--site-page-bg)] font-sans text-[var(--site-text)] selection:bg-[var(--site-selection)]">
         <style>{`
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

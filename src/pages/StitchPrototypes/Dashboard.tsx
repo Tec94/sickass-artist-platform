@@ -29,7 +29,7 @@ const formatFeaturedDropPrice = (priceCents: number) =>
 
 export default function Dashboard() {
   return (
-    <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#F4EFE6] font-sans text-[#3C2A21] antialiased lg:h-screen">
+    <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--site-page-bg)] font-sans text-[var(--site-text)] antialiased lg:h-screen">
       <style>{`
         .border-ink { border-color: #3C2A21; }
         .border-ink-soft { border-color: rgba(60, 42, 33, 0.15); }

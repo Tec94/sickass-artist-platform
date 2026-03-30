@@ -4,12 +4,12 @@ import { User, ShoppingCart } from 'lucide-react';
 import SharedNavbar from '../../components/Navigation/SharedNavbar';
 export default function Events() {
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
+    <div className="min-h-screen w-full bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <style>{`
         body {
             font-family: 'Manrope', sans-serif;
-            background-color: theme('colors.parchment');
-            color: theme('colors.ink');
+            background-color: var(--site-page-bg);
+            color: var(--site-text);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }

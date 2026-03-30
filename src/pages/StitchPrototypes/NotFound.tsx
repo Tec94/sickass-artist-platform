@@ -6,7 +6,7 @@ export default function NotFound() {
   const location = useLocation()
 
   return (
-    <div className="flex min-h-[100dvh] flex-col overflow-hidden bg-[#F4EFE6] text-[#3C2A21] antialiased">
+    <div className="flex min-h-[100dvh] flex-col overflow-hidden bg-[var(--site-page-bg)] text-[var(--site-text)] antialiased">
       <SharedNavbar />
 
       <main className="flex-1 min-h-0">

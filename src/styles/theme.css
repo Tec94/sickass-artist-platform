@@ -6,6 +6,43 @@
   --color-focus-ring-strong: var(--color-focus-ring);
   --color-brand-text: var(--color-accent-brand-soft);
 
+  /* Site appearance tokens: light mode */
+  --site-page-bg: #f4efe6;
+  --site-surface: #faf7f2;
+  --site-surface-alt: #f4efe6;
+  --site-surface-muted: #eee7dd;
+  --site-text: #3c2a21;
+  --site-text-muted: #8e7d72;
+  --site-text-subtle: #b09c8f;
+  --site-border-strong: #3c2a21;
+  --site-border-soft: rgba(60, 42, 33, 0.14);
+  --site-border-muted: #d1c7bc;
+  --site-accent: #c36b42;
+  --site-accent-soft: rgba(195, 107, 66, 0.16);
+  --site-button-solid: #3c2a21;
+  --site-button-solid-text: #faf7f2;
+  --site-overlay-scrim: rgba(60, 42, 33, 0.34);
+  --site-navbar-shadow: 0 4px 10px rgba(60, 42, 33, 0.12);
+  --site-panel-shadow: 0 24px 48px rgba(28, 27, 26, 0.18);
+  --site-panel-shadow-strong: 0 30px 60px rgba(28, 27, 26, 0.16);
+  --site-selection: rgba(195, 107, 66, 0.22);
+  --site-scroll-track: #f4efe6;
+  --site-scroll-thumb: #d1c7bc;
+  --site-scroll-thumb-hover: #c36b42;
+  --site-profile-hero-scrim:
+    radial-gradient(circle at 18% 22%, rgba(250, 247, 242, 0.18), transparent 30%),
+    linear-gradient(
+      115deg,
+      rgba(60, 42, 33, 0.68),
+      rgba(60, 42, 33, 0.36) 34%,
+      rgba(60, 42, 33, 0.12) 64%,
+      rgba(244, 239, 230, 0.88)
+    );
+  --site-profile-hero-edge: linear-gradient(to left, #f4efe6, rgba(244, 239, 230, 0.6), transparent);
+  --site-profile-hero-card-bg: rgba(60, 42, 33, 0.26);
+  --site-profile-hero-card-border: rgba(209, 199, 188, 0.4);
+  --site-profile-hero-card-text: #faf7f2;
+
   --glass-premium-blur: 14px;
   --glass-hero-bg: linear-gradient(142deg, rgba(12, 19, 28, 0.8), rgba(4, 9, 14, 0.68));
   --glass-hero-border: rgba(123, 143, 162, 0.44);
@@ -54,6 +91,44 @@
   --gallery-card-border: rgba(88, 104, 123, 0.38);
 }
 
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) {
+  --site-page-bg: #171311;
+  --site-surface: #1f1a17;
+  --site-surface-alt: #28211d;
+  --site-surface-muted: #221c19;
+  --site-text: #f4efe6;
+  --site-text-muted: #d1c7bc;
+  --site-text-subtle: #b09c8f;
+  --site-border-strong: rgba(244, 239, 230, 0.72);
+  --site-border-soft: rgba(244, 239, 230, 0.16);
+  --site-border-muted: rgba(209, 199, 188, 0.44);
+  --site-accent: #c36b42;
+  --site-accent-soft: rgba(195, 107, 66, 0.16);
+  --site-button-solid: #f4efe6;
+  --site-button-solid-text: #1f1a17;
+  --site-overlay-scrim: rgba(9, 7, 6, 0.54);
+  --site-navbar-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+  --site-panel-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+  --site-panel-shadow-strong: 0 30px 68px rgba(0, 0, 0, 0.44);
+  --site-selection: rgba(195, 107, 66, 0.2);
+  --site-scroll-track: #171311;
+  --site-scroll-thumb: rgba(209, 199, 188, 0.36);
+  --site-scroll-thumb-hover: #c36b42;
+  --site-profile-hero-scrim:
+    radial-gradient(circle at 18% 22%, rgba(244, 239, 230, 0.06), transparent 32%),
+    linear-gradient(
+      115deg,
+      rgba(8, 6, 5, 0.88),
+      rgba(14, 11, 9, 0.7) 36%,
+      rgba(23, 19, 17, 0.46) 62%,
+      rgba(23, 19, 17, 0.94)
+    );
+  --site-profile-hero-edge: linear-gradient(to left, #171311, rgba(23, 19, 17, 0.68), transparent);
+  --site-profile-hero-card-bg: rgba(23, 19, 17, 0.58);
+  --site-profile-hero-card-border: rgba(244, 239, 230, 0.18);
+  --site-profile-hero-card-text: #f4efe6;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -65,15 +140,59 @@ body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  background-color: var(--color-bg);
-  color: var(--color-text-main);
+  background-color: var(--site-page-bg, var(--color-bg));
+  color: var(--site-text, var(--color-text-main));
   font-family: var(--font-body);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--site-selection);
+}
+
+.app-theme-root {
+  background-color: var(--site-page-bg);
+  color: var(--site-text);
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='bg-[#F4EFE6]'] {
+  background-color: var(--site-page-bg) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='bg-[#F4F0EB]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='bg-[#FAF7F2]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='bg-[#FCFBF9]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='bg-[#EEE7DD]'] {
+  background-color: var(--site-surface) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='text-[#3C2A21]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='text-ink'] {
+  color: var(--site-text) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='text-[#8E7D72]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) .text-muted {
+  color: var(--site-text-muted) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='border-[#3C2A21]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) .border-ink {
+  border-color: var(--site-border-strong) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='border-[#D1C7BC]'] {
+  border-color: var(--site-border-muted) !important;
+}
+
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) [class~='text-[#C36B42]'],
+:where(html[data-appearance='dark'], body[data-appearance='dark'], .app-theme-root[data-appearance='dark']) .text-primary {
+  color: var(--site-accent) !important;
 }
 
 .motion-safe {

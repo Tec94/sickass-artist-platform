@@ -63,7 +63,7 @@
 
 .responsive-sheet-panel {
   border-top-left-radius: 1.75rem;
-  border-top-right-radius: 1.75rem;
+  border-bottom-right-radius: 1.75rem;
 }
 
 .gear-stick-container {

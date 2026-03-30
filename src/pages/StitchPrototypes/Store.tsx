@@ -39,14 +39,14 @@ export default function Store() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#F4EFE6] font-sans text-[#3C2A21]">
+    <div className="flex h-full min-h-0 flex-col bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <SharedNavbar />
 
       <main className="h-[calc(100dvh-72px)] overflow-hidden">
         <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col lg:flex-row">
           <aside
             data-testid="prototype-store-sidebar"
-            className="hidden w-[250px] flex-shrink-0 overflow-y-auto bg-[#F4F0EB] lg:block"
+            className="hidden w-[250px] flex-shrink-0 overflow-y-auto bg-[var(--site-surface)] lg:block"
           >
             <div className="p-8">
               <h2 className="font-['Cormorant_Garamond'] text-2xl mb-8 tracking-tight">Categories</h2>
@@ -267,9 +267,9 @@ export default function Store() {
                             className="flex-1 self-stretch text-left"
                             aria-label={`View ${product.name}`}
                           >
-                            <div className="flex h-full flex-col justify-end">
+                            <div className="flex h-full min-w-0 flex-col justify-end">
                               <h3
-                                className={`font-['Cormorant_Garamond'] text-[32px] leading-none tracking-tight ${
+                                className={`line-clamp-2 min-h-[2em] font-['Cormorant_Garamond'] text-[32px] leading-none tracking-tight ${
                                   product.availability === 'sold-out' ? 'text-[#8E7D72]' : 'text-[#3C2A21]'
                                 }`}
                               >

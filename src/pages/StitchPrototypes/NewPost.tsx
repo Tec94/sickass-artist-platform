@@ -6,7 +6,7 @@ import CommunitySidebar from './CommunitySidebar';
 
 export default function NewPost() {
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
+    <div className="min-h-screen w-full bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
       <style>{`
       .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

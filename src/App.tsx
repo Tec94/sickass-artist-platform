@@ -4,6 +4,7 @@ import { GearProvider } from './contexts/GearContext'
 import { UserProvider } from './contexts/UserContext'
 import { CartProvider } from './contexts/CartContext'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { AppAppearanceProvider, useAppAppearance } from './contexts/AppAppearanceContext'
 import { AppVisualVariantProvider } from './contexts/AppVisualVariantContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Toaster } from 'sonner'
@@ -27,10 +28,19 @@ import {
 } from './pages/StitchPrototypes'
 
 function AppContent() {
+  const { appearance } = useAppAppearance()
+
   return (
-    <div className="app-theme-root">
-      <div className="relative flex min-h-[100dvh] flex-1 flex-col overflow-x-hidden bg-[#F4EFE6] lg:h-screen" data-scroll-container>
-        <Suspense fallback={<div className="text-[#3C2A21] p-8 text-center font-serif">Loading...</div>}>
+    <div className="app-theme-root" data-appearance={appearance}>
+      <div
+        className="relative flex min-h-[100dvh] flex-1 flex-col overflow-x-hidden bg-[var(--site-page-bg)] text-[var(--site-text)] lg:h-screen"
+        data-scroll-container
+      >
+        <Suspense
+          fallback={
+            <div className="p-8 text-center font-serif text-[var(--site-text)]">Loading...</div>
+          }
+        >
           <AnimatedRoutes>
             <Routes>
               {/* Landing page is Journey */}
@@ -60,7 +70,7 @@ function AppContent() {
           </AnimatedRoutes>
         </Suspense>
       </div>
-      <Toaster position="bottom-right" theme="dark" closeButton richColors />
+      <Toaster position="bottom-right" theme={appearance} closeButton richColors />
     </div>
   )
 }
@@ -72,13 +82,15 @@ function App() {
         <LanguageProvider>
           <ErrorBoundary level="page">
             <BrowserRouter>
-              <AppVisualVariantProvider>
-                <PrototypeCartProvider>
-                  <GearProvider>
-                    <AppContent />
-                  </GearProvider>
-                </PrototypeCartProvider>
-              </AppVisualVariantProvider>
+              <AppAppearanceProvider>
+                <AppVisualVariantProvider>
+                  <PrototypeCartProvider>
+                    <GearProvider>
+                      <AppContent />
+                    </GearProvider>
+                  </PrototypeCartProvider>
+                </AppVisualVariantProvider>
+              </AppAppearanceProvider>
             </BrowserRouter>
           </ErrorBoundary>
         </LanguageProvider>
