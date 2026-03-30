@@ -47,7 +47,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-[120] flex justify-end font-sans"
+          className="fixed inset-0 z-[120] flex items-end justify-center font-sans md:justify-end"
           data-testid="checkout-overlay"
           role="dialog"
           aria-modal="true"
@@ -68,12 +68,15 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
           />
 
           <motion.div
-            className="relative flex h-full w-[400px] max-w-[92vw] flex-col border-l border-[#3C2A21] bg-[#F4EFE6] shadow-[rgba(0,0,0,0.35)_0px_0px_40px]"
+            className="responsive-sheet-panel mobile-safe-nav relative mt-auto flex w-full max-h-[min(82dvh,42rem)] flex-col overflow-hidden border border-[#3C2A21] bg-[#F4EFE6] shadow-[rgba(0,0,0,0.35)_0px_0px_40px] md:mt-0 md:h-full md:w-[400px] md:max-w-[92vw] md:rounded-none md:border-l md:border-t-0"
             initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            animate={{ x: 0, y: 0 }}
+            exit={{ x: '100%', y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
+            <div className="flex justify-center pt-3 md:hidden">
+              <span className="h-1.5 w-14 rounded-full bg-[#3C2A21]/18" />
+            </div>
             <div className="flex items-center justify-between border-b border-[#3C2A21]/15 px-6 py-6">
               <div className="flex items-center gap-3">
                 <ShoppingBag size={20} className="text-[#C36B42]" />

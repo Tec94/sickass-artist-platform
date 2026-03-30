@@ -90,7 +90,7 @@ export default function StoreProductDetail() {
         ref={mainRef}
         className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto max-w-[1560px] px-4 pb-12 pt-3 md:px-8 md:pb-20 md:pt-4">
+        <div className="mx-auto max-w-[1560px] px-4 pb-32 pt-3 md:px-8 md:pb-24 md:pt-4 xl:pb-20">
           <button
             data-testid="detail-back-button"
             type="button"
@@ -114,7 +114,7 @@ export default function StoreProductDetail() {
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(252,251,249,0.16),rgba(215,213,208,0.38)_58%,rgba(186,178,168,0.58)_100%)]" />
                 </div>
 
-                <div className="relative z-10 flex min-h-[400px] items-center justify-center px-3 py-4 md:min-h-[520px] md:px-4 md:py-5 xl:h-full xl:px-0 xl:py-0">
+                <div className="relative z-10 flex min-h-[320px] items-center justify-center px-3 py-4 sm:min-h-[380px] md:min-h-[520px] md:px-4 md:py-5 xl:h-full xl:px-0 xl:py-0">
                   <img
                     data-testid="detail-main-image"
                     src={selectedImage}
@@ -125,7 +125,7 @@ export default function StoreProductDetail() {
               </div>
 
               <div className="border-b border-[#1C1B1A] bg-[#F7F1E8] p-4 md:p-5 xl:border-b-0 xl:border-r">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-1">
+                <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-1">
                   {galleryImages.map((image, index) => {
                     const isActive = selectedImage === image
 
@@ -134,7 +134,7 @@ export default function StoreProductDetail() {
                         key={`${product.slug}-${index}`}
                         type="button"
                         onClick={() => setSelectedImage(image)}
-                        className={`aspect-[4/5] overflow-hidden border bg-[#EFE8DE] text-left transition-colors ${
+                        className={`aspect-[4/5] w-28 shrink-0 overflow-hidden border bg-[#EFE8DE] text-left transition-colors sm:w-auto ${
                           isActive
                             ? 'border-[#C36B42] shadow-[inset_0_0_0_1px_#C36B42]'
                             : 'border-[#1C1B1A] hover:border-[#3C2A21]'
@@ -344,7 +344,7 @@ export default function StoreProductDetail() {
             </section>
           ) : null}
 
-          <div className="mt-8 flex justify-end">
+          <div className="mt-8 hidden justify-end xl:flex">
             <button
               type="button"
               onClick={handleBack}
@@ -356,6 +356,60 @@ export default function StoreProductDetail() {
           </div>
         </div>
       </main>
+      <div className="mobile-safe-nav fixed inset-x-0 bottom-0 z-30 border-t border-[#1C1B1A]/12 bg-[#FCFBF9]/96 px-4 py-4 shadow-[0_-18px_40px_rgba(28,27,26,0.14)] backdrop-blur xl:hidden">
+        <div data-testid="detail-mobile-purchase-bar" className="mx-auto flex max-w-[1560px] flex-col gap-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                {product.releaseNote}
+              </p>
+              <p className="mt-2 font-['Cormorant_Garamond'] text-3xl leading-none">
+                {formatPrototypePrice(selectedPriceCents)}
+              </p>
+            </div>
+            <div className="inline-flex items-center border border-[#1C1B1A] bg-[#FCFBF9]">
+              <button
+                type="button"
+                onClick={() => setQuantity((currentQuantity) => clampQuantity(currentQuantity - 1))}
+                disabled={product.availability !== 'available'}
+                className="flex h-11 w-11 items-center justify-center border-r border-[#1C1B1A] text-[#3C2A21] transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6] disabled:cursor-not-allowed disabled:text-[#8E7D72] disabled:hover:bg-transparent disabled:hover:text-[#8E7D72]"
+                aria-label="Decrease quantity"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="flex h-11 min-w-[52px] items-center justify-center px-3 text-sm font-semibold tabular-nums">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((currentQuantity) => clampQuantity(currentQuantity + 1))}
+                disabled={product.availability !== 'available'}
+                className="flex h-11 w-11 items-center justify-center border-l border-[#1C1B1A] text-[#3C2A21] transition-colors hover:bg-[#1C1B1A] hover:text-[#F4EFE6] disabled:cursor-not-allowed disabled:text-[#8E7D72] disabled:hover:bg-transparent disabled:hover:text-[#8E7D72]"
+                aria-label="Increase quantity"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+          {product.availability === 'available' && canWrite ? (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="inline-flex min-h-[48px] items-center justify-center border border-[#1C1B1A] bg-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
+            >
+              Add to cart
+            </button>
+          ) : product.availability === 'available' ? (
+            <span className="inline-flex min-h-[48px] items-center justify-center border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+              Sign in to add
+            </span>
+          ) : (
+            <span className="inline-flex min-h-[48px] items-center justify-center border border-[#1C1B1A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+              Sold out
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

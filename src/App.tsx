@@ -21,15 +21,15 @@ import { AnimatedRoutes } from './components/Effects/PageTransition'
 // Pages
 import {
   Archive, Rankings, Profile, Community, Journey, Campaign,
-  Store, StoreProductDetail, NewPost, Dashboard, AccessTiersMobile,
-  AccessTiersAlbert, ExperienceMobile, ExperienceAlbert,
-  EventsMobile, Events, DashboardMobile, RankingSubmission, Login, NotFound
+  Store, StoreProductDetail, NewPost, Dashboard,
+  AccessTiersAlbert, ExperienceAlbert,
+  Events, RankingSubmission, Login, NotFound
 } from './pages/StitchPrototypes'
 
 function AppContent() {
   return (
     <div className="app-theme-root">
-      <div className="relative flex-1 flex flex-col h-screen overflow-hidden bg-[#F4EFE6]" data-scroll-container>
+      <div className="relative flex min-h-[100dvh] flex-1 flex-col overflow-x-hidden bg-[#F4EFE6] lg:h-screen" data-scroll-container>
         <Suspense fallback={<div className="text-[#3C2A21] p-8 text-center font-serif">Loading...</div>}>
           <AnimatedRoutes>
             <Routes>
@@ -49,13 +49,9 @@ function AppContent() {
               <Route path="/store/product/:productSlug" element={<StoreProductDetail />} />
               <Route path="/new-post" element={<NewPost />} />
               <Route path="/salon" element={<Navigate to="/new-post" replace />} />
-              <Route path="/access-tiers-mobile" element={<AccessTiersMobile />} />
               <Route path="/access-tiers-albert" element={<AccessTiersAlbert />} />
-              <Route path="/experience-mobile" element={<ExperienceMobile />} />
               <Route path="/experience-albert" element={<ExperienceAlbert />} />
-              <Route path="/events-mobile" element={<EventsMobile />} />
               <Route path="/events" element={<Events />} />
-              <Route path="/dashboard-mobile" element={<DashboardMobile />} />
               <Route path="/login" element={<Login />} />
 
               {/* Catch all */}

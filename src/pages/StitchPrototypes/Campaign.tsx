@@ -67,13 +67,13 @@ export default function Campaign() {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
                 {latestRelease?.url ? (
                   <a
                     href={latestRelease.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 border border-[#3C2A21] bg-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
+                    className="inline-flex w-full items-center justify-center gap-2 border border-[#3C2A21] bg-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42] sm:w-auto"
                   >
                     <Music4 size={14} />
                     Open on Spotify
@@ -81,14 +81,14 @@ export default function Campaign() {
                 ) : null}
                 <Link
                   to="/rankings"
-                  className="inline-flex items-center gap-2 border border-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#3C2A21] hover:text-[#F4EFE6]"
+                  className="inline-flex w-full items-center justify-center gap-2 border border-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#3C2A21] hover:text-[#F4EFE6] sm:w-auto"
                 >
                   <Flame size={14} />
                   Fan rankings
                 </Link>
                 <Link
                   to="/store"
-                  className="inline-flex items-center gap-2 border border-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#3C2A21] hover:text-[#F4EFE6]"
+                  className="inline-flex w-full items-center justify-center gap-2 border border-[#3C2A21] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] transition-colors hover:bg-[#3C2A21] hover:text-[#F4EFE6] sm:w-auto"
                 >
                   <ArrowUpRight size={14} />
                   Merch wing
@@ -166,13 +166,13 @@ export default function Campaign() {
                   <iframe
                     title={`${latestRelease.name} Spotify embed`}
                     src={latestRelease.embedUrl}
-                    className="h-[380px] w-full border-0"
+                    className="h-[320px] w-full border-0 sm:h-[380px]"
                     loading="lazy"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                   />
                 </div>
               ) : (
-                <div className="flex h-[380px] items-end border border-dashed border-[#3C2A21]/20 bg-[#F4EFE6] p-6">
+                <div className="flex min-h-[320px] items-end border border-dashed border-[#3C2A21]/20 bg-[#F4EFE6] p-6 sm:min-h-[380px]">
                   <div className="max-w-md">
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
                       Embed fallback

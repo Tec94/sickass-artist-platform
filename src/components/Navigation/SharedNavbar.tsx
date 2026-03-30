@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Menu, Search, ShoppingBag, User, X } from 'lucide-react'
 import { setNextTransition } from '../Effects/PageTransition'
-import { Search, User, ShoppingBag } from 'lucide-react'
 import SearchOverlay, { type SearchOverlayState } from './SearchOverlay'
 import CheckoutOverlay from './CheckoutOverlay'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
@@ -10,10 +10,22 @@ import { usePrototypeCart } from '../../features/store/prototypeCart'
 const isActivePath = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
 
+const mobileNavItems = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Journey', path: '/journey' },
+  { label: 'Store', path: '/store' },
+  { label: 'Events', path: '/events' },
+  { label: 'Community', path: '/community' },
+  { label: 'Rankings', path: '/rankings' },
+  { label: 'Campaign', path: '/campaign' },
+  { label: 'Profile', path: '/profile' },
+]
+
 export default function SharedNavbar() {
   const [searchState, setSearchState] = useState<SearchOverlayState | 'closed'>('closed')
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false)
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const location = useLocation()
   const { itemCount } = usePrototypeCart()
   const searchTriggerRef = useRef<HTMLButtonElement>(null)
@@ -24,10 +36,12 @@ export default function SharedNavbar() {
     setSearchState('closed')
     setIsCheckoutOpen(false)
     setIsStoreMenuOpen(false)
+    setIsMobileNavOpen(false)
   }
 
   const beginCloseSearch = () => {
     setIsStoreMenuOpen(false)
+    setIsMobileNavOpen(false)
     setSearchState((currentState) => (currentState === 'open' ? 'closing' : currentState))
   }
 
@@ -37,17 +51,26 @@ export default function SharedNavbar() {
   }
 
   useEffect(() => {
-    setSearchState('closed')
-    setIsCheckoutOpen(false)
-    setIsStoreMenuOpen(false)
+    closeTransientUi()
   }, [location.pathname])
 
   const getLinkClasses = (path: string) => {
     const baseClasses =
-      'text-sm font-semibold uppercase tracking-wider transition-colors nav-link-hover flex items-center h-full'
+      'flex h-full items-center text-sm font-semibold uppercase tracking-wider transition-colors nav-link-hover'
 
     if (isActivePath(location.pathname, path)) {
-      return `${baseClasses} text-[#C36B42] border-b-2 border-[#C36B42]`
+      return `${baseClasses} border-b-2 border-[#C36B42] text-[#C36B42]`
+    }
+
+    return `${baseClasses} text-[#3C2A21] hover:text-[#C36B42]`
+  }
+
+  const getDrawerLinkClasses = (path: string) => {
+    const baseClasses =
+      'flex items-center justify-between border-b border-[#3C2A21]/10 py-4 text-sm font-semibold uppercase tracking-[0.16em] transition-colors'
+
+    if (isActivePath(location.pathname, path)) {
+      return `${baseClasses} text-[#C36B42]`
     }
 
     return `${baseClasses} text-[#3C2A21] hover:text-[#C36B42]`
@@ -55,18 +78,19 @@ export default function SharedNavbar() {
 
   return (
     <>
-      <header className="relative z-40 flex h-[72px] min-h-[72px] shrink-0 items-center justify-between border-b border-[#3C2A21] bg-[#F4EFE6] px-8 shadow-[0_4px_10px_rgba(60,42,33,0.12)]">
-        <div className="flex items-center gap-12 h-full">
+      <header className="mobile-safe-header relative z-40 flex min-h-[72px] shrink-0 items-center justify-between border-b border-[#3C2A21] bg-[#F4EFE6] px-4 shadow-[0_4px_10px_rgba(60,42,33,0.12)] sm:px-6 lg:px-8">
+        <div className="flex h-full min-w-0 items-center gap-4 lg:gap-12">
           <Link
             to="/dashboard"
-            className="font-['Cormorant_Garamond'] text-2xl font-semibold tracking-tight text-[#3C2A21] hover:text-[#C36B42] transition-colors"
+            className="truncate font-['Cormorant_Garamond'] text-xl font-semibold tracking-tight text-[#3C2A21] transition-colors hover:text-[#C36B42] sm:text-2xl"
+            onClick={() => closeTransientUi()}
           >
             THE ESTATE
           </Link>
 
-          <nav className="flex items-center gap-8 h-full">
+          <nav className="hidden h-full items-center gap-8 lg:flex">
             <div
-              className="relative h-full flex items-center"
+              className="relative flex h-full items-center"
               onMouseEnter={() => {
                 if (isSearchActive) return
                 setIsStoreMenuOpen(true)
@@ -171,7 +195,7 @@ export default function SharedNavbar() {
                               }}
                               className="text-sm text-[#3C2A21] transition-colors hover:text-[#C36B42]"
                             >
-                              Vinyl & Media
+                              Vinyl &amp; Media
                             </Link>
                           </div>
                           <div className="flex flex-col gap-4">
@@ -266,7 +290,7 @@ export default function SharedNavbar() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
           <button
             ref={searchTriggerRef}
             type="button"
@@ -275,9 +299,10 @@ export default function SharedNavbar() {
               if (isSearchActive) return
               setIsCheckoutOpen(false)
               setIsStoreMenuOpen(false)
+              setIsMobileNavOpen(false)
               setSearchState('open')
             }}
-            className="text-[#3C2A21] hover:text-[#C36B42] transition-colors"
+            className="rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
           >
             <Search size={20} />
           </button>
@@ -291,7 +316,7 @@ export default function SharedNavbar() {
               setNextTransition('slide-up')
               closeTransientUi()
             }}
-            className="text-[#3C2A21] hover:text-[#C36B42] transition-colors"
+            className="hidden rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42] lg:block"
             aria-label="Open profile"
           >
             <User size={20} />
@@ -303,18 +328,98 @@ export default function SharedNavbar() {
               if (isSearchActive) return
               setIsCheckoutOpen(true)
               setIsStoreMenuOpen(false)
+              setIsMobileNavOpen(false)
             }}
-            className="text-[#3C2A21] hover:text-[#C36B42] transition-colors relative"
+            className="relative rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
           >
             <ShoppingBag size={20} />
             {itemCount > 0 ? (
-              <span className="absolute -top-1 -right-2 bg-[#C36B42] text-[#FAF7F2] text-[10px] font-bold px-1.5 py-0.5 rounded-sm min-w-[18px] text-center">
+              <span className="absolute -top-1 -right-2 min-w-[18px] rounded-sm bg-[#C36B42] px-1.5 py-0.5 text-center text-[10px] font-bold text-[#FAF7F2]">
                 {itemCount}
               </span>
             ) : null}
           </button>
+          <button
+            type="button"
+            aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            onClick={() => {
+              if (isSearchActive) return
+              setIsCheckoutOpen(false)
+              setIsStoreMenuOpen(false)
+              setIsMobileNavOpen((currentState) => !currentState)
+            }}
+            className="rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42] lg:hidden"
+          >
+            {isMobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </header>
+
+      <AnimatePresence>
+        {isMobileNavOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[115] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div
+              className="absolute inset-0 bg-[#3C2A21]/34 backdrop-blur-[2px]"
+              aria-hidden="true"
+              onClick={() => setIsMobileNavOpen(false)}
+            />
+            <motion.aside
+              data-testid="mobile-nav-drawer"
+              className="responsive-sheet-panel mobile-safe-nav absolute inset-x-0 top-[72px] mx-3 overflow-hidden border border-[#3C2A21] bg-[#FAF7F2] px-5 pb-8 pt-4 shadow-[0_24px_48px_rgba(28,27,26,0.18)]"
+              initial={{ y: -20, opacity: 0.9 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -14, opacity: 0.92 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="mb-4 flex items-center justify-between gap-4 border-b border-[#3C2A21]/12 pb-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
+                    Estate navigation
+                  </p>
+                  <p className="mt-2 font-['Cormorant_Garamond'] text-2xl text-[#3C2A21]">
+                    Move through the live routes
+                  </p>
+                </div>
+                <Link
+                  to="/profile"
+                  aria-label="Open profile"
+                  className="rounded-full border border-[#3C2A21]/18 p-2 text-[#3C2A21] transition-colors hover:border-[#C36B42] hover:text-[#C36B42]"
+                  onClick={() => {
+                    setNextTransition('slide-up')
+                    closeTransientUi()
+                  }}
+                >
+                  <User size={18} />
+                </Link>
+              </div>
+
+              <nav className="flex flex-col">
+                {mobileNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => {
+                      setNextTransition('push')
+                      closeTransientUi()
+                    }}
+                    className={getDrawerLinkClasses(item.path)}
+                  >
+                    <span>{item.label}</span>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-[#8E7D72]">
+                      Open
+                    </span>
+                  </Link>
+                ))}
+              </nav>
+            </motion.aside>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {searchState !== 'closed' ? (
         <SearchOverlay

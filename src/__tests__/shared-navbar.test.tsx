@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SharedNavbar from '../components/Navigation/SharedNavbar'
@@ -124,6 +124,23 @@ describe('SharedNavbar', () => {
     const header = container.querySelector('header')
     expect(header).toHaveClass('shadow-[0_4px_10px_rgba(60,42,33,0.12)]')
     expect(screen.getByRole('link', { name: /journey/i })).toHaveClass('border-b-2')
+  })
+
+  it('opens the mobile drawer and exposes route links from the compact header shell', () => {
+    render(
+      <PrototypeCartProvider>
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <SharedNavbar />
+        </MemoryRouter>
+      </PrototypeCartProvider>,
+    )
+
+    fireEvent.click(screen.getByLabelText(/open navigation menu/i))
+
+    const drawer = screen.getByTestId('mobile-nav-drawer')
+    expect(drawer).toBeInTheDocument()
+    expect(within(drawer).getByRole('link', { name: /community/i })).toBeInTheDocument()
+    expect(within(drawer).getByRole('link', { name: /^profile open$/i })).toBeInTheDocument()
   })
 
   it('keeps the store menu hover bridge and mounts the cart drawer only when open', () => {

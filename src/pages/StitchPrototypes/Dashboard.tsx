@@ -29,7 +29,7 @@ const formatFeaturedDropPrice = (priceCents: number) =>
 
 export default function Dashboard() {
   return (
-    <div className="h-screen flex flex-col bg-[#F4EFE6] text-[#3C2A21] font-sans antialiased overflow-hidden">
+    <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#F4EFE6] font-sans text-[#3C2A21] antialiased lg:h-screen">
       <style>{`
         .border-ink { border-color: #3C2A21; }
         .border-ink-soft { border-color: rgba(60, 42, 33, 0.15); }
@@ -56,24 +56,24 @@ export default function Dashboard() {
       `}</style>
       <SharedNavbar />
 
-      <main className="relative flex-1 min-h-0 flex flex-row overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[65%] z-20 w-px bg-[#3C2A21]" />
-        <div className="w-[65%] h-full flex flex-col overflow-hidden">
-          <div className="p-8 pb-4 flex-1 flex flex-col min-h-0">
-            <div className="relative w-full h-full bg-cover bg-center rounded-sm overflow-hidden flex items-end p-10 py-8 shadow-md" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}>
+      <main data-testid="dashboard-shell" className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden lg:flex-row lg:overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[62%] z-20 hidden w-px bg-[#3C2A21] lg:block" />
+        <div className="flex w-full flex-col overflow-hidden lg:h-full lg:w-[62%]">
+          <div className="flex min-h-0 flex-1 flex-col p-4 pb-4 sm:p-6 sm:pb-4 lg:p-8 lg:pb-4">
+            <div className="relative flex h-full min-h-[420px] w-full items-end overflow-hidden rounded-sm bg-cover bg-center p-6 py-6 shadow-md sm:min-h-[520px] sm:p-8 lg:p-10 lg:py-8" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}>
               <div className="absolute inset-0 bg-gradient-to-t from-[#3C2A21]/80 via-[#3C2A21]/30 to-transparent"></div>
               <div className="relative z-10 w-full">
                 <span className="text-[#FAF7F2]/80 text-xs-wide block mb-4 border-b border-[#FAF7F2]/30 pb-2 inline-block">Private Suite Vol. 3</span>
-                <h2 className="font-serif text-[72px] text-[#FAF7F2] leading-none font-medium mb-4">LATEST DROP</h2>
-                <p className="text-[#FAF7F2] font-serif text-2xl italic mb-3 opacity-90">"Every night has a room. This one is yours."</p>
-                <p className="text-[#FAF7F2]/80 font-sans text-base max-w-lg">The new collection just dropped. Explore the merch, listen to the latest tracks, and check upcoming tour dates.</p>
-                <Link to="/new-post" onClick={() => setNextTransition('push')} className="inline-block mt-8 border border-[#FAF7F2] text-[#FAF7F2] px-8 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[#FAF7F2] hover:text-[#3C2A21] transition-all rounded-sm">
+                <h2 className="font-serif text-[clamp(3.2rem,12vw,4.8rem)] text-[#FAF7F2] leading-none font-medium mb-4 lg:text-[72px]">LATEST DROP</h2>
+                <p className="mb-3 font-serif text-xl italic text-[#FAF7F2] opacity-90 sm:text-2xl">"Every night has a room. This one is yours."</p>
+                <p className="max-w-lg font-sans text-sm text-[#FAF7F2]/80 sm:text-base">The new collection just dropped. Explore the merch, listen to the latest tracks, and check upcoming tour dates.</p>
+                <Link to="/new-post" onClick={() => setNextTransition('push')} className="mt-8 inline-flex w-full items-center justify-center rounded-sm border border-[#FAF7F2] px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider text-[#FAF7F2] transition-all hover:bg-[#FAF7F2] hover:text-[#3C2A21] sm:w-auto sm:px-8">
                   Explore Now
                 </Link>
               </div>
             </div>
           </div>
-          <div className="px-8 pb-8 shrink-0 grid grid-cols-2 gap-8">
+          <div className="grid shrink-0 grid-cols-1 gap-8 px-4 pb-8 sm:px-6 lg:grid-cols-2 lg:px-8">
             <section className="flex flex-col gap-6">
               <div className="flex items-center justify-between border-b border-[#3C2A21]/20 pb-2">
                 <h3 className="text-xs-wide text-[#3C2A21]">Pack Activity</h3>
@@ -92,7 +92,7 @@ export default function Dashboard() {
                 <h3 className="text-xs-wide text-[#3C2A21]">New Drops</h3>
                 <Link to="/store" onClick={() => setNextTransition('push')} className="text-[10px] uppercase font-bold text-[#C36B42] hover:text-[#3C2A21] transition-colors">Full Store</Link>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {featuredDrops.map((product) => (
                   <Link
                     key={product.slug}
@@ -119,8 +119,8 @@ export default function Dashboard() {
             </section>
           </div>
         </div>
-        <div className="w-[35%] h-full bg-[#F4EFE6] flex flex-col">
-          <div className="px-8 py-8 bg-[#FAF7F2] border-b border-ink">
+        <div className="flex w-full flex-col border-t border-[#3C2A21]/12 bg-[#F4EFE6] lg:h-full lg:w-[38%] lg:border-t-0">
+          <div className="border-b border-ink bg-[#FAF7F2] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             <h3 className="text-xs-wide text-[#8E7D72] mb-6">Your Status</h3>
             <div className="flex items-start justify-between">
               <div>
@@ -142,18 +142,18 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="px-8 py-6 border-b-1 border-ink-soft flex items-center justify-between bg-[#F4EFE6]">
+          <div className="border-b-1 border-ink-soft flex items-center justify-between bg-[#F4EFE6] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <h3 className="font-serif text-2xl text-[#3C2A21] font-medium">Updates</h3>
             <span className="text-xs-wide text-[#8E7D72]">2026</span>
           </div>
-          <div className="flex-1 overflow-y-auto px-0 py-0 flex flex-col bg-[#F4EFE6]">
-            <Link to="/new-post" onClick={() => setNextTransition('push')} className="dispatch-link group px-8 py-6 border-b border-[#3C2A21]/10 flex flex-col gap-1">
+          <div className="flex flex-col bg-[#F4EFE6] px-0 py-0 lg:flex-1 lg:overflow-y-auto">
+            <Link to="/new-post" onClick={() => setNextTransition('push')} className="dispatch-link group flex flex-col gap-1 border-b border-[#3C2A21]/10 px-4 py-6 sm:px-6 lg:px-8">
               <span className="text-xs-wide text-[#8E7D72] group-hover:text-[#C36B42] transition-colors">20 MAR 2026</span>
               <h4 className="font-serif text-xl text-[#3C2A21] group-hover:text-[#C36B42] transition-colors">New merch just dropped — Private Suite Vol. 3 collection</h4>
             </Link>
           </div>
-          <div className="px-8 py-6 border-t-1 border-ink-soft flex justify-center bg-[#FAF7F2]">
-            <Link to="/archive" onClick={() => setNextTransition('push')} className="text-xs-wide text-[#3C2A21] hover:text-[#C36B42] transition-all flex items-center gap-2">
+          <div className="border-t-1 border-ink-soft flex justify-center bg-[#FAF7F2] px-4 py-6 sm:px-6 lg:px-8">
+            <Link to="/archive" onClick={() => setNextTransition('push')} className="flex items-center gap-2 text-xs-wide text-[#3C2A21] transition-all hover:text-[#C36B42]">
                             View All Updates
                             <ArrowRight size={14} className="ml-1" />
             </Link>

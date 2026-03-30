@@ -16,7 +16,7 @@ export default function Archive() {
 
         <div className="flex min-h-screen">
             {/* SideNavBar Navigation Shell */}
-            <aside className="fixed left-0 top-[#72px] h-[calc(100vh-72px)] w-64 flex flex-col border-r border-[#3C2A21] bg-[#FAF7F2] pt-12 hidden md:flex">
+            <aside className="fixed left-0 top-[#72px] hidden h-[calc(100vh-72px)] w-64 flex-col border-r border-[#3C2A21] bg-[#FAF7F2] pt-12 lg:flex">
                 <div className="px-6 mb-8">
                     <div className="flex items-center gap-3 mb-2">
                         <img className="w-10 h-10 object-cover grayscale border border-[#3C2A21]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNtM68J4thnsFiUg7OusBuJ2El7hmsRKfnsFNng8SJ1uA7CixmnjD4l_Bw1Cbw9LdJCRCTQhuYc0qUxwAZJFleqEUsLmXWVM2oVgsLeFR_V-fyoYojj07h4LoLPoUZ-jsj43s_QVUxE-_-7TlszRzj0SjfSR3eXd-X-KiA493zqnRkua0RQuqunzjrkDmybATn0h1A05zTDZK0y5H3CbxRDyFmhg4Q6R5mkjWK8Nq_-EB5Jz4GvYhRCK-9sjE0xHV0XWbeFYhHau7I" alt="Curator Profile Portrait" />
@@ -44,16 +44,16 @@ export default function Archive() {
             </aside>
 
             {/* Main Content Canvas */}
-            <main className="flex-1 md:ml-64 p-8 lg:p-12 pb-24">
+            <main className="flex-1 p-5 pb-24 sm:p-8 lg:ml-64 lg:p-12">
                 {/* Hero Header Section */}
                 <div className="mb-12 border-b border-[#3C2A21]/15 pb-8">
                     <p className="text-[11px] uppercase tracking-[0.3em] font-extrabold text-[#C36B42] mb-4">Volume IV • No. 12</p>
-                    <h2 className="font-serif text-6xl md:text-8xl tracking-tighter leading-none mb-6">The Song Ranking Portal</h2>
+                    <h2 className="mb-6 font-serif text-[clamp(3rem,11vw,6rem)] leading-none tracking-tighter md:text-8xl">The Song Ranking Portal</h2>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <p className="max-w-xl font-serif text-xl italic text-[#8E7D72] leading-relaxed">
                             A definitive ledger of auditory excellence, chronicling the seasonal shifts in acoustic preference and compositional merit across the grand estate.
                         </p>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4">
                             <div className="text-right border-r border-[#3C2A21]/15 pr-6">
                                 <p className="text-[10px] uppercase font-bold tracking-tighter text-[#8E7D72]">Updated</p>
                                 <p className="font-label font-bold text-sm">OCT 24, 1924</p>
@@ -113,9 +113,9 @@ export default function Archive() {
 
                     {/* Right Column: The Ledger List */}
                     <div className="lg:col-span-8">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <h3 className="font-label text-[11px] uppercase tracking-widest font-extrabold">Registry Ledger</h3>
-                            <div className="flex gap-4">
+                            <div className="flex flex-wrap gap-4">
                                 <button className="text-[10px] uppercase font-bold tracking-widest border-b border-[#C36B42] text-[#C36B42]">By Rank</button>
                                 <button className="text-[10px] uppercase font-bold tracking-widest text-[#8E7D72] hover:text-[#3C2A21]">By Genre</button>
                                 <button className="text-[10px] uppercase font-bold tracking-widest text-[#8E7D72] hover:text-[#3C2A21]">A-Z</button>
@@ -124,12 +124,42 @@ export default function Archive() {
 
                         {/* Ledger Table */}
                         <div className="border-t-2 border-[#3C2A21]">
-                            <div className="grid grid-cols-12 bg-[#D1C7BC]/10 py-3 px-4 border-b border-[#3C2A21] text-[10px] uppercase font-extrabold tracking-widest text-[#8E7D72]">
+                            <div className="hidden grid-cols-12 bg-[#D1C7BC]/10 px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-[#8E7D72] md:grid md:border-b md:border-[#3C2A21]">
                                 <div className="col-span-1">No.</div>
                                 <div className="col-span-5">Composition Title</div>
                                 <div className="col-span-3">Orchestra / Artist</div>
                                 <div className="col-span-2 text-right">Circulation</div>
                                 <div className="col-span-1 text-right">Trend</div>
+                            </div>
+                            <div className="space-y-4 py-4 md:hidden">
+                                {[ 
+                                    { no: '04', title: 'Winter Whispers at Dawn', genre: 'Classical / Solo Piano', artist: 'Arthur Penhaligon', circ: '54,109', trend: 'Rising' },
+                                    { no: '05', title: 'The Marble Hall Gala', genre: 'Orchestral / Waltz', artist: 'Vienna State Phil.', circ: '49,822', trend: 'Holding' },
+                                    { no: '06', title: 'Starlight Promenade', genre: 'Jazz / Swing', artist: 'The Midnight Five', circ: '41,002', trend: 'Falling' },
+                                    { no: '07', title: 'Echoes of the Great Lake', genre: 'Ambient / Nature', artist: 'Environmentalist Soc.', circ: '39,441', trend: 'Rising' },
+                                    { no: '08', title: 'Copper Pipe Fugue', genre: 'Experimental', artist: 'The Foundry Duo', circ: '22,810', trend: 'Holding' }
+                                ].map((row, i) => (
+                                    <article key={`mobile-${i}`} className="border border-[#3C2A21]/15 bg-[#FAF7F2] p-5">
+                                        <div className="mb-4 flex items-start justify-between gap-4">
+                                            <div>
+                                                <span className="font-label text-[10px] font-extrabold uppercase tracking-widest text-[#8E7D72]">No. {row.no}</span>
+                                                <h4 className="mt-2 font-serif text-2xl leading-tight text-[#3C2A21]">{row.title}</h4>
+                                            </div>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#C36B42]">{row.trend}</span>
+                                        </div>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E7D72]">{row.genre}</p>
+                                        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-[#3C2A21]/12 pt-4 text-sm">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E7D72]">Artist</p>
+                                                <p className="mt-2 font-semibold">{row.artist}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E7D72]">Circulation</p>
+                                                <p className="mt-2 font-semibold">{row.circ}</p>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
                             
                             {[ 
@@ -139,7 +169,7 @@ export default function Archive() {
                                 { no: '07', title: 'Echoes of the Great Lake', genre: 'Ambient / Nature', artist: 'Environmentalist Soc.', circ: '39,441', trendIcon: <TrendingUp size={18} className="text-green-700" /> },
                                 { no: '08', title: 'Copper Pipe Fugue', genre: 'Experimental', artist: 'The Foundry Duo', circ: '22,810', trendIcon: <Minus size={18} className="text-[#8E7D72]" /> }
                             ].map((row, i) => (
-                                <div key={i} className="grid grid-cols-12 py-4 px-4 border-b border-[#3C2A21]/15 hover:bg-[#C36B42]/[0.03] transition-colors group cursor-pointer">
+                                <div key={i} className="hidden grid-cols-12 border-b border-[#3C2A21]/15 px-4 py-4 transition-colors group cursor-pointer hover:bg-[#C36B42]/[0.03] md:grid">
                                     <div className="col-span-1 font-label font-extrabold text-sm self-center">{row.no}</div>
                                     <div className="col-span-5 flex flex-col justify-center">
                                         <span className="font-serif text-lg leading-tight group-hover:text-[#C36B42]">{row.title}</span>
@@ -154,7 +184,7 @@ export default function Archive() {
                             ))}
                         </div>
 
-                        <div className="mt-8 flex justify-between items-center">
+                        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <p className="font-serif italic text-[#8E7D72] text-sm">Displaying entries 1 through 8 of 1,204.</p>
                             <div className="flex gap-2">
                                 <button className="w-10 h-10 border border-[#3C2A21] flex items-center justify-center hover:bg-[#C36B42] hover:text-white transition-colors">

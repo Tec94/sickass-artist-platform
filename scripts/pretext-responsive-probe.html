@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Pretext responsive probe</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Manrope, system-ui, sans-serif;
+        background: #f4efe6;
+        color: #1c1b1a;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 24px;
+      }
+
+      p {
+        max-width: 72ch;
+        line-height: 1.6;
+      }
+
+      pre {
+        overflow: auto;
+        border: 1px solid rgba(28, 27, 26, 0.16);
+        background: #faf7f2;
+        padding: 16px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pretext responsive probe</h1>
+    <p>
+      This page measures a small set of long editorial strings against narrow
+      widths. Use it when you need a quick sanity check before locking hero
+      type, filter labels, or CTA copy into a responsive layout.
+    </p>
+    <pre id="results">Loading…</pre>
+    <script type="module">
+      import { layout, prepare } from "../node_modules/@chenglou/pretext/dist/layout.js";
+
+      const cases = [
+        {
+          id: "access-tiers-heading",
+          text: "The Royal Albert Hall",
+          font: "72px Impact",
+          lineHeight: 72,
+          widths: [320, 375, 768],
+        },
+        {
+          id: "experience-heading",
+          text: "THE ROYAL ALBERT HALL EXHIBITION",
+          font: "96px Impact",
+          lineHeight: 96,
+          widths: [320, 375, 768],
+        },
+        {
+          id: "events-row-title",
+          text: "Coliseo de Puerto Rico",
+          font: "300 20px Georgia",
+          lineHeight: 28,
+          widths: [140, 180, 240],
+        },
+        {
+          id: "search-placeholder",
+          text: "Search the Estate Archives...",
+          font: "30px Georgia",
+          lineHeight: 40,
+          widths: [240, 320, 480],
+        },
+        {
+          id: "cta-label",
+          text: "Complete Purchase",
+          font: "700 18px Arial Narrow",
+          lineHeight: 28,
+          widths: [140, 180, 220],
+        },
+      ];
+
+      const results = cases.map((entry) => {
+        const prepared = prepare(entry.text, entry.font);
+        return {
+          id: entry.id,
+          font: entry.font,
+          text: entry.text,
+          widths: entry.widths.map((width) => ({
+            width,
+            ...layout(prepared, width, entry.lineHeight),
+          })),
+        };
+      });
+
+      document.getElementById("results").textContent = JSON.stringify(
+        results,
+        null,
+        2,
+      );
+      console.log(results);
+    </script>
+  </body>
+</html>

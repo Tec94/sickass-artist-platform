@@ -2,10 +2,20 @@ import { Link } from 'react-router-dom';
 import { setNextTransition } from '../../components/Effects/PageTransition';
 import { Search, UserCircle, Circle } from 'lucide-react';
 import SharedNavbar from '../../components/Navigation/SharedNavbar';
+import { usePretextResponsiveFit } from '../../hooks/usePretextResponsiveFit';
 
 export default function ExperienceAlbert() {
+  const headingText = 'THE ROYAL ALBERT HALL EXHIBITION'
+  const { containerRef, isCompact } = usePretextResponsiveFit({
+    text: headingText,
+    font: '96px Impact',
+    lineHeight: 96,
+    maxLines: 3,
+    compactBelow: 768,
+  })
+
   return (
-    <div className="h-full overflow-y-auto bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
+    <div className="min-h-[100dvh] overflow-y-auto bg-[#F4EFE6] text-[#3C2A21] w-full font-sans">
       <style>{`
         .material-symbols-outlined {
             font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
@@ -33,18 +43,18 @@ export default function ExperienceAlbert() {
       
 <SharedNavbar />
 <main className="min-h-screen">
-<section className="relative w-full h-[600px] overflow-hidden border-b border-outline">
+<section className="relative w-full h-[360px] overflow-hidden border-b border-outline sm:h-[460px] lg:h-[600px]">
 <img alt="Royal Albert Hall" className="w-full h-full object-cover grayscale contrast-125 brightness-75" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8BreJDDMzM9Y7d6qLFVSdtmTMnOJf5jmozRCrfDqeBjTHQZaFvVE-9Uq0qMTqTqmB2uA00w1WzCWeAVB2SXI2ZuKli138TErVcfqQcDM6WTkO-sY3BPvdMQatJvACBz8tI6ehZUpKTOMVqi_OC-FKoFHUEC6E2S7kXaHfW6zJAslC3N8mJbzFJj7HnuJyKFqe6NtXbp_0ECKtkaRpsNwAw_Zd2HDkzAvOVNadK01qh6v5ZcRwdl79iKQs25TyE4BJ-Nnlsj1yLOH1" />
 <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1A]/90 via-[#1C1B1A]/30 to-transparent"></div>
-<div className="absolute bottom-12 left-6 right-6 md:left-12 max-w-4xl font-display">
-<h1 className="text-6xl md:text-9xl text-[#F4EFE6] leading-none tracking-tighter uppercase drop-shadow-md">THE ROYAL ALBERT HALL EXHIBITION</h1>
-<p className="font-headline italic text-xl md:text-3xl text-[#F4EFE6]/90 mt-4 border-l-2 border-[#C36B42] pl-6 max-w-2xl drop-shadow">A Retrospective of Architectural Sovereignty and Performance History.</p>
+<div ref={(node) => { containerRef.current = node }} className="absolute bottom-8 left-4 right-4 max-w-4xl font-display sm:left-6 sm:right-6 md:bottom-12 md:left-12">
+<h1 data-pretext-compact={isCompact ? 'true' : 'false'} className={`text-[#F4EFE6] leading-none tracking-tighter uppercase drop-shadow-md ${isCompact ? 'text-[clamp(2.8rem,13vw,4.6rem)] sm:text-[clamp(3.8rem,11vw,6.5rem)] lg:text-9xl' : 'text-[clamp(3.25rem,15vw,5.2rem)] sm:text-[clamp(4rem,12vw,7rem)] lg:text-9xl'}`}>{headingText}</h1>
+<p className="mt-4 max-w-2xl border-l-2 border-[#C36B42] pl-4 font-headline text-lg italic text-[#F4EFE6]/90 drop-shadow sm:pl-6 sm:text-xl md:text-3xl">A Retrospective of Architectural Sovereignty and Performance History.</p>
 </div>
 </section>
-<section className="max-w-7xl mx-auto p-6 md:p-12">
+<section className="max-w-7xl mx-auto p-4 sm:p-6 md:p-12">
 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
 
-<div className="md:col-span-12 lg:col-span-8 p-8 md:p-12 border border-outline-variant parchment-texture bg-surface-container-lowest">
+<div className="md:col-span-12 lg:col-span-8 p-5 sm:p-8 md:p-12 border border-outline-variant parchment-texture bg-surface-container-lowest">
 <div className="flex items-center justify-between mb-8">
 <h2 className="font-headline text-4xl">The Genesis of Obsidian</h2>
 <div className="twin-lines text-primary"><span></span><span></span></div>
@@ -67,7 +77,7 @@ export default function ExperienceAlbert() {
 </div>
 </div>
 </div>
-<div className="md:col-span-12 lg:col-span-4 p-8 border border-outline-variant parchment-texture bg-surface-container-low/30">
+<div className="md:col-span-12 lg:col-span-4 p-5 sm:p-8 border border-outline-variant parchment-texture bg-surface-container-low/30">
 <h4 className="font-label text-[0.6875rem] uppercase tracking-widest mb-6 opacity-70">Map Reference</h4>
 <div className="aspect-video lg:aspect-square bg-surface-container-highest relative group overflow-hidden border border-outline/10">
 <img alt="Map location" className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-80 transition-opacity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4t8-y4DkaWzKDFagRLZaVSFB9m5AiQAjTusk_3v4LAEJbhnynl7raVzxRPn4KddJBHZoGetGTGbX26Qun7W9XZrknMRxTDy73xqpdP5cY1zjVTDaP85al0I5zWm59ju0bnO-HBGees1a1qXSK1rIPYBh5UQv3SprQyEEx16vBB7t0q2uVK7AXACYVd1cXgInXM-suZP08Lr9YqAH5eKb0uETCt8w0hACZxdntvE8YPTqPAgcfEl0sD4UPEM3hJbp0qF9JArMGZco1" />
@@ -80,7 +90,7 @@ export default function ExperienceAlbert() {
 </div>
 </div>
 
-<div className="md:col-span-12 lg:col-span-5 border border-outline p-8 md:p-12 bg-background relative overflow-hidden flex flex-col">
+<div className="md:col-span-12 lg:col-span-5 border border-outline p-5 sm:p-8 md:p-12 bg-background relative overflow-hidden flex flex-col">
 <div className="relative z-10">
 <h2 className="font-display text-5xl mb-6 tracking-tighter">BUY TICKETS</h2>
 
@@ -138,7 +148,7 @@ export default function ExperienceAlbert() {
 <span className="absolute -bottom-10 -right-10 font-display text-[12rem] opacity-[0.03] select-none pointer-events-none">ENTRY</span>
 </div>
 
-<div className="md:col-span-12 lg:col-span-7 p-8 md:p-12 border border-outline-variant parchment-texture bg-surface-container-low/20">
+<div className="md:col-span-12 lg:col-span-7 p-5 sm:p-8 md:p-12 border border-outline-variant parchment-texture bg-surface-container-low/20">
 <div className="flex items-center justify-between mb-12">
 <h3 className="font-headline text-4xl">Event Rules &amp; Protocol</h3>
 <div className="twin-lines text-primary"><span></span><span></span></div>
@@ -171,7 +181,7 @@ export default function ExperienceAlbert() {
 </section>
 </main>
 <footer className="bg-[#F4F0EB] border-t border-[#1C1B1A]/20">
-<div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto">
+<div className="flex flex-col md:flex-row justify-between items-center px-4 sm:px-8 py-12 max-w-7xl mx-auto">
 <span className="font-['Manrope'] text-[0.6875rem] uppercase tracking-widest opacity-70 mb-4 md:mb-0">
             © 2024 THE ESTATE DIRECTORY × PRIVATE SUITE OS. ALL RIGHTS RESERVED.
         </span>

@@ -4,7 +4,7 @@ import { setNextTransition } from '../../components/Effects/PageTransition';
 
 export default function Login() {
   return (
-    <div className="archive-login-shell font-body selection:bg-[#C36B42]/20 min-h-screen flex items-center justify-center p-6 bg-[#F4EFE6] text-[#3C2A21]">
+    <div className="archive-login-shell font-body selection:bg-[#C36B42]/20 min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-[#F4EFE6] text-[#3C2A21]">
       <style>{`
         .archive-login-shell { color-scheme: light; }
         .vellum-surface { background-color: #FAF7F2; }
@@ -34,7 +34,7 @@ export default function Login() {
         }
       `}</style>
       
-      <main className="w-full max-w-lg flex flex-col gap-12 z-10">
+      <main className="z-10 flex w-full max-w-lg flex-col gap-10 sm:gap-12">
         {/* Brand Header */}
         <header className="text-center">
           <h1 className="font-headline italic text-4xl tracking-tight text-[#3C2A21]">
@@ -46,7 +46,7 @@ export default function Login() {
         </header>
         
         {/* Login Card */}
-        <section className="vellum-surface ink-border p-10 md:p-14 relative overflow-hidden">
+        <section className="vellum-surface ink-border relative overflow-hidden p-6 sm:p-10 md:p-14">
           {/* Architectural Line Detail */}
           <div className="absolute top-0 left-0 w-full h-[2px] bg-[#3C2A21]"></div>
           
@@ -85,7 +85,7 @@ export default function Login() {
                   <ArrowRight aria-hidden="true" className="h-[18px] w-[18px] shrink-0 transition-transform group-hover:translate-x-1" strokeWidth={2.2} />
                 </button>
                 
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-[#3C2A21]/10 pt-6">
+                <div className="flex flex-col items-start gap-4 border-t border-[#3C2A21]/10 pt-6 md:flex-row md:items-center md:justify-between">
                   <Link className="font-label text-[10px] font-bold tracking-wider text-[#8E7D72] hover:text-[#3C2A21] transition-colors uppercase decoration-[#8E7D72]/30 underline-offset-4 underline" to="#">
                     Forgot credentials?
                   </Link>
@@ -100,7 +100,7 @@ export default function Login() {
         
         {/* Institutional Footer */}
         <footer className="flex flex-col items-center gap-4 opacity-60">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <span className="font-label text-[9px] font-bold tracking-[0.2em] uppercase text-[#3C2A21]">Registry v.4.0.2</span>
             <span className="w-[1px] h-3 bg-[#3C2A21]/20"></span>
             <span className="font-label text-[9px] font-bold tracking-[0.2em] uppercase text-[#3C2A21]">End-to-End Encryption</span>

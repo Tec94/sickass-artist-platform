@@ -179,12 +179,12 @@ export default function Rankings() {
   }, [activeBoard, entries, songLeaderboard])
 
   return (
-    <div className="rankings-v2-container flex h-full min-h-0 flex-col overflow-x-hidden">
+    <div className="rankings-v2-container flex min-h-[100dvh] min-h-0 flex-col overflow-x-hidden lg:h-screen">
       <div className="halftone-overlay" />
       <SharedNavbar />
 
-      <main className="mx-auto flex min-h-[calc(100dvh-72px)] w-full max-w-[1920px]">
-        <div className="custom-scrollbar flex-1 overflow-y-auto border-r border-structural p-8 md:p-12">
+      <main className="mx-auto flex min-h-[calc(100dvh-72px)] w-full max-w-[1920px] flex-col xl:flex-row">
+        <div className="custom-scrollbar flex-1 overflow-y-auto border-r-0 p-5 sm:p-8 md:p-10 xl:border-r xl:border-structural xl:p-12">
           <header className="mb-10 space-y-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#8E8982]">
@@ -195,7 +195,7 @@ export default function Rankings() {
               </span>
             </div>
             <div className="space-y-4">
-              <h2 className="editorial-title text-5xl leading-none text-[#1C1B1A] md:text-7xl">Pack Rankings</h2>
+              <h2 className="editorial-title text-[clamp(3rem,9vw,4.5rem)] leading-none text-[#1C1B1A] md:text-7xl">Pack Rankings</h2>
               <div className="h-px w-full bg-[#1C1B1A]/15" />
               <p className="max-w-3xl text-sm leading-relaxed text-[#5B554D] md:text-[15px]">
                 A denser ledger of the archive&apos;s most influential members and the tracks shaping the current cycle.

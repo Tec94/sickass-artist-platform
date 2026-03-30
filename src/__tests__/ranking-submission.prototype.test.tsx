@@ -49,7 +49,7 @@ describe('RankingSubmission prototype', () => {
       'xl:overflow-y-auto',
       'xl:overscroll-contain',
     )
-    expect(screen.getByText('Submit Your Archive')).toBeInTheDocument()
+    expect(screen.getByText('Submit Your Rankings')).toBeInTheDocument()
     expect(screen.getAllByText('WO OH OH').length).toBeGreaterThan(0)
     expect(screen.queryByText('Midnight City')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /back to rankings/i })).toHaveAttribute('href', '/rankings')
@@ -57,6 +57,6 @@ describe('RankingSubmission prototype', () => {
     fireEvent.click(screen.getByRole('button', { name: /add wo oh oh to ranking/i }))
 
     expect(screen.getByText('1 / 5 tracks staged')).toBeInTheDocument()
-    expect(screen.getByText(/prototype mode only/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /reorder wo oh oh/i })).toBeInTheDocument()
   })
 })

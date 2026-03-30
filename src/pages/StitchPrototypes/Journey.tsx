@@ -188,9 +188,9 @@ export default function Journey() {
         <SharedNavbar />
       </div>
 
-      <main className="pt-[72px] min-h-screen grid lg:h-screen lg:min-h-0 lg:grid-cols-[400px_minmax(0,1fr)]">
-        <aside className="border-r border-[#3C2A21] bg-[#FCFBF9] flex flex-col lg:h-[calc(100vh-72px)] lg:min-h-0 lg:overflow-hidden">
-          <div className="h-10 shrink-0 px-6 md:px-8 border-b border-[#3C2A21] flex items-center">
+      <main className="flex min-h-screen flex-col pt-[72px] lg:grid lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(320px,30vw)_minmax(0,1fr)]">
+        <aside className="flex flex-col border-b border-[#3C2A21] bg-[#FCFBF9] lg:h-[calc(100vh-72px)] lg:min-h-0 lg:overflow-hidden lg:border-b-0 lg:border-r">
+          <div className="flex h-10 shrink-0 items-center border-b border-[#3C2A21] px-5 sm:px-6 md:px-8">
             <Link
               to="/dashboard"
               className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[#3C2A21] hover:text-[#C36B42] transition-colors"
@@ -200,9 +200,9 @@ export default function Journey() {
             </Link>
           </div>
 
-          <div className="px-6 md:px-8 py-8 md:py-10 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-7 sm:px-6 md:px-8 md:py-10">
             <div className="mb-10">
-              <h1 className="font-serif text-5xl leading-none mb-4">The Journey</h1>
+              <h1 className="font-serif text-[clamp(2.9rem,9vw,5rem)] leading-none mb-4">The Journey</h1>
               <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#8E7D72]">
                 Outergrounds / Live Chapters
               </p>
@@ -245,7 +245,7 @@ export default function Journey() {
                   <button
                     key={entry.id}
                     type="button"
-                    className={`group w-full px-3 md:px-4 py-6 text-left border-b border-[#3C2A21]/25 transition-colors ${
+                    className={`group w-full border-b border-[#3C2A21]/25 px-3 py-5 text-left transition-colors md:px-4 md:py-6 ${
                       isActive ? 'bg-[#F4EFE6]' : 'bg-transparent hover:bg-[#FAF7F2]'
                     } ${entry.isLocked ? 'opacity-80' : ''}`}
                     onMouseEnter={() => setPreviewRegionId(entry.id)}
@@ -302,11 +302,11 @@ export default function Journey() {
             </div>
           </div>
 
-          <div className="p-6 border-t border-[#3C2A21] bg-[#FCFBF9] mt-auto shrink-0">
+          <div className="mt-auto shrink-0 border-t border-[#3C2A21] bg-[#FCFBF9] p-5 sm:p-6">
             <button
               type="button"
               onClick={() => openRegion(activeRegion)}
-              className="w-full inline-flex items-center justify-center gap-3 border border-[#3C2A21] bg-[#1F1C19] text-[#F4EFE6] px-6 py-4 text-[12px] font-bold uppercase tracking-[0.22em] hover:bg-[#C36B42] hover:border-[#C36B42] transition-colors"
+              className="inline-flex w-full items-center justify-center gap-3 border border-[#3C2A21] bg-[#1F1C19] px-6 py-4 text-[12px] font-bold uppercase tracking-[0.22em] text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]"
             >
               {activeRegion.isLocked ? <Lock size={15} /> : <ArrowRight size={15} />}
               Open {activeRegion.journeyLabel}
@@ -314,7 +314,7 @@ export default function Journey() {
           </div>
         </aside>
 
-        <section className="bg-[#05070b] min-h-[70vh] lg:h-[calc(100vh-72px)] lg:min-h-0 overflow-hidden">
+        <section className="min-h-[52vh] overflow-hidden bg-[#05070b] sm:min-h-[60vh] lg:h-[calc(100vh-72px)] lg:min-h-0">
           <LandingPage fromScene="/journey" onVisibleRegionChange={setVisibleRegion} />
         </section>
       </main>

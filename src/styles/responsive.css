@@ -1,41 +1,105 @@
-/* Mobile (<768px) */
-@media (max-width: 767px) {
-  .gear-stick-container {
-    display: none;
-  }
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --responsive-space-xs: clamp(0.25rem, 0.18rem + 0.32vw, 0.5rem);
+  --responsive-space-sm: clamp(0.5rem, 0.38rem + 0.52vw, 0.82rem);
+  --responsive-space-md: clamp(0.8rem, 0.62rem + 0.96vw, 1.35rem);
+  --responsive-space-lg: clamp(1.2rem, 0.92rem + 1.44vw, 2rem);
+  --responsive-space-xl: clamp(1.8rem, 1.3rem + 2.1vw, 3rem);
+  --responsive-text-sm: clamp(0.82rem, 0.76rem + 0.28vw, 0.95rem);
+  --responsive-text-base: clamp(0.98rem, 0.92rem + 0.34vw, 1.1rem);
+  --responsive-text-lg: clamp(1.16rem, 1rem + 0.72vw, 1.42rem);
+  --responsive-text-xl: clamp(1.45rem, 1.08rem + 1.6vw, 2.2rem);
+  --responsive-text-display: clamp(2.4rem, 1.5rem + 4.8vw, 5.4rem);
+  --app-header-height: 72px;
+}
 
-  .gear-display {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
-  }
+.app-safe-top {
+  padding-top: var(--safe-area-top);
+}
 
-  .gear-button {
-    width: 48px;
-    height: 48px;
-    font-size: 16px;
-  }
+.app-safe-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
 
-  .windshield-frame {
-    width: 100%;
-    padding: 16px;
-  }
+.app-safe-inline {
+  padding-inline: calc(var(--responsive-space-md) + var(--safe-area-left))
+    calc(var(--responsive-space-md) + var(--safe-area-right));
+}
 
-  .navbar-fallback {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
+.app-shell-dvh {
+  min-height: 100vh;
+}
 
-  .mobile-nav-links {
-    display: flex;
+@supports (min-height: 100dvh) {
+  .app-shell-dvh {
+    min-height: 100dvh;
   }
 }
 
-/* Tablet (768px - 1024px) */
-@media (min-width: 768px) and (max-width: 1023px) {
+.responsive-display {
+  font-size: var(--responsive-text-display);
+}
+
+.responsive-title-xl {
+  font-size: var(--responsive-text-xl);
+}
+
+.responsive-copy {
+  font-size: var(--responsive-text-base);
+}
+
+.responsive-surface-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--responsive-space-lg);
+}
+
+.responsive-bottom-bar {
+  padding-bottom: calc(var(--safe-area-bottom) + 0.9rem);
+}
+
+.responsive-sheet-panel {
+  border-top-left-radius: 1.75rem;
+  border-top-right-radius: 1.75rem;
+}
+
+.gear-stick-container {
+  display: none;
+}
+
+.gear-display {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.gear-button {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.windshield-frame {
+  width: 100%;
+  padding: 16px;
+}
+
+.navbar-fallback {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.mobile-nav-links {
+  display: flex;
+}
+
+@media (min-width: 768px) {
   .gear-stick-container {
     display: flex;
   }
@@ -45,7 +109,7 @@
   }
 
   .windshield-frame {
-    width: 70%;
+    width: min(70%, 880px);
     margin: 0 auto;
   }
 
@@ -58,26 +122,22 @@
   }
 }
 
-/* Desktop (1024px+) */
 @media (min-width: 1024px) {
-  .gear-stick-container {
-    display: flex;
-  }
-
-  .gear-display {
-    display: none;
-  }
-
   .windshield-frame {
-    width: 60%;
-    margin: 0 auto;
+    width: min(60%, 960px);
+  }
+}
+
+@media (max-width: 639px) {
+  [data-scroll-container] {
+    min-height: 100dvh;
   }
 
-  .navbar-fallback {
-    position: relative;
+  .mobile-safe-nav {
+    padding-bottom: calc(var(--safe-area-bottom) + 0.55rem);
   }
 
-  .mobile-nav-links {
-    display: none;
+  .mobile-safe-header {
+    padding-top: var(--safe-area-top);
   }
 }

@@ -26,12 +26,12 @@ export default function NewPost() {
 
 <SharedNavbar />
 
-<div className="flex h-[calc(100vh-72px)] w-full max-w-[1600px] mx-auto overflow-hidden">
+<div className="mx-auto flex w-full max-w-[1600px] flex-col overflow-hidden lg:h-[calc(100dvh-72px)] lg:flex-row">
 <CommunitySidebar activeItem="new-post" />
 
 <main className="new-post-scroll flex-1 w-full min-h-0 overflow-y-auto">
 <div className="sticky top-0 z-20 border-b border-[#3C2A21]/10 bg-[#F4EFE6]/95 backdrop-blur-sm">
-<div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-8 py-4 md:px-12">
+<div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6 md:px-12">
 <Link
 to="/community"
 aria-label="Return to the community page"
@@ -45,11 +45,11 @@ className="inline-flex items-center gap-2 border border-[#3C2A21] bg-[#FAF7F2] p
 </div>
 </div>
 
-<div className="max-w-5xl mx-auto p-8 pb-28 md:p-12 md:pb-12">
+<div className="max-w-5xl mx-auto p-4 pb-40 sm:p-6 sm:pb-36 md:p-12 md:pb-12">
 
-<div className="grid grid-cols-1 md:grid-cols-12 ink-border">
+<div className="grid grid-cols-1 ink-border lg:grid-cols-12">
 
-<div className="md:col-span-3 ink-border-r bg-surface-container-low p-6 space-y-8">
+<div className="hidden bg-surface-container-low p-6 space-y-8 lg:col-span-3 lg:block lg:border-r lg:border-[#3C2A21]">
 <div>
 <label className="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-3 block">Category</label>
 <select className="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 font-body text-sm py-2 px-0 italic">
@@ -81,19 +81,54 @@ className="inline-flex items-center gap-2 border border-[#3C2A21] bg-[#FAF7F2] p
 </div>
 </div>
 
-<div className="md:col-span-9 bg-surface-container-lowest">
+<div className="bg-surface-container-lowest lg:col-span-9">
 
-<div className="ink-border-b p-8">
+<details className="border-b border-[#3C2A21]/12 bg-surface-container-low px-4 py-4 lg:hidden">
+<summary className="cursor-pointer list-none text-[11px] font-bold uppercase tracking-[0.18em] text-[#3C2A21]">
+                                Post controls
+                            </summary>
+<div className="mt-4 space-y-5">
+<div>
+<label className="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-3 block">Category</label>
+<select className="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 font-body text-sm py-2 px-0 italic">
+<option>All Threads</option>
+<option>Announcements</option>
+<option>The Archives</option>
+<option>Upcoming Events</option>
+<option>General</option>
+</select>
+</div>
+<div>
+<label className="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-3 block">Visibility</label>
+<div className="space-y-2">
+<label className="flex items-center gap-2 text-sm cursor-pointer">
+<input defaultChecked={true} className="accent-[#C36B42] focus:ring-0 border-outline" name="access-mobile" type="radio" />
+<span>Open to all members</span>
+</label>
+<label className="flex items-center gap-2 text-sm cursor-pointer opacity-50">
+<input className="accent-[#C36B42] focus:ring-0 border-outline" disabled={true} name="access-mobile" type="radio" />
+<span>Mods only</span>
+</label>
+</div>
+</div>
+<div className="p-4 border border-dashed border-outline-variant text-center">
+<Paperclip className="text-on-surface-variant block mb-2 mx-auto" />
+<span className="font-label text-[9px] uppercase font-bold text-on-surface-variant">Attach Image<br />or Reference (Max 5MB)</span>
+</div>
+</div>
+</details>
+
+<div className="ink-border-b p-4 sm:p-6 md:p-8">
 <label className="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-4 block" htmlFor="title">Post Title</label>
 <input className="w-full bg-transparent border-0 focus:ring-0 font-headline text-3xl italic p-0 placeholder:text-surface-dim placeholder:italic" id="title" placeholder="What is the headline?" type="text" />
 </div>
 
-<div className="p-8 min-h-[400px] ledger-line">
+<div className="min-h-[340px] p-4 ledger-line sm:p-6 md:min-h-[400px] md:p-8">
 <label className="font-label text-[10px] uppercase font-bold text-on-surface-variant mb-4 block" htmlFor="content">Message</label>
 <textarea className="w-full bg-transparent border-0 focus:ring-0 font-body text-lg leading-[32px] p-0 resize-none placeholder:text-surface-dim" id="content" placeholder="Share your update with the community..." rows={12}></textarea>
 </div>
 
-<div className="ink-border-t border-t border-on-background p-6 flex flex-col md:flex-row justify-between items-center bg-surface-container-low gap-4">
+<div className="ink-border-t border-t border-on-background bg-surface-container-low p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:p-6">
 <div className="flex items-center gap-4">
 <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-on-surface-variant">
 <Circle className="text-xs" />
@@ -104,11 +139,11 @@ className="inline-flex items-center gap-2 border border-[#3C2A21] bg-[#FAF7F2] p
                                 Autosaved 2m ago
                             </span>
 </div>
-<div className="flex gap-4 w-full md:w-auto">
-<button className="flex-1 md:flex-none px-8 py-3 bg-transparent ink-border text-on-background hover:bg-surface-dim transition-colors font-label text-[11px] uppercase tracking-widest">
+<div className="hidden w-full gap-4 sm:flex sm:w-auto">
+<button className="flex-1 px-8 py-3 bg-transparent ink-border text-on-background hover:bg-surface-dim transition-colors font-label text-[11px] uppercase tracking-widest sm:flex-none">
                                 Save Draft
                             </button>
-<button className="flex-1 md:flex-none border border-[#3C2A21] bg-[#1F1C19] px-12 py-3 text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42] font-label text-[11px] uppercase tracking-widest flex items-center justify-center gap-2">
+<button className="flex flex-1 items-center justify-center gap-2 border border-[#3C2A21] bg-[#1F1C19] px-12 py-3 font-label text-[11px] uppercase tracking-widest text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42] sm:flex-none">
 <SquarePen className="text-sm" />
                                 Publish Post
                             </button>
@@ -131,6 +166,18 @@ className="inline-flex items-center gap-2 border border-[#3C2A21] bg-[#FAF7F2] p
 </div>
 </div>
 </main>
+</div>
+
+<div className="mobile-safe-nav fixed bottom-[68px] left-0 right-0 z-40 border-t border-[#3C2A21]/12 bg-[#F4EFE6]/96 px-4 py-4 backdrop-blur sm:hidden">
+<div className="mx-auto flex max-w-5xl gap-3">
+<button className="flex-1 px-5 py-3 bg-transparent ink-border text-on-background hover:bg-surface-dim transition-colors font-label text-[11px] uppercase tracking-widest">
+                            Save Draft
+                        </button>
+<button className="flex flex-[1.25] items-center justify-center gap-2 border border-[#3C2A21] bg-[#1F1C19] px-5 py-3 font-label text-[11px] uppercase tracking-widest text-[#F4EFE6] transition-colors hover:border-[#C36B42] hover:bg-[#C36B42]">
+<SquarePen className="text-sm" />
+                            Publish Post
+                        </button>
+</div>
 </div>
 
 <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#F4EFE6] border-t-2 border-[#3C2A21] flex justify-around p-4 z-50">

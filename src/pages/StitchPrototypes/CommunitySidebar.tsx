@@ -19,7 +19,7 @@ export default function CommunitySidebar({
   activeItem = 'all-threads',
 }: CommunitySidebarProps) {
   return (
-    <aside className="w-[320px] shrink-0 border-r border-solid border-[#3C2A21] flex flex-col min-h-[calc(100vh-72px)] bg-[#F4EFE6] sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
+    <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] min-h-[calc(100vh-72px)] w-[320px] shrink-0 flex-col overflow-y-auto border-r border-solid border-[#3C2A21] bg-[#F4EFE6] lg:flex">
       <div className="p-8 pb-4 border-b border-[#3C2A21]">
         <h1 className="font-serif text-4xl font-medium tracking-tight mb-2 text-[#3C2A21]">La Manada</h1>
         <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-[#8E7D72]">Community Forum</p>

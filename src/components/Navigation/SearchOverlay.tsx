@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { ArrowRight, Search, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { setNextTransition } from '../Effects/PageTransition'
+import { usePretextResponsiveFit } from '../../hooks/usePretextResponsiveFit'
 
 export type SearchOverlayState = 'open' | 'closing'
 
@@ -23,10 +24,19 @@ const panelTransition = {
   ease: [0.16, 1, 0.3, 1] as const,
 }
 
+const placeholderCopy = 'Search the Estate Archives...'
+
 export default function SearchOverlay({ state, onExited, onRequestClose }: SearchOverlayProps) {
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const hasCompletedExitRef = useRef(false)
+  const { containerRef, isCompact } = usePretextResponsiveFit({
+    text: placeholderCopy,
+    font: '30px Georgia',
+    lineHeight: 40,
+    maxLines: 1,
+    compactBelow: 768,
+  })
 
   useEffect(() => {
     if (state === 'open') {
@@ -88,9 +98,9 @@ export default function SearchOverlay({ state, onExited, onRequestClose }: Searc
         aria-modal="true"
         aria-label="Search the Estate Archives"
         data-state={state}
-        className={`relative flex max-h-[80vh] w-full transform-gpu flex-col overflow-hidden border-b border-[#3C2A21] bg-[#F4EFE6] shadow-[0_18px_48px_rgba(28,27,26,0.22)] will-change-transform ${
+        className={`relative flex max-h-[88dvh] w-full transform-gpu flex-col overflow-hidden border-b border-[#3C2A21] bg-[#F4EFE6] shadow-[0_18px_48px_rgba(28,27,26,0.22)] will-change-transform ${
           state === 'open' ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
+        } md:max-h-[80vh]`}
         style={{ willChange: 'transform, opacity' }}
         initial={{ y: -44, opacity: 0.92 }}
         animate={state === 'open' ? { y: 0, opacity: 1 } : { y: -44, opacity: 0.92 }}
@@ -102,14 +112,21 @@ export default function SearchOverlay({ state, onExited, onRequestClose }: Searc
           }
         }}
       >
-        <div className="flex items-center justify-between border-b border-[#3C2A21]/15 px-8 py-6">
-          <div className="mx-auto flex w-full max-w-4xl flex-1 items-center gap-6">
-            <Search size={28} className="text-[#8E7D72]" />
+        <div className="border-b border-[#3C2A21]/15 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
+          <div
+            ref={(node) => {
+              containerRef.current = node
+            }}
+            className="mx-auto flex w-full max-w-4xl items-center gap-3 sm:gap-4 md:gap-6"
+          >
+            <Search size={24} className="shrink-0 text-[#8E7D72] sm:size-7" />
             <input
               ref={inputRef}
               type="text"
-              className="flex-1 bg-transparent border-none p-0 font-serif text-3xl text-[#3C2A21] placeholder-[#8E7D72]/50 focus:ring-0"
-              placeholder="Search the Estate Archives..."
+              className={`min-w-0 flex-1 bg-transparent border-none p-0 font-serif text-[#3C2A21] placeholder-[#8E7D72]/50 focus:ring-0 ${
+                isCompact ? 'text-[1.7rem] sm:text-[2rem] md:text-3xl' : 'text-[2rem] sm:text-[2.35rem] md:text-3xl'
+              }`}
+              placeholder={placeholderCopy}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -121,18 +138,18 @@ export default function SearchOverlay({ state, onExited, onRequestClose }: Searc
                   onRequestClose()
                 }
               }}
-              className="p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
+              className="rounded-full p-2 text-[#3C2A21] transition-colors hover:text-[#C36B42]"
             >
-              <X size={28} strokeWidth={1.5} />
+              <X size={24} strokeWidth={1.5} />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-8 py-12">
-          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
-            <div className="flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-12">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-8 md:grid-cols-3 md:gap-12">
+            <div className="flex flex-col gap-5 md:gap-6">
               <h4 className="border-b border-[#3C2A21]/10 pb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#8E7D72]">
-                Frequent Inquiries
+                Frequent inquiries
               </h4>
               <nav className="flex flex-col gap-4">
                 <Link
@@ -171,12 +188,12 @@ export default function SearchOverlay({ state, onExited, onRequestClose }: Searc
               </nav>
             </div>
 
-            <div className="md:col-span-2 flex flex-col gap-6">
+            <div className="flex flex-col gap-6 md:col-span-2">
               <h4 className="border-b border-[#3C2A21]/10 pb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#8E7D72]">
                 Highlight
               </h4>
               <div
-                className="group relative h-48 w-full cursor-pointer overflow-hidden border border-[#3C2A21]/20 bg-cover bg-center"
+                className="group relative h-56 w-full cursor-pointer overflow-hidden border border-[#3C2A21]/20 bg-cover bg-center md:h-48"
                 style={{
                   backgroundImage:
                     "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCn2d7DIcuRChwL7JHv90Xk489giFm7mkFmi7UMnknopv5kyun1AIgd1oIrQ5qFfwg6l7JAT8VeMHIuwtHYoPu-FIuvXL_NcAqq2-qlAcPpe91PDjyExlV7qPqfmCyLkepSngg4YOKeZV-omlXUUGIJGbZOrldRalluKggAi817GVkaSlCDYRKLtuZiZWFDhFmDZNyy-f7MeeQg_7k89qqolK831X8e56xZdFScT0D0NGzhYA--gYHf59Q8Hvm23q4QMR6biY6Njvh0')",
@@ -188,16 +205,16 @@ export default function SearchOverlay({ state, onExited, onRequestClose }: Searc
                 }}
               >
                 <div className="absolute inset-0 bg-[#3C2A21]/40 transition-colors duration-500 group-hover:bg-[#3C2A21]/20" />
-                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-end md:justify-between">
                   <div>
                     <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-[#FAF7F2]">
                       Latest Log
                     </span>
-                    <h3 className="font-serif text-2xl font-medium text-[#FAF7F2]">
-                      The Architecture of the 'North-East' Gate
+                    <h3 className="max-w-xl font-serif text-xl font-medium text-[#FAF7F2] sm:text-2xl">
+                      The Architecture of the &apos;North-East&apos; Gate
                     </h3>
                   </div>
-                  <ArrowRight className="text-[#FAF7F2] transform transition-transform group-hover:translate-x-2" />
+                  <ArrowRight className="shrink-0 text-[#FAF7F2] transition-transform group-hover:translate-x-2" />
                 </div>
               </div>
             </div>

@@ -285,7 +285,7 @@ export default function RankingSubmission() {
     <div className="flex h-full min-h-0 flex-col bg-parchment font-sans text-ink">
       <SharedNavbar />
 
-      <main className="h-[calc(100dvh-72px)] overflow-hidden">
+      <main className="min-h-[calc(100dvh-72px)] xl:h-[calc(100dvh-72px)] xl:overflow-hidden">
         <div
           data-testid="ranking-submission-shell"
           className="mx-auto flex h-full w-full max-w-[1600px] flex-col overflow-y-auto xl:min-h-0 xl:flex-row xl:overflow-hidden"
@@ -374,7 +374,7 @@ export default function RankingSubmission() {
               </section>
             </DndContext>
 
-            <div className="mt-10 flex flex-col gap-4 border-t border-ink/20 pt-8">
+            <div className="mt-10 hidden flex-col gap-4 border-t border-ink/20 pt-8 sm:flex">
               <button
                 type="button"
                 onClick={handleSubmit}
@@ -469,6 +469,16 @@ export default function RankingSubmission() {
           </aside>
         </div>
       </main>
+      <div className="mobile-safe-nav sticky bottom-0 z-20 border-t border-ink/12 bg-parchment/95 px-4 py-4 backdrop-blur sm:hidden">
+        <button
+          data-testid="ranking-submission-mobile-submit"
+          type="button"
+          onClick={handleSubmit}
+          className="w-full bg-ink px-8 py-4 text-center text-xs font-bold uppercase tracking-widest text-vellum transition-colors hover:bg-primary"
+        >
+          Submit ranking
+        </button>
+      </div>
     </div>
   )
 }

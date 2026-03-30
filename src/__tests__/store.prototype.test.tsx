@@ -309,13 +309,15 @@ describe('Prototype store route', () => {
   it('creates separate cart lines for different variant selections and quantities', () => {
     renderPrototypeStore('/store/product/private-suite-tee')
 
-    fireEvent.click(screen.getByRole('button', { name: /archive black/i }))
-    fireEvent.click(screen.getByRole('button', { name: /increase quantity/i }))
-    fireEvent.click(screen.getByRole('button', { name: /add to cart/i }))
+    const sideRail = screen.getByTestId('detail-side-rail')
 
-    fireEvent.click(screen.getByRole('button', { name: /core white/i }))
-    fireEvent.click(screen.getByRole('button', { name: /decrease quantity/i }))
-    fireEvent.click(screen.getByRole('button', { name: /add to cart/i }))
+    fireEvent.click(within(sideRail).getByRole('button', { name: /archive black/i }))
+    fireEvent.click(within(sideRail).getByRole('button', { name: /increase quantity/i }))
+    fireEvent.click(within(sideRail).getByRole('button', { name: /add to cart/i }))
+
+    fireEvent.click(within(sideRail).getByRole('button', { name: /core white/i }))
+    fireEvent.click(within(sideRail).getByRole('button', { name: /decrease quantity/i }))
+    fireEvent.click(within(sideRail).getByRole('button', { name: /add to cart/i }))
 
     expect(screen.getByLabelText(/open cart/i).querySelector('span')).toHaveTextContent('3')
 
@@ -334,10 +336,12 @@ describe('Prototype store route', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /view tour longsleeve/i }))
 
+    const sideRail = screen.getByTestId('detail-side-rail')
+
     expect(screen.getByTestId('location-display')).toHaveTextContent('/store/product/tour-longsleeve')
     expect(screen.getAllByText(/sold out/i).length).toBeGreaterThan(0)
-    expect(screen.queryByRole('button', { name: /add to cart/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /increase quantity/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /decrease quantity/i })).toBeDisabled()
+    expect(within(sideRail).queryByRole('button', { name: /add to cart/i })).not.toBeInTheDocument()
+    expect(within(sideRail).getByRole('button', { name: /increase quantity/i })).toBeDisabled()
+    expect(within(sideRail).getByRole('button', { name: /decrease quantity/i })).toBeDisabled()
   })
 })

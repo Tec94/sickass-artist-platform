@@ -13,7 +13,7 @@ export default function Profile() {
   }, []);
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F4EFE6] font-sans text-[#3C2A21] antialiased">
+    <div className="min-h-[100dvh] w-full overflow-y-auto bg-[#F4EFE6] font-sans text-[#3C2A21] antialiased lg:h-screen lg:overflow-hidden">
       <style>{`body {
     font-family: inherit;
     background-color: #F4EFE6;
@@ -30,6 +30,12 @@ export default function Profile() {
 .panel-open .utility-panel {
     transform: translatex(0)
     }
+@media (max-width: 1023px) {
+.utility-panel {
+    transform: none;
+    box-shadow: none;
+    }
+}
 /* Strict 1px borders */
 .border-ink {
     border-color: #3C2A21
@@ -48,7 +54,7 @@ export default function Profile() {
     background: #C36B42
     }`}</style>
 
-<div className="absolute inset-0 pr-[400px]">
+<div className="absolute inset-0 hidden pr-[400px] lg:block">
 <div className="relative h-full w-full overflow-hidden">
 <img alt="" aria-hidden="true" className="h-full w-full object-cover object-center" src="/dashboard/signal-card-placeholder-1.webp" />
 <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(250,247,242,0.18),transparent_30%),linear-gradient(115deg,rgba(60,42,33,0.68),rgba(60,42,33,0.36)_34%,rgba(60,42,33,0.12)_64%,rgba(244,239,230,0.88))]" />
@@ -61,15 +67,15 @@ export default function Profile() {
 </div>
 </div>
       
-<div className="fixed top-8 left-8 z-20 flex flex-col gap-4">
+<div className="fixed left-4 top-4 z-20 flex flex-col gap-4 lg:left-8 lg:top-8">
 <Link aria-label="Back to Dashboard" className="nav-fab flex h-12 w-12 cursor-pointer items-center justify-center border border-[#3C2A21]/18 bg-[#FAF7F2] shadow-[0_12px_24px_rgba(60,42,33,0.08)] transition-all hover:border-[#C36B42] hover:bg-[#F4EFE6] group" to="/dashboard">
 <ArrowLeft className="text-[#3C2A21] transition-colors duration-200 group-hover:text-[#C36B42]" />
 </Link>
 </div>
 
-<aside className="utility-panel fixed top-0 right-0 z-30 flex h-screen w-[400px] flex-col overflow-y-auto border-l border-[#3C2A21] bg-[#FAF7F2] backdrop-blur-md">
+<aside className="utility-panel relative z-30 flex min-h-[100dvh] w-full flex-col overflow-y-auto border-t border-[#3C2A21] bg-[#FAF7F2] backdrop-blur-md lg:fixed lg:top-0 lg:right-0 lg:h-screen lg:w-[400px] lg:border-t-0 lg:border-l">
 
-<header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#3C2A21] bg-[#FAF7F2] px-6 py-6">
+<header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#3C2A21] bg-[#FAF7F2] px-5 py-5 sm:px-6 sm:py-6">
 <div>
 <h1 className="font-display text-2xl font-semibold uppercase tracking-tight text-[#3C2A21]">Profile</h1>
 <p className="mt-1 text-xs font-medium uppercase tracking-widest text-[#8E7D72]">Your Account</p>
@@ -82,7 +88,7 @@ export default function Profile() {
 
 <div className="flex-1 flex flex-col">
 
-<section className="flex items-start gap-4 border-b border-[#3C2A21] p-6">
+<section className="flex items-start gap-4 border-b border-[#3C2A21] p-5 sm:p-6">
 <div className="h-16 w-16 flex-shrink-0 overflow-hidden border border-[#3C2A21]/12 bg-[#F4EFE6]">
 <img alt="User Avatar" className="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFtvjfctxDOknYmYqKnGkq0OSJCzVotNPCyRW1GdCscM0JKpBKLXZnsnlrseXm8ZgSuUKHkeCUZjfHOMVskOZI5_b6cp28ZD6VXEUGUlLjMhzuzovQqhiEIDa7Uxsxb-aBPUuFWeWlaeLGnYWJNrnFZneYixa_T2bYb4um82sME2SFjhUvjyQnubPsfheiYu9VGWGBzFJysGzFR1PTbDCVlTJboPS8Vn9fyGq2oGQR5IiOEHnQMMtYeEgGmgfsw3aqVYV8M3onjTjz" />
 </div>
@@ -113,7 +119,7 @@ export default function Profile() {
                 </button>
 </nav>
 
-<section className="flex-1 p-6 flex flex-col gap-8">
+<section className="flex-1 p-5 flex flex-col gap-8 sm:p-6">
 
 {activeTab === 'quests' && (
   <div className="space-y-6 animate-fade-in">

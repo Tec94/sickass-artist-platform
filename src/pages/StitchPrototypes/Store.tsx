@@ -43,10 +43,10 @@ export default function Store() {
       <SharedNavbar />
 
       <main className="h-[calc(100dvh-72px)] overflow-hidden">
-        <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col md:flex-row">
+        <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col lg:flex-row">
           <aside
             data-testid="prototype-store-sidebar"
-            className="hidden md:block w-[250px] flex-shrink-0 overflow-y-auto bg-[#F4F0EB]"
+            className="hidden w-[250px] flex-shrink-0 overflow-y-auto bg-[#F4F0EB] lg:block"
           >
             <div className="p-8">
               <h2 className="font-['Cormorant_Garamond'] text-2xl mb-8 tracking-tight">Categories</h2>
@@ -124,7 +124,7 @@ export default function Store() {
           </aside>
 
           <section className="min-h-0 flex-1 overflow-y-auto bg-[#FCFBF9] overscroll-contain">
-            <div className="md:hidden border-b border-[#1C1B1A] bg-[#F4F0EB] px-4 py-4 space-y-4">
+            <div className="border-b border-[#1C1B1A] bg-[#F4F0EB] px-4 py-4 space-y-4 lg:hidden">
               <div className="overflow-x-auto whitespace-nowrap">
                 <div className="flex gap-3 min-w-max">
                   {categoryOptions.map((category) => {
@@ -173,7 +173,7 @@ export default function Store() {
               className="border-l border-r border-b border-[#1C1B1A] bg-[#FCFBF9]"
             >
               <div className="border-b border-[#1C1B1A] bg-[#FAF7F2] px-5 py-5 md:px-8 md:py-7">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
                       Prototype-first collection
@@ -193,7 +193,7 @@ export default function Store() {
                      ) : null}
                    </div>
 
-                  <div className="flex items-end gap-8">
+                  <div className="flex flex-wrap items-end gap-6 sm:gap-8">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7D72]">
                         Showing
@@ -222,12 +222,12 @@ export default function Store() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                    className="grid min-h-[420px] grid-cols-1 content-start bg-[#FCFBF9] sm:grid-cols-2 xl:grid-cols-3"
+                    className="grid min-h-[420px] auto-rows-fr grid-cols-1 content-start bg-[#FCFBF9] sm:grid-cols-2 xl:grid-cols-3"
                   >
                     {products.map((product) => (
                       <article
                         key={product.slug}
-                        className="group flex h-[450px] flex-col border-r border-b border-[#1C1B1A] bg-[#FCFBF9] first:border-l sm:[&:nth-child(odd)]:border-l xl:[&:nth-child(3n+1)]:border-l"
+                        className="group flex min-h-[390px] flex-col border-r border-b border-[#1C1B1A] bg-[#FCFBF9] first:border-l sm:[&:nth-child(odd)]:border-l xl:[&:nth-child(3n+1)]:border-l"
                       >
                         <button
                           type="button"
@@ -260,7 +260,7 @@ export default function Store() {
                           </div>
                         </button>
 
-                        <div className="flex min-h-[120px] items-end gap-4 bg-[#FCFBF9] p-5">
+                        <div className="flex min-h-[120px] gap-4 bg-[#FCFBF9] p-5 sm:items-end">
                           <button
                             type="button"
                             onClick={() => openProduct(product.slug)}

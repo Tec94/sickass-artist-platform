@@ -19,13 +19,9 @@ describe('route a11y smoke', () => {
       '/store/product/:productSlug',
       '/new-post',
       '/salon',
-      '/access-tiers-mobile',
       '/access-tiers-albert',
-      '/experience-mobile',
       '/experience-albert',
-      '/events-mobile',
       '/events',
-      '/dashboard-mobile',
       '/login',
     ]
 
@@ -34,6 +30,10 @@ describe('route a11y smoke', () => {
     }
 
     expect(appTsx).not.toContain('path="/auth"')
+    expect(appTsx).not.toContain('path="/access-tiers-mobile"')
+    expect(appTsx).not.toContain('path="/experience-mobile"')
+    expect(appTsx).not.toContain('path="/events-mobile"')
+    expect(appTsx).not.toContain('path="/dashboard-mobile"')
     expect(appTsx).not.toContain('path="/store/browse"')
     expect(appTsx).not.toContain('path="/sso-callback"')
     expect(appTsx).toContain('<Navigate to="/rankings" replace />')
