@@ -172,7 +172,10 @@ describe('SharedNavbar', () => {
 
     fireEvent.click(screen.getByLabelText(/open cart/i))
 
-    expect(screen.getByRole('dialog', { name: /prototype cart/i })).toBeInTheDocument()
+    const cartDialog = screen.getByRole('dialog', { name: /prototype cart/i })
+    expect(cartDialog).toBeInTheDocument()
+    expect(cartDialog).toHaveClass('md:top-[var(--app-header-height)]', 'md:items-start')
+    expect(cartDialog.lastElementChild).toHaveClass('md:h-full', 'md:max-h-none')
   })
 
   it('keeps the search overlay mounted through closing, blocks navbar re-entry, and restores focus on exit', () => {

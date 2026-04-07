@@ -1,7 +1,7 @@
 {
   "name": "sickass-artist-platform",
   "private": true,
-  "version": "2.0.7",
+  "version": "2.0.8",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
+    "bones:build": "node scripts/buildRouteBones.mjs",
     "check:color-contract": "node scripts/check-color-contract.mjs",
     "check:color-contract:update": "node scripts/check-color-contract.mjs --update-baseline",
     "merch:normalize-images": "node scripts/normalizeMerchImages.mjs --clean",

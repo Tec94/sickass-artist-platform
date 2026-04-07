@@ -1,0 +1,121 @@
+[
+  {
+    "id": "home",
+    "path": "/",
+    "capturePath": null,
+    "skeletonName": "page-journey",
+    "label": "Journey"
+  },
+  {
+    "id": "dashboard",
+    "path": "/dashboard",
+    "capturePath": "/dashboard",
+    "skeletonName": "page-dashboard",
+    "label": "Dashboard"
+  },
+  {
+    "id": "archive",
+    "path": "/archive",
+    "capturePath": "/archive",
+    "skeletonName": "page-archive",
+    "label": "Archive"
+  },
+  {
+    "id": "rankings",
+    "path": "/rankings",
+    "capturePath": "/rankings",
+    "skeletonName": "page-rankings",
+    "label": "Rankings"
+  },
+  {
+    "id": "rankingSubmission",
+    "path": "/ranking-submission",
+    "capturePath": "/ranking-submission",
+    "skeletonName": "page-ranking-submission",
+    "label": "Ranking Submission"
+  },
+  {
+    "id": "profile",
+    "path": "/profile",
+    "capturePath": "/profile",
+    "skeletonName": "page-profile",
+    "label": "Profile"
+  },
+  {
+    "id": "community",
+    "path": "/community",
+    "capturePath": "/community",
+    "skeletonName": "page-community",
+    "label": "Community"
+  },
+  {
+    "id": "journey",
+    "path": "/journey",
+    "capturePath": "/journey",
+    "skeletonName": "page-journey",
+    "label": "Journey"
+  },
+  {
+    "id": "campaign",
+    "path": "/campaign",
+    "capturePath": "/campaign",
+    "skeletonName": "page-campaign",
+    "label": "Campaign"
+  },
+  {
+    "id": "store",
+    "path": "/store",
+    "capturePath": "/store",
+    "skeletonName": "page-store",
+    "label": "Store"
+  },
+  {
+    "id": "storeProductDetail",
+    "path": "/store/product/:productSlug",
+    "capturePath": "/store/product/private-suite-tee",
+    "skeletonName": "page-store-product-detail",
+    "label": "Store Product Detail"
+  },
+  {
+    "id": "newPost",
+    "path": "/new-post",
+    "capturePath": "/new-post",
+    "skeletonName": "page-new-post",
+    "label": "New Post"
+  },
+  {
+    "id": "accessTiersAlbert",
+    "path": "/access-tiers-albert",
+    "capturePath": "/access-tiers-albert",
+    "skeletonName": "page-access-tiers-albert",
+    "label": "Access Tiers Albert"
+  },
+  {
+    "id": "experienceAlbert",
+    "path": "/experience-albert",
+    "capturePath": "/experience-albert",
+    "skeletonName": "page-experience-albert",
+    "label": "Experience Albert"
+  },
+  {
+    "id": "events",
+    "path": "/events",
+    "capturePath": "/events",
+    "skeletonName": "page-events",
+    "label": "Events"
+  },
+  {
+    "id": "login",
+    "path": "/login",
+    "capturePath": "/login",
+    "skeletonName": "page-login",
+    "label": "Login"
+  },
+  {
+    "id": "notFound",
+    "path": "*",
+    "capturePath": "/__boneyard-not-found__",
+    "skeletonName": "page-not-found",
+    "label": "Not Found"
+  }
+]

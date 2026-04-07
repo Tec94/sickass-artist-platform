@@ -10,6 +10,7 @@ import {
   OUTER_GROUNDS_PATHS,
   type CastleRegionId,
 } from '../../features/castleNavigation/sceneConfig'
+import { useSkeletonMode } from '../../features/skeletonMode'
 import { useAuth } from '../../hooks/useAuth'
 import { LandingPage, type OuterGroundRegion } from '../LandingPage'
 
@@ -59,6 +60,7 @@ export default function Journey() {
   const navigate = useNavigate()
   const { content, isLoading: isArtistContentLoading } = useArtistContent()
   const { isSignedIn } = useAuth()
+  const { isSkeletonMode } = useSkeletonMode()
   const dashboardData = useQuery(api.dashboard.getDashboardData, {})
   const [visibleRegion, setVisibleRegion] = useState<OuterGroundRegion | null>(null)
   const [previewRegionId, setPreviewRegionId] = useState<CastleRegionId | null>(null)
@@ -183,7 +185,8 @@ export default function Journey() {
     navigate(region.isLocked ? '/login' : region.route)
   }
 
-  const isJourneyRailLoading = isArtistContentLoading || dashboardData === undefined
+  const isJourneyRailLoading =
+    isSkeletonMode || isArtistContentLoading || dashboardData === undefined
   const journeyRailContent = (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-7 sm:px-6 md:px-8 md:py-10">

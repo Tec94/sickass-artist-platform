@@ -8,6 +8,40 @@ import AccessTiersAlbert from '../pages/StitchPrototypes/AccessTiersAlbert'
 import ExperienceAlbert from '../pages/StitchPrototypes/ExperienceAlbert'
 import StoreProductDetail from '../pages/StitchPrototypes/StoreProductDetail'
 
+if (!window.matchMedia) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
+if (!window.ResizeObserver) {
+  class ResizeObserverMock {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+
+  Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: ResizeObserverMock,
+  })
+
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    writable: true,
+    value: ResizeObserverMock,
+  })
+}
+
 vi.mock('../components/Navigation/SharedNavbar', () => ({
   default: () => <div data-testid="shared-navbar-stub">Shared navbar</div>,
 }))
@@ -68,6 +102,36 @@ describe('prototype responsive layout contracts', () => {
 
     expect(screen.getByTestId('dashboard-shell')).toHaveClass('flex-col')
     expect(screen.getByTestId('dashboard-shell').className).toContain('lg:flex-row')
+  })
+
+  it('lets the dashboard page grow instead of clipping the lower grid under the hero', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    )
+
+    const shell = screen.getByTestId('dashboard-shell')
+    const primaryColumn = screen.getByTestId('dashboard-primary-column')
+    const secondaryColumn = screen.getByTestId('dashboard-secondary-column')
+    const hero = screen.getByTestId('dashboard-hero')
+    const lowerGrid = screen.getByTestId('dashboard-lower-grid')
+
+    expect(shell.className).toContain('min-h-[calc(100dvh-72px)]')
+    expect(shell.className).not.toContain('overflow-y-auto')
+    expect(shell.className).not.toContain('lg:overflow-hidden')
+    expect(shell.parentElement?.className).not.toContain('lg:h-screen')
+
+    expect(primaryColumn.className).toContain('lg:w-[62%]')
+    expect(primaryColumn.className).not.toContain('overflow-hidden')
+    expect(primaryColumn.className).not.toContain('lg:h-full')
+
+    expect(secondaryColumn.className).toContain('lg:w-[38%]')
+
+    expect(hero.className).toContain('lg:min-h-[clamp(420px,55vh,640px)]')
+    expect(hero.className).not.toContain('h-full')
+
+    expect(lowerGrid.className).not.toContain('shrink-0')
   })
 
   it('renders the mobile community category scroller', () => {

@@ -47,7 +47,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-[120] flex items-end justify-center font-sans md:justify-end"
+          className="fixed inset-0 z-[120] flex items-end justify-center font-sans md:top-[var(--app-header-height)] md:items-start md:justify-end"
           data-testid="checkout-overlay"
           role="dialog"
           aria-modal="true"
@@ -68,7 +68,7 @@ export default function CheckoutOverlay({ isOpen, onClose }: CheckoutOverlayProp
           />
 
           <motion.div
-            className="responsive-sheet-panel mobile-safe-nav relative mt-auto flex w-full max-h-[min(82dvh,42rem)] flex-col overflow-hidden border border-[var(--site-border-strong)] bg-[var(--site-page-bg)] shadow-[var(--site-panel-shadow)] md:mt-0 md:h-full md:w-[400px] md:max-w-[92vw] md:rounded-none md:border-l md:border-t-0"
+            className="responsive-sheet-panel mobile-safe-nav relative mt-auto flex w-full max-h-[min(82dvh,42rem)] flex-col overflow-hidden border border-[var(--site-border-strong)] bg-[var(--site-page-bg)] shadow-[var(--site-panel-shadow)] md:mt-0 md:h-full md:w-[400px] md:max-w-[92vw] md:max-h-none md:rounded-none md:border-l md:border-t-0"
             initial={{ x: '100%' }}
             animate={{ x: 0, y: 0 }}
             exit={{ x: '100%', y: 0 }}

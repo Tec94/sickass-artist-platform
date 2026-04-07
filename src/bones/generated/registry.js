@@ -3,16 +3,48 @@
 import { registerBones } from 'boneyard-js'
 import { configureBoneyard } from 'boneyard-js/react'
 
-import _campaign_modules from './campaign-modules.bones.json'
-import _campaign_overview from './campaign-overview.bones.json'
-import _store_product_detail from './store-product-detail.bones.json'
+import _page_dashboard from './page-dashboard.bones.json'
+import _page_archive from './page-archive.bones.json'
+import _page_rankings from './page-rankings.bones.json'
+import _page_ranking_submission from './page-ranking-submission.bones.json'
+import _page_profile from './page-profile.bones.json'
+import _page_community from './page-community.bones.json'
+import _page_journey from './page-journey.bones.json'
 import _journey_sidebar from './journey-sidebar.bones.json'
+import _page_campaign from './page-campaign.bones.json'
+import _campaign_overview from './campaign-overview.bones.json'
+import _campaign_modules from './campaign-modules.bones.json'
+import _page_store from './page-store.bones.json'
+import _page_store_product_detail from './page-store-product-detail.bones.json'
+import _store_product_detail from './store-product-detail.bones.json'
+import _page_new_post from './page-new-post.bones.json'
+import _page_access_tiers_albert from './page-access-tiers-albert.bones.json'
+import _page_experience_albert from './page-experience-albert.bones.json'
+import _page_events from './page-events.bones.json'
+import _page_login from './page-login.bones.json'
+import _page_not_found from './page-not-found.bones.json'
 
 configureBoneyard({"color":"rgba(60, 42, 33, 0.08)","darkColor":"rgba(244, 239, 230, 0.16)","animate":"shimmer"})
 
 registerBones({
-  "campaign-modules": _campaign_modules,
-  "campaign-overview": _campaign_overview,
-  "store-product-detail": _store_product_detail,
+  "page-dashboard": _page_dashboard,
+  "page-archive": _page_archive,
+  "page-rankings": _page_rankings,
+  "page-ranking-submission": _page_ranking_submission,
+  "page-profile": _page_profile,
+  "page-community": _page_community,
+  "page-journey": _page_journey,
   "journey-sidebar": _journey_sidebar,
+  "page-campaign": _page_campaign,
+  "campaign-overview": _campaign_overview,
+  "campaign-modules": _campaign_modules,
+  "page-store": _page_store,
+  "page-store-product-detail": _page_store_product_detail,
+  "store-product-detail": _store_product_detail,
+  "page-new-post": _page_new_post,
+  "page-access-tiers-albert": _page_access_tiers_albert,
+  "page-experience-albert": _page_experience_albert,
+  "page-events": _page_events,
+  "page-login": _page_login,
+  "page-not-found": _page_not_found,
 })

@@ -4,6 +4,7 @@ import { Skeleton } from 'boneyard-js/react'
 import PrototypeSafeImage from '../../components/Media/PrototypeSafeImage'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
 import { useArtistContent } from '../../features/artistContent'
+import { useSkeletonMode } from '../../features/skeletonMode'
 
 const formatCompact = (value: number | null | undefined) => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return '--'
@@ -15,6 +16,7 @@ const trimCopy = (value: string, maxLength = 148) =>
 
 export default function Campaign() {
   const { content, isLoading } = useArtistContent()
+  const { isSkeletonMode } = useSkeletonMode()
   const latestRelease = content.spotify.latestRelease
   const recentPosts = content.instagram.posts.slice(0, 3)
   const topTrack = content.spotify.topTrack
@@ -227,11 +229,19 @@ export default function Campaign() {
 
       <main className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain">
         <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-8 md:px-8 md:pb-20 md:pt-10">
-          <Skeleton name="campaign-overview" loading={isLoading} fallback={campaignOverview}>
+          <Skeleton
+            name="campaign-overview"
+            loading={isSkeletonMode || isLoading}
+            fallback={campaignOverview}
+          >
             {campaignOverview}
           </Skeleton>
 
-          <Skeleton name="campaign-modules" loading={isLoading} fallback={campaignModules}>
+          <Skeleton
+            name="campaign-modules"
+            loading={isSkeletonMode || isLoading}
+            fallback={campaignModules}
+          >
             {campaignModules}
           </Skeleton>
         </div>

@@ -29,7 +29,7 @@ const formatFeaturedDropPrice = (priceCents: number) =>
 
 export default function Dashboard() {
   return (
-    <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--site-page-bg)] font-sans text-[var(--site-text)] antialiased lg:h-screen">
+    <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--site-page-bg)] font-sans text-[var(--site-text)] antialiased">
       <style>{`
         .border-ink { border-color: #3C2A21; }
         .border-ink-soft { border-color: rgba(60, 42, 33, 0.15); }
@@ -56,11 +56,18 @@ export default function Dashboard() {
       `}</style>
       <SharedNavbar />
 
-      <main data-testid="dashboard-shell" className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden lg:flex-row lg:overflow-hidden">
+      <main
+        data-testid="dashboard-shell"
+        className="relative flex min-h-[calc(100dvh-72px)] flex-1 flex-col overflow-x-hidden lg:flex-row"
+      >
         <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[62%] z-20 hidden w-px bg-[#3C2A21] lg:block" />
-        <div className="flex w-full flex-col overflow-hidden lg:h-full lg:w-[62%]">
-          <div className="flex min-h-0 flex-1 flex-col p-4 pb-4 sm:p-6 sm:pb-4 lg:p-8 lg:pb-4">
-            <div className="relative flex h-full min-h-[420px] w-full items-end overflow-hidden rounded-sm bg-cover bg-center p-6 py-6 shadow-md sm:min-h-[520px] sm:p-8 lg:p-10 lg:py-8" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}>
+        <div data-testid="dashboard-primary-column" className="flex w-full flex-col lg:w-[62%]">
+          <div className="p-4 pb-4 sm:p-6 sm:pb-4 lg:p-8 lg:pb-4">
+            <div
+              data-testid="dashboard-hero"
+              className="relative flex min-h-[420px] w-full items-end overflow-hidden rounded-sm bg-cover bg-center p-6 py-6 shadow-md sm:min-h-[520px] sm:p-8 lg:min-h-[clamp(420px,55vh,640px)] lg:p-10 lg:py-8"
+              style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB86GbIO7WgW0L69jtt82aIUOmNarBlGkzBUM3huKDkF0mfNpoIFWmf5OxHUsnWdEO-IkcX4_vOfGShwdFyYcKVegTinoJzQooaQQtxdzbpCV1QlXUGudVo1xQeLL7S1wLEdTj6JY8_3e7e1_BcmReZ0CdymYgjwGp-9McbjNAsc3RYaIN__mwJIpBf2r0ffAuGaJh0NA5dlreRmv2-OBxIvVUCcCvpiN7FCIMsI5p65oAATzGQVZYHnjRzs8VmJp0qM7L_AuwNRGu9')"}}
+            >
               <div className="absolute inset-0 bg-gradient-to-t from-[#3C2A21]/80 via-[#3C2A21]/30 to-transparent"></div>
               <div className="relative z-10 w-full">
                 <span className="text-[#FAF7F2]/80 text-xs-wide block mb-4 border-b border-[#FAF7F2]/30 pb-2 inline-block">Private Suite Vol. 3</span>
@@ -73,7 +80,10 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="grid shrink-0 grid-cols-1 gap-8 px-4 pb-8 sm:px-6 lg:grid-cols-2 lg:px-8">
+          <div
+            data-testid="dashboard-lower-grid"
+            className="grid grid-cols-1 gap-8 px-4 pb-8 sm:px-6 lg:grid-cols-2 lg:px-8"
+          >
             <section className="flex flex-col gap-6">
               <div className="flex items-center justify-between border-b border-[#3C2A21]/20 pb-2">
                 <h3 className="text-xs-wide text-[#3C2A21]">Pack Activity</h3>
@@ -119,7 +129,10 @@ export default function Dashboard() {
             </section>
           </div>
         </div>
-        <div className="flex w-full flex-col border-t border-[#3C2A21]/12 bg-[#F4EFE6] lg:h-full lg:w-[38%] lg:border-t-0">
+        <div
+          data-testid="dashboard-secondary-column"
+          className="flex w-full flex-col border-t border-[#3C2A21]/12 bg-[#F4EFE6] lg:h-full lg:w-[38%] lg:border-t-0"
+        >
           <div className="border-b border-ink bg-[#FAF7F2] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             <h3 className="text-xs-wide text-[#8E7D72] mb-6">Your Status</h3>
             <div className="flex items-start justify-between">

@@ -6,6 +6,7 @@ import { setNextTransition } from '../../components/Effects/PageTransition'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
 import { usePrototypeCatalog } from '../../features/store/usePrototypeCatalog'
+import { useSkeletonMode } from '../../features/skeletonMode'
 import {
   formatPrototypePrice,
   getPrototypeDefaultSelection,
@@ -20,6 +21,7 @@ export default function StoreProductDetail() {
   const { productSlug } = useParams<{ productSlug: string }>()
   const { addItem, canWrite } = usePrototypeCart()
   const { products, getProductBySlug, isLoading } = usePrototypeCatalog()
+  const { isSkeletonMode } = useSkeletonMode()
   const mainRef = useRef<HTMLElement | null>(null)
 
   const matchedProduct = getProductBySlug(productSlug ?? '')
@@ -115,7 +117,7 @@ export default function StoreProductDetail() {
       >
         <Skeleton
           name="store-product-detail"
-          loading={isLoading}
+          loading={isSkeletonMode || isLoading}
           fallback={detailLoadingFallback}
           className="block"
         >
