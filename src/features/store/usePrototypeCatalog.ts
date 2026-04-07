@@ -2,11 +2,43 @@ import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import {
+  PROTOTYPE_STORE_PRODUCTS,
+  getPrototypeDefaultSelection as getStaticPrototypeDefaultSelection,
+} from './prototypeStoreCatalog'
+import {
   formatPrototypePrice,
   type PrototypeStoreCategory,
   type PrototypeStoreProduct,
   type PrototypeStoreSort,
 } from './prototypeStoreContract'
+
+const STATIC_PROTOTYPE_PRODUCTS: PrototypeStoreProduct[] = PROTOTYPE_STORE_PRODUCTS.map((product) => ({
+  slug: product.slug,
+  name: product.name,
+  category: product.category,
+  priceCents: product.priceCents,
+  primaryImage: product.primaryImage,
+  gallery: product.gallery,
+  availability: product.availability,
+  badge: product.badge,
+  shortDescription: product.shortDescription,
+  detailDescription: product.detailDescription,
+  materials: undefined,
+  releaseNote: product.releaseNote,
+  alt: product.alt,
+  featuredOrder: product.featuredOrder,
+  optionGroups: product.optionGroups.map((group) => ({
+    key: group.id,
+    label: group.label,
+    options: group.options.map((option) => ({
+      value: option.id,
+      label: option.label,
+      priceDeltaCents: option.priceDeltaCents,
+    })),
+  })),
+  quickDetails: product.quickDetails.map((detail) => `${detail.label}: ${detail.value}`),
+  defaultSelection: getStaticPrototypeDefaultSelection(product),
+}))
 
 const getCategoryCounts = (products: PrototypeStoreProduct[]) =>
   products.reduce<Record<PrototypeStoreCategory, number>>(
@@ -43,7 +75,10 @@ const sortProducts = (
 
 export function usePrototypeCatalog() {
   const remoteProducts = useQuery(api.catalog.listPrototypeProducts, {})
-  const products = (remoteProducts ?? []) as PrototypeStoreProduct[]
+  const products =
+    remoteProducts && remoteProducts.length > 0
+      ? (remoteProducts as PrototypeStoreProduct[])
+      : STATIC_PROTOTYPE_PRODUCTS
 
   const productBySlug = useMemo(
     () => new Map(products.map((product) => [product.slug, product])),

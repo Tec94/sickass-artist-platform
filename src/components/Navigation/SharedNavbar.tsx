@@ -6,6 +6,7 @@ import { setNextTransition } from '../Effects/PageTransition'
 import SearchOverlay, { type SearchOverlayState } from './SearchOverlay'
 import CheckoutOverlay from './CheckoutOverlay'
 import { usePrototypeCart } from '../../features/store/prototypeCart'
+import { SHARED_NAVBAR_ROUTE_ITEMS } from '../../features/navigation/sharedNavbarRouteOrder'
 
 const isActivePath = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
@@ -22,6 +23,7 @@ const mobileNavItems = [
 ]
 
 const mobileNavViewportOffset = 'calc(72px + env(safe-area-inset-top, 0px))'
+const desktopNavItems = SHARED_NAVBAR_ROUTE_ITEMS.filter((item) => item.id !== 'store')
 
 export default function SharedNavbar() {
   const [searchState, setSearchState] = useState<SearchOverlayState | 'closed'>('closed')
@@ -80,7 +82,7 @@ export default function SharedNavbar() {
 
   return (
     <>
-      <header className="mobile-safe-header relative z-40 flex min-h-[72px] shrink-0 items-center justify-between border-b border-[var(--site-border-strong)] bg-[var(--site-page-bg)] px-4 shadow-[var(--site-navbar-shadow)] sm:px-6 lg:px-8">
+      <header className="mobile-safe-header relative z-40 flex min-h-[72px] shrink-0 items-center justify-between border-b border-[var(--site-border-strong)] bg-[var(--site-page-bg)] px-4 shadow-[var(--site-navbar-shadow)] sm:px-6 lg:h-[72px] lg:px-8">
         <div className="flex h-full min-w-0 items-center gap-4 lg:gap-12">
           <Link
             to="/dashboard"
@@ -90,9 +92,13 @@ export default function SharedNavbar() {
             THE ESTATE
           </Link>
 
-          <nav className="hidden h-full items-center gap-8 lg:flex">
+          <nav
+            data-testid="desktop-primary-nav"
+            className="hidden h-full items-stretch gap-8 lg:flex"
+          >
             <div
-              className="relative flex h-full items-center"
+              data-testid="desktop-store-nav-item"
+              className="relative flex h-full items-stretch"
               onMouseEnter={() => {
                 if (isSearchActive) return
                 setIsStoreMenuOpen(true)
@@ -233,62 +239,23 @@ export default function SharedNavbar() {
               </AnimatePresence>
             </div>
 
-            <Link
-              to="/events"
-              onClick={(event) => {
-                if (isSearchActive) {
-                  event.preventDefault()
-                  return
-                }
-                setNextTransition('push')
-                closeTransientUi()
-              }}
-              className={getLinkClasses('/events')}
-            >
-              Events
-            </Link>
-            <Link
-              to="/community"
-              onClick={(event) => {
-                if (isSearchActive) {
-                  event.preventDefault()
-                  return
-                }
-                setNextTransition('push')
-                closeTransientUi()
-              }}
-              className={getLinkClasses('/community')}
-            >
-              Community
-            </Link>
-            <Link
-              to="/rankings"
-              onClick={(event) => {
-                if (isSearchActive) {
-                  event.preventDefault()
-                  return
-                }
-                setNextTransition('push')
-                closeTransientUi()
-              }}
-              className={getLinkClasses('/rankings')}
-            >
-              Rankings
-            </Link>
-            <Link
-              to="/journey"
-              onClick={(event) => {
-                if (isSearchActive) {
-                  event.preventDefault()
-                  return
-                }
-                setNextTransition('push')
-                closeTransientUi()
-              }}
-              className={getLinkClasses('/journey')}
-            >
-              Journey
-            </Link>
+            {desktopNavItems.map((item) => (
+              <Link
+                key={item.id}
+                to={item.path}
+                onClick={(event) => {
+                  if (isSearchActive) {
+                    event.preventDefault()
+                    return
+                  }
+                  setNextTransition('push')
+                  closeTransientUi()
+                }}
+                className={getLinkClasses(item.path)}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
 

@@ -344,4 +344,12 @@ describe('Prototype store route', () => {
     expect(within(sideRail).getByRole('button', { name: /increase quantity/i })).toBeDisabled()
     expect(within(sideRail).getByRole('button', { name: /decrease quantity/i })).toBeDisabled()
   })
+
+  it('redirects unknown product slugs back to the store route', async () => {
+    renderPrototypeStore('/store/product/not-a-real-product')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-display')).toHaveTextContent('/store')
+    })
+  })
 })

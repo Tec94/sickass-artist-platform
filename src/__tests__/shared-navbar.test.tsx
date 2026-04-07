@@ -123,6 +123,9 @@ describe('SharedNavbar', () => {
 
     const header = container.querySelector('header')
     expect(header).toHaveClass('shadow-[var(--site-navbar-shadow)]')
+    expect(header).toHaveClass('lg:h-[72px]')
+    expect(screen.getByTestId('desktop-primary-nav')).toHaveClass('h-full', 'items-stretch')
+    expect(screen.getByTestId('desktop-store-nav-item')).toHaveClass('h-full', 'items-stretch')
     expect(screen.getByRole('link', { name: /journey/i })).toHaveClass('border-b-2')
   })
 

@@ -1,70 +1,81 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
-import { ReactNode, useEffect, useState } from "react";
-
-export type TransitionType = "push" | "push-back" | "slide-up" | "fade";
+import { AnimatePresence, motion } from 'framer-motion'
+import { cloneElement, isValidElement, ReactElement, ReactNode, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
+import {
+  resolvePageTransition,
+  type TransitionType,
+} from './pageTransitionRouting'
 
 // We can store a global state to track the transition direction
 export const globalTransitionState = {
-  type: "push" as TransitionType
-};
+  type: null as TransitionType | null,
+}
 
 export const setNextTransition = (type: TransitionType) => {
-  globalTransitionState.type = type;
-};
+  globalTransitionState.type = type
+}
 
 const variants = {
   push: {
-    initial: { x: "100%", opacity: 0 },
+    initial: { x: '18%', opacity: 1 },
     animate: { x: 0, opacity: 1 },
-    exit: { x: "-30%", opacity: 0 }
+    exit: { x: 0, opacity: 1 },
   },
-  "push-back": {
-    initial: { x: "-100%", opacity: 0 },
+  'push-back': {
+    initial: { x: '-18%', opacity: 1 },
     animate: { x: 0, opacity: 1 },
-    exit: { x: "30%", opacity: 0 }
+    exit: { x: 0, opacity: 1 },
   },
-  "slide-up": {
-    initial: { y: "100%", opacity: 0 },
+  'slide-up': {
+    initial: { y: '12%', opacity: 1 },
     animate: { y: 0, opacity: 1 },
-    exit: { y: "100%", opacity: 0 }
+    exit: { y: 0, opacity: 1 },
   },
   fade: {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
-    exit: { opacity: 0 }
-  }
-};
+    exit: { opacity: 1 },
+  },
+}
 
 interface AnimatedRoutesProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function AnimatedRoutes({ children }: AnimatedRoutesProps) {
-  const location = useLocation();
-  const [transition, setTransition] = useState<TransitionType>("fade");
+  const location = useLocation()
+  const previousPathnameRef = useRef(location.pathname)
+  const transitionRef = useRef<TransitionType>('fade')
 
-  useEffect(() => {
-    setTransition(globalTransitionState.type);
-    // Reset to push after navigation defaults
-    globalTransitionState.type = "push";
-  }, [location.pathname]);
+  if (previousPathnameRef.current !== location.pathname) {
+    transitionRef.current = resolvePageTransition(
+      previousPathnameRef.current,
+      location.pathname,
+      globalTransitionState.type,
+    )
+    previousPathnameRef.current = location.pathname
+    globalTransitionState.type = null
+  }
 
-  const activeVariants = variants[transition];
+  const activeVariants = variants[transitionRef.current]
+  const renderedChildren = isValidElement(children)
+    ? cloneElement(children as ReactElement<{ location?: typeof location }>, { location })
+    : children
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence initial={false} mode='sync'>
       <motion.div
         key={location.pathname}
-        initial="initial"
-        animate="animate"
-        exit="exit"
+        initial='initial'
+        animate='animate'
+        exit='exit'
         variants={activeVariants}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="h-full w-full absolute top-0 left-0 bg-[#F4EFE6]"
+        transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+        className='absolute top-0 left-0 h-full w-full bg-[#F4EFE6]'
+        style={{ willChange: 'transform, opacity' }}
       >
-        {children}
+        {renderedChildren}
       </motion.div>
     </AnimatePresence>
-  );
+  )
 }

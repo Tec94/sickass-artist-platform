@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Minus, Plus } from 'lucide-react'
+import { Skeleton } from 'boneyard-js/react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { setNextTransition } from '../../components/Effects/PageTransition'
 import SharedNavbar from '../../components/Navigation/SharedNavbar'
@@ -18,29 +19,36 @@ export default function StoreProductDetail() {
   const navigate = useNavigate()
   const { productSlug } = useParams<{ productSlug: string }>()
   const { addItem, canWrite } = usePrototypeCart()
-  const { products, getProductBySlug } = usePrototypeCatalog()
+  const { products, getProductBySlug, isLoading } = usePrototypeCatalog()
   const mainRef = useRef<HTMLElement | null>(null)
 
   const matchedProduct = getProductBySlug(productSlug ?? '')
-  const product = matchedProduct ?? products[0]
+  const product = matchedProduct
 
-  const galleryImages = useMemo(
-    () => (product.gallery.length ? product.gallery : [product.primaryImage]),
-    [product.gallery, product.primaryImage],
+  const galleryImages = useMemo(() => {
+    if (!product) return []
+    return product.gallery.length ? product.gallery : [product.primaryImage]
+  }, [product])
+  const defaultSelection = useMemo(
+    () => (product ? getPrototypeDefaultSelection(product) : {}),
+    [product],
   )
-  const defaultSelection = useMemo(() => getPrototypeDefaultSelection(product), [product])
-  const [selectedImage, setSelectedImage] = useState<string>(galleryImages[0] ?? product.primaryImage)
+  const [selectedImage, setSelectedImage] = useState<string>(galleryImages[0] ?? '')
   const [selectedSelection, setSelectedSelection] = useState<PrototypeStoreSelection>(defaultSelection)
   const [quantity, setQuantity] = useState(1)
 
   const selectedPriceCents = useMemo(
-    () => getPrototypeSelectionUnitPrice(product, selectedSelection),
+    () => (product ? getPrototypeSelectionUnitPrice(product, selectedSelection) : 0),
     [product, selectedSelection],
   )
 
-  const relatedProducts = products.filter(
-    (candidate) => candidate.slug !== product.slug && candidate.category === product.category,
-  ).slice(0, 3)
+  const relatedProducts = product
+    ? products
+        .filter(
+          (candidate) => candidate.slug !== product.slug && candidate.category === product.category,
+        )
+        .slice(0, 3)
+    : []
 
   const openProduct = (slug: string) => {
     setNextTransition('push')
@@ -59,10 +67,11 @@ export default function StoreProductDetail() {
   }, [productSlug])
 
   useEffect(() => {
+    if (!product) return
     setSelectedImage(galleryImages[0] ?? product.primaryImage)
     setSelectedSelection(defaultSelection)
     setQuantity(1)
-  }, [defaultSelection, galleryImages, product.primaryImage, productSlug])
+  }, [defaultSelection, galleryImages, product?.primaryImage, productSlug])
 
   const formatOptionDelta = (priceDeltaCents?: number) => {
     if (!priceDeltaCents) return ''
@@ -75,12 +84,26 @@ export default function StoreProductDetail() {
   }
 
   const handleAddToCart = () => {
+    if (!product) return
     addItem(product.slug, selectedSelection, quantity)
   }
 
-  if (!matchedProduct) {
+  if (!product && !isLoading) {
     return <Navigate to="/store" replace />
   }
+
+  const detailLoadingFallback = (
+    <div className="flex h-full min-h-[320px] items-center justify-center px-6">
+      <div className="text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--site-text-muted)]">
+          Loading product
+        </p>
+        <p className="mt-4 max-w-[34ch] text-sm leading-7 text-[#3C2A21]/76">
+          The catalog is syncing pricing, gallery, and purchase controls for this item.
+        </p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[var(--site-page-bg)] font-sans text-[var(--site-text)]">
@@ -90,7 +113,14 @@ export default function StoreProductDetail() {
         ref={mainRef}
         className="h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto max-w-[1560px] px-4 pb-32 pt-3 md:px-8 md:pb-24 md:pt-4 xl:pb-20">
+        <Skeleton
+          name="store-product-detail"
+          loading={isLoading}
+          fallback={detailLoadingFallback}
+          className="block"
+        >
+          {product ? (
+            <div className="mx-auto max-w-[1560px] px-4 pb-32 pt-3 md:px-8 md:pb-24 md:pt-4 xl:pb-20">
           <button
             data-testid="detail-back-button"
             type="button"
@@ -354,9 +384,14 @@ export default function StoreProductDetail() {
               <ArrowRight size={14} />
             </button>
           </div>
-        </div>
+            </div>
+          ) : (
+            detailLoadingFallback
+          )}
+        </Skeleton>
       </main>
-      <div className="mobile-safe-nav fixed inset-x-0 bottom-0 z-30 border-t border-[#1C1B1A]/12 bg-[#FCFBF9]/96 px-4 py-4 shadow-[0_-18px_40px_rgba(28,27,26,0.14)] backdrop-blur xl:hidden">
+      {product && !isLoading ? (
+        <div className="mobile-safe-nav fixed inset-x-0 bottom-0 z-30 border-t border-[#1C1B1A]/12 bg-[#FCFBF9]/96 px-4 py-4 shadow-[0_-18px_40px_rgba(28,27,26,0.14)] backdrop-blur xl:hidden">
         <div data-testid="detail-mobile-purchase-bar" className="mx-auto flex max-w-[1560px] flex-col gap-4">
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -409,7 +444,8 @@ export default function StoreProductDetail() {
             </span>
           )}
         </div>
-      </div>
+        </div>
+      ) : null}
     </div>
   )
 }

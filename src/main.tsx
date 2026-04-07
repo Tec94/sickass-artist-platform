@@ -9,6 +9,7 @@ import { sanitizeReturnTo } from './features/auth/authRouting'
 import './index.css'
 import './styles/dashboard-variants.css'
 import './styles/app-surfaces.css'
+import './bones/registry'
 
 const AUTH0_DOMAIN = import.meta.env.VITE_AUTH0_DOMAIN
 const AUTH0_CLIENT_ID = import.meta.env.VITE_AUTH0_CLIENT_ID

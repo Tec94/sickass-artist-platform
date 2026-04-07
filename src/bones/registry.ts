@@ -1,0 +1,1 @@
+import './generated/registry.js'
